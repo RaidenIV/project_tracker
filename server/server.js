@@ -75,35 +75,44 @@ app.get('/api/data', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
+        res.status(500).json({ error: 'Failed to fetch data', details: error?.message || String(error) });
     }
 });
 
 // Save all data
+// Save all data (atomic upsert to avoid race conditions / duplicate key errors)
 app.post('/api/data', async (req, res) => {
     try {
         const { projects, stats } = req.body;
-        
-        let userData = await UserData.findOne({ userId: 'default' });
-        
-        if (!userData) {
-            userData = new UserData({
-                userId: 'default',
-                projects,
-                stats,
-                lastModified: new Date()
+
+        if (!Array.isArray(projects) || typeof stats !== 'object' || stats === null) {
+            return res.status(400).json({
+                error: 'Invalid payload',
+                details: 'Expected { projects: Array, stats: Object }'
             });
-        } else {
-            userData.projects = projects;
-            userData.stats = stats;
-            userData.lastModified = new Date();
         }
-        
-        await userData.save();
+
+        const update = {
+            userId: 'default',
+            projects,
+            stats,
+            lastModified: new Date()
+        };
+
+        // Atomic write: creates the doc if it doesn't exist; updates it if it does.
+        await UserData.findOneAndUpdate(
+            { userId: 'default' },
+            update,
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
         res.json({ success: true, message: 'Data saved successfully' });
     } catch (error) {
         console.error('Error saving data:', error);
-        res.status(500).json({ error: 'Failed to save data' });
+        res.status(500).json({
+            error: 'Failed to save data',
+            details: error?.message || String(error)
+        });
     }
 });
 
