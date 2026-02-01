@@ -4,7 +4,7 @@ nixPkgs = ["nodejs-18_x"]
 
 [phases.install]
 cmds = [
-  "cd server && npm ci --prefer-offline --no-audit"
+  "cd server && npm install --prefer-offline --no-audit"
 ]
 
 [start]
