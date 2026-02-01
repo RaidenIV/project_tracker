@@ -119,6 +119,42 @@ function updateProjectTitle(projectId, newTitle) {
     render();
 }
 
+function copyProjectToClipboard(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const completedTasks = project.tasks.filter(t => t.completed).length;
+    const totalTasks = project.tasks.length;
+    
+    let text = `${project.title}\n`;
+    text += `Created: ${new Date(project.dateCreated).toLocaleDateString()}\n`;
+    text += `Progress: ${completedTasks}/${totalTasks} tasks completed\n\n`;
+    text += `Tasks:\n`;
+    
+    project.tasks.forEach((task, index) => {
+        const status = task.completed ? '✓' : '○';
+        text += `${status} ${task.text}\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show brief feedback
+        const button = event?.target?.closest('button');
+        if (button) {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = `
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            `;
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 1000);
+        }
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
 // ============================================================================
 // TASK OPERATIONS
 // ============================================================================
@@ -235,6 +271,58 @@ function addTaskToProject(projectId) {
     return newTask.id;
 }
 
+function reorderTasks(projectId, oldIndex, newIndex) {
+    if (!requireAdmin()) return;
+    
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const tasks = [...project.tasks];
+    const [movedTask] = tasks.splice(oldIndex, 1);
+    tasks.splice(newIndex, 0, movedTask);
+    
+    state.updateProject(projectId, { tasks });
+    saveData();
+    openProjectModal(projectId);
+}
+
+function reorderProjects(oldIndex, newIndex) {
+    if (!requireAdmin()) return;
+    
+    const currentViewProjects = state.getCurrentViewProjects();
+    const allProjects = state.getProjects();
+    
+    // Get the project being moved
+    const movedProject = currentViewProjects[oldIndex];
+    
+    // Find the indices in the full project list
+    const oldFullIndex = allProjects.findIndex(p => p.id === movedProject.id);
+    
+    // Remove from current position
+    const newProjects = [...allProjects];
+    newProjects.splice(oldFullIndex, 1);
+    
+    // Calculate new position in full list
+    let newFullIndex;
+    if (newIndex === 0) {
+        newFullIndex = 0;
+    } else {
+        const targetProject = currentViewProjects[newIndex];
+        newFullIndex = newProjects.findIndex(p => p.id === targetProject.id);
+        if (newFullIndex === -1) newFullIndex = newProjects.length;
+    }
+    
+    // Insert at new position
+    newProjects.splice(newFullIndex, 0, movedProject);
+    
+    // Update priorities
+    newProjects.forEach((p, i) => p.priority = i);
+    
+    state.setProjects(newProjects);
+    saveData();
+    render();
+}
+
 // ============================================================================
 // VIEW MANAGEMENT
 // ============================================================================
@@ -253,6 +341,167 @@ function switchToCompletedView() {
     document.getElementById('activeProjectsCard').classList.remove('active');
     document.querySelector('.viewport-header h1').textContent = 'Completed Projects';
     render();
+}
+
+// ============================================================================
+// DRAG AND DROP
+// ============================================================================
+
+let draggedTaskElement = null;
+let draggedTaskProjectId = null;
+let draggedTaskIndex = null;
+
+let draggedProjectElement = null;
+let draggedProjectIndex = null;
+
+function setupProjectDragAndDrop() {
+    const projectCards = document.querySelectorAll('.project-card');
+    
+    projectCards.forEach((card, index) => {
+        const dragHandle = card.querySelector('.drag-handle');
+        
+        if (dragHandle) {
+            dragHandle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                card.setAttribute('draggable', 'true');
+            });
+        }
+        
+        card.addEventListener('dragstart', (e) => {
+            if (!state.isAdmin()) {
+                e.preventDefault();
+                return;
+            }
+            draggedProjectElement = card;
+            draggedProjectIndex = index;
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+            card.setAttribute('draggable', 'false');
+            draggedProjectElement = null;
+            draggedProjectIndex = null;
+        });
+        
+        card.addEventListener('dragover', (e) => {
+            if (draggedProjectElement && draggedProjectElement !== card) {
+                e.preventDefault();
+                const cardRect = card.getBoundingClientRect();
+                const midPoint = cardRect.top + cardRect.height / 2;
+                
+                if (e.clientY < midPoint) {
+                    card.style.borderTop = '3px solid #5a6c7d';
+                    card.style.borderBottom = 'none';
+                } else {
+                    card.style.borderBottom = '3px solid #5a6c7d';
+                    card.style.borderTop = 'none';
+                }
+            }
+        });
+        
+        card.addEventListener('dragleave', (e) => {
+            card.style.borderTop = 'none';
+            card.style.borderBottom = 'none';
+        });
+        
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            card.style.borderTop = 'none';
+            card.style.borderBottom = 'none';
+            
+            if (draggedProjectElement && draggedProjectElement !== card) {
+                const targetIndex = Array.from(projectCards).indexOf(card);
+                const cardRect = card.getBoundingClientRect();
+                const midPoint = cardRect.top + cardRect.height / 2;
+                
+                let newIndex = targetIndex;
+                if (e.clientY > midPoint && draggedProjectIndex < targetIndex) {
+                    newIndex = targetIndex;
+                } else if (e.clientY < midPoint && draggedProjectIndex > targetIndex) {
+                    newIndex = targetIndex;
+                } else if (e.clientY > midPoint) {
+                    newIndex = targetIndex + 1;
+                }
+                
+                reorderProjects(draggedProjectIndex, newIndex);
+            }
+        });
+    });
+}
+
+function setupTaskDragAndDrop(projectId) {
+    const taskItems = document.querySelectorAll(`[data-task-item]`);
+    
+    taskItems.forEach((item, index) => {
+        item.setAttribute('draggable', 'true');
+        
+        item.addEventListener('dragstart', (e) => {
+            if (!state.isAdmin()) {
+                e.preventDefault();
+                return;
+            }
+            draggedTaskElement = item;
+            draggedTaskProjectId = projectId;
+            draggedTaskIndex = index;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', (e) => {
+            item.classList.remove('dragging');
+            draggedTaskElement = null;
+            draggedTaskProjectId = null;
+            draggedTaskIndex = null;
+        });
+        
+        item.addEventListener('dragover', (e) => {
+            if (draggedTaskElement && draggedTaskElement !== item && draggedTaskProjectId === projectId) {
+                e.preventDefault();
+                const itemRect = item.getBoundingClientRect();
+                const midPoint = itemRect.top + itemRect.height / 2;
+                
+                if (e.clientY < midPoint) {
+                    item.style.borderTop = '2px solid #5a6c7d';
+                    item.style.borderBottom = 'none';
+                } else {
+                    item.style.borderBottom = '2px solid #5a6c7d';
+                    item.style.borderTop = 'none';
+                }
+            }
+        });
+        
+        item.addEventListener('dragleave', (e) => {
+            item.style.borderTop = 'none';
+            item.style.borderBottom = 'none';
+        });
+        
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            item.style.borderTop = 'none';
+            item.style.borderBottom = 'none';
+            
+            if (draggedTaskElement && draggedTaskElement !== item && draggedTaskProjectId === projectId) {
+                const allTaskItems = Array.from(document.querySelectorAll(`[data-task-item]`));
+                const targetIndex = allTaskItems.indexOf(item);
+                const itemRect = item.getBoundingClientRect();
+                const midPoint = itemRect.top + itemRect.height / 2;
+                
+                let newIndex = targetIndex;
+                if (e.clientY > midPoint && draggedTaskIndex < targetIndex) {
+                    newIndex = targetIndex;
+                } else if (e.clientY < midPoint && draggedTaskIndex > targetIndex) {
+                    newIndex = targetIndex;
+                } else if (e.clientY > midPoint) {
+                    newIndex = targetIndex + 1;
+                }
+                
+                reorderTasks(projectId, draggedTaskIndex, newIndex);
+            }
+        });
+    });
 }
 
 // ============================================================================
@@ -289,11 +538,18 @@ function openProjectModal(projectId) {
                     <span>${completedTasks} done</span>
                 </div>
             </div>
-            <button class="modal-close" onclick="closeProjectModal()">
-                <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+            <div style="display: flex; gap: 4px;">
+                <button class="modal-copy-button" onclick="copyProjectToClipboard(${project.id})">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
+                <button class="modal-close" onclick="closeProjectModal()">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
         
         <div class="modal-progress">
@@ -307,7 +563,10 @@ function openProjectModal(projectId) {
             <h3>Tasks</h3>
             <div class="task-list" id="modal-task-list-${project.id}">
                 ${project.tasks.map(task => `
-                    <div class="task-item">
+                    <div class="task-item" data-task-item data-task-id="${task.id}">
+                        <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                        </svg>
                         <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
                              data-task-checkbox="${task.id}"
                              onclick="toggleTask(${project.id}, ${task.id})">
@@ -369,6 +628,9 @@ function openProjectModal(projectId) {
     `;
     
     modal.classList.add('active');
+    
+    // Setup drag and drop for tasks
+    setTimeout(() => setupTaskDragAndDrop(project.id), 100);
 }
 
 function closeProjectModal() {
@@ -575,6 +837,9 @@ function render() {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
+        
+        // Setup drag and drop after rendering
+        setTimeout(setupProjectDragAndDrop, 100);
     }
     
     renderQuickActions();
@@ -592,9 +857,17 @@ function renderProjectCard(project) {
              onclick="openProjectModal(${project.id})">
             <div class="project-header">
                 <div class="project-title-container">
+                    <svg class="drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                    </svg>
                     <div class="project-title">${project.title}</div>
                 </div>
                 <div class="project-actions">
+                    <button class="copy-button" onclick="event.stopPropagation(); copyProjectToClipboard(${project.id})">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
                     <button class="card-delete-button" onclick="event.stopPropagation(); confirmDeleteProjectCard(${project.id})">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -717,6 +990,21 @@ function initializeEventHandlers() {
     // Paste button
     document.getElementById('pasteButton').addEventListener('click', pasteTasks);
 
+    // Click outside modal to close
+    const projectModal = document.getElementById('projectModal');
+    projectModal.addEventListener('click', (e) => {
+        if (e.target === projectModal) {
+            closeProjectModal();
+        }
+    });
+
+    const confirmDialog = document.getElementById('confirmDialog');
+    confirmDialog.addEventListener('click', (e) => {
+        if (e.target === confirmDialog) {
+            closeConfirmDialog();
+        }
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
@@ -755,6 +1043,9 @@ D - View Completed Projects
 
 Admin Features:
 - Click on project cards to view/edit details
+- Drag tasks or projects to reorder them
+- Use copy button to copy project details
+- Click outside expanded cards to close them
 - Use the paste box in modals for bulk task import
 - Stats are clickable to switch views
 
@@ -772,6 +1063,7 @@ window.addProject = addProject;
 window.deleteProject = deleteProject;
 window.completeProject = completeProject;
 window.toggleTask = toggleTask;
+window.copyProjectToClipboard = copyProjectToClipboard;
 window.switchToActiveView = switchToActiveView;
 window.switchToCompletedView = switchToCompletedView;
 window.openProjectModal = openProjectModal;
