@@ -16,8 +16,34 @@ export async function loadData() {
     render();
 }
 
+// Save queue: prevents overlapping saves and reduces race conditions / partial writes.
+let __saveInFlight = false;
+let __saveQueued = false;
+
 async function saveData() {
-    await saveDataToServer(state.getProjects(), state.getStats());
+    // If a save is already running, just mark that we need another pass.
+    if (__saveInFlight) {
+        __saveQueued = true;
+        return;
+    }
+
+    __saveInFlight = true;
+    try {
+        do {
+            __saveQueued = false;
+
+            const ok = await saveDataToServer(state.getProjects(), state.getStats());
+            if (!ok) {
+                console.warn('Save failed (server returned error). Data is still in memory for this session.');
+                // If save fails, do not spin endlessly; exit queue.
+                break;
+            }
+
+            // If changes happened while saving, loop once more to persist the latest state.
+        } while (__saveQueued);
+    } finally {
+        __saveInFlight = false;
+    }
 }
 
 // ============================================================================
