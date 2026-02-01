@@ -65,7 +65,7 @@
         .menu-icon {
             width: 20px;
             height: 20px;
-            color: #2f27ce;
+            color: #5a6c7d;
         }
 
         .menu-dropdown {
@@ -90,7 +90,7 @@
         .menu-dropdown a {
             display: block;
             padding: 12px 16px;
-            color: #2f27ce;
+            color: #5a6c7d;
             text-decoration: none;
             transition: all 0.3s ease;
             border-radius: 8px;
@@ -115,7 +115,7 @@
         .viewport-header h1 {
             font-size: 32px;
             font-weight: bold;
-            color: #2f27ce;
+            color: #5a6c7d;
             margin-bottom: 8px;
             letter-spacing: -0.5px;
         }
@@ -123,7 +123,7 @@
         .viewport-header .underline {
             height: 4px;
             width: 96px;
-            background: linear-gradient(to right, #2f27ce, transparent);
+            background: linear-gradient(to right, #5a6c7d, transparent);
             border-radius: 2px;
             margin-bottom: 24px;
         }
@@ -197,11 +197,16 @@
         }
 
         .drag-handle {
-            color: #2f27ce;
+            color: #5a6c7d;
             opacity: 0;
             transition: opacity 0.3s ease;
             width: 16px;
             height: 16px;
+            cursor: grab;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
         }
 
         .project-card:hover .drag-handle {
@@ -211,7 +216,7 @@
         .project-title {
             font-size: 18px;
             font-weight: bold;
-            color: #2f27ce;
+            color: #5a6c7d;
             flex: 1;
         }
 
@@ -220,7 +225,7 @@
             border: none;
             border-radius: 8px;
             padding: 4px 12px;
-            color: #2f27ce;
+            color: #5a6c7d;
             font-size: 18px;
             font-weight: bold;
             font-family: inherit;
@@ -235,6 +240,7 @@
         }
 
         .edit-button,
+        .copy-button,
         .card-delete-button {
             background: none;
             border: none;
@@ -243,7 +249,11 @@
             border-radius: 8px;
             opacity: 0;
             transition: all 0.3s ease;
-            color: #2f27ce;
+            color: #5a6c7d;
+        }
+
+        .copy-button {
+            color: #48bb78;
         }
 
         .card-delete-button {
@@ -251,11 +261,13 @@
         }
 
         .project-card:hover .edit-button,
+        .project-card:hover .copy-button,
         .project-card:hover .card-delete-button {
             opacity: 1;
         }
 
         .edit-button:hover,
+        .copy-button:hover,
         .card-delete-button:hover {
             background: #e8ecf1;
         }
@@ -295,12 +307,34 @@
             border-radius: 8px;
             padding: 12px;
             box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:active {
+            cursor: grabbing;
+        }
+
+        .task-item.dragging {
+            opacity: 0.5;
+        }
+
+        .task-drag-handle {
+            color: #5a6c7d;
+            opacity: 0.3;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .task-item:hover .task-drag-handle {
+            opacity: 0.6;
         }
 
         .task-checkbox {
             width: 20px;
             height: 20px;
-            border: 2px solid #2f27ce;
+            border: 2px solid #5a6c7d;
             border-radius: 4px;
             cursor: pointer;
             display: flex;
@@ -311,26 +345,22 @@
         }
 
         .task-checkbox.checked {
-            background: #2f27ce;
-        }
-
-        .task-checkbox:hover {
-            background: rgba(0, 170, 102, 0.2);
+            background: #5a6c7d;
+            border-color: #5a6c7d;
         }
 
         .task-text {
             flex: 1;
-            font-size: 14px;
-            cursor: pointer;
             color: #2d3748;
+            font-size: 14px;
         }
 
         .task-text.completed {
             text-decoration: line-through;
-            color: #a0aec0;
+            opacity: 0.5;
         }
 
-        .task-input {
+        .task-text-input {
             flex: 1;
             background: #f0f4f8;
             border: none;
@@ -340,9 +370,10 @@
             font-size: 14px;
             font-family: inherit;
             outline: none;
+            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
         }
 
-        .delete-button {
+        .task-delete-button {
             background: none;
             border: none;
             cursor: pointer;
@@ -351,42 +382,38 @@
             opacity: 0;
             transition: all 0.3s ease;
             color: #e53e3e;
+            flex-shrink: 0;
         }
 
-        .task-item:hover .delete-button {
+        .task-item:hover .task-delete-button {
             opacity: 1;
         }
 
-        .delete-button:hover {
+        .task-delete-button:hover {
             background: #f0f4f8;
         }
 
-        /* Add Task Button */
-        .add-task-button {
-            width: 100%;
-            margin-top: 12px;
-            padding: 8px;
+        /* Progress Bar */
+        .progress-bar-container {
             background: #e8ecf1;
-            border: none;
-            border-radius: 8px;
-            color: #2f27ce;
-            font-size: 14px;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            font-family: inherit;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
         }
 
-        .add-task-button:hover {
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #5a6c7d, #48bb78);
+            border-radius: 4px;
+            transition: width 0.5s ease;
         }
 
-        /* Tasks hidden on card, shown in modal */
-        .tasks-container {
-            display: none;
+        .progress-text {
+            font-size: 12px;
+            color: #718096;
+            text-align: right;
         }
 
         /* Control Panel */
@@ -401,12 +428,12 @@
         }
 
         .control-panel-content {
+            position: sticky;
+            top: 80px;
             background: #f0f4f8;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 24px;
             box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
-            position: sticky;
-            top: 96px;
         }
 
         .control-panel-header {
@@ -419,7 +446,7 @@
         .control-panel-header h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #2f27ce;
+            color: #5a6c7d;
         }
 
         .collapse-button {
@@ -428,7 +455,7 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            color: #2f27ce;
+            color: #5a6c7d;
             transition: all 0.3s ease;
         }
 
@@ -436,31 +463,40 @@
             background: #e8ecf1;
         }
 
-        /* Stats */
+        .icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .icon-lg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Stats - 75% smaller */
         .stats {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
             margin-bottom: 24px;
         }
 
         .stat-card {
             background: #e8ecf1;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
-            cursor: pointer;
+            border-radius: 10px;
+            padding: 10px 12px;
+            box-shadow: inset 3px 3px 6px rgba(174, 174, 192, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.9);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .stat-card:hover {
             transform: scale(1.02);
-            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.3), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
         }
 
         .stat-card.active {
-            background: #2f27ce;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            background: linear-gradient(135deg, #5a6c7d, #48bb78);
+            box-shadow: 4px 4px 8px rgba(174, 174, 192, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.9);
         }
 
         .stat-card.active .stat-value,
@@ -469,14 +505,14 @@
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 20px;
             font-weight: bold;
-            color: #2f27ce;
-            margin-bottom: 4px;
+            color: #5a6c7d;
+            margin-bottom: 2px;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 10px;
             color: #718096;
         }
 
@@ -484,12 +520,12 @@
         .add-project-button {
             width: 100%;
             padding: 12px;
-            background: #2f27ce;
+            background: linear-gradient(135deg, #5a6c7d, #48bb78);
             border: none;
             border-radius: 12px;
             color: #ffffff;
-            font-weight: bold;
             font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -502,77 +538,73 @@
         }
 
         .add-project-button:hover {
-            transform: scale(1.05);
-            box-shadow: 12px 12px 24px rgba(174, 174, 192, 0.5), -12px -12px 24px rgba(255, 255, 255, 0.9);
+            transform: scale(1.02);
         }
 
         /* Quick Actions */
         .quick-actions {
-            margin-top: 24px;
+            margin-bottom: 24px;
         }
 
         .quick-actions h3 {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
-            color: #718096;
+            color: #2d3748;
             margin-bottom: 12px;
         }
 
         .quick-actions-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            max-height: 384px;
-            overflow-y: auto;
+            gap: 8px;
         }
 
         .quick-action-item {
             background: #e8ecf1;
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
             box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
         }
 
         .quick-action-title {
             font-size: 13px;
-            color: #2d3748;
-            margin-bottom: 6px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-weight: bold;
+            color: #5a6c7d;
+            margin-bottom: 8px;
         }
 
         .quick-action-buttons {
             display: flex;
-            gap: 6px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .done-button {
             flex: 1;
-            padding: 4px 6px;
-            background: rgba(0, 170, 102, 0.2);
+            padding: 6px;
+            background: #48bb78;
             border: none;
-            border-radius: 4px;
-            color: #2f27ce;
-            font-size: 11px;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: inherit;
         }
 
         .done-button:hover {
-            background: rgba(0, 170, 102, 0.3);
+            transform: scale(1.05);
         }
 
         .quick-delete-button {
-            padding: 4px 6px;
+            padding: 6px;
             background: rgba(229, 62, 62, 0.2);
             border: none;
-            border-radius: 4px;
-            color: #e53e3e;
-            font-size: 11px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
+            color: #e53e3e;
         }
 
         .quick-delete-button:hover {
@@ -580,151 +612,65 @@
         }
 
         .quick-action-stats {
-            font-size: 10px;
-            color: #a0aec0;
-            margin-top: 6px;
-        }
-
-        /* Expand Button */
-        .expand-button {
-            position: fixed;
-            right: 24px;
-            top: 96px;
-            width: 48px;
-            height: 48px;
-            background: #f0f4f8;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
-            transition: all 0.3s ease;
-            z-index: 40;
-            color: #2f27ce;
-        }
-
-        .expand-button.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .expand-button:hover {
-            transform: scale(1.05);
-            box-shadow: 12px 12px 24px rgba(174, 174, 192, 0.5), -12px -12px 24px rgba(255, 255, 255, 0.9);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #e8ecf1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #2f27ce;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #008855;
-        }
-
-        /* Icons */
-        .icon {
-            width: 14px;
-            height: 14px;
-        }
-
-        .icon-lg {
-            width: 18px;
-            height: 18px;
-        }
-
-        /* Progress Bar */
-        .progress-bar-container {
-            width: 100%;
-            height: 6px;
-            background: #e8ecf1;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 12px;
-            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4);
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #2f27ce, #00dd88);
-            border-radius: 3px;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 8px rgba(0, 170, 102, 0.5);
-        }
-
-        .progress-text {
             font-size: 11px;
             color: #718096;
-            margin-top: 4px;
-            text-align: right;
         }
 
-        /* Paste Box */
-        .paste-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid rgba(0, 170, 102, 0.1);
-        }
-
+        /* Paste Section */
         .paste-section h3 {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
-            color: #718096;
+            color: #2d3748;
             margin-bottom: 12px;
+        }
+
+        .project-select {
+            width: 100%;
+            padding: 8px;
+            background: #e8ecf1;
+            border: none;
+            border-radius: 8px;
+            color: #2d3748;
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-family: inherit;
+            outline: none;
+            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            cursor: pointer;
         }
 
         .paste-box {
             width: 100%;
             min-height: 100px;
-            background: #e8ecf1;
-            border: 1px solid rgba(0, 170, 102, 0.2);
-            border-radius: 8px;
             padding: 12px;
+            background: #e8ecf1;
+            border: none;
+            border-radius: 8px;
             color: #2d3748;
-            font-size: 12px;
+            font-size: 13px;
             font-family: inherit;
             resize: vertical;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
             outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        .paste-box:focus {
-            border-color: #2f27ce;
-        }
-
-        .paste-box::placeholder {
-            color: #a0aec0;
+            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
         }
 
         .paste-button {
             width: 100%;
-            margin-top: 8px;
-            padding: 8px;
-            background: rgba(0, 170, 102, 0.2);
+            padding: 10px;
+            background: #5a6c7d;
             border: none;
             border-radius: 8px;
-            color: #2f27ce;
-            font-size: 12px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: inherit;
         }
 
-        .paste-button:hover {
-            background: rgba(0, 170, 102, 0.3);
+        .paste-button:hover:not(:disabled) {
+            transform: scale(1.02);
         }
 
         .paste-button:disabled {
@@ -732,22 +678,33 @@
             cursor: not-allowed;
         }
 
-        .project-select {
-            width: 100%;
-            margin-bottom: 8px;
-            padding: 8px;
-            background: #e8ecf1;
-            border: 1px solid rgba(0, 170, 102, 0.2);
-            border-radius: 8px;
-            color: #2d3748;
-            font-size: 12px;
-            font-family: inherit;
-            outline: none;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+        /* Expand Button */
+        .expand-button {
+            position: fixed;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #f0f4f8;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            z-index: 40;
         }
 
-        .project-select:focus {
-            border-color: #2f27ce;
+        .expand-button:hover {
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .expand-button.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* Keyboard Shortcuts Hint */
@@ -757,48 +714,41 @@
             left: 24px;
             background: #f0f4f8;
             border-radius: 12px;
-            padding: 16px 20px;
+            padding: 16px;
             box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
             font-size: 11px;
             color: #718096;
-            z-index: 40;
-            transition: all 0.3s ease;
-            max-width: 300px;
+            z-index: 30;
+            max-width: 200px;
         }
 
-        .shortcuts-hint:hover {
-            color: #2f27ce;
-        }
-
-        .shortcuts-hint .shortcuts-title {
+        .shortcuts-title {
             font-weight: bold;
-            color: #2f27ce;
+            color: #5a6c7d;
             margin-bottom: 8px;
             font-size: 12px;
         }
 
-        .shortcuts-hint .shortcut-line {
-            margin: 4px 0;
+        .shortcut-line {
+            margin-bottom: 4px;
         }
 
-        .shortcuts-hint kbd {
+        kbd {
             background: #e8ecf1;
             padding: 2px 6px;
             border-radius: 4px;
+            font-family: inherit;
             font-size: 10px;
-            color: #2f27ce;
-            margin: 0 2px;
-            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4);
-            font-weight: bold;
+            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
         }
 
-        /* Admin Mode Indicator */
+        /* Admin Indicator */
         .admin-indicator {
             position: fixed;
             top: 24px;
             right: 24px;
-            background: #2f27ce;
-            color: white;
+            background: linear-gradient(135deg, #48bb78, #5a6c7d);
+            color: #ffffff;
             padding: 8px 16px;
             border-radius: 8px;
             font-size: 12px;
@@ -812,35 +762,39 @@
             display: block;
         }
 
-        /* Password Prompt */
+        /* Password Overlay */
         .password-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
-        .password-overlay.hidden {
-            display: none;
+        .password-overlay.active {
+            opacity: 1;
+            pointer-events: all;
         }
 
         .password-dialog {
             background: #f0f4f8;
-            border-radius: 20px;
-            padding: 40px;
+            border-radius: 16px;
+            padding: 32px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 20px 20px 40px rgba(174, 174, 192, 0.6), -20px -20px 40px rgba(255, 255, 255, 0.9);
+            box-shadow: 10px 10px 20px rgba(174, 174, 192, 0.3), -10px -10px 20px rgba(255, 255, 255, 0.45);
             text-align: center;
         }
 
         .password-dialog h2 {
             font-size: 24px;
             font-weight: bold;
-            color: #2f27ce;
+            color: #5a6c7d;
             margin-bottom: 12px;
         }
 
@@ -854,7 +808,7 @@
             width: 100%;
             padding: 12px;
             background: #e8ecf1;
-            border: 2px solid rgba(47, 39, 206, 0.2);
+            border: 2px solid rgba(90, 108, 125, 0.2);
             border-radius: 8px;
             color: #2d3748;
             font-size: 16px;
@@ -866,13 +820,13 @@
         }
 
         .password-input:focus {
-            border-color: #2f27ce;
+            border-color: #5a6c7d;
         }
 
         .password-submit {
             width: 100%;
             padding: 12px;
-            background: #2f27ce;
+            background: #5a6c7d;
             border: none;
             border-radius: 8px;
             color: #ffffff;
@@ -898,7 +852,7 @@
             display: block;
         }
 
-        /* Modal */
+        /* Modal - Reduced glow by 50% */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -925,7 +879,7 @@
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 20px 20px 40px rgba(174, 174, 192, 0.6), -20px -20px 40px rgba(255, 255, 255, 0.9);
+            box-shadow: 10px 10px 20px rgba(174, 174, 192, 0.3), -10px -10px 20px rgba(255, 255, 255, 0.45);
             transform: scale(0.9);
             transition: transform 0.3s ease;
         }
@@ -948,7 +902,7 @@
         .modal-title {
             font-size: 24px;
             font-weight: bold;
-            color: #2f27ce;
+            color: #5a6c7d;
             margin-bottom: 8px;
         }
 
@@ -957,7 +911,7 @@
             border: none;
             border-radius: 8px;
             padding: 8px 12px;
-            color: #2f27ce;
+            color: #5a6c7d;
             font-size: 24px;
             font-weight: bold;
             font-family: inherit;
@@ -989,6 +943,21 @@
             color: #e53e3e;
         }
 
+        .modal-copy-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            color: #48bb78;
+            transition: all 0.3s ease;
+            margin-right: 4px;
+        }
+
+        .modal-copy-button:hover {
+            background: #e8ecf1;
+        }
+
         .modal-progress {
             margin-bottom: 24px;
         }
@@ -1010,7 +979,7 @@
             background: #e8ecf1;
             border: none;
             border-radius: 8px;
-            color: #2f27ce;
+            color: #5a6c7d;
             font-size: 14px;
             cursor: pointer;
             display: flex;
@@ -1054,7 +1023,7 @@
         .modal-done-btn {
             flex: 1;
             padding: 12px;
-            background: #2f27ce;
+            background: #5a6c7d;
             border: none;
             border-radius: 8px;
             color: #ffffff;
@@ -1069,14 +1038,14 @@
             transform: scale(1.02);
         }
 
-        /* Confirmation Dialog */
+        /* Confirmation Dialog - Reduced glow by 50% */
         .confirm-dialog {
             background: #f0f4f8;
             border-radius: 16px;
             padding: 24px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 20px 20px 40px rgba(174, 174, 192, 0.6), -20px -20px 40px rgba(255, 255, 255, 0.9);
+            box-shadow: 10px 10px 20px rgba(174, 174, 192, 0.3), -10px -10px 20px rgba(255, 255, 255, 0.45);
             text-align: center;
         }
 
