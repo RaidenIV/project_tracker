@@ -4,10 +4,31 @@
             box-sizing: border-box;
         }
 
-        body {
+:root {
+    /* Industrial Grey Palette */
+    --bg: #c5c7c9;
+    --bg-2: #d6d8da;
+    --bg-3: #b6b8bb;
+
+    --panel: #e1e3e5;      /* raised cards/buttons */
+    --surface: #c9cbcd;    /* inset fields/surfaces */
+    --surface-2: #bfc1c3;  /* hover surface */
+
+    --text: var(--text);
+    --heading: #1f2428;
+    --muted: #3c4043;
+    --muted-2: #4b4f52;
+    --text-invert: var(--text-invert);
+
+    --accent: #3a3f45;     /* primary action */
+    --accent-2: #2b2f34;   /* hover / deeper */
+    --progress: #42f578;   /* progress bars */
+}
+
+body {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Dank Mono', monospace;
-            background: #d2d2d2;
-            color: #000000;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -16,8 +37,8 @@
         .bg-gradient {
             position: fixed;
             inset: 0;
-            background: linear-gradient(to bottom right, #e0e0e0, #d2d2d2, #c7c7c7);
-            opacity: 1;
+            background: linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
+opacity: 1;
             pointer-events: none;
             z-index: 0;
         }
@@ -44,13 +65,13 @@
             width: 48px;
             height: 48px;
             border-radius: 12px;
-            background: #e0e0e0;
+            background: var(--panel);
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
             transition: all 0.3s ease;
         }
 
@@ -59,22 +80,22 @@
         }
 
         .menu-button.active {
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .menu-icon {
             width: 20px;
             height: 20px;
-            color: #2f2f2f;
+            color: var(--heading);
         }
 
         .menu-dropdown {
             position: absolute;
             top: 64px;
             left: 0;
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 12px;
-            box-shadow: 12px 12px 24px rgba(174, 174, 192, 0.5), -12px -12px 24px rgba(255, 255, 255, 0.9);
+            box-shadow: 12px 12px 24px rgba(120, 120, 130, 0.45), -12px -12px 24px rgba(255, 255, 255, 0.85);
             overflow: hidden;
             transition: all 0.3s ease;
             transform-origin: top;
@@ -90,7 +111,7 @@
         .menu-dropdown a {
             display: block;
             padding: 12px 16px;
-            color: #2f2f2f;
+            color: var(--heading);
             text-decoration: none;
             transition: all 0.3s ease;
             border-radius: 8px;
@@ -98,8 +119,8 @@
         }
 
         .menu-dropdown a:hover {
-            background: #d2d2d2;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            background: var(--surface);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         /* Viewport */
@@ -115,7 +136,7 @@
         .viewport-header h1 {
             font-size: 32px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             margin-bottom: 8px;
             letter-spacing: -0.5px;
         }
@@ -123,7 +144,7 @@
         .viewport-header .underline {
             height: 4px;
             width: 96px;
-            background: linear-gradient(to right, #00aaff, transparent);
+            background: linear-gradient(to right, var(--accent), transparent);
             border-radius: 2px;
             margin-bottom: 24px;
         }
@@ -144,13 +165,13 @@
         }
 
         .empty-state .title {
-            color: #4a4a4a;
+            color: var(--muted);
             font-size: 18px;
             margin-bottom: 8px;
         }
 
         .empty-state .subtitle {
-            color: #5a5a5a;
+            color: var(--muted-2);
             font-size: 14px;
         }
 
@@ -163,10 +184,10 @@
 
         /* Project Card */
         .project-card {
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
             cursor: pointer;
             transition: all 0.3s ease;
             min-height: 180px;
@@ -175,7 +196,7 @@
 
         .project-card:hover {
             transform: translateY(-2px);
-            box-shadow: 12px 12px 24px rgba(174, 174, 192, 0.5), -12px -12px 24px rgba(255, 255, 255, 0.9);
+            box-shadow: 12px 12px 24px rgba(120, 120, 130, 0.45), -12px -12px 24px rgba(255, 255, 255, 0.85);
         }
 
         .project-card.dragging {
@@ -197,7 +218,7 @@
         }
 
         .drag-handle {
-            color: #2f2f2f;
+            color: var(--heading);
             opacity: 0;
             transition: opacity 0.3s ease;
             width: 16px;
@@ -216,21 +237,21 @@
         .project-title {
             font-size: 18px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             flex: 1;
         }
 
         .project-title-input {
-            background: #d2d2d2;
+            background: var(--surface);
             border: none;
             border-radius: 8px;
             padding: 4px 12px;
-            color: #2f2f2f;
+            color: var(--heading);
             font-size: 18px;
             font-weight: bold;
             font-family: inherit;
             outline: none;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             flex: 1;
         }
 
@@ -249,11 +270,11 @@
             border-radius: 8px;
             opacity: 0;
             transition: all 0.3s ease;
-            color: #2f2f2f;
+            color: var(--heading);
         }
 
         .copy-button {
-            color: #00aaff;
+            color: var(--accent);
         }
 
         .card-delete-button {
@@ -269,14 +290,14 @@
         .edit-button:hover,
         .copy-button:hover,
         .card-delete-button:hover {
-            background: #d2d2d2;
+            background: var(--surface);
         }
 
         .project-stats {
             display: flex;
             gap: 16px;
             font-size: 12px;
-            color: #4a4a4a;
+            color: var(--muted);
             margin-bottom: 16px;
         }
 
@@ -303,10 +324,10 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #d2d2d2;
+            background: var(--surface);
             border-radius: 8px;
             padding: 12px;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             cursor: grab;
             transition: all 0.3s ease;
         }
@@ -320,7 +341,7 @@
         }
 
         .task-drag-handle {
-            color: #2f2f2f;
+            color: var(--heading);
             opacity: 0.3;
             width: 16px;
             height: 16px;
@@ -334,7 +355,7 @@
         .task-checkbox {
             width: 20px;
             height: 20px;
-            border: 2px solid #2f2f2f;
+            border: 2px solid var(--heading);
             border-radius: 4px;
             cursor: pointer;
             display: flex;
@@ -345,13 +366,13 @@
         }
 
         .task-checkbox.checked {
-            background: #00aaff;
-            border-color: #00aaff;
+            background: var(--accent);
+            border-color: var(--accent);
         }
 
         .task-text {
             flex: 1;
-            color: #000000;
+            color: var(--text);
             font-size: 14px;
         }
 
@@ -362,15 +383,15 @@
 
         .task-text-input {
             flex: 1;
-            background: #e0e0e0;
+            background: var(--panel);
             border: none;
             border-radius: 4px;
             padding: 4px 8px;
-            color: #000000;
+            color: var(--text);
             font-size: 14px;
             font-family: inherit;
             outline: none;
-            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 2px 2px 4px rgba(120, 120, 130, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.85);
         }
 
         .task-delete-button {
@@ -390,29 +411,29 @@
         }
 
         .task-delete-button:hover {
-            background: #e0e0e0;
+            background: var(--panel);
         }
 
         /* Progress Bar */
         .progress-bar-container {
-            background: #d2d2d2;
+            background: var(--surface);
             height: 8px;
             border-radius: 4px;
             overflow: hidden;
             margin-bottom: 8px;
-            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 2px 2px 4px rgba(120, 120, 130, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.85);
         }
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(to right, #00aaff, #2f2f2f);
+            background: var(--progress);
             border-radius: 4px;
             transition: width 0.5s ease;
         }
 
         .progress-text {
             font-size: 12px;
-            color: #4a4a4a;
+            color: var(--muted);
             text-align: right;
         }
 
@@ -430,10 +451,10 @@
         .control-panel-content {
             position: sticky;
             top: 80px;
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 20px;
             padding: 24px;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
         }
 
         .control-panel-header {
@@ -446,7 +467,7 @@
         .control-panel-header h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
         }
 
         .collapse-button {
@@ -455,12 +476,12 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            color: #2f2f2f;
+            color: var(--heading);
             transition: all 0.3s ease;
         }
 
         .collapse-button:hover {
-            background: #d2d2d2;
+            background: var(--surface);
         }
 
         .icon {
@@ -482,10 +503,10 @@
         }
 
         .stat-card {
-            background: #d2d2d2;
+            background: var(--surface);
             border-radius: 10px;
             padding: 10px 12px;
-            box-shadow: inset 3px 3px 6px rgba(174, 174, 192, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 3px 3px 6px rgba(120, 120, 130, 0.35), inset -3px -3px 6px rgba(255, 255, 255, 0.85);
             transition: all 0.3s ease;
             cursor: pointer;
         }
@@ -495,35 +516,35 @@
         }
 
         .stat-card.active {
-            background: linear-gradient(135deg, #2f2f2f, #00aaff);
-            box-shadow: 4px 4px 8px rgba(174, 174, 192, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.9);
+            background: linear-gradient(135deg, var(--heading), var(--accent));
+            box-shadow: 4px 4px 8px rgba(120, 120, 130, 0.45), -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .stat-card.active .stat-value,
         .stat-card.active .stat-label {
-            color: #ffffff;
+            color: var(--text-invert);
         }
 
         .stat-value {
             font-size: 20px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             margin-bottom: 2px;
         }
 
         .stat-label {
             font-size: 10px;
-            color: #4a4a4a;
+            color: var(--muted);
         }
 
         /* Add Project Button */
         .add-project-button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #2f2f2f, #00aaff);
+            background: linear-gradient(135deg, var(--heading), var(--accent));
             border: none;
             border-radius: 12px;
-            color: #ffffff;
+            color: var(--text-invert);
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -531,7 +552,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
             transition: all 0.3s ease;
             font-family: inherit;
             margin-bottom: 24px;
@@ -549,7 +570,7 @@
         .quick-actions h3 {
             font-size: 14px;
             font-weight: bold;
-            color: #000000;
+            color: var(--text);
             margin-bottom: 12px;
         }
 
@@ -560,16 +581,16 @@
         }
 
         .quick-action-item {
-            background: #d2d2d2;
+            background: var(--surface);
             border-radius: 8px;
             padding: 12px;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .quick-action-title {
             font-size: 13px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             margin-bottom: 8px;
         }
 
@@ -582,10 +603,10 @@
         .done-button {
             flex: 1;
             padding: 6px;
-            background: #00aaff;
+            background: var(--accent);
             border: none;
             border-radius: 6px;
-            color: #ffffff;
+            color: var(--text-invert);
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
@@ -613,29 +634,29 @@
 
         .quick-action-stats {
             font-size: 11px;
-            color: #4a4a4a;
+            color: var(--muted);
         }
 
         /* Paste Section */
         .paste-section h3 {
             font-size: 14px;
             font-weight: bold;
-            color: #000000;
+            color: var(--text);
             margin-bottom: 12px;
         }
 
         .project-select {
             width: 100%;
             padding: 8px;
-            background: #d2d2d2;
+            background: var(--surface);
             border: none;
             border-radius: 8px;
-            color: #000000;
+            color: var(--text);
             font-size: 13px;
             margin-bottom: 12px;
             font-family: inherit;
             outline: none;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             cursor: pointer;
         }
 
@@ -643,25 +664,25 @@
             width: 100%;
             min-height: 100px;
             padding: 12px;
-            background: #d2d2d2;
+            background: var(--surface);
             border: none;
             border-radius: 8px;
-            color: #000000;
+            color: var(--text);
             font-size: 13px;
             font-family: inherit;
             resize: vertical;
             margin-bottom: 12px;
             outline: none;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .paste-button {
             width: 100%;
             padding: 10px;
-            background: #00aaff;
+            background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: #ffffff;
+            color: var(--text-invert);
             font-size: 13px;
             font-weight: bold;
             cursor: pointer;
@@ -687,13 +708,13 @@
             width: 48px;
             height: 48px;
             border-radius: 12px;
-            background: #e0e0e0;
+            background: var(--panel);
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
             transition: all 0.3s ease;
             z-index: 40;
         }
@@ -712,19 +733,19 @@
             position: fixed;
             bottom: 24px;
             left: 24px;
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 12px;
             padding: 16px;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
             font-size: 11px;
-            color: #4a4a4a;
+            color: var(--muted);
             z-index: 30;
             max-width: 200px;
         }
 
         .shortcuts-title {
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             margin-bottom: 8px;
             font-size: 12px;
         }
@@ -734,12 +755,12 @@
         }
 
         kbd {
-            background: #d2d2d2;
+            background: var(--surface);
             padding: 2px 6px;
             border-radius: 4px;
             font-family: inherit;
             font-size: 10px;
-            box-shadow: inset 2px 2px 4px rgba(174, 174, 192, 0.4), inset -2px -2px 4px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 2px 2px 4px rgba(120, 120, 130, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.85);
         }
 
         /* Admin Indicator */
@@ -747,13 +768,13 @@
             position: fixed;
             top: 24px;
             right: 24px;
-            background: linear-gradient(135deg, #00aaff, #2f2f2f);
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--accent), var(--heading));
+            color: var(--text-invert);
             padding: 8px 16px;
             border-radius: 8px;
             font-size: 12px;
             font-weight: bold;
-            box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.9);
+            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
             z-index: 50;
             display: none;
         }
@@ -782,24 +803,24 @@
         }
 
         .password-dialog {
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 16px;
             padding: 32px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 10px 10px 20px rgba(174, 174, 192, 0.3), -10px -10px 20px rgba(255, 255, 255, 0.45);
+            box-shadow: 10px 10px 20px rgba(120, 120, 130, 0.30), -10px -10px 20px rgba(255, 255, 255, 0.42);
             text-align: center;
         }
 
         .password-dialog h2 {
             font-size: 24px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             margin-bottom: 12px;
         }
 
         .password-dialog p {
-            color: #4a4a4a;
+            color: var(--muted);
             margin-bottom: 24px;
             font-size: 14px;
         }
@@ -807,29 +828,29 @@
         .password-input {
             width: 100%;
             padding: 12px;
-            background: #d2d2d2;
-            border: 2px solid rgba(90, 108, 125, 0.2);
+            background: var(--surface);
+            border: 2px solid rgba(0, 0, 0, 0.14);
             border-radius: 8px;
-            color: #000000;
+            color: var(--text);
             font-size: 16px;
             font-family: inherit;
             outline: none;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             margin-bottom: 16px;
             text-align: center;
         }
 
         .password-input:focus {
-            border-color: #00aaff;
+            border-color: var(--accent);
         }
 
         .password-submit {
             width: 100%;
             padding: 12px;
-            background: #00aaff;
+            background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: #ffffff;
+            color: var(--text-invert);
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -872,14 +893,14 @@
         }
 
         .modal-content {
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 20px;
             padding: 32px;
             max-width: 600px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 10px 10px 20px rgba(174, 174, 192, 0.3), -10px -10px 20px rgba(255, 255, 255, 0.45);
+            box-shadow: 10px 10px 20px rgba(120, 120, 130, 0.30), -10px -10px 20px rgba(255, 255, 255, 0.42);
             transform: scale(0.9);
             transition: transform 0.3s ease;
         }
@@ -902,29 +923,29 @@
         .modal-title {
             font-size: 24px;
             font-weight: bold;
-            color: #2f2f2f;
+            color: var(--heading);
             margin-bottom: 8px;
         }
 
         .modal-title-input {
-            background: #d2d2d2;
+            background: var(--surface);
             border: none;
             border-radius: 8px;
             padding: 8px 12px;
-            color: #2f2f2f;
+            color: var(--heading);
             font-size: 24px;
             font-weight: bold;
             font-family: inherit;
             outline: none;
             width: 100%;
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .modal-stats {
             display: flex;
             gap: 16px;
             font-size: 13px;
-            color: #4a4a4a;
+            color: var(--muted);
             margin-bottom: 16px;
         }
 
@@ -934,12 +955,12 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            color: #4a4a4a;
+            color: var(--muted);
             transition: all 0.3s ease;
         }
 
         .modal-close:hover {
-            background: #d2d2d2;
+            background: var(--surface);
             color: #e53e3e;
         }
 
@@ -949,13 +970,13 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            color: #00aaff;
+            color: var(--accent);
             transition: all 0.3s ease;
             margin-right: 4px;
         }
 
         .modal-copy-button:hover {
-            background: #d2d2d2;
+            background: var(--surface);
         }
 
         .modal-progress {
@@ -969,17 +990,17 @@
         .modal-tasks h3 {
             font-size: 16px;
             font-weight: bold;
-            color: #000000;
+            color: var(--text);
             margin-bottom: 16px;
         }
 
         .modal-add-task {
             width: 100%;
             padding: 12px;
-            background: #d2d2d2;
+            background: var(--surface);
             border: none;
             border-radius: 8px;
-            color: #2f2f2f;
+            color: var(--heading);
             font-size: 14px;
             cursor: pointer;
             display: flex;
@@ -991,7 +1012,7 @@
         }
 
         .modal-add-task:hover {
-            box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .modal-actions {
@@ -999,7 +1020,7 @@
             gap: 12px;
             margin-top: 24px;
             padding-top: 24px;
-            border-top: 1px solid rgba(0, 170, 255, 0.15);
+            border-top: 1px solid rgba(0, 0, 0, 0.12);
         }
 
         .modal-delete-btn {
@@ -1023,10 +1044,10 @@
         .modal-done-btn {
             flex: 1;
             padding: 12px;
-            background: #00aaff;
+            background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: #ffffff;
+            color: var(--text-invert);
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -1040,24 +1061,24 @@
 
         /* Confirmation Dialog - Reduced glow by 50% */
         .confirm-dialog {
-            background: #e0e0e0;
+            background: var(--panel);
             border-radius: 16px;
             padding: 24px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 10px 10px 20px rgba(174, 174, 192, 0.3), -10px -10px 20px rgba(255, 255, 255, 0.45);
+            box-shadow: 10px 10px 20px rgba(120, 120, 130, 0.30), -10px -10px 20px rgba(255, 255, 255, 0.42);
             text-align: center;
         }
 
         .confirm-dialog h3 {
             font-size: 18px;
             font-weight: bold;
-            color: #000000;
+            color: var(--text);
             margin-bottom: 12px;
         }
 
         .confirm-dialog p {
-            color: #4a4a4a;
+            color: var(--muted);
             margin-bottom: 24px;
             font-size: 14px;
         }
@@ -1070,10 +1091,10 @@
         .confirm-cancel {
             flex: 1;
             padding: 10px;
-            background: #d2d2d2;
+            background: var(--surface);
             border: none;
             border-radius: 8px;
-            color: #4a4a4a;
+            color: var(--muted);
             font-size: 14px;
             cursor: pointer;
             font-family: inherit;
@@ -1090,7 +1111,7 @@
             background: #e53e3e;
             border: none;
             border-radius: 8px;
-            color: #ffffff;
+            color: var(--text-invert);
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
