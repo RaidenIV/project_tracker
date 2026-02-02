@@ -200,6 +200,33 @@ function toggleTask(projectId, taskId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
+    const task = project.tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    const willBeCompleted = !task.completed;
+    
+    // If marking as complete, add fade animation first
+    if (willBeCompleted) {
+        const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskElement) {
+            taskElement.classList.add('fading-out');
+            
+            // Wait for fade animation, then update state
+            setTimeout(() => {
+                performTaskToggle(projectId, taskId);
+            }, 500); // Match the CSS transition duration
+            return;
+        }
+    }
+    
+    // If unmarking as complete, update immediately (no fade needed)
+    performTaskToggle(projectId, taskId);
+}
+
+function performTaskToggle(projectId, taskId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
     const updatedTasks = project.tasks.map(t => {
         if (t.id === taskId) {
             const newCompleted = !t.completed;
