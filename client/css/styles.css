@@ -949,6 +949,10 @@ opacity: 1;
             background: rgba(0, 0, 0, 0.3);
         }
 
+        .modal-content::-webkit-scrollbar-button {
+            display: none;
+        }
+
         /* Firefox */
         .modal-content {
             scrollbar-width: thin;
