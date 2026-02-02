@@ -65,7 +65,7 @@
         .menu-icon {
             width: 20px;
             height: 20px;
-            color: #5a6c7d;
+            color: #3b82f6;
         }
 
         .menu-dropdown {
@@ -90,7 +90,7 @@
         .menu-dropdown a {
             display: block;
             padding: 12px 16px;
-            color: #5a6c7d;
+            color: #3b82f6;
             text-decoration: none;
             transition: all 0.3s ease;
             border-radius: 8px;
@@ -115,7 +115,7 @@
         .viewport-header h1 {
             font-size: 32px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             margin-bottom: 8px;
             letter-spacing: -0.5px;
         }
@@ -123,7 +123,7 @@
         .viewport-header .underline {
             height: 4px;
             width: 96px;
-            background: linear-gradient(to right, #5a6c7d, transparent);
+            background: linear-gradient(to right, #3b82f6, transparent);
             border-radius: 2px;
             margin-bottom: 24px;
         }
@@ -197,7 +197,7 @@
         }
 
         .drag-handle {
-            color: #5a6c7d;
+            color: #3b82f6;
             opacity: 0;
             transition: opacity 0.3s ease;
             width: 16px;
@@ -216,7 +216,7 @@
         .project-title {
             font-size: 18px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             flex: 1;
         }
 
@@ -225,7 +225,7 @@
             border: none;
             border-radius: 8px;
             padding: 4px 12px;
-            color: #5a6c7d;
+            color: #3b82f6;
             font-size: 18px;
             font-weight: bold;
             font-family: inherit;
@@ -249,11 +249,11 @@
             border-radius: 8px;
             opacity: 0;
             transition: all 0.3s ease;
-            color: #5a6c7d;
+            color: #3b82f6;
         }
 
         .copy-button {
-            color: #48bb78;
+            color: #60a5fa;
         }
 
         .card-delete-button {
@@ -320,7 +320,7 @@
         }
 
         .task-drag-handle {
-            color: #5a6c7d;
+            color: #3b82f6;
             opacity: 0.3;
             width: 16px;
             height: 16px;
@@ -334,7 +334,7 @@
         .task-checkbox {
             width: 20px;
             height: 20px;
-            border: 2px solid #5a6c7d;
+            border: 2px solid #3b82f6;
             border-radius: 4px;
             cursor: pointer;
             display: flex;
@@ -345,8 +345,8 @@
         }
 
         .task-checkbox.checked {
-            background: #5a6c7d;
-            border-color: #5a6c7d;
+            background: #3b82f6;
+            border-color: #3b82f6;
         }
 
         .task-text {
@@ -405,7 +405,7 @@
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(to right, #5a6c7d, #48bb78);
+            background: linear-gradient(to right, #3b82f6, #60a5fa);
             border-radius: 4px;
             transition: width 0.5s ease;
         }
@@ -446,7 +446,7 @@
         .control-panel-header h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
         }
 
         .collapse-button {
@@ -455,7 +455,7 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            color: #5a6c7d;
+            color: #3b82f6;
             transition: all 0.3s ease;
         }
 
@@ -495,7 +495,7 @@
         }
 
         .stat-card.active {
-            background: linear-gradient(135deg, #5a6c7d, #48bb78);
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
             box-shadow: 4px 4px 8px rgba(174, 174, 192, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.9);
         }
 
@@ -507,7 +507,7 @@
         .stat-value {
             font-size: 20px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             margin-bottom: 2px;
         }
 
@@ -520,7 +520,7 @@
         .add-project-button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #5a6c7d, #48bb78);
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
             border: none;
             border-radius: 12px;
             color: #ffffff;
@@ -569,7 +569,7 @@
         .quick-action-title {
             font-size: 13px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             margin-bottom: 8px;
         }
 
@@ -582,7 +582,7 @@
         .done-button {
             flex: 1;
             padding: 6px;
-            background: #48bb78;
+            background: #60a5fa;
             border: none;
             border-radius: 6px;
             color: #ffffff;
@@ -658,7 +658,7 @@
         .paste-button {
             width: 100%;
             padding: 10px;
-            background: #5a6c7d;
+            background: #3b82f6;
             border: none;
             border-radius: 8px;
             color: #ffffff;
@@ -724,7 +724,7 @@
 
         .shortcuts-title {
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             margin-bottom: 8px;
             font-size: 12px;
         }
@@ -747,7 +747,7 @@
             position: fixed;
             top: 24px;
             right: 24px;
-            background: linear-gradient(135deg, #48bb78, #5a6c7d);
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
             color: #ffffff;
             padding: 8px 16px;
             border-radius: 8px;
@@ -794,7 +794,7 @@
         .password-dialog h2 {
             font-size: 24px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             margin-bottom: 12px;
         }
 
@@ -820,13 +820,13 @@
         }
 
         .password-input:focus {
-            border-color: #5a6c7d;
+            border-color: #3b82f6;
         }
 
         .password-submit {
             width: 100%;
             padding: 12px;
-            background: #5a6c7d;
+            background: #3b82f6;
             border: none;
             border-radius: 8px;
             color: #ffffff;
@@ -902,7 +902,7 @@
         .modal-title {
             font-size: 24px;
             font-weight: bold;
-            color: #5a6c7d;
+            color: #3b82f6;
             margin-bottom: 8px;
         }
 
@@ -911,7 +911,7 @@
             border: none;
             border-radius: 8px;
             padding: 8px 12px;
-            color: #5a6c7d;
+            color: #3b82f6;
             font-size: 24px;
             font-weight: bold;
             font-family: inherit;
@@ -949,7 +949,7 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            color: #48bb78;
+            color: #60a5fa;
             transition: all 0.3s ease;
             margin-right: 4px;
         }
@@ -979,7 +979,7 @@
             background: #e8ecf1;
             border: none;
             border-radius: 8px;
-            color: #5a6c7d;
+            color: #3b82f6;
             font-size: 14px;
             cursor: pointer;
             display: flex;
@@ -1023,7 +1023,7 @@
         .modal-done-btn {
             flex: 1;
             padding: 12px;
-            background: #5a6c7d;
+            background: #3b82f6;
             border: none;
             border-radius: 8px;
             color: #ffffff;
