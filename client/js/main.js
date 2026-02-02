@@ -153,7 +153,7 @@ function updateProjectNotes(projectId, notes) {
     saveData();
 }
 
-function copyProjectToClipboard(projectId) {
+function copyProjectToClipboard(projectId, evt) {
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -164,7 +164,7 @@ function copyProjectToClipboard(projectId) {
     
     navigator.clipboard.writeText(text).then(() => {
         // Show brief feedback with checkmark
-        const button = event?.target?.closest('button');
+        const button = evt?.target?.closest('button');
         if (button) {
             const originalHTML = button.innerHTML;
             const originalBg = button.style.background;
@@ -205,11 +205,31 @@ function toggleTask(projectId, taskId) {
     
     const willBeCompleted = !task.completed;
     
-    // If marking as complete, add fade animation first
+    // If marking as complete, show checkmark first, then fade
     if (willBeCompleted) {
         const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
         if (taskElement) {
-            taskElement.classList.add('fading-out');
+            // Immediately stamp the checkmark and strikethrough onto the live element
+            const checkbox = taskElement.querySelector(`[data-task-checkbox="${taskId}"]`);
+            if (checkbox) {
+                checkbox.classList.add('checked');
+                checkbox.innerHTML = `
+                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+            }
+            const taskText = taskElement.querySelector(`[data-task-text="${taskId}"]`);
+            if (taskText) {
+                taskText.classList.add('completed');
+            }
+
+            // Let the browser paint the checkmark, then fade out
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    taskElement.classList.add('fading-out');
+                });
+            });
             
             // Wait for fade animation, then update state
             setTimeout(() => {
@@ -750,7 +770,7 @@ function openProjectModal(projectId) {
                 </div>
             </div>
             <div style="display: flex; gap: 4px;">
-                <button class="modal-copy-button" onclick="copyProjectToClipboard(${project.id})">
+                <button class="modal-copy-button" onclick="copyProjectToClipboard(${project.id}, event)">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                     </svg>
@@ -1199,7 +1219,7 @@ function renderProjectCard(project) {
                     <div class="project-title">${project.title}</div>
                 </div>
                 <div class="project-actions">
-                    <button class="copy-button" onclick="event.stopPropagation(); copyProjectToClipboard(${project.id})">
+                    <button class="copy-button" onclick="event.stopPropagation(); copyProjectToClipboard(${project.id}, event)">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
