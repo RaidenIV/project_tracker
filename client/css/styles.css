@@ -20,9 +20,9 @@
     --muted-2: #4b4f52;
     --text-invert: var(--text-invert);
 
-    --accent: #3a3f45;     /* primary action */
-    --accent-2: #2b2f34;   /* hover / deeper */
-    --progress: #42f578;   /* progress bars */
+    --accent: #3278eb;     /* primary action */
+    --accent-2: #2563c7;   /* hover / deeper */
+    --progress: #07ff67;   /* progress bars */
 }
 
 body {
@@ -530,13 +530,13 @@ opacity: 1;
         }
 
         .stat-card.active {
-            background: linear-gradient(135deg, var(--heading), var(--accent));
+            background: var(--accent);
             box-shadow: 4px 4px 8px rgba(120, 120, 130, 0.45), -4px -4px 8px rgba(255, 255, 255, 0.85);
         }
 
         .stat-card.active .stat-value,
         .stat-card.active .stat-label {
-            color: var(--text-invert);
+            color: white;
         }
 
         .stat-value {
@@ -555,10 +555,10 @@ opacity: 1;
         .add-project-button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, var(--heading), var(--accent));
+            background: var(--accent);
             border: none;
             border-radius: 12px;
-            color: var(--text-invert);
+            color: white;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -687,7 +687,7 @@ opacity: 1;
             background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: var(--text-invert);
+            color: white;
             font-size: 13px;
             font-weight: bold;
             cursor: pointer;
@@ -773,8 +773,8 @@ opacity: 1;
             position: fixed;
             top: 24px;
             right: 24px;
-            background: linear-gradient(135deg, var(--accent), var(--heading));
-            color: var(--text-invert);
+            background: var(--accent);
+            color: white;
             padding: 8px 16px;
             border-radius: 8px;
             font-size: 12px;
@@ -855,7 +855,7 @@ opacity: 1;
             background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: var(--text-invert);
+            color: white;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -1052,7 +1052,7 @@ opacity: 1;
             background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: var(--text-invert);
+            color: white;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -1116,7 +1116,7 @@ opacity: 1;
             background: #e53e3e;
             border: none;
             border-radius: 8px;
-            color: var(--text-invert);
+            color: white;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -1211,7 +1211,7 @@ opacity: 1;
             background: var(--accent);
             border: none;
             border-radius: 8px;
-            color: var(--text-invert);
+            color: white;
             font-size: 14px;
             cursor: pointer;
             display: flex;
