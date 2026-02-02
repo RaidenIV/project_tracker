@@ -756,7 +756,7 @@ opacity: 1;
             font-size: 11px;
             color: var(--muted);
             z-index: 30;
-            max-width: 200px;
+            max-width: 340px;
         }
 
         .shortcuts-title {
@@ -766,8 +766,14 @@ opacity: 1;
             font-size: 12px;
         }
 
+        .shortcuts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 16px;
+        }
+
         .shortcut-line {
-            margin-bottom: 4px;
+            white-space: nowrap;
         }
 
         kbd {
