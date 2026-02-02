@@ -11,7 +11,7 @@ export function checkPassword() {
     
     if (input.value === ADMIN_PASSWORD) {
         state.setAdminMode(true);
-        overlay.classList.add('hidden');
+        overlay.classList.remove('active');
         indicator.classList.add('active');
         error.classList.remove('show');
         input.value = '';
@@ -39,6 +39,13 @@ export function requireAdmin(action) {
 
 export function initializePasswordPrompt() {
     const passwordInput = document.getElementById('passwordInput');
+    const overlay = document.getElementById('passwordOverlay');
+    
+    // Show the password overlay on startup
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+    
     if (passwordInput) {
         passwordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
