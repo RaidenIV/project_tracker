@@ -4,6 +4,20 @@ import { state } from './state.js';
 import { requireAdmin } from './auth.js';
 import { saveDataToServer } from './api.js';
 
+// Capitalize first letter of first word
+function capitalizeFirstLetter(text) {
+    if (!text) return text;
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// Capitalize first letter of each word (Title Case)
+function toTitleCase(text) {
+    if (!text) return text;
+    return text.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
 export function addProject() {
     if (!requireAdmin()) return;
     
@@ -13,7 +27,8 @@ export function addProject() {
         tasks: [],
         dateCreated: new Date().toISOString(),
         priority: state.getProjects().length,
-        completed: false
+        completed: false,
+        notes: ''
     };
     
     state.addProject(newProject);
@@ -63,7 +78,8 @@ export function completeProject(projectId) {
 export function updateProjectTitle(projectId, newTitle) {
     if (!requireAdmin()) return;
     
-    state.updateProject(projectId, { title: newTitle });
+    const titleCased = toTitleCase(newTitle);
+    state.updateProject(projectId, { title: titleCased });
     saveData();
 }
 
