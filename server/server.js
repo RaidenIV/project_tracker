@@ -35,7 +35,8 @@ const projectSchema = new mongoose.Schema({
     dateCreated: String,
     priority: Number,
     completed: Boolean,
-    completedDate: String
+    completedDate: String,
+    notes: { type: String, default: '' }
 });
 
 const statsSchema = new mongoose.Schema({
