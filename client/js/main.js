@@ -157,25 +157,17 @@ function copyProjectToClipboard(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    // Only copy incomplete tasks
+    // Only copy incomplete task text
     const incompleteTasks = project.tasks.filter(t => !t.completed);
-    const totalTasks = project.tasks.length;
-    const completedTasks = project.tasks.filter(t => t.completed).length;
     
-    let text = `${project.title}\n`;
-    text += `Created: ${new Date(project.dateCreated).toLocaleDateString()}\n`;
-    text += `Progress: ${completedTasks}/${totalTasks} tasks completed\n\n`;
-    text += `Incomplete Tasks:\n`;
-    
-    incompleteTasks.forEach((task, index) => {
-        text += `○ ${task.text}\n`;
-    });
+    let text = incompleteTasks.map(task => task.text).join('\n');
     
     navigator.clipboard.writeText(text).then(() => {
-        // Show brief feedback
+        // Show brief feedback with checkmark
         const button = event?.target?.closest('button');
         if (button) {
             const originalHTML = button.innerHTML;
+            button.style.color = '#07ff67';
             button.innerHTML = `
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -183,7 +175,8 @@ function copyProjectToClipboard(projectId) {
             `;
             setTimeout(() => {
                 button.innerHTML = originalHTML;
-            }, 1000);
+                button.style.color = '';
+            }, 1500);
         }
     }).catch(err => {
         console.error('Failed to copy:', err);
