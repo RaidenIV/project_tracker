@@ -336,7 +336,18 @@ opacity: 1;
             padding: 12px;
             box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             cursor: grab;
-            transition: all 0.3s ease;
+            transition: all 0.5s ease-out;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .task-item.fading-out {
+            opacity: 0;
+            transform: translateY(-10px);
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
 
         .task-item:active {
@@ -1265,7 +1276,7 @@ opacity: 1;
             bottom: 0;
             background: var(--surface);
             border-radius: 6px;
-            transition: 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             box-shadow: inset 3px 3px 6px rgba(120, 120, 130, 0.35), inset -3px -3px 6px rgba(255, 255, 255, 0.85);
         }
 
@@ -1278,7 +1289,7 @@ opacity: 1;
             bottom: 5px;
             background: var(--panel);
             border-radius: 4px;
-            transition: 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             box-shadow: 2px 2px 4px rgba(120, 120, 130, 0.35), -2px -2px 4px rgba(255, 255, 255, 0.85);
         }
 
@@ -1288,7 +1299,7 @@ opacity: 1;
         }
 
         .toggle-switch input:checked + .toggle-slider:before {
-            transform: translateX(33px);
+            transform: translateX(30px);
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2), -1px -1px 2px rgba(255, 255, 255, 0.5);
         }
 
