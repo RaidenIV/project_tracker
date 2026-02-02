@@ -71,7 +71,7 @@ opacity: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             transition: all 0.3s ease;
         }
 
@@ -95,7 +95,7 @@ opacity: 1;
             left: 0;
             background: var(--panel);
             border-radius: 12px;
-            box-shadow: 12px 12px 24px rgba(120, 120, 130, 0.45), -12px -12px 24px rgba(255, 255, 255, 0.85);
+            box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
             overflow: hidden;
             transition: all 0.3s ease;
             transform-origin: top;
@@ -187,7 +187,7 @@ opacity: 1;
             background: var(--panel);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             cursor: pointer;
             transition: all 0.3s ease;
             min-height: 180px;
@@ -196,7 +196,7 @@ opacity: 1;
 
         .project-card:hover {
             transform: translateY(-2px);
-            box-shadow: 12px 12px 24px rgba(120, 120, 130, 0.45), -12px -12px 24px rgba(255, 255, 255, 0.85);
+            box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
 
         .project-card.dragging {
@@ -468,7 +468,7 @@ opacity: 1;
             background: var(--panel);
             border-radius: 20px;
             padding: 24px;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
 
         .control-panel-header {
@@ -531,7 +531,7 @@ opacity: 1;
 
         .stat-card.active {
             background: var(--accent);
-            box-shadow: 4px 4px 8px rgba(120, 120, 130, 0.45), -4px -4px 8px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
 
         .stat-card.active .stat-value,
@@ -566,7 +566,7 @@ opacity: 1;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             transition: all 0.3s ease;
             font-family: inherit;
             margin-bottom: 24px;
@@ -719,7 +719,7 @@ opacity: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             transition: all 0.3s ease;
             z-index: 40;
         }
@@ -741,7 +741,7 @@ opacity: 1;
             background: var(--panel);
             border-radius: 12px;
             padding: 16px;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             font-size: 11px;
             color: var(--muted);
             z-index: 30;
@@ -779,7 +779,7 @@ opacity: 1;
             border-radius: 8px;
             font-size: 12px;
             font-weight: bold;
-            box-shadow: 8px 8px 16px rgba(120, 120, 130, 0.35), -8px -8px 16px rgba(255, 255, 255, 0.85);
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             z-index: 50;
             display: none;
         }
@@ -1262,7 +1262,7 @@ opacity: 1;
 
         .modal-header-centered .modal-title-container {
             flex: 1;
-            text-align: center;
+            text-align: left;
         }
 
         .modal-header-centered .modal-title {
