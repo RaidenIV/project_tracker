@@ -22,7 +22,7 @@
 
     --accent: #3278eb;     /* primary action */
     --accent-2: #2563c7;   /* hover / deeper */
-    --progress: #5CE65C;   /* progress bars */
+    --progress: #07ff67;   /* progress bars */
 }
 
 body {
@@ -1228,28 +1228,71 @@ opacity: 1;
             transform: scale(1.02);
         }
 
-        /* Hide Completed Toggle */
+        /* Hide Completed Toggle with Block Neomorphic Slider */
         .hide-completed-toggle {
-            padding: 12px;
+            padding: 16px;
             background: var(--surface);
             border-radius: 8px;
             margin-bottom: 16px;
             box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
-        }
-
-        .hide-completed-toggle label {
             display: flex;
             align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            color: var(--text);
+            justify-content: space-between;
         }
 
-        .hide-completed-toggle input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+        .toggle-label {
+            font-size: 13px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
             cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--surface);
+            border-radius: 6px;
+            transition: 0.3s;
+            box-shadow: inset 3px 3px 6px rgba(120, 120, 130, 0.35), inset -3px -3px 6px rgba(255, 255, 255, 0.85);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background: var(--panel);
+            border-radius: 4px;
+            transition: 0.3s;
+            box-shadow: 2px 2px 4px rgba(120, 120, 130, 0.35), -2px -2px 4px rgba(255, 255, 255, 0.85);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--accent);
+            box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2), -1px -1px 2px rgba(255, 255, 255, 0.5);
         }
 
         /* Modal Header Centered */
