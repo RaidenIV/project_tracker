@@ -139,6 +139,7 @@ opacity: 1;
             color: var(--heading);
             margin-bottom: 8px;
             letter-spacing: -0.5px;
+            text-align: center;
         }
 
         .viewport-header .underline {
@@ -147,6 +148,8 @@ opacity: 1;
             background: linear-gradient(to right, var(--accent), transparent);
             border-radius: 2px;
             margin-bottom: 24px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Empty State */
@@ -925,6 +928,31 @@ opacity: 1;
             box-shadow: 10px 10px 20px rgba(120, 120, 130, 0.30), -10px -10px 20px rgba(255, 255, 255, 0.42);
             transform: scale(0.9);
             transition: transform 0.3s ease;
+        }
+
+        /* Thin scrollbar so right-side rounded corners stay visible */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 3px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 3px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Firefox */
+        .modal-content {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
         }
 
         .modal-overlay.active .modal-content {
