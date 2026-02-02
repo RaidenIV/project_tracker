@@ -19,7 +19,7 @@ class AppState {
         this.lastSelectedTask = new Map(); // projectId -> taskId
         
         // Hide completed tasks toggle
-        this.hideCompletedTasks = false;
+        this.hideCompletedTasks = true;
     }
 
     // Undo functionality
