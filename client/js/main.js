@@ -6,6 +6,31 @@ import { loadDataFromServer, saveDataToServer } from './modules/api.js';
 import { initializePasswordPrompt, requireAdmin } from './modules/auth.js';
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+// Capitalize first letter of first word
+function capitalizeFirstLetter(text) {
+    if (!text) return text;
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// Capitalize first letter of each word (Title Case)
+function toTitleCase(text) {
+    if (!text) return text;
+    return text.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
+// Sort tasks: incomplete first (newest first), then completed last (oldest first)
+function sortTasks(tasks) {
+    const incomplete = tasks.filter(t => !t.completed).sort((a, b) => b.id - a.id);
+    const completed = tasks.filter(t => t.completed).sort((a, b) => a.id - b.id);
+    return [...incomplete, ...completed];
+}
+
+// ============================================================================
 // DATA MANAGEMENT
 // ============================================================================
 
@@ -59,7 +84,8 @@ function addProject() {
         tasks: [],
         dateCreated: new Date().toISOString(),
         priority: state.getProjects().length,
-        completed: false
+        completed: false,
+        notes: ''
     };
     
     state.addProject(newProject);
@@ -88,6 +114,7 @@ function deleteProject(projectId) {
     state.deleteProject(projectId);
     saveData();
     render();
+    updateUndoButton();
 }
 
 function completeProject(projectId) {
@@ -114,26 +141,34 @@ function completeProject(projectId) {
 
 function updateProjectTitle(projectId, newTitle) {
     if (!requireAdmin()) return;
-    state.updateProject(projectId, { title: newTitle });
+    const titleCased = toTitleCase(newTitle);
+    state.updateProject(projectId, { title: titleCased });
     saveData();
     render();
+}
+
+function updateProjectNotes(projectId, notes) {
+    if (!requireAdmin()) return;
+    state.updateProject(projectId, { notes });
+    saveData();
 }
 
 function copyProjectToClipboard(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const completedTasks = project.tasks.filter(t => t.completed).length;
+    // Only copy incomplete tasks
+    const incompleteTasks = project.tasks.filter(t => !t.completed);
     const totalTasks = project.tasks.length;
+    const completedTasks = project.tasks.filter(t => t.completed).length;
     
     let text = `${project.title}\n`;
     text += `Created: ${new Date(project.dateCreated).toLocaleDateString()}\n`;
     text += `Progress: ${completedTasks}/${totalTasks} tasks completed\n\n`;
-    text += `Tasks:\n`;
+    text += `Incomplete Tasks:\n`;
     
-    project.tasks.forEach((task, index) => {
-        const status = task.completed ? '✓' : '○';
-        text += `${status} ${task.text}\n`;
+    incompleteTasks.forEach((task, index) => {
+        text += `○ ${task.text}\n`;
     });
     
     navigator.clipboard.writeText(text).then(() => {
@@ -178,35 +213,22 @@ function toggleTask(projectId, taskId) {
         return t;
     });
     
-    state.updateProject(projectId, { tasks: updatedTasks });
+    // Sort tasks after toggling
+    const sortedTasks = sortTasks(updatedTasks);
+    state.updateProject(projectId, { tasks: sortedTasks });
     saveData();
     
-    // Update DOM directly without full re-render
-    const checkbox = document.querySelector(`[data-task-checkbox="${taskId}"]`);
-    const taskText = document.querySelector(`[data-task-text="${taskId}"]`);
-    const task = updatedTasks.find(t => t.id === taskId);
-    
-    if (checkbox && task) {
-        if (task.completed) {
-            checkbox.classList.add('checked');
-            checkbox.innerHTML = `
-                <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-            `;
-            if (taskText) taskText.classList.add('completed');
-        } else {
-            checkbox.classList.remove('checked');
-            checkbox.innerHTML = '';
-            if (taskText) taskText.classList.remove('completed');
-        }
+    // Re-render to show new order
+    const modalOpen = document.getElementById('projectModal').classList.contains('active');
+    if (modalOpen) {
+        openProjectModal(projectId);
+    } else {
+        render();
     }
     
     // Update stats display
     document.getElementById('completedTasksCount').textContent = state.getStats().completedTasks;
-    
-    // Update progress bar
-    updateProjectProgress(projectId);
+    updateTotalCompletion();
 }
 
 function updateProjectProgress(projectId) {
@@ -235,10 +257,15 @@ function deleteTask(projectId, taskId) {
         state.decrementCompletedTasks();
     }
     
+    // Save undo state for task deletion
+    state.saveUndoState('deleteTask', { projectId, task: { ...taskToDelete } });
+    
     const updatedTasks = project.tasks.filter(t => t.id !== taskId);
     state.updateProject(projectId, { tasks: updatedTasks });
     saveData();
     render();
+    updateUndoButton();
+    updateTotalCompletion();
 }
 
 function updateTaskText(projectId, taskId, newText) {
@@ -247,8 +274,9 @@ function updateTaskText(projectId, taskId, newText) {
     const project = state.findProject(projectId);
     if (!project) return;
     
+    const capitalized = capitalizeFirstLetter(newText);
     const updatedTasks = project.tasks.map(t => 
-        t.id === taskId ? { ...t, text: newText } : t
+        t.id === taskId ? { ...t, text: capitalized } : t
     );
     
     state.updateProject(projectId, { tasks: updatedTasks });
@@ -263,7 +291,8 @@ function addTaskToProject(projectId) {
     if (!project) return;
     
     const newTask = { id: Date.now(), text: 'New task', completed: false };
-    const updatedTasks = [...project.tasks, newTask];
+    // Add new tasks at the beginning (they'll appear first after sorting)
+    const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
     state.updateProject(projectId, { tasks: updatedTasks });
     saveData();
@@ -324,6 +353,112 @@ function reorderProjects(oldIndex, newIndex) {
 }
 
 // ============================================================================
+// UNDO FUNCTIONALITY
+// ============================================================================
+
+function performUndo() {
+    if (!requireAdmin()) return;
+    if (!state.hasUndo()) return;
+    
+    const undoEntry = state.getLastUndo();
+    if (!undoEntry) return;
+    
+    if (undoEntry.action === 'deleteProject') {
+        // Restore deleted project
+        const project = undoEntry.data.project;
+        state.addProject(project);
+        
+        // Restore stats
+        if (project.completed) {
+            state.incrementCompletedProjects();
+        }
+        const completedTasks = project.tasks.filter(t => t.completed).length;
+        for (let i = 0; i < completedTasks; i++) {
+            state.incrementCompletedTasks();
+        }
+        
+        saveData();
+        render();
+    } else if (undoEntry.action === 'deleteTask') {
+        // Restore deleted task
+        const { projectId, task } = undoEntry.data;
+        const project = state.findProject(projectId);
+        if (project) {
+            const updatedTasks = sortTasks([...project.tasks, task]);
+            state.updateProject(projectId, { tasks: updatedTasks });
+            
+            if (task.completed) {
+                state.incrementCompletedTasks();
+            }
+            
+            saveData();
+            render();
+        }
+    }
+    
+    updateUndoButton();
+    updateTotalCompletion();
+}
+
+function updateUndoButton() {
+    const undoButton = document.getElementById('undoButton');
+    if (state.hasUndo()) {
+        undoButton.classList.remove('hidden');
+    } else {
+        undoButton.classList.add('hidden');
+    }
+}
+
+// ============================================================================
+// TASK SELECTION (SHIFT-CLICK)
+// ============================================================================
+
+function handleTaskClick(projectId, taskId, event) {
+    if (!state.isAdmin()) return;
+    
+    if (event.shiftKey) {
+        const lastSelected = state.lastSelectedTask.get(projectId);
+        if (lastSelected) {
+            state.selectTaskRange(projectId, lastSelected, taskId);
+        } else {
+            state.selectTask(projectId, taskId, false);
+        }
+        openProjectModal(projectId);
+    } else if (event.ctrlKey || event.metaKey) {
+        state.toggleTaskSelection(projectId, taskId);
+        openProjectModal(projectId);
+    } else {
+        state.selectTask(projectId, taskId, false);
+    }
+}
+
+// ============================================================================
+// TOTAL COMPLETION CALCULATION
+// ============================================================================
+
+function calculateTotalCompletion() {
+    const allProjects = state.getProjects();
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    allProjects.forEach(project => {
+        totalTasks += project.tasks.length;
+        completedTasks += project.tasks.filter(t => t.completed).length;
+    });
+    
+    if (totalTasks === 0) return 0;
+    return Math.round((completedTasks / totalTasks) * 100);
+}
+
+function updateTotalCompletion() {
+    const percentage = calculateTotalCompletion();
+    const totalPercentageElement = document.getElementById('totalPercentage');
+    if (totalPercentageElement) {
+        totalPercentageElement.textContent = `${percentage}%`;
+    }
+}
+
+// ============================================================================
 // VIEW MANAGEMENT
 // ============================================================================
 
@@ -353,19 +488,25 @@ let draggedTaskIndex = null;
 
 let draggedProjectElement = null;
 let draggedProjectIndex = null;
+let dragGhostElement = null;
+
+function createDragGhost(element) {
+    const ghost = element.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    ghost.style.position = 'absolute';
+    ghost.style.pointerEvents = 'none';
+    ghost.style.opacity = '0.5';
+    ghost.style.zIndex = '1000';
+    return ghost;
+}
 
 function setupProjectDragAndDrop() {
     const projectCards = document.querySelectorAll('.project-card');
+    const projectGrid = document.getElementById('projectGrid');
     
     projectCards.forEach((card, index) => {
-        const dragHandle = card.querySelector('.drag-handle');
-        
-        if (dragHandle) {
-            dragHandle.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                card.setAttribute('draggable', 'true');
-            });
-        }
+        // Make the entire card draggable
+        card.setAttribute('draggable', 'true');
         
         card.addEventListener('dragstart', (e) => {
             if (!state.isAdmin()) {
@@ -376,13 +517,32 @@ function setupProjectDragAndDrop() {
             draggedProjectIndex = index;
             card.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
+            
+            // Create ghost outline
+            setTimeout(() => {
+                dragGhostElement = document.createElement('div');
+                dragGhostElement.className = 'project-card-ghost';
+                dragGhostElement.style.width = card.offsetWidth + 'px';
+                dragGhostElement.style.height = card.offsetHeight + 'px';
+            }, 0);
         });
         
         card.addEventListener('dragend', (e) => {
             card.classList.remove('dragging');
-            card.setAttribute('draggable', 'false');
             draggedProjectElement = null;
             draggedProjectIndex = null;
+            
+            // Remove ghost
+            if (dragGhostElement && dragGhostElement.parentNode) {
+                dragGhostElement.parentNode.removeChild(dragGhostElement);
+            }
+            dragGhostElement = null;
+            
+            // Clean up any remaining borders
+            projectCards.forEach(c => {
+                c.style.borderTop = 'none';
+                c.style.borderBottom = 'none';
+            });
         });
         
         card.addEventListener('dragover', (e) => {
@@ -390,6 +550,11 @@ function setupProjectDragAndDrop() {
                 e.preventDefault();
                 const cardRect = card.getBoundingClientRect();
                 const midPoint = cardRect.top + cardRect.height / 2;
+                
+                // Position ghost element
+                if (dragGhostElement && !dragGhostElement.parentNode) {
+                    card.parentNode.insertBefore(dragGhostElement, card);
+                }
                 
                 if (e.clientY < midPoint) {
                     card.style.borderTop = '3px solid #5a6c7d';
@@ -430,6 +595,20 @@ function setupProjectDragAndDrop() {
             }
         });
     });
+    
+    // Handle drag over empty space in grid
+    if (projectGrid) {
+        projectGrid.addEventListener('dragover', (e) => {
+            if (draggedProjectElement) {
+                e.preventDefault();
+                
+                // Show ghost in empty space
+                if (dragGhostElement && !dragGhostElement.parentNode) {
+                    projectGrid.appendChild(dragGhostElement);
+                }
+            }
+        });
+    }
 }
 
 function setupTaskDragAndDrop(projectId) {
@@ -512,6 +691,9 @@ function openProjectModal(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
+    const hideCompleted = state.shouldHideCompletedTasks();
+    const displayTasks = hideCompleted ? project.tasks.filter(t => !t.completed) : project.tasks;
+    
     const completedTasks = project.tasks.filter(t => t.completed).length;
     const totalTasks = project.tasks.length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -519,8 +701,10 @@ function openProjectModal(projectId) {
     const modal = document.getElementById('projectModal');
     const content = document.getElementById('modalContent');
     
+    const selectedTasks = state.getSelectedTasks(projectId);
+    
     content.innerHTML = `
-        <div class="modal-header">
+        <div class="modal-header-centered">
             <div class="modal-title-container">
                 <div class="modal-title" id="modal-title-${project.id}" onclick="editModalTitle(${project.id})" style="cursor: pointer;">${project.title}</div>
                 <input type="text" 
@@ -556,64 +740,101 @@ function openProjectModal(projectId) {
             <div class="progress-bar-container">
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${percentage}%"></div>
             </div>
-            <div class="progress-text" data-progress-text="${project.id}">${percentage}%</div>
+            <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
         </div>
         
-        <div class="modal-tasks">
-            <h3>Tasks</h3>
-            <div class="task-list" id="modal-task-list-${project.id}">
-                ${project.tasks.map(task => `
-                    <div class="task-item" data-task-item data-task-id="${task.id}">
-                        <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                        </svg>
-                        <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                             data-task-checkbox="${task.id}"
-                             onclick="toggleTask(${project.id}, ${task.id})">
-                            ${task.completed ? `
-                                <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            ` : ''}
-                        </div>
-                        <span class="task-text ${task.completed ? 'completed' : ''}" 
-                              data-task-text="${task.id}"
-                              id="modal-task-text-${task.id}"
-                              onclick="editModalTask(${task.id})">${task.text}</span>
-                        <input type="text" 
-                               class="task-input"
-                               id="modal-task-input-${task.id}"
-                               value="${task.text}"
-                               style="display: none;"
-                               onblur="finishEditModalTask(${project.id}, ${task.id})"
-                               onkeydown="if(event.key==='Enter') finishEditModalTask(${project.id}, ${task.id})">
-                        <button class="delete-button" onclick="deleteTaskFromModal(${project.id}, ${task.id})" style="opacity: 1;">
-                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
-                    </div>
-                `).join('')}
-            </div>
-            <button class="modal-add-task" onclick="addTaskToModal(${project.id})">
+        <!-- Tabs for Tasks and Notes -->
+        <div class="modal-tabs">
+            <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab(${project.id}, 'tasks')">
+                Tasks
+            </button>
+            <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab(${project.id}, 'notes')">
+                Notes
+            </button>
+        </div>
+        
+        <!-- Tasks Section -->
+        <div class="modal-section" id="tasks-section-${project.id}">
+            <!-- Add Task Button at Top -->
+            <button class="modal-add-task-top" onclick="addTaskToModal(${project.id})">
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Add Task
             </button>
             
-            <!-- Paste Tasks Section in Modal -->
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(47, 39, 206, 0.1);">
-                <h4 style="font-size: 14px; font-weight: bold; color: #2d3748; margin-bottom: 12px;">Paste Multiple Tasks</h4>
+            <!-- Hide Completed Toggle -->
+            <div class="hide-completed-toggle">
+                <label>
+                    <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
+                           onchange="toggleHideCompleted()">
+                    <span>Hide completed tasks</span>
+                </label>
+            </div>
+            
+            <div class="modal-tasks">
+                <div class="task-list" id="modal-task-list-${project.id}">
+                    ${displayTasks.map(task => `
+                        <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
+                             data-task-item 
+                             data-task-id="${task.id}"
+                             onclick="handleTaskClick(${project.id}, ${task.id}, event)">
+                            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                            </svg>
+                            <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                                 data-task-checkbox="${task.id}"
+                                 onclick="event.stopPropagation(); toggleTask(${project.id}, ${task.id})">
+                                ${task.completed ? `
+                                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                ` : ''}
+                            </div>
+                            <span class="task-text ${task.completed ? 'completed' : ''}" 
+                                  data-task-text="${task.id}"
+                                  id="modal-task-text-${task.id}"
+                                  onclick="event.stopPropagation(); editModalTask(${task.id})">${task.text}</span>
+                            <input type="text" 
+                                   class="task-input"
+                                   id="modal-task-input-${task.id}"
+                                   value="${task.text}"
+                                   style="display: none;"
+                                   onblur="finishEditModalTask(${project.id}, ${task.id})"
+                                   onkeydown="if(event.key==='Enter') finishEditModalTask(${project.id}, ${task.id})">
+                            <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal(${project.id}, ${task.id})" style="opacity: 1;">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Paste Tasks Section in Modal -->
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(47, 39, 206, 0.1);">
+                    <h4 style="font-size: 14px; font-weight: bold; color: #2d3748; margin-bottom: 12px;">Paste Multiple Tasks</h4>
+                    <textarea 
+                        id="modal-paste-box-${project.id}"
+                        placeholder="Paste tasks here (one per line)"
+                        style="width: 100%; min-height: 80px; background: #e8ecf1; border: 1px solid rgba(47, 39, 206, 0.2); border-radius: 8px; padding: 12px; color: #2d3748; font-size: 12px; font-family: inherit; resize: vertical; box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9); outline: none;"></textarea>
+                    <button 
+                        onclick="pasteTasksInModal(${project.id})"
+                        style="width: 100%; margin-top: 8px; padding: 8px; background: rgba(47, 39, 206, 0.2); border: none; border-radius: 8px; color: #2f27ce; font-size: 12px; cursor: pointer; font-family: inherit;">
+                        Add Pasted Tasks
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes Section -->
+        <div class="modal-section hidden" id="notes-section-${project.id}">
+            <div class="modal-notes">
                 <textarea 
-                    id="modal-paste-box-${project.id}"
-                    placeholder="Paste tasks here (one per line)"
-                    style="width: 100%; min-height: 80px; background: #e8ecf1; border: 1px solid rgba(47, 39, 206, 0.2); border-radius: 8px; padding: 12px; color: #2d3748; font-size: 12px; font-family: inherit; resize: vertical; box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9); outline: none;"></textarea>
-                <button 
-                    onclick="pasteTasksInModal(${project.id})"
-                    style="width: 100%; margin-top: 8px; padding: 8px; background: rgba(47, 39, 206, 0.2); border: none; border-radius: 8px; color: #2f27ce; font-size: 12px; cursor: pointer; font-family: inherit;">
-                    Add Pasted Tasks
-                </button>
+                    class="notes-textarea"
+                    id="notes-textarea-${project.id}"
+                    placeholder="Add notes about this project..."
+                    onblur="saveProjectNotes(${project.id})">${project.notes || ''}</textarea>
             </div>
         </div>
         
@@ -633,9 +854,49 @@ function openProjectModal(projectId) {
     setTimeout(() => setupTaskDragAndDrop(project.id), 100);
 }
 
+function switchModalTab(projectId, tab) {
+    const tasksTab = document.getElementById(`tasks-tab-${projectId}`);
+    const notesTab = document.getElementById(`notes-tab-${projectId}`);
+    const tasksSection = document.getElementById(`tasks-section-${projectId}`);
+    const notesSection = document.getElementById(`notes-section-${projectId}`);
+    
+    if (tab === 'tasks') {
+        tasksTab.classList.add('active');
+        notesTab.classList.remove('active');
+        tasksSection.classList.remove('hidden');
+        notesSection.classList.add('hidden');
+    } else {
+        notesTab.classList.add('active');
+        tasksTab.classList.remove('active');
+        notesSection.classList.remove('hidden');
+        tasksSection.classList.add('hidden');
+    }
+}
+
+function saveProjectNotes(projectId) {
+    const textarea = document.getElementById(`notes-textarea-${projectId}`);
+    if (textarea) {
+        updateProjectNotes(projectId, textarea.value);
+    }
+}
+
+function toggleHideCompleted() {
+    const checkbox = document.getElementById('hide-completed-checkbox');
+    state.setHideCompletedTasks(checkbox.checked);
+    
+    // Find the currently open modal project
+    const modalContent = document.getElementById('modalContent');
+    const projectIdMatch = modalContent.innerHTML.match(/data-progress-bar="(\d+)"/);
+    if (projectIdMatch) {
+        const projectId = parseInt(projectIdMatch[1]);
+        openProjectModal(projectId);
+    }
+}
+
 function closeProjectModal() {
     const modal = document.getElementById('projectModal');
     modal.classList.remove('active');
+    state.clearAllTaskSelections();
     render();
 }
 
@@ -655,7 +916,7 @@ function finishEditModalTitle(projectId) {
     const titleInput = document.getElementById(`modal-title-input-${projectId}`);
     if (titleDiv && titleInput) {
         updateProjectTitle(projectId, titleInput.value);
-        titleDiv.textContent = titleInput.value;
+        titleDiv.textContent = toTitleCase(titleInput.value);
         titleDiv.style.display = 'block';
         titleInput.style.display = 'none';
     }
@@ -677,7 +938,7 @@ function finishEditModalTask(projectId, taskId) {
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
     if (taskText && taskInput) {
         updateTaskText(projectId, taskId, taskInput.value);
-        taskText.textContent = taskInput.value;
+        taskText.textContent = capitalizeFirstLetter(taskInput.value);
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
     }
@@ -765,13 +1026,12 @@ function pasteTasks() {
     
     const newTasks = taskLines.map(text => ({
         id: Date.now() + Math.random(),
-        text: text,
+        text: capitalizeFirstLetter(text),
         completed: false
     }));
     
-    state.updateProject(projectId, {
-        tasks: [...project.tasks, ...newTasks]
-    });
+    const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
+    state.updateProject(projectId, { tasks: updatedTasks });
     
     pasteBox.value = '';
     projectSelect.value = '';
@@ -800,13 +1060,12 @@ function pasteTasksInModal(projectId) {
     
     const newTasks = taskLines.map(text => ({
         id: Date.now() + Math.random(),
-        text: text,
+        text: capitalizeFirstLetter(text),
         completed: false
     }));
     
-    state.updateProject(projectId, {
-        tasks: [...project.tasks, ...newTasks]
-    });
+    const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
+    state.updateProject(projectId, { tasks: updatedTasks });
     
     saveData();
     openProjectModal(projectId);
@@ -827,6 +1086,12 @@ function render() {
     document.getElementById('completedTasksCount').textContent = stats.completedTasks;
     document.getElementById('completedProjectsCount').textContent = stats.completedProjects;
     
+    // Update total completion
+    updateTotalCompletion();
+    
+    // Update undo button
+    updateUndoButton();
+    
     // Render projects
     if (displayProjects.length === 0) {
         emptyState.style.display = 'flex';
@@ -842,7 +1107,6 @@ function render() {
         setTimeout(setupProjectDragAndDrop, 100);
     }
     
-    renderQuickActions();
     updateProjectSelect();
 }
 
@@ -856,10 +1120,7 @@ function renderProjectCard(project) {
              data-project-id="${project.id}"
              onclick="openProjectModal(${project.id})">
             <div class="project-header">
-                <div class="project-title-container">
-                    <svg class="drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                    </svg>
+                <div class="project-title-container-centered">
                     <div class="project-title">${project.title}</div>
                 </div>
                 <div class="project-actions">
@@ -887,37 +1148,9 @@ function renderProjectCard(project) {
             <div class="progress-bar-container">
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
             </div>
-            <div class="progress-text" data-progress-text="${project.id}">${progressPercentage}%</div>
+            <div class="progress-text-large" data-progress-text="${project.id}">${progressPercentage}%</div>
         </div>
     `;
-}
-
-function renderQuickActions() {
-    const activeProjects = state.getActiveProjects();
-    const quickActionsList = document.getElementById('quickActionsList');
-    
-    if (activeProjects.length === 0) {
-        quickActionsList.innerHTML = '<p style="color: #666; font-size: 12px; text-align: center;">No active projects</p>';
-        return;
-    }
-    
-    quickActionsList.innerHTML = activeProjects.map(project => {
-        const completedTasks = project.tasks.filter(t => t.completed).length;
-        return `
-            <div class="quick-action-item">
-                <div class="quick-action-title">${project.title}</div>
-                <div class="quick-action-buttons">
-                    <button class="done-button" onclick="completeProject(${project.id})">Done</button>
-                    <button class="quick-delete-button" onclick="deleteProject(${project.id})">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="quick-action-stats">${completedTasks}/${project.tasks.length} tasks</div>
-            </div>
-        `;
-    }).join('');
 }
 
 function updateProjectSelect() {
@@ -987,6 +1220,9 @@ function initializeEventHandlers() {
     // Add project button
     document.getElementById('addProjectButton').addEventListener('click', addProject);
 
+    // Undo button
+    document.getElementById('undoButton').addEventListener('click', performUndo);
+
     // Paste button
     document.getElementById('pasteButton').addEventListener('click', pasteTasks);
 
@@ -1031,6 +1267,14 @@ function initializeEventHandlers() {
             case SHORTCUTS.VIEW_COMPLETED:
                 switchToCompletedView();
                 break;
+            case 'z':
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    performUndo();
+                } else {
+                    performUndo();
+                }
+                break;
             case SHORTCUTS.HELP:
                 alert(`Keyboard Shortcuts:
 
@@ -1039,15 +1283,24 @@ C - Toggle Control Panel
 M - Toggle Menu
 A - View Active Projects
 D - View Completed Projects
+Z - Undo (last deletion)
 ? - Show this help
+
+Task Features:
+- Shift+Click - Select multiple tasks
+- Newest tasks appear first
+- Completed tasks move to bottom
+- Hide completed tasks toggle in modal
 
 Admin Features:
 - Click on project cards to view/edit details
-- Drag tasks or projects to reorder them
-- Use copy button to copy project details
+- Drag projects from anywhere on the card
+- Drag tasks to reorder them
+- Use copy button (copies only incomplete tasks)
 - Click outside expanded cards to close them
 - Use the paste box in modals for bulk task import
 - Stats are clickable to switch views
+- Use tabs in modal for Tasks and Notes
 
 Current Mode: ${state.isAdmin() ? 'ADMIN' : 'READ-ONLY'}`);
                 break;
@@ -1080,6 +1333,11 @@ window.confirmDeleteProjectCard = confirmDeleteProjectCard;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;
 window.pasteTasksInModal = pasteTasksInModal;
+window.handleTaskClick = handleTaskClick;
+window.switchModalTab = switchModalTab;
+window.saveProjectNotes = saveProjectNotes;
+window.toggleHideCompleted = toggleHideCompleted;
+window.performUndo = performUndo;
 
 // ============================================================================
 // INITIALIZATION
