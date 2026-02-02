@@ -137,19 +137,9 @@ opacity: 1;
             font-size: 32px;
             font-weight: bold;
             color: var(--heading);
-            margin-bottom: 8px;
+            margin-bottom: 24px;
             letter-spacing: -0.5px;
             text-align: center;
-        }
-
-        .viewport-header .underline {
-            height: 4px;
-            width: 96px;
-            background: linear-gradient(to right, var(--accent), transparent);
-            border-radius: 2px;
-            margin-bottom: 24px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         /* Empty State */
@@ -666,7 +656,7 @@ opacity: 1;
 
         .project-select {
             width: 100%;
-            padding: 8px;
+            padding: 8px 32px 8px 8px;
             background: var(--surface);
             border: none;
             border-radius: 8px;
@@ -677,6 +667,12 @@ opacity: 1;
             outline: none;
             box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231f2428' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
         }
 
         .paste-box {
@@ -932,17 +928,17 @@ opacity: 1;
 
         /* Thin scrollbar so right-side rounded corners stay visible */
         .modal-content::-webkit-scrollbar {
-            width: 6px;
+            width: 12px;
         }
 
         .modal-content::-webkit-scrollbar-track {
             background: transparent;
-            border-radius: 3px;
+            border-radius: 6px;
         }
 
         .modal-content::-webkit-scrollbar-thumb {
             background: rgba(0, 0, 0, 0.18);
-            border-radius: 3px;
+            border-radius: 6px;
         }
 
         .modal-content::-webkit-scrollbar-thumb:hover {
@@ -951,6 +947,8 @@ opacity: 1;
 
         .modal-content::-webkit-scrollbar-button {
             display: none;
+            height: 0;
+            width: 0;
         }
 
         /* Firefox */
@@ -1379,6 +1377,29 @@ opacity: 1;
 
         .delete-button:hover {
             background: var(--panel);
+        }
+
+        /* Activate Button on Completed Cards */
+        .activate-button {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
+        }
+
+        .activate-button:hover {
+            background: var(--accent-2);
+            transform: scale(1.02);
         }
 
         /* Responsive */
