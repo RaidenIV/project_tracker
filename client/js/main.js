@@ -167,15 +167,22 @@ function copyProjectToClipboard(projectId) {
         const button = event?.target?.closest('button');
         if (button) {
             const originalHTML = button.innerHTML;
-            button.style.color = '#07ff67';
+            const originalBg = button.style.background;
+            const originalColor = button.style.color;
+            
+            // Change button appearance
+            button.style.background = '#07ff67';
+            button.style.color = 'white';
             button.innerHTML = `
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                <svg class="icon-lg" fill="none" stroke="white" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                 </svg>
             `;
+            
             setTimeout(() => {
                 button.innerHTML = originalHTML;
-                button.style.color = '';
+                button.style.background = originalBg;
+                button.style.color = originalColor;
             }, 1500);
         }
     }).catch(err => {
@@ -756,12 +763,13 @@ function openProjectModal(projectId) {
                 Add Task
             </button>
             
-            <!-- Hide Completed Toggle -->
+            <!-- Hide Completed Toggle with Neomorphic Slider -->
             <div class="hide-completed-toggle">
-                <label>
+                <span class="toggle-label">Hide completed tasks</span>
+                <label class="toggle-switch">
                     <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
                            onchange="toggleHideCompleted()">
-                    <span>Hide completed tasks</span>
+                    <span class="toggle-slider"></span>
                 </label>
             </div>
             
@@ -818,6 +826,16 @@ function openProjectModal(projectId) {
                     </button>
                 </div>
             </div>
+            
+            <!-- Modal Actions - Only in Tasks Tab -->
+            <div class="modal-actions">
+                <button class="modal-delete-btn" onclick="confirmDeleteProject(${project.id})">
+                    Delete Project
+                </button>
+                <button class="modal-done-btn" onclick="completeProjectFromModal(${project.id})">
+                    Mark as Complete
+                </button>
+            </div>
         </div>
         
         <!-- Notes Section -->
@@ -829,15 +847,6 @@ function openProjectModal(projectId) {
                     placeholder="Add notes about this project..."
                     onblur="saveProjectNotes(${project.id})">${project.notes || ''}</textarea>
             </div>
-        </div>
-        
-        <div class="modal-actions">
-            <button class="modal-delete-btn" onclick="confirmDeleteProject(${project.id})">
-                Delete Project
-            </button>
-            <button class="modal-done-btn" onclick="completeProjectFromModal(${project.id})">
-                Mark as Complete
-            </button>
         </div>
     `;
     
