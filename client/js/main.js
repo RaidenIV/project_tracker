@@ -167,22 +167,16 @@ function copyProjectToClipboard(projectId, evt) {
         const button = evt?.target?.closest('button');
         if (button) {
             const originalHTML = button.innerHTML;
-            const originalBg = button.style.background;
-            const originalColor = button.style.color;
             
-            // Change button appearance
-            button.style.background = '#07ff67';
-            button.style.color = 'white';
+            // Swap icon to checkmark, keep the existing accent-blue colour
             button.innerHTML = `
-                <svg class="icon-lg" fill="none" stroke="white" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                 </svg>
             `;
             
             setTimeout(() => {
                 button.innerHTML = originalHTML;
-                button.style.background = originalBg;
-                button.style.color = originalColor;
             }, 1500);
         }
     }).catch(err => {
@@ -861,10 +855,10 @@ function openProjectModal(projectId) {
                 
                 <!-- Paste Tasks Section in Modal -->
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(47, 39, 206, 0.1);">
-                    <h4 style="font-size: 14px; font-weight: bold; color: #2d3748; margin-bottom: 12px;">Paste Multiple Tasks</h4>
+                    <h4 style="font-size: 14px; font-weight: bold; color: #2d3748; margin-bottom: 12px;">Tasks List</h4>
                     <textarea 
                         id="modal-paste-box-${project.id}"
-                        placeholder="Paste tasks here (one per line)"
+                        placeholder="Enter tasks here"
                         style="width: 100%; min-height: 80px; background: #e8ecf1; border: 1px solid rgba(47, 39, 206, 0.2); border-radius: 8px; padding: 12px; color: #2d3748; font-size: 12px; font-family: inherit; resize: vertical; box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9); outline: none;"></textarea>
                     <button 
                         onclick="pasteTasksInModal(${project.id})"
@@ -1032,8 +1026,15 @@ function finishEditModalTask(projectId, taskId) {
     const taskText = document.getElementById(`modal-task-text-${taskId}`);
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
     if (taskText && taskInput) {
-        updateTaskText(projectId, taskId, taskInput.value);
-        taskText.textContent = capitalizeFirstLetter(taskInput.value);
+        const trimmed = taskInput.value.trim();
+        if (trimmed.length === 0) {
+            // Empty text — remove the task entirely, don't persist it
+            deleteTask(projectId, taskId);
+            openProjectModal(projectId);
+            return;
+        }
+        updateTaskText(projectId, taskId, trimmed);
+        taskText.textContent = capitalizeFirstLetter(trimmed);
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
     }
@@ -1244,6 +1245,11 @@ function renderProjectCard(project) {
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
             </div>
             <div class="progress-text-large" data-progress-text="${project.id}">${progressPercentage}%</div>
+            ${project.completed ? `
+            <button class="activate-button" onclick="event.stopPropagation(); completeProject(${project.id})">
+                Activate
+            </button>
+            ` : ''}
         </div>
     `;
 }
