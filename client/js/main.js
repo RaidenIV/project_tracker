@@ -763,9 +763,9 @@ function openProjectModal(projectId) {
                 Add Task
             </button>
             
-            <!-- Hide Completed Toggle with Neomorphic Slider -->
+            <!-- Hide Completed Toggle with Block Slider -->
             <div class="hide-completed-toggle">
-                <span class="toggle-label">Hide completed tasks</span>
+                <div class="toggle-label">Hide completed tasks</div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
                            onchange="toggleHideCompleted()">
