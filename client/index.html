@@ -92,6 +92,15 @@
                     </div>
                 </div>
 
+                <!-- Total Completion Percentage -->
+                <div class="total-completion-section">
+                    <h3>Total Completion</h3>
+                    <div class="total-completion-display">
+                        <div class="total-percentage" id="totalPercentage">0%</div>
+                        <div class="total-percentage-label">across all projects</div>
+                    </div>
+                </div>
+
                 <!-- Add Project Button -->
                 <button class="add-project-button" id="addProjectButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,11 +109,13 @@
                     Add Project
                 </button>
 
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    <h3>Quick Actions</h3>
-                    <div class="quick-actions-list" id="quickActionsList"></div>
-                </div>
+                <!-- Undo Button -->
+                <button class="undo-button hidden" id="undoButton">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                    Undo
+                </button>
 
                 <!-- Paste Section -->
                 <div class="paste-section">
@@ -130,6 +141,7 @@
         <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
         <div class="shortcut-line"><kbd>A</kbd> View Active Projects</div>
         <div class="shortcut-line"><kbd>D</kbd> View Completed Projects</div>
+        <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
         <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
     </div>
 
