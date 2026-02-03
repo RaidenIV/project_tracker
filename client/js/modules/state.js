@@ -6,7 +6,7 @@ class AppState {
     constructor() {
         this.projects = [];
         this.stats = { completedTasks: 0, completedProjects: 0 };
-        this.isAdminMode = false;
+        this.isAdminMode = true;
         this.currentView = VIEWS.ACTIVE;
         this.controlPanelOpen = true;
         
