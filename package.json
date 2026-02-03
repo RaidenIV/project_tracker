@@ -1,0 +1,20 @@
+{
+  "name": "project-tracker",
+  "version": "1.0.0",
+  "description": "Code Project Tracker with MongoDB integration",
+  "scripts": {
+    "start": "cd server && npm install && node server.js",
+    "dev": "cd server && npm install && nodemon server.js",
+    "test": "node test-connection.js"
+  },
+  "keywords": [
+    "project-tracker",
+    "mongodb",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
