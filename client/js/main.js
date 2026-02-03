@@ -31,6 +31,24 @@ function sortTasks(tasks) {
 }
 
 // ============================================================================
+// EXPANDED CARD MANAGEMENT
+// ============================================================================
+
+let expandedCardId = null;
+
+function setExpandedCard(projectId) {
+    expandedCardId = projectId;
+}
+
+function clearExpandedCard() {
+    expandedCardId = null;
+}
+
+function getExpandedCard() {
+    return expandedCardId;
+}
+
+// ============================================================================
 // DATA MANAGEMENT
 // ============================================================================
 
@@ -1550,7 +1568,8 @@ function renderProjectCard(project) {
     return `
         <div class="project-card" 
              data-project-id="${project.id}"
-             onclick="openProjectModal(${project.id})">
+             data-project-card="${project.id}"
+             onclick="handleCardClick(${project.id}, event)">
             <div class="project-header">
                 <div class="project-title-container-centered">
                     <div class="project-title">${project.title}</div>
@@ -1678,6 +1697,19 @@ function initializeEventHandlers() {
         }
     });
 
+    // Click outside expanded card to close it
+    document.addEventListener('click', (e) => {
+        const expandedCard = getExpandedCard();
+        if (!expandedCard) return;
+        
+        // Check if click is outside the expanded card
+        const cardElement = document.querySelector(`[data-project-card="${expandedCard}"]`);
+        if (cardElement && !cardElement.contains(e.target)) {
+            // Click was outside the expanded card, close it
+            closeExpandedCard(expandedCard);
+        }
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
@@ -1712,6 +1744,13 @@ function initializeEventHandlers() {
                     performUndo();
                 }
                 break;
+            case 'escape':
+                // Close expanded card on ESC key
+                const expandedCard = getExpandedCard();
+                if (expandedCard) {
+                    closeExpandedCard(expandedCard);
+                }
+                break;
             case SHORTCUTS.HELP:
                 alert(`Keyboard Shortcuts:
 
@@ -1721,6 +1760,7 @@ M - Toggle Menu
 A - View Active Projects
 D - View Completed Projects
 Z - Undo (last deletion)
+ESC - Close expanded card
 ? - Show this help
 
 Task Features:
@@ -1743,6 +1783,48 @@ Current Mode: ${state.isAdmin() ? 'ADMIN' : 'READ-ONLY'}`);
                 break;
         }
     });
+}
+
+// ============================================================================
+// EXPANDED CARD FUNCTIONS
+// ============================================================================
+
+// Function to close an expanded card
+function closeExpandedCard(projectId) {
+    const cardElement = document.querySelector(`[data-project-card="${projectId}"]`);
+    if (cardElement) {
+        cardElement.classList.remove('expanded');
+        clearExpandedCard();
+    }
+}
+
+// Function to handle card click and expansion
+function handleCardClick(projectId, event) {
+    // If clicking on a button or interactive element, don't expand
+    if (event.target.closest('button') || event.target.closest('input')) {
+        return;
+    }
+    
+    const cardElement = document.querySelector(`[data-project-card="${projectId}"]`);
+    if (!cardElement) return;
+    
+    // Check if this card is already expanded
+    const isExpanded = cardElement.classList.contains('expanded');
+    
+    // Close any other expanded cards first
+    const currentExpanded = getExpandedCard();
+    if (currentExpanded && currentExpanded !== projectId) {
+        closeExpandedCard(currentExpanded);
+    }
+    
+    if (isExpanded) {
+        // Toggle off if clicking the same card
+        closeExpandedCard(projectId);
+    } else {
+        // Expand this card
+        cardElement.classList.add('expanded');
+        setExpandedCard(projectId);
+    }
 }
 
 // ============================================================================
@@ -1775,6 +1857,8 @@ window.switchModalTab = switchModalTab;
 window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
 window.performUndo = performUndo;
+window.handleCardClick = handleCardClick;
+window.closeExpandedCard = closeExpandedCard;
 
 // ============================================================================
 // INITIALIZATION
