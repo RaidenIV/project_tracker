@@ -588,7 +588,6 @@ function setupProjectDragAndDrop() {
                 sourceRect: rect,
                 overlay: null,
                 placeholder: null,
-                lastSwapAt: 0,
                 suppressClick: false
             };
 
@@ -619,7 +618,7 @@ function onProjectPointerMove(e) {
     }
 
     updateProjectOverlayPosition(e.clientX, e.clientY);
-    maybeMoveProjectPlaceholder(e.clientX, e.clientY);
+    scheduleProjectPlaceholderUpdate(e.clientX, e.clientY);
 }
 
 function onProjectPointerUp(e) {
@@ -666,6 +665,10 @@ function startProjectLiveReflowDrag(e) {
     const { sourceCard, sourceRect, grid } = __projectDrag;
 
     __projectDrag.active = true;
+    __projectDrag.lastClientX = e.clientX;
+    __projectDrag.lastClientY = e.clientY;
+    __projectDrag.placeholderRaf = null;
+    __projectDrag.metrics = measureProjectGridMetrics(grid, sourceRect);
     grid.classList.add('is-reordering');
 
     // Create overlay (floating dragged card)
@@ -701,22 +704,80 @@ function updateProjectOverlayPosition(clientX, clientY) {
     overlay.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 }
 
-function maybeMoveProjectPlaceholder(clientX, clientY) {
-    const now = Date.now();
-    if (now - __projectDrag.lastSwapAt < 40) return; // simple hysteresis / jitter guard
+function measureProjectGridMetrics(grid, cellRect) {
+    const cs = getComputedStyle(grid);
 
+    // In computed styles, gridTemplateColumns is typically expanded into pixel tracks
+    // e.g. "320px 320px 320px" so splitting on whitespace yields the column count.
+    const cols = Math.max(1, cs.gridTemplateColumns.split(/\s+/).filter(Boolean).length);
+
+    const gapX = parseFloat(cs.columnGap) || 0;
+    const gapY = parseFloat(cs.rowGap) || 0;
+
+    const padL = parseFloat(cs.paddingLeft) || 0;
+    const padT = parseFloat(cs.paddingTop) || 0;
+
+    const cellW = (cellRect?.width || 1) + gapX;
+    const cellH = (cellRect?.height || 1) + gapY;
+
+    return { cols, gapX, gapY, padL, padT, cellW, cellH };
+}
+
+function computeProjectGridInsertionIndex(grid, clientX, clientY) {
+    const metrics = __projectDrag?.metrics;
+    const rect = grid.getBoundingClientRect();
+
+    const padL = metrics?.padL || 0;
+    const padT = metrics?.padT || 0;
+
+    // Pointer position relative to grid content box (minus padding)
+    const x = clientX - rect.left - padL;
+    const y = clientY - rect.top - padT;
+
+    const cellW = metrics?.cellW || 1;
+    const cellH = metrics?.cellH || 1;
+    const cols = metrics?.cols || 1;
+
+    // Center-based snapping: offset by half a cell pitch
+    const col = Math.max(0, Math.min(cols - 1, Math.floor((x + cellW * 0.5) / cellW)));
+    const row = Math.max(0, Math.floor((y + cellH * 0.5) / cellH));
+
+    let idx = row * cols + col;
+
+    // Clamp to valid DOM insertion range (allow "append to end")
+    const children = Array.from(grid.children).filter(el => el.classList && el.classList.contains('project-card'));
+    const max = children.length;
+    if (idx < 0) idx = 0;
+    if (idx > max) idx = max;
+
+    return idx;
+}
+
+function scheduleProjectPlaceholderUpdate(clientX, clientY) {
+    if (!__projectDrag) return;
+    __projectDrag.lastClientX = clientX;
+    __projectDrag.lastClientY = clientY;
+
+    if (__projectDrag.placeholderRaf) return;
+
+    __projectDrag.placeholderRaf = requestAnimationFrame(() => {
+        if (!__projectDrag) return;
+        __projectDrag.placeholderRaf = null;
+        if (!__projectDrag.active) return;
+        maybeMoveProjectPlaceholder(__projectDrag.lastClientX, __projectDrag.lastClientY);
+    });
+}
+
+function maybeMoveProjectPlaceholder(clientX, clientY) {
     const { grid, placeholder } = __projectDrag;
     if (!grid || !placeholder) return;
 
-    const cards = getOrderedProjectCards(grid);
-    const insertionIndex = computeInsertionIndex(cards, clientX, clientY);
+    const insertionIndex = computeProjectGridInsertionIndex(grid, clientX, clientY);
 
-    // Move placeholder if needed
     const currentChildren = Array.from(grid.children).filter(el => el.classList && el.classList.contains('project-card'));
     const currentIndex = currentChildren.indexOf(placeholder);
 
     if (insertionIndex !== currentIndex) {
-        __projectDrag.lastSwapAt = now;
         movePlaceholderWithFlip(grid, placeholder, insertionIndex);
     }
 }
@@ -766,7 +827,7 @@ function playFlip(firstRects, elements) {
         const dy = first.top - last.top;
         if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 
-        el.style.transition = 'transform 180ms ease';
+        el.style.transition = 'transform 120ms ease-out';
         el.style.transform = `translate(${dx}px, ${dy}px)`;
 
         requestAnimationFrame(() => {
@@ -808,6 +869,12 @@ function cleanupProjectDragVisuals() {
 }
 
 function cleanupProjectDrag() {
+    // Stop scheduled placeholder updates
+    if (__projectDrag && __projectDrag.placeholderRaf) {
+        try { cancelAnimationFrame(__projectDrag.placeholderRaf); } catch { /* noop */ }
+        __projectDrag.placeholderRaf = null;
+    }
+
     window.removeEventListener('pointermove', onProjectPointerMove);
     __projectDrag = null;
 }
