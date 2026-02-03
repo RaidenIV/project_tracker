@@ -22,7 +22,7 @@
 
     --accent: #3278eb;     /* primary action */
     --accent-2: #2563c7;   /* hover / deeper */
-    --progress: #3278eb;   /* progress bars */
+    --progress: #07ff67;   /* progress bars */
 }
 
 body {
@@ -782,116 +782,6 @@ opacity: 1;
             font-family: inherit;
             font-size: 10px;
             box-shadow: inset 2px 2px 4px rgba(120, 120, 130, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.85);
-        }
-
-        /* Admin Indicator */
-        .admin-indicator {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            background: var(--accent);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
-            z-index: 50;
-            display: none;
-        }
-
-        .admin-indicator.active {
-            display: block;
-        }
-
-        /* Password Overlay */
-        .password-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .password-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .password-dialog {
-            background: var(--panel);
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 10px 10px 20px rgba(120, 120, 130, 0.30), -10px -10px 20px rgba(255, 255, 255, 0.42);
-            text-align: center;
-        }
-
-        .password-dialog h2 {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--heading);
-            margin-bottom: 12px;
-        }
-
-        .password-dialog p {
-            color: var(--muted);
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-
-        .password-input {
-            width: 100%;
-            padding: 12px;
-            background: var(--surface);
-            border: 2px solid rgba(0, 0, 0, 0.14);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 16px;
-            font-family: inherit;
-            outline: none;
-            box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .password-input:focus {
-            border-color: var(--accent);
-        }
-
-        .password-submit {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .password-submit:hover {
-            transform: scale(1.02);
-        }
-
-        .password-error {
-            color: #e53e3e;
-            font-size: 12px;
-            margin-top: 8px;
-            display: none;
-        }
-
-        .password-error.show {
-            display: block;
         }
 
         /* Modal - Reduced glow by 50% */
