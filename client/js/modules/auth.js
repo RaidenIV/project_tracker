@@ -1,31 +1,38 @@
 // Authentication and password handling
 
-import { ADMIN_PASSWORD } from './config.js';
 import { state } from './state.js';
+import { loginAdmin, verifyAdminToken, clearAdminToken } from './api.js';
 
-export function checkPassword() {
+export async function checkPassword() {
     const input = document.getElementById('passwordInput');
     const error = document.getElementById('passwordError');
     const overlay = document.getElementById('passwordOverlay');
     const indicator = document.getElementById('adminIndicator');
-    
-    if (input.value === ADMIN_PASSWORD) {
+
+    const password = (input?.value || '').trim();
+
+    try {
+        await loginAdmin(password);
+
         state.setAdminMode(true);
-        overlay.classList.remove('active');
-        indicator.classList.add('active');
-        error.classList.remove('show');
-        input.value = '';
-        
+        overlay?.classList.remove('active');
+        indicator?.classList.add('active');
+        error?.classList.remove('show');
+
+        if (input) input.value = '';
+
         // Import and call loadData after successful auth
-        import('../main.js').then(module => {
-            if (module.loadData) {
-                module.loadData();
-            }
-        });
-    } else {
-        error.classList.add('show');
-        input.value = '';
-        input.focus();
+        const module = await import('../main.js');
+        if (module.loadData) {
+            module.loadData();
+        }
+    } catch (e) {
+        console.error(e);
+        error?.classList.add('show');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
     }
 }
 
@@ -37,25 +44,44 @@ export function requireAdmin(action) {
     return true;
 }
 
-export function initializePasswordPrompt() {
+export async function initializePasswordPrompt() {
     const passwordInput = document.getElementById('passwordInput');
     const overlay = document.getElementById('passwordOverlay');
-    
-    // Show the password overlay on startup
-    if (overlay) {
-        overlay.classList.add('active');
+    const indicator = document.getElementById('adminIndicator');
+
+    // If a token exists, verify it with the server; if valid, skip the overlay.
+    const tokenValid = await verifyAdminToken();
+    if (tokenValid) {
+        state.setAdminMode(true);
+        overlay?.classList.remove('active');
+        indicator?.classList.add('active');
+
+        // Load data immediately (matches your prior behavior after auth)
+        const module = await import('../main.js');
+        if (module.loadData) {
+            module.loadData();
+        }
+    } else {
+        // Invalid/expired token: clear + force prompt
+        clearAdminToken();
+        state.setAdminMode(false);
+
+        if (overlay) overlay.classList.add('active');
+        if (indicator) indicator.classList.remove('active');
+
+        if (passwordInput) {
+            setTimeout(() => passwordInput.focus(), 100);
+        }
     }
-    
+
     if (passwordInput) {
         passwordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 checkPassword();
             }
         });
-        // Auto-focus password input
-        setTimeout(() => passwordInput.focus(), 100);
     }
-    
+
     // Make checkPassword available globally for HTML onclick
     window.checkPassword = checkPassword;
 }
