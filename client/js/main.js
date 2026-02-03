@@ -759,12 +759,17 @@ function onProjectPointerUp(e) {
 
     const { startIndex, targetIndex } = __projectDrag;
 
+    // targetIndex was computed in "idle" space (dragged card excluded).
+    // reorderProjects uses the original full array, so shift forward-drags
+    // by +1 to land in the correct slot.
+    const fullTargetIndex = targetIndex > startIndex ? targetIndex + 1 : targetIndex;
+
     // Wipe visuals before the state-driven re-render
     resetProjectSlideVisuals();
     cleanupProjectDrag();
 
-    if (startIndex !== targetIndex) {
-        reorderProjects(startIndex, targetIndex);
+    if (startIndex !== fullTargetIndex) {
+        reorderProjects(startIndex, fullTargetIndex);
     }
 }
 
