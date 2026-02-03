@@ -1428,3 +1428,35 @@ opacity: 1;
                 top: 0;
             }
         }
+
+/* ============================================================================
+   Project drag-to-reorder (Live Reflow)
+   ============================================================================ */
+
+.project-grid.is-reordering {
+    user-select: none;
+}
+
+.project-grid.is-reordering .project-card {
+    cursor: grabbing;
+}
+
+.project-card.project-card-placeholder {
+    background: var(--surface);
+    border: 2px dashed rgba(31, 36, 40, 0.35);
+    box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.75);
+}
+
+.project-drag-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2000;
+    pointer-events: none;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    cursor: grabbing;
+    opacity: 0.98;
+    /* Slight lift */
+    box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -4px -4px 10px rgba(255, 255, 255, 0.7);
+}
