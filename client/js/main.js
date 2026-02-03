@@ -1,9 +1,8 @@
 // Main application entry point
 
-import { ADMIN_PASSWORD, VIEWS, SHORTCUTS } from './modules/config.js';
+import { VIEWS, SHORTCUTS } from './modules/config.js';
 import { state } from './modules/state.js';
 import { loadDataFromServer, saveDataToServer } from './modules/api.js';
-import { initializePasswordPrompt, requireAdmin } from './modules/auth.js';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -76,7 +75,7 @@ async function saveData() {
 // ============================================================================
 
 function addProject() {
-    if (!requireAdmin()) return;
+    
     
     const newProject = {
         id: Date.now(),
@@ -100,7 +99,7 @@ function addProject() {
 }
 
 function deleteProject(projectId) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (project?.completed) {
@@ -118,7 +117,7 @@ function deleteProject(projectId) {
 }
 
 function completeProject(projectId) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (!project) return;
@@ -140,7 +139,7 @@ function completeProject(projectId) {
 }
 
 function updateProjectTitle(projectId, newTitle) {
-    if (!requireAdmin()) return;
+    
     const titleCased = toTitleCase(newTitle);
     state.updateProject(projectId, { title: titleCased });
     saveData();
@@ -148,7 +147,7 @@ function updateProjectTitle(projectId, newTitle) {
 }
 
 function updateProjectNotes(projectId, notes) {
-    if (!requireAdmin()) return;
+    
     state.updateProject(projectId, { notes });
     saveData();
 }
@@ -189,7 +188,7 @@ function copyProjectToClipboard(projectId, evt) {
 // ============================================================================
 
 function toggleTask(projectId, taskId) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (!project) return;
@@ -288,7 +287,7 @@ function updateProjectProgress(projectId) {
 }
 
 function deleteTask(projectId, taskId) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (!project) return;
@@ -310,7 +309,7 @@ function deleteTask(projectId, taskId) {
 }
 
 function updateTaskText(projectId, taskId, newText) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (!project) return;
@@ -326,7 +325,7 @@ function updateTaskText(projectId, taskId, newText) {
 }
 
 function addTaskToProject(projectId) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (!project) return;
@@ -342,7 +341,7 @@ function addTaskToProject(projectId) {
 }
 
 function reorderTasks(projectId, oldIndex, newIndex) {
-    if (!requireAdmin()) return;
+    
     
     const project = state.findProject(projectId);
     if (!project) return;
@@ -357,7 +356,7 @@ function reorderTasks(projectId, oldIndex, newIndex) {
 }
 
 function reorderProjects(oldIndex, newIndex) {
-    if (!requireAdmin()) return;
+    
     
     const currentViewProjects = state.getCurrentViewProjects();
     const allProjects = state.getProjects();
@@ -401,7 +400,7 @@ function reorderProjects(oldIndex, newIndex) {
 // ============================================================================
 
 function performUndo() {
-    if (!requireAdmin()) return;
+    
     if (!state.hasUndo()) return;
     
     const undoEntry = state.getLastUndo();
@@ -458,7 +457,7 @@ function updateUndoButton() {
 // ============================================================================
 
 function handleTaskClick(projectId, taskId, event) {
-    if (!state.isAdmin()) return;
+    
     
     if (event.shiftKey) {
         const lastSelected = state.lastSelectedTask.get(projectId);
@@ -560,7 +559,7 @@ function setupProjectDragAndDrop() {
         card.setAttribute('draggable', 'false');
 
         card.addEventListener('pointerdown', (e) => {
-            if (!state.isAdmin()) return;
+            
             if (e.button !== 0) return;
 
             // Don't start a drag when the user is tapping a button / input inside the card
@@ -895,7 +894,7 @@ function cleanupProjectDrag() {
 
 function setupTaskDragAndDrop(projectId) {
     const taskList = document.getElementById(`modal-task-list-${projectId}`);
-    if (!taskList || !state.isAdmin()) return;
+    if (!taskList) return;
 
     // ── per-gesture state (reset each drag) ──
     let draggableItem = null;
@@ -1377,7 +1376,7 @@ function finishEditModalTask(projectId, taskId) {
 }
 
 function addTaskToModal(projectId) {
-    if (!requireAdmin()) return;
+    
     
     const newTaskId = addTaskToProject(projectId);
     render();
@@ -1438,7 +1437,7 @@ function closeConfirmDialog() {
 // ============================================================================
 
 function pasteTasks() {
-    if (!requireAdmin()) return;
+    
     
     const projectSelect = document.getElementById('pasteProjectSelect');
     const pasteBox = document.getElementById('pasteBox');
@@ -1474,7 +1473,7 @@ function pasteTasks() {
 }
 
 function pasteTasksInModal(projectId) {
-    if (!requireAdmin()) return;
+    
     
     const pasteBox = document.getElementById(`modal-paste-box-${projectId}`);
     const taskText = pasteBox.value.trim();
@@ -1729,7 +1728,7 @@ Task Features:
 - Completed tasks move to bottom
 - Hide completed tasks toggle in modal
 
-Admin Features:
+Features:
 - Click on project cards to view/edit details
 - Drag projects from anywhere on the card
 - Drag tasks to reorder them
@@ -1737,9 +1736,7 @@ Admin Features:
 - Click outside expanded cards to close them
 - Use the paste box in modals for bulk task import
 - Stats are clickable to switch views
-- Use tabs in modal for Tasks and Notes
-
-Current Mode: ${state.isAdmin() ? 'ADMIN' : 'READ-ONLY'}`);
+- Use tabs in modal for Tasks and Notes`);
                 break;
         }
     });
@@ -1781,6 +1778,7 @@ window.performUndo = performUndo;
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializePasswordPrompt();
     initializeEventHandlers();
+    // Load data immediately without password prompt
+    loadData();
 });
