@@ -531,13 +531,19 @@ let draggedTaskProjectId = null;
 let draggedTaskIndex = null;
 
 
-// Project drag-to-reorder (Live Reflow / snap-to-grid)
+// Project drag-to-reorder (iOS-style: long-press to enter edit mode + live reflow)
 let __projectDrag = null;
 let __suppressNextProjectGridClick = false;
+let __projectEditMode = false;
+let __projectLongPressTimer = null;
+let __projectPendingPress = null;
+let __projectEditListenersBound = false;
 
 function setupProjectDragAndDrop() {
     const projectGrid = document.getElementById('projectGrid');
     if (!projectGrid) return;
+
+    bindProjectEditModeExitHandlers();
 
     // Prevent "click to open modal" firing right after a drag-reorder
     projectGrid.addEventListener('click', (e) => {
@@ -545,6 +551,12 @@ function setupProjectDragAndDrop() {
             e.preventDefault();
             e.stopImmediatePropagation();
             __suppressNextProjectGridClick = false;
+            return;
+        }
+        // In iOS-style edit mode, clicks on tiles should not open the project modal
+        if (__projectEditMode) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
         }
     }, true);
 
@@ -559,7 +571,7 @@ function setupProjectDragAndDrop() {
 
             // If the user is interacting with controls inside the card, don't start a drag
             const t = e.target;
-            if (t && (t.closest('button') || t.closest('input') || t.closest('textarea') || t.closest('select') || t.closest('a'))) {
+            if (t && t.closest && t.closest('button, input, textarea, select, a')) {
                 return;
             }
 
@@ -574,13 +586,109 @@ function setupProjectDragAndDrop() {
             const offsetX = e.clientX - rect.left;
             const offsetY = e.clientY - rect.top;
 
+            // iOS-style behavior:
+            // - If NOT in edit mode: long-press enters edit mode and immediately picks up the tile.
+            // - If already in edit mode: dragging can start right away (small movement threshold).
+            if (!__projectEditMode) {
+                // Set up a pending long-press; if the pointer moves too far or is released, cancel.
+                clearProjectLongPress();
+
+                __projectPendingPress = {
+                    pointerId: e.pointerId,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    lastX: e.clientX,
+                    lastY: e.clientY,
+                    offsetX,
+                    offsetY,
+                    grid: projectGrid,
+                    sourceCard: card,
+                    sourceRect: rect,
+                    startIndex,
+                    active: true
+                };
+
+                try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
+
+                const CANCEL_MOVE = 8;
+                const LONG_PRESS_MS = 260;
+
+                const onPreMove = (ev) => {
+                    if (!__projectPendingPress) return;
+                    if (ev.pointerId !== __projectPendingPress.pointerId) return;
+
+                    __projectPendingPress.lastX = ev.clientX;
+                    __projectPendingPress.lastY = ev.clientY;
+
+                    const dx = ev.clientX - __projectPendingPress.startX;
+                    const dy = ev.clientY - __projectPendingPress.startY;
+                    if (Math.hypot(dx, dy) > CANCEL_MOVE) {
+                        clearProjectLongPress();
+                        window.removeEventListener('pointermove', onPreMove);
+                    }
+                };
+
+                const onPreUp = (ev) => {
+                    if (__projectPendingPress && ev.pointerId === __projectPendingPress.pointerId) {
+                        clearProjectLongPress();
+                    }
+                    window.removeEventListener('pointermove', onPreMove);
+                };
+
+                window.addEventListener('pointermove', onPreMove, { passive: false });
+                window.addEventListener('pointerup', onPreUp, { passive: false, once: true });
+
+                __projectLongPressTimer = setTimeout(() => {
+                    // If still pending, enter edit mode and start dragging immediately.
+                    if (!__projectPendingPress || !__projectPendingPress.active) return;
+
+                    setProjectEditMode(true);
+                    __suppressNextProjectGridClick = true;
+
+                    __projectDrag = {
+                        pointerId: __projectPendingPress.pointerId,
+                        startIndex: __projectPendingPress.startIndex,
+                        startX: __projectPendingPress.startX,
+                        startY: __projectPendingPress.startY,
+                        offsetX: __projectPendingPress.offsetX,
+                        offsetY: __projectPendingPress.offsetY,
+                        grid: __projectPendingPress.grid,
+                        sourceCard: __projectPendingPress.sourceCard,
+                        sourceRect: __projectPendingPress.sourceRect,
+                        overlay: null,
+                        placeholder: null,
+                        suppressClick: false,
+                        active: false
+                    };
+
+                    // Start the live reflow drag right away (no movement required after long-press)
+                    startProjectLiveReflowDrag({ 
+                        clientX: __projectPendingPress.lastX, 
+                        clientY: __projectPendingPress.lastY 
+                    });
+
+                    // Now switch to normal drag tracking
+                    window.addEventListener('pointermove', onProjectPointerMove, { passive: false });
+                    window.addEventListener('pointerup', onProjectPointerUp, { passive: false, once: true });
+
+                    // Clean pre listeners
+                    window.removeEventListener('pointermove', onPreMove);
+                    clearProjectLongPress();
+                }, LONG_PRESS_MS);
+
+                return;
+            }
+
+            // Already in edit mode: set up drag state; drag will actuate with a small threshold.
+            clearProjectLongPress();
+
             __projectDrag = {
-                active: false,
-                projectId,
-                startIndex,
                 pointerId: e.pointerId,
+                startIndex,
                 startX: e.clientX,
                 startY: e.clientY,
+                    lastX: e.clientX,
+                    lastY: e.clientY,
                 offsetX,
                 offsetY,
                 grid: projectGrid,
@@ -588,16 +696,67 @@ function setupProjectDragAndDrop() {
                 sourceRect: rect,
                 overlay: null,
                 placeholder: null,
-                suppressClick: false
+                suppressClick: false,
+                active: false
             };
 
             try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
 
             window.addEventListener('pointermove', onProjectPointerMove, { passive: false });
             window.addEventListener('pointerup', onProjectPointerUp, { passive: false, once: true });
+        });
+            window.addEventListener('pointerup', onProjectPointerUp, { passive: false, once: true });
             window.addEventListener('pointercancel', onProjectPointerCancel, { passive: false, once: true });
         });
+    };
+
+
+function clearProjectLongPress() {
+    if (__projectLongPressTimer) {
+        clearTimeout(__projectLongPressTimer);
+        __projectLongPressTimer = null;
+    }
+    if (__projectPendingPress) {
+        __projectPendingPress.active = false;
+        __projectPendingPress = null;
+    }
+}
+
+function setProjectEditMode(enabled) {
+    __projectEditMode = !!enabled;
+    const grid = document.getElementById('projectGrid');
+    if (grid) {
+        grid.classList.toggle('is-editing', __projectEditMode);
+    }
+    if (!__projectEditMode) {
+        clearProjectLongPress();
+    }
+}
+
+function bindProjectEditModeExitHandlers() {
+    if (__projectEditListenersBound) return;
+    __projectEditListenersBound = true;
+
+    // Escape exits edit mode
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && __projectEditMode) {
+            setProjectEditMode(false);
+        }
     });
+
+    // Clicking outside the grid exits edit mode (iOS "Done" equivalent)
+    document.addEventListener('pointerdown', (e) => {
+        if (!__projectEditMode) return;
+        if (__projectDrag && __projectDrag.active) return;
+
+        const grid = document.getElementById('projectGrid');
+        const modal = document.getElementById('projectModal');
+
+        if (grid && grid.contains(e.target)) return;
+        if (modal && modal.contains(e.target)) return;
+
+        setProjectEditMode(false);
+    }, true);
 }
 
 function onProjectPointerMove(e) {
@@ -612,7 +771,7 @@ function onProjectPointerMove(e) {
 
     // Threshold before starting reorder (prevents accidental drags)
     if (!__projectDrag.active) {
-        const THRESHOLD = 8;
+        const THRESHOLD = __projectEditMode ? 2 : 8;
         if (dist < THRESHOLD) return;
         startProjectLiveReflowDrag(e);
     }
@@ -674,6 +833,12 @@ function startProjectLiveReflowDrag(e) {
     // Create overlay (floating dragged card)
     const overlay = sourceCard.cloneNode(true);
     overlay.classList.add('project-drag-overlay');
+    // Ensure the dragged overlay tracks the pointer with zero lag
+    overlay.style.transition = 'none';
+    overlay.style.setProperty('--wiggle', '0deg');
+    overlay.style.setProperty('--hover-y', '0px');
+    overlay.style.setProperty('--flip-x', '0px');
+    overlay.style.setProperty('--flip-y', '0px');
     overlay.style.width = `${sourceRect.width}px`;
     overlay.style.height = `${sourceRect.height}px`;
     document.body.appendChild(overlay);
@@ -822,16 +987,21 @@ function playFlip(firstRects, elements) {
     elements.forEach(el => {
         const first = firstRects.get(el);
         if (!first) return;
+
         const last = el.getBoundingClientRect();
         const dx = first.left - last.left;
         const dy = first.top - last.top;
+
         if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 
-        el.style.transition = 'transform 120ms ease-out';
-        el.style.transform = `translate(${dx}px, ${dy}px)`;
+        // Use CSS variables so we can compose FLIP translations with iOS-style jiggle (rotation).
+        el.style.transition = 'transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+        el.style.setProperty('--flip-x', `${dx}px`);
+        el.style.setProperty('--flip-y', `${dy}px`);
 
         requestAnimationFrame(() => {
-            el.style.transform = '';
+            el.style.setProperty('--flip-x', '0px');
+            el.style.setProperty('--flip-y', '0px');
         });
 
         el.addEventListener('transitionend', () => {
@@ -839,6 +1009,7 @@ function playFlip(firstRects, elements) {
         }, { once: true });
     });
 }
+
 
 function movePlaceholderWithFlip(grid, placeholder, insertionIndex) {
     const movingEls = Array.from(grid.querySelectorAll('.project-card'))
