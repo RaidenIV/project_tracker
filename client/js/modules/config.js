@@ -7,11 +7,7 @@ export const API_ENDPOINTS = {
     DATA: '/api/data',
     PROJECTS: '/api/projects',
     STATS: '/api/stats',
-    HEALTH: '/api/health',
-
-    // Auth
-    AUTH_LOGIN: '/api/auth/login',
-    AUTH_ME: '/api/auth/me'
+    HEALTH: '/api/health'
 };
 
 // UI Configuration
