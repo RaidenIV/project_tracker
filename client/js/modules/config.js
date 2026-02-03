@@ -1,8 +1,5 @@
 // Configuration settings for the application
 
-// PASSWORD CONFIGURATION - CHANGE THE PASSWORD HERE
-export const ADMIN_PASSWORD = "admin123";  // ← CHANGE PASSWORD HERE
-
 // API Configuration
 export const API_BASE_URL = window.location.origin;
 
