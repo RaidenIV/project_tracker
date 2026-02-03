@@ -1,8 +1,5 @@
 // Configuration settings for the application
 
-// PASSWORD CONFIGURATION - CHANGE THE PASSWORD HERE
-export const ADMIN_PASSWORD = "admin123";  // ← CHANGE PASSWORD HERE
-
 // API Configuration
 export const API_BASE_URL = window.location.origin;
 
@@ -10,7 +7,11 @@ export const API_ENDPOINTS = {
     DATA: '/api/data',
     PROJECTS: '/api/projects',
     STATS: '/api/stats',
-    HEALTH: '/api/health'
+    HEALTH: '/api/health',
+
+    // Auth
+    AUTH_LOGIN: '/api/auth/login',
+    AUTH_ME: '/api/auth/me'
 };
 
 // UI Configuration
