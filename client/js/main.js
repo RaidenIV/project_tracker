@@ -1781,6 +1781,5 @@ window.performUndo = performUndo;
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializePasswordPrompt();
     initializeEventHandlers();
 });
