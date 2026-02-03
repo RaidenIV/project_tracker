@@ -2,89 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const JWT_SECRET = process.env.JWT_SECRET || '';
-
-if (!ADMIN_PASSWORD) {
-    console.warn('⚠️ ADMIN_PASSWORD is not set. Admin login will fail until you add it in Railway Variables.');
-}
-if (!JWT_SECRET) {
-    console.warn('⚠️ JWT_SECRET is not set. Admin login will fail until you add it in Railway Variables.');
-}
-
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'client')));
-
-// --- Auth helpers ---
-
-function requireAdmin(req, res, next) {
-    if (!JWT_SECRET) {
-        return res.status(500).json({ error: 'Server misconfigured', details: 'JWT_SECRET is not set' });
-    }
-
-    const auth = req.headers.authorization || '';
-    const match = auth.match(/^Bearer\s+(.+)$/i);
-    if (!match) {
-        return res.status(401).json({ error: 'Unauthorized', details: 'Missing Bearer token' });
-    }
-
-    const token = match[1];
-    try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        if (!payload || payload.role !== 'admin') {
-            return res.status(401).json({ error: 'Unauthorized', details: 'Invalid token role' });
-        }
-        req.user = payload;
-        return next();
-    } catch (err) {
-        return res.status(401).json({ error: 'Unauthorized', details: 'Token invalid or expired' });
-    }
-}
-
-// Auth routes
-app.post('/api/auth/login', (req, res) => {
-    try {
-        const { password } = req.body || {};
-        if (typeof password !== 'string' || !password.trim()) {
-            return res.status(400).json({ error: 'Invalid payload', details: 'Expected { password: string }' });
-        }
-
-        if (!ADMIN_PASSWORD || !JWT_SECRET) {
-            return res.status(500).json({
-                error: 'Server misconfigured',
-                details: 'ADMIN_PASSWORD or JWT_SECRET not set'
-            });
-        }
-
-        if (password !== ADMIN_PASSWORD) {
-            return res.status(401).json({ error: 'Unauthorized', details: 'Incorrect password' });
-        }
-
-        const token = jwt.sign(
-            { role: 'admin' },
-            JWT_SECRET,
-            { expiresIn: '12h' }
-        );
-
-        return res.json({ token, admin: true, expiresIn: '12h' });
-    } catch (error) {
-        console.error('Error in /api/auth/login:', error);
-        return res.status(500).json({ error: 'Login failed', details: error?.message || String(error) });
-    }
-});
-
-// Verify token (used by frontend to skip password prompt if still valid)
-app.get('/api/auth/me', requireAdmin, (req, res) => {
-    res.json({ admin: true });
-});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -129,13 +55,12 @@ const UserData = mongoose.model('UserData', userDataSchema);
 
 // API Routes
 
-// Get all data (public read)
+// Get all data (public)
 app.get('/api/data', async (req, res) => {
     try {
         let userData = await UserData.findOne({ userId: 'default' });
 
         if (!userData) {
-            // Create default data if none exists
             userData = new UserData({
                 userId: 'default',
                 projects: [],
@@ -154,9 +79,8 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
-// Save all data (admin-only)
-// Save all data (atomic upsert to avoid race conditions / duplicate key errors)
-app.post('/api/data', requireAdmin, async (req, res) => {
+// Save all data (public)
+app.post('/api/data', async (req, res) => {
     try {
         const { projects, stats } = req.body;
 
@@ -174,7 +98,6 @@ app.post('/api/data', requireAdmin, async (req, res) => {
             lastModified: new Date()
         };
 
-        // Atomic write: creates the doc if it doesn't exist; updates it if it does.
         await UserData.findOneAndUpdate(
             { userId: 'default' },
             update,
@@ -191,8 +114,8 @@ app.post('/api/data', requireAdmin, async (req, res) => {
     }
 });
 
-// Update projects (admin-only)
-app.put('/api/projects', requireAdmin, async (req, res) => {
+// Update projects (public)
+app.put('/api/projects', async (req, res) => {
     try {
         const { projects } = req.body;
 
@@ -212,8 +135,8 @@ app.put('/api/projects', requireAdmin, async (req, res) => {
     }
 });
 
-// Update stats (admin-only)
-app.put('/api/stats', requireAdmin, async (req, res) => {
+// Update stats (public)
+app.put('/api/stats', async (req, res) => {
     try {
         const { stats } = req.body;
 
@@ -249,6 +172,6 @@ app.get('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📁 Serving frontend from: ${path.join(__dirname, '..', 'client')}`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Serving frontend from: ${path.join(__dirname, '..', 'client')}`);
 });
