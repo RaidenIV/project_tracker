@@ -526,11 +526,6 @@ function switchToCompletedView() {
 // DRAG AND DROP
 // ============================================================================
 
-let draggedTaskElement = null;
-let draggedTaskProjectId = null;
-let draggedTaskIndex = null;
-
-
 // Project drag-to-reorder (iOS-style: long-press to enter edit mode + live reflow)
 let __projectDrag = null;
 let __suppressNextProjectGridClick = false;
@@ -1052,75 +1047,168 @@ function cleanupProjectDrag() {
 
 
 function setupTaskDragAndDrop(projectId) {
-    const taskItems = document.querySelectorAll(`[data-task-item]`);
-    
-    taskItems.forEach((item, index) => {
-        item.setAttribute('draggable', 'true');
-        
-        item.addEventListener('dragstart', (e) => {
-            if (!state.isAdmin()) {
-                e.preventDefault();
-                return;
+    const taskList = document.getElementById(`modal-task-list-${projectId}`);
+    if (!taskList || !state.isAdmin()) return;
+
+    // ── per-gesture state (reset each drag) ──
+    let draggableItem = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let itemsGap = 0;
+    let cachedItems = [];          // lazily populated, cleared on release
+
+    // ── helpers ──
+    function getAllItems() {
+        if (!cachedItems.length)
+            cachedItems = Array.from(taskList.querySelectorAll('[data-task-item]'));
+        return cachedItems;
+    }
+    function getIdleItems() {
+        return getAllItems().filter(el => !el.classList.contains('dragging'));
+    }
+    function isAbove(el)   { return el.hasAttribute('data-is-above'); }
+    function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
+
+    // ── drag start ──
+    function onStart(e) {
+        const handle = e.target.closest('.task-drag-handle');
+        if (!handle) return;
+        draggableItem = handle.closest('[data-task-item]');
+        if (!draggableItem) return;
+
+        e.preventDefault();
+
+        pointerStartX = e.clientX ?? e.touches?.[0]?.clientX;
+        pointerStartY = e.clientY ?? e.touches?.[0]?.clientY;
+
+        // measure the gap between the first two idle items (used to size the slide)
+        const idle = getIdleItems();
+        if (idle.length > 1) {
+            const r1 = idle[0].getBoundingClientRect();
+            const r2 = idle[1].getBoundingClientRect();
+            itemsGap = Math.abs(r1.bottom - r2.top);
+        } else {
+            itemsGap = 0;
+        }
+
+        // stamp every item that is currently above the dragged item
+        const dragIdx = getAllItems().indexOf(draggableItem);
+        getIdleItems().forEach(item => {
+            if (getAllItems().indexOf(item) < dragIdx) item.dataset.isAbove = '';
+        });
+
+        draggableItem.classList.add('dragging');
+
+        // lock page scroll while a finger/pointer is down
+        document.body.style.overflow  = 'hidden';
+        document.body.style.userSelect = 'none';
+        document.body.style.touchAction = 'none';
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup',   onEnd);
+        document.addEventListener('touchend',  onEnd);
+    }
+
+    // ── drag move ──
+    function onMove(e) {
+        if (!draggableItem) return;
+        e.preventDefault();
+
+        const cx = e.clientX ?? e.touches[0].clientX;
+        const cy = e.clientY ?? e.touches[0].clientY;
+
+        // 1. follow the pointer
+        draggableItem.style.transform =
+            `translate(${cx - pointerStartX}px, ${cy - pointerStartY}px)`;
+
+        // 2. decide which idle items should slide out of the way
+        const dRect   = draggableItem.getBoundingClientRect();
+        const dCenter = dRect.top + dRect.height / 2;
+
+        getIdleItems().forEach(item => {
+            const iCenter = item.getBoundingClientRect().top +
+                            item.getBoundingClientRect().height / 2;
+
+            if (isAbove(item)) {
+                // item started above → it "toggles" (slides down) when the
+                // dragged item's centre passes above its centre
+                if (dCenter <= iCenter) item.dataset.isToggled = '';
+                else                    delete item.dataset.isToggled;
+            } else {
+                // item started below → slides up when dragged centre passes below
+                if (dCenter >= iCenter) item.dataset.isToggled = '';
+                else                    delete item.dataset.isToggled;
             }
-            draggedTaskElement = item;
-            draggedTaskProjectId = projectId;
-            draggedTaskIndex = index;
-            item.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
         });
-        
-        item.addEventListener('dragend', (e) => {
-            item.classList.remove('dragging');
-            draggedTaskElement = null;
-            draggedTaskProjectId = null;
-            draggedTaskIndex = null;
-        });
-        
-        item.addEventListener('dragover', (e) => {
-            if (draggedTaskElement && draggedTaskElement !== item && draggedTaskProjectId === projectId) {
-                e.preventDefault();
-                const itemRect = item.getBoundingClientRect();
-                const midPoint = itemRect.top + itemRect.height / 2;
-                
-                if (e.clientY < midPoint) {
-                    item.style.borderTop = '2px solid #5a6c7d';
-                    item.style.borderBottom = 'none';
-                } else {
-                    item.style.borderBottom = '2px solid #5a6c7d';
-                    item.style.borderTop = 'none';
-                }
+
+        // 3. apply (or clear) the slide transform on every idle item
+        getIdleItems().forEach(item => {
+            if (isToggled(item)) {
+                const dir = isAbove(item) ? 1 : -1;   // above→slide down (+), below→slide up (-)
+                item.style.transform =
+                    `translateY(${dir * (dRect.height + itemsGap)}px)`;
+            } else {
+                item.style.transform = '';
             }
         });
-        
-        item.addEventListener('dragleave', (e) => {
-            item.style.borderTop = 'none';
-            item.style.borderBottom = 'none';
+    }
+
+    // ── drag end ──
+    function onEnd(e) {
+        if (!draggableItem) return;
+
+        const all           = getAllItems();
+        const originalIndex = all.indexOf(draggableItem);
+
+        // Reconstruct the final order using the same sparse-array trick as the
+        // CodePen: each toggled item shifts its index by ±1; the dragged item
+        // fills the one slot that is left empty.
+        const reordered = [];
+        all.forEach((item, i) => {
+            if (item === draggableItem) return;                          // skip; placed below
+            if (!isToggled(item))       { reordered[i] = item; return; } // unmoved
+            reordered[isAbove(item) ? i + 1 : i - 1] = item;            // shifted
         });
-        
-        item.addEventListener('drop', (e) => {
-            e.preventDefault();
-            item.style.borderTop = 'none';
-            item.style.borderBottom = 'none';
-            
-            if (draggedTaskElement && draggedTaskElement !== item && draggedTaskProjectId === projectId) {
-                const allTaskItems = Array.from(document.querySelectorAll(`[data-task-item]`));
-                const targetIndex = allTaskItems.indexOf(item);
-                const itemRect = item.getBoundingClientRect();
-                const midPoint = itemRect.top + itemRect.height / 2;
-                
-                let newIndex = targetIndex;
-                if (e.clientY > midPoint && draggedTaskIndex < targetIndex) {
-                    newIndex = targetIndex;
-                } else if (e.clientY < midPoint && draggedTaskIndex > targetIndex) {
-                    newIndex = targetIndex;
-                } else if (e.clientY > midPoint) {
-                    newIndex = targetIndex + 1;
-                }
-                
-                reorderTasks(projectId, draggedTaskIndex, newIndex);
-            }
+
+        let newIndex = originalIndex;
+        for (let i = 0; i < all.length; i++) {
+            if (reordered[i] === undefined) { newIndex = i; break; }
+        }
+
+        // wipe all visual state before committing (reorderTasks re-renders the modal)
+        draggableItem.classList.remove('dragging');
+        draggableItem.style.transform = '';
+        all.forEach(item => {
+            delete item.dataset.isAbove;
+            delete item.dataset.isToggled;
+            item.style.transform = '';
         });
-    });
+
+        reset();
+
+        // persist the new order (updates state → saves to MongoDB → re-renders modal)
+        if (originalIndex !== newIndex) {
+            reorderTasks(projectId, originalIndex, newIndex);
+        }
+    }
+
+    // ── cleanup ──
+    function reset() {
+        cachedItems     = [];
+        draggableItem   = null;
+        document.body.style.overflow    = '';
+        document.body.style.userSelect  = '';
+        document.body.style.touchAction = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup',   onEnd);
+        document.removeEventListener('touchend',  onEnd);
+    }
+
+    // ── attach ──
+    taskList.addEventListener('mousedown',  onStart);
+    taskList.addEventListener('touchstart', onStart, { passive: false });
 }
 
 // ============================================================================
