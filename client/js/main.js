@@ -575,8 +575,6 @@ function setupProjectDragAndDrop() {
             if (startIndex === -1) return;
 
             const rect = card.getBoundingClientRect();
-            const offsetX = e.clientX - rect.left;
-            const offsetY = e.clientY - rect.top;
 
             // ── NOT in edit mode: require a long-press to enter edit mode first ──
             if (!__projectEditMode) {
@@ -588,7 +586,6 @@ function setupProjectDragAndDrop() {
                     startY: e.clientY,
                     lastX: e.clientX,
                     lastY: e.clientY,
-                    offsetX, offsetY,
                     grid: projectGrid,
                     sourceCard: card,
                     startIndex,
@@ -633,13 +630,12 @@ function setupProjectDragAndDrop() {
                         startIndex,
                         startX:     __projectPendingPress.startX,
                         startY:     __projectPendingPress.startY,
-                        offsetX:    __projectPendingPress.offsetX,
-                        offsetY:    __projectPendingPress.offsetY,
                         grid:       projectGrid,
                         sourceCard: card,
                         active:     false,
                         snapshots:  null,
-                        targetIndex: startIndex
+                        targetIndex:     startIndex,
+                        lastTargetIndex: startIndex
                     };
 
                     startProjectSlide({ clientX: __projectPendingPress.lastX,
@@ -664,13 +660,12 @@ function setupProjectDragAndDrop() {
                 startIndex,
                 startX:     e.clientX,
                 startY:     e.clientY,
-                offsetX,
-                offsetY,
                 grid:       projectGrid,
                 sourceCard: card,
                 active:     false,
                 snapshots:  null,
-                targetIndex: startIndex
+                targetIndex:     startIndex,
+                lastTargetIndex: startIndex
             };
 
             try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
@@ -739,10 +734,12 @@ function onProjectPointerMove(e) {
         startProjectSlide(e);
     }
 
-    // 1. Dragged card follows the pointer (zero-lag, no easing)
-    const x = e.clientX - __projectDrag.offsetX;
-    const y = e.clientY - __projectDrag.offsetY;
-    __projectDrag.sourceCard.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    // 1. Dragged card follows the pointer (zero-lag, no easing).
+    //    translate3d is relative to layout position, so we only need the delta
+    //    from where the pointer was when the press started.
+    const dx = e.clientX - __projectDrag.startX;
+    const dy = e.clientY - __projectDrag.startY;
+    __projectDrag.sourceCard.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
 
     // 2. Slide idle cards to make room / fill the gap
     updateProjectSlideItems(e.clientX, e.clientY);
@@ -799,12 +796,13 @@ function startProjectSlide(e) {
         rect: card.getBoundingClientRect()
     }));
 
-    // Float the dragged card; its transform is now set via inline style only
+    // Float the dragged card; its transform is now driven by inline style only.
+    // Use the same delta logic as onProjectPointerMove so there is no jump.
     sourceCard.classList.add('dragging');
 
-    const x = e.clientX - __projectDrag.offsetX;
-    const y = e.clientY - __projectDrag.offsetY;
-    sourceCard.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    const dx = e.clientX - __projectDrag.startX;
+    const dy = e.clientY - __projectDrag.startY;
+    sourceCard.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
 }
 
 /*
@@ -814,7 +812,7 @@ function startProjectSlide(e) {
  *   2. For each idle card, derives the slot it would occupy after the reorder
  *      (adjustedI → finalI mapping, same algebra as the CodePen pattern).
  *   3. Applies the slide offset as CSS custom-property values (--slide-x /
- *      --slide-y) so the offset composes cleanly with the wiggle animation.
+ *      --slide-y) which feed into the card's transform via calc().
  */
 function updateProjectSlideItems(clientX, clientY) {
     const { snapshots, startIndex, sourceCard } = __projectDrag;
@@ -845,9 +843,11 @@ function updateProjectSlideItems(clientX, clientY) {
     }
 
     // targetIndex in the full array == insertionIndex in the idle (reduced) array.
-    // Proof: removing the dragged card and reinserting at position T produces the
-    // same mapping whether T is measured in the full or reduced list.
     __projectDrag.targetIndex = insertionIndex;
+
+    // Nothing moved since the last update — let the current transition finish.
+    if (insertionIndex === __projectDrag.lastTargetIndex) return;
+    __projectDrag.lastTargetIndex = insertionIndex;
 
     // ── slide every idle card to its destination slot ──
     snapshots.forEach((snap, origI) => {
