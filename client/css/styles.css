@@ -29,6 +29,8 @@
 @property --flip-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --hover-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --wiggle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --slide-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --slide-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
 
 }
 
@@ -188,7 +190,7 @@ opacity: 1;
             100% { --wiggle: 1.2deg; }
         }
 
-        .project-grid.is-editing .project-card:not(.project-card-placeholder):not(.project-drag-overlay) {
+        .project-grid.is-editing .project-card:not(.dragging) {
             animation: xmgJiggle 160ms ease-in-out infinite alternate;
         }
 
@@ -200,11 +202,13 @@ opacity: 1;
 
         /* Project Card */
         .project-card {
-            /* iOS-style reorder: compose FLIP translation + hover lift + jiggle rotation */
+            /* iOS-style reorder: compose slide offset + FLIP translation + hover lift + jiggle */
             --flip-x: 0px;
             --flip-y: 0px;
             --hover-y: 0px;
             --wiggle: 0deg;
+            --slide-x: 0px;
+            --slide-y: 0px;
 
             background: var(--panel);
             border-radius: 16px;
@@ -214,10 +218,15 @@ opacity: 1;
             min-height: 180px;
             position: relative;
 
-            /* Only transition visual properties here; transform transitions are controlled by FLIP during reorder */
+            /* Only transition visual properties here; transform transitions are applied
+               selectively during reorder via is-reordering rules below */
             transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 
-            transform: translate3d(var(--flip-x), calc(var(--flip-y) + var(--hover-y)), 0) rotate(var(--wiggle));
+            transform: translate3d(
+                calc(var(--flip-x) + var(--slide-x)),
+                calc(var(--flip-y) + var(--hover-y) + var(--slide-y)),
+                0
+            ) rotate(var(--wiggle));
             transform-origin: 50% 60%;
             will-change: transform;
         }
@@ -233,7 +242,15 @@ opacity: 1;
         }
 
 .project-card.dragging {
-            opacity: 0.5;
+            /* the card being dragged must follow the pointer instantly — no easing */
+            transition: none !important;
+            animation: none !important;
+            z-index: 100;
+            --slide-x: 0px;
+            --slide-y: 0px;
+            --wiggle: 0deg;
+            --hover-y: 0px;
+            box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -4px -4px 10px rgba(255, 255, 255, 0.7);
         }
 
         .project-header {
@@ -1484,14 +1501,16 @@ opacity: 1;
         }
 
 /* ============================================================================
-   Project drag-to-reorder (Live Reflow)
+   Project drag-to-reorder (pointer-based slide)
    ============================================================================ */
 
+/* Lock the page while a card is being dragged */
 .project-grid.is-reordering {
     user-select: none;
     touch-action: none;
 }
 
+/* Edit-mode cursors */
 .project-grid.is-editing .project-card {
     cursor: grab;
 }
@@ -1500,36 +1519,14 @@ opacity: 1;
     cursor: grabbing;
 }
 
-
 .project-grid.is-reordering .project-card {
     cursor: grabbing;
 }
 
-.project-card.project-card-placeholder {
-    background: var(--surface);
-    border: 2px dashed rgba(31, 36, 40, 0.35);
-    box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.75);
-}
-
-.project-drag-overlay {
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 2000;
-    pointer-events: none;
-    will-change: transform;
-    cursor: grabbing;
-    opacity: 0.98;
-
-    /* Absolutely no easing on the dragged tile (must track pointer with zero lag) */
-    transition: none !important;
-    animation: none !important;
-
-    /* Slight lift */
-    box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -4px -4px 10px rgba(255, 255, 255, 0.7);
-}
-
-.project-drag-overlay * {
-    transition: none !important;
-    animation: none !important;
+/* Idle cards slide smoothly while a sibling is being dragged.
+   Transitioning the custom properties (not transform) lets the slide
+   compose cleanly with the wiggle animation that runs on --wiggle. */
+.project-grid.is-reordering .project-card:not(.dragging) {
+    transition: --slide-x 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                --slide-y 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
