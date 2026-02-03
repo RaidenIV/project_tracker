@@ -23,6 +23,13 @@
     --accent: #3278eb;     /* primary action */
     --accent-2: #2563c7;   /* hover / deeper */
     --progress: #07ff67;   /* progress bars */
+
+/* Animatable custom properties for iOS-style reorder (Chromium/modern browsers) */
+@property --flip-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --flip-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --hover-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --wiggle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
 }
 
 body {
@@ -175,24 +182,57 @@ opacity: 1;
             gap: 24px;
         }
 
+        /* iOS home-screen style jiggle while in edit mode */
+        @keyframes xmgJiggle {
+            0% { --wiggle: -1.2deg; }
+            100% { --wiggle: 1.2deg; }
+        }
+
+        .project-grid.is-editing .project-card:not(.project-card-placeholder):not(.project-drag-overlay) {
+            animation: xmgJiggle 160ms ease-in-out infinite alternate;
+        }
+
+        /* Desync phases so the grid doesn't wiggle in perfect sync */
+        .project-grid.is-editing .project-card:nth-child(3n + 1) { animation-delay: -40ms; }
+        .project-grid.is-editing .project-card:nth-child(3n + 2) { animation-delay: -80ms; }
+        .project-grid.is-editing .project-card:nth-child(3n + 3) { animation-delay: -120ms; }
+
+
         /* Project Card */
         .project-card {
+            /* iOS-style reorder: compose FLIP translation + hover lift + jiggle rotation */
+            --flip-x: 0px;
+            --flip-y: 0px;
+            --hover-y: 0px;
+            --wiggle: 0deg;
+
             background: var(--panel);
             border-radius: 16px;
             padding: 24px;
             box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             cursor: pointer;
-            transition: all 0.3s ease;
             min-height: 180px;
             position: relative;
+
+            /* Only transition visual properties here; transform transitions are controlled by FLIP during reorder */
+            transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+
+            transform: translate3d(var(--flip-x), calc(var(--flip-y) + var(--hover-y)), 0) rotate(var(--wiggle));
+            transform-origin: 50% 60%;
+            will-change: transform;
         }
 
         .project-card:hover {
-            transform: translateY(-2px);
+            --hover-y: -2px;
             box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
 
-        .project-card.dragging {
+        /* In edit mode, don't apply hover lift */
+        .project-grid.is-editing .project-card:hover {
+            --hover-y: 0px;
+        }
+
+.project-card.dragging {
             opacity: 0.5;
         }
 
@@ -1438,6 +1478,15 @@ opacity: 1;
     touch-action: none;
 }
 
+.project-grid.is-editing .project-card {
+    cursor: grab;
+}
+
+.project-grid.is-editing .project-card:active {
+    cursor: grabbing;
+}
+
+
 .project-grid.is-reordering .project-card {
     cursor: grabbing;
 }
@@ -1455,9 +1504,19 @@ opacity: 1;
     z-index: 2000;
     pointer-events: none;
     will-change: transform;
-    transform: translate3d(0, 0, 0);
     cursor: grabbing;
     opacity: 0.98;
+
+    /* Absolutely no easing on the dragged tile (must track pointer with zero lag) */
+    transition: none !important;
+    animation: none !important;
+
     /* Slight lift */
     box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -4px -4px 10px rgba(255, 255, 255, 0.7);
 }
+
+.project-drag-overlay * {
+    transition: none !important;
+    animation: none !important;
+}
+
