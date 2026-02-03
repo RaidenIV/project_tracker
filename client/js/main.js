@@ -374,8 +374,11 @@ function reorderProjects(oldIndex, newIndex) {
     
     // Calculate new position in full list
     let newFullIndex;
-    if (newIndex === 0) {
+    if (newIndex <= 0) {
         newFullIndex = 0;
+    } else if (newIndex >= currentViewProjects.length) {
+        // Dropping past the last tile in the current view
+        newFullIndex = newProjects.length;
     } else {
         const targetProject = currentViewProjects[newIndex];
         newFullIndex = newProjects.findIndex(p => p.id === targetProject.id);
@@ -527,130 +530,288 @@ let draggedTaskElement = null;
 let draggedTaskProjectId = null;
 let draggedTaskIndex = null;
 
-let draggedProjectElement = null;
-let draggedProjectIndex = null;
-let dragGhostElement = null;
 
-function createDragGhost(element) {
-    const ghost = element.cloneNode(true);
-    ghost.classList.add('drag-ghost');
-    ghost.style.position = 'absolute';
-    ghost.style.pointerEvents = 'none';
-    ghost.style.opacity = '0.5';
-    ghost.style.zIndex = '1000';
-    return ghost;
-}
+// Project drag-to-reorder (Live Reflow / snap-to-grid)
+let __projectDrag = null;
+let __suppressNextProjectGridClick = false;
 
 function setupProjectDragAndDrop() {
-    const projectCards = document.querySelectorAll('.project-card');
     const projectGrid = document.getElementById('projectGrid');
-    
-    projectCards.forEach((card, index) => {
-        // Make the entire card draggable
-        card.setAttribute('draggable', 'true');
-        
-        card.addEventListener('dragstart', (e) => {
-            if (!state.isAdmin()) {
-                e.preventDefault();
+    if (!projectGrid) return;
+
+    // Prevent "click to open modal" firing right after a drag-reorder
+    projectGrid.addEventListener('click', (e) => {
+        if (__suppressNextProjectGridClick) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            __suppressNextProjectGridClick = false;
+        }
+    }, true);
+
+    const cards = Array.from(projectGrid.querySelectorAll('.project-card'));
+    cards.forEach((card) => {
+        // Disable native HTML5 DnD for projects (we implement pointer-based dragging)
+        card.setAttribute('draggable', 'false');
+
+        card.addEventListener('pointerdown', (e) => {
+            if (!state.isAdmin()) return;
+            if (e.button !== 0) return;
+
+            // If the user is interacting with controls inside the card, don't start a drag
+            const t = e.target;
+            if (t && (t.closest('button') || t.closest('input') || t.closest('textarea') || t.closest('select') || t.closest('a'))) {
                 return;
             }
-            draggedProjectElement = card;
-            draggedProjectIndex = index;
-            card.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            
-            // Create ghost outline
-            setTimeout(() => {
-                dragGhostElement = document.createElement('div');
-                dragGhostElement.className = 'project-card-ghost';
-                dragGhostElement.style.width = card.offsetWidth + 'px';
-                dragGhostElement.style.height = card.offsetHeight + 'px';
-            }, 0);
-        });
-        
-        card.addEventListener('dragend', (e) => {
-            card.classList.remove('dragging');
-            draggedProjectElement = null;
-            draggedProjectIndex = null;
-            
-            // Remove ghost
-            if (dragGhostElement && dragGhostElement.parentNode) {
-                dragGhostElement.parentNode.removeChild(dragGhostElement);
-            }
-            dragGhostElement = null;
-            
-            // Clean up any remaining borders
-            projectCards.forEach(c => {
-                c.style.borderTop = 'none';
-                c.style.borderBottom = 'none';
-            });
-        });
-        
-        card.addEventListener('dragover', (e) => {
-            if (draggedProjectElement && draggedProjectElement !== card) {
-                e.preventDefault();
-                const cardRect = card.getBoundingClientRect();
-                const midPoint = cardRect.top + cardRect.height / 2;
-                
-                // Position ghost element
-                if (dragGhostElement && !dragGhostElement.parentNode) {
-                    card.parentNode.insertBefore(dragGhostElement, card);
-                }
-                
-                if (e.clientY < midPoint) {
-                    card.style.borderTop = '3px solid #5a6c7d';
-                    card.style.borderBottom = 'none';
-                } else {
-                    card.style.borderBottom = '3px solid #5a6c7d';
-                    card.style.borderTop = 'none';
-                }
-            }
-        });
-        
-        card.addEventListener('dragleave', (e) => {
-            card.style.borderTop = 'none';
-            card.style.borderBottom = 'none';
-        });
-        
-        card.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            card.style.borderTop = 'none';
-            card.style.borderBottom = 'none';
-            
-            if (draggedProjectElement && draggedProjectElement !== card) {
-                const targetIndex = Array.from(projectCards).indexOf(card);
-                const cardRect = card.getBoundingClientRect();
-                const midPoint = cardRect.top + cardRect.height / 2;
-                
-                let newIndex = targetIndex;
-                if (e.clientY > midPoint && draggedProjectIndex < targetIndex) {
-                    newIndex = targetIndex;
-                } else if (e.clientY < midPoint && draggedProjectIndex > targetIndex) {
-                    newIndex = targetIndex;
-                } else if (e.clientY > midPoint) {
-                    newIndex = targetIndex + 1;
-                }
-                
-                reorderProjects(draggedProjectIndex, newIndex);
-            }
+
+            const projectId = Number(card.getAttribute('data-project-id'));
+            if (!projectId) return;
+
+            const viewProjects = state.getCurrentViewProjects();
+            const startIndex = viewProjects.findIndex(p => p.id === projectId);
+            if (startIndex === -1) return;
+
+            const rect = card.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+
+            __projectDrag = {
+                active: false,
+                projectId,
+                startIndex,
+                pointerId: e.pointerId,
+                startX: e.clientX,
+                startY: e.clientY,
+                offsetX,
+                offsetY,
+                grid: projectGrid,
+                sourceCard: card,
+                sourceRect: rect,
+                overlay: null,
+                placeholder: null,
+                lastSwapAt: 0,
+                suppressClick: false
+            };
+
+            try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
+
+            window.addEventListener('pointermove', onProjectPointerMove, { passive: false });
+            window.addEventListener('pointerup', onProjectPointerUp, { passive: false, once: true });
+            window.addEventListener('pointercancel', onProjectPointerCancel, { passive: false, once: true });
         });
     });
-    
-    // Handle drag over empty space in grid
-    if (projectGrid) {
-        projectGrid.addEventListener('dragover', (e) => {
-            if (draggedProjectElement) {
-                e.preventDefault();
-                
-                // Show ghost in empty space
-                if (dragGhostElement && !dragGhostElement.parentNode) {
-                    projectGrid.appendChild(dragGhostElement);
-                }
-            }
-        });
+}
+
+function onProjectPointerMove(e) {
+    if (!__projectDrag) return;
+    if (e.pointerId !== __projectDrag.pointerId) return;
+
+    e.preventDefault();
+
+    const dx = e.clientX - __projectDrag.startX;
+    const dy = e.clientY - __projectDrag.startY;
+    const dist = Math.hypot(dx, dy);
+
+    // Threshold before starting reorder (prevents accidental drags)
+    if (!__projectDrag.active) {
+        const THRESHOLD = 8;
+        if (dist < THRESHOLD) return;
+        startProjectLiveReflowDrag(e);
+    }
+
+    updateProjectOverlayPosition(e.clientX, e.clientY);
+    maybeMoveProjectPlaceholder(e.clientX, e.clientY);
+}
+
+function onProjectPointerUp(e) {
+    if (!__projectDrag) return;
+
+    // If we never actually started dragging, just clean up listeners.
+    if (!__projectDrag.active) {
+        cleanupProjectDrag();
+        return;
+    }
+
+    e.preventDefault();
+
+    const { grid, placeholder, startIndex } = __projectDrag;
+
+    // Final index = placeholder index in the current grid order
+    const children = Array.from(grid.children).filter(el => el.classList && el.classList.contains('project-card'));
+    const newIndex = Math.max(0, children.indexOf(placeholder));
+
+    // Suppress click that would open the modal from the pointerup
+    __suppressNextProjectGridClick = true;
+
+    // Cleanup UI before re-render
+    cleanupProjectDragVisuals();
+
+    // Tear down drag listeners/state before committing reorder
+    cleanupProjectDrag();
+
+    // Commit reorder (insert semantics)
+    reorderProjects(startIndex, newIndex);
+}
+
+function onProjectPointerCancel() {
+    if (!__projectDrag) return;
+    // If the drag was active, restore UI by re-rendering
+    if (__projectDrag.active) {
+        cleanupProjectDragVisuals();
+        render();
+    }
+    cleanupProjectDrag();
+}
+
+function startProjectLiveReflowDrag(e) {
+    const { sourceCard, sourceRect, grid } = __projectDrag;
+
+    __projectDrag.active = true;
+    grid.classList.add('is-reordering');
+
+    // Create overlay (floating dragged card)
+    const overlay = sourceCard.cloneNode(true);
+    overlay.classList.add('project-drag-overlay');
+    overlay.style.width = `${sourceRect.width}px`;
+    overlay.style.height = `${sourceRect.height}px`;
+    document.body.appendChild(overlay);
+    __projectDrag.overlay = overlay;
+
+    // Create placeholder (the "gap" that snaps to grid)
+    const placeholder = document.createElement('div');
+    placeholder.className = 'project-card project-card-placeholder';
+    placeholder.style.height = `${sourceRect.height}px`;
+    placeholder.style.minHeight = `${sourceRect.height}px`;
+    placeholder.setAttribute('data-placeholder', 'true');
+    __projectDrag.placeholder = placeholder;
+
+    // Replace source card with placeholder in the grid (causes the grid to reflow)
+    sourceCard.replaceWith(placeholder);
+
+    // Position overlay immediately
+    updateProjectOverlayPosition(e.clientX, e.clientY);
+}
+
+function updateProjectOverlayPosition(clientX, clientY) {
+    const { overlay, offsetX, offsetY } = __projectDrag;
+    if (!overlay) return;
+
+    const x = clientX - offsetX;
+    const y = clientY - offsetY;
+
+    overlay.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+}
+
+function maybeMoveProjectPlaceholder(clientX, clientY) {
+    const now = Date.now();
+    if (now - __projectDrag.lastSwapAt < 40) return; // simple hysteresis / jitter guard
+
+    const { grid, placeholder } = __projectDrag;
+    if (!grid || !placeholder) return;
+
+    const cards = getOrderedProjectCards(grid);
+    const insertionIndex = computeInsertionIndex(cards, clientX, clientY);
+
+    // Move placeholder if needed
+    const currentChildren = Array.from(grid.children).filter(el => el.classList && el.classList.contains('project-card'));
+    const currentIndex = currentChildren.indexOf(placeholder);
+
+    if (insertionIndex !== currentIndex) {
+        __projectDrag.lastSwapAt = now;
+        movePlaceholderWithFlip(grid, placeholder, insertionIndex);
     }
 }
+
+function getOrderedProjectCards(grid) {
+    // Cards excluding placeholder, in DOM order is already row-major for CSS grid auto-flow.
+    // We still sort by (top,left) to be robust when the browser repacks rows.
+    const els = Array.from(grid.querySelectorAll('.project-card')).filter(el => !el.hasAttribute('data-placeholder'));
+    return els.sort((a, b) => {
+        const ra = a.getBoundingClientRect();
+        const rb = b.getBoundingClientRect();
+        const dy = ra.top - rb.top;
+        if (Math.abs(dy) > 8) return dy;
+        return ra.left - rb.left;
+    });
+}
+
+function computeInsertionIndex(orderedCards, x, y) {
+    for (let i = 0; i < orderedCards.length; i++) {
+        const r = orderedCards[i].getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+
+        // If we're clearly above this card, insert before it
+        if (y < cy - r.height * 0.25) return i;
+
+        // If we're roughly in the same row, compare X to decide before/after
+        if (Math.abs(y - cy) <= r.height * 0.35 && x < cx) return i;
+    }
+    return orderedCards.length;
+}
+
+function capturePositions(elements) {
+    const map = new Map();
+    elements.forEach(el => {
+        map.set(el, el.getBoundingClientRect());
+    });
+    return map;
+}
+
+function playFlip(firstRects, elements) {
+    elements.forEach(el => {
+        const first = firstRects.get(el);
+        if (!first) return;
+        const last = el.getBoundingClientRect();
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+
+        el.style.transition = 'transform 180ms ease';
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+        requestAnimationFrame(() => {
+            el.style.transform = '';
+        });
+
+        el.addEventListener('transitionend', () => {
+            el.style.transition = '';
+        }, { once: true });
+    });
+}
+
+function movePlaceholderWithFlip(grid, placeholder, insertionIndex) {
+    const movingEls = Array.from(grid.querySelectorAll('.project-card'))
+        .filter(el => !el.hasAttribute('data-placeholder')); // animate real cards only
+
+    const first = capturePositions(movingEls);
+
+    const children = Array.from(grid.children).filter(el => el.classList && el.classList.contains('project-card'));
+    const beforeEl = children[insertionIndex];
+
+    if (beforeEl) {
+        grid.insertBefore(placeholder, beforeEl);
+    } else {
+        grid.appendChild(placeholder);
+    }
+
+    // Play FLIP on the elements that shifted
+    const movingElsAfter = Array.from(grid.querySelectorAll('.project-card'))
+        .filter(el => !el.hasAttribute('data-placeholder'));
+    playFlip(first, movingElsAfter);
+}
+
+function cleanupProjectDragVisuals() {
+    const { grid, overlay, placeholder } = __projectDrag || {};
+    if (grid) grid.classList.remove('is-reordering');
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+}
+
+function cleanupProjectDrag() {
+    window.removeEventListener('pointermove', onProjectPointerMove);
+    __projectDrag = null;
+}
+
 
 function setupTaskDragAndDrop(projectId) {
     const taskItems = document.querySelectorAll(`[data-task-item]`);
