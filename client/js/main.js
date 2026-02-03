@@ -1,9 +1,9 @@
 // Main application entry point
 
-import { ADMIN_PASSWORD, VIEWS, SHORTCUTS } from './modules/config.js';
+import { VIEWS, SHORTCUTS } from './modules/config.js';
 import { state } from './modules/state.js';
 import { loadDataFromServer, saveDataToServer } from './modules/api.js';
-import { initializePasswordPrompt, requireAdmin } from './modules/auth.js';
+import { requireAdmin } from './modules/auth.js';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -1781,6 +1781,6 @@ window.performUndo = performUndo;
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializePasswordPrompt();
-    initializeEventHandlers();
+    // Load saved projects/stats immediately (no password gate)
+    loadData();
 });
