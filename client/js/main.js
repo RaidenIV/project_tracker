@@ -331,7 +331,7 @@ function addTaskToProject(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const newTask = { id: Date.now(), text: 'New task', completed: false };
+    const newTask = { id: Date.now(), text: '', completed: false };
     // Add new tasks at the beginning (they'll appear first after sorting)
     const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
@@ -1175,6 +1175,7 @@ function openProjectModal(projectId) {
                                    class="task-input"
                                    id="modal-task-input-${task.id}"
                                    value="${task.text}"
+                                   placeholder="New task"
                                    style="display: none;"
                                    onblur="finishEditModalTask(${project.id}, ${task.id})"
                                    onkeydown="if(event.key==='Enter') finishEditModalTask(${project.id}, ${task.id})">
@@ -1300,6 +1301,7 @@ function toggleHideCompleted() {
                            class="task-input"
                            id="modal-task-input-${task.id}"
                            value="${task.text}"
+                           placeholder="New task"
                            style="display: none;"
                            onblur="finishEditModalTask(${projectId}, ${task.id})"
                            onkeydown="if(event.key==='Enter') finishEditModalTask(${projectId}, ${task.id})">
