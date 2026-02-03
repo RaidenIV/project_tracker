@@ -3,6 +3,40 @@
 
 import { API_ENDPOINTS } from './config.js';
 
+const ADMIN_TOKEN_KEY = 'adminToken';
+
+export function getAdminToken() {
+    try {
+        return localStorage.getItem(ADMIN_TOKEN_KEY) || '';
+    } catch {
+        return '';
+    }
+}
+
+export function setAdminToken(token) {
+    try {
+        localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    } catch {
+        // ignore
+    }
+}
+
+export function clearAdminToken() {
+    try {
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+    } catch {
+        // ignore
+    }
+}
+
+function withAuthHeaders(headers = {}) {
+    const token = getAdminToken();
+    if (token) {
+        return { ...headers, Authorization: `Bearer ${token}` };
+    }
+    return headers;
+}
+
 async function readJsonSafe(response) {
     const text = await response.text();
     if (!text) return { text: '', json: null };
@@ -29,6 +63,47 @@ function buildHttpError(prefix, url, response, payload) {
 
     return new Error(msg);
 }
+
+// --- Auth ---
+
+export async function loginAdmin(password) {
+    const url = API_ENDPOINTS.AUTH_LOGIN;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+    });
+
+    const payload = await readJsonSafe(response);
+    if (!response.ok) {
+        throw buildHttpError('Login failed', url, response, payload);
+    }
+
+    const token = payload.json?.token;
+    if (!token || typeof token !== 'string') {
+        throw new Error('Login failed: server did not return a token');
+    }
+
+    setAdminToken(token);
+    return token;
+}
+
+export async function verifyAdminToken() {
+    const url = API_ENDPOINTS.AUTH_ME;
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: withAuthHeaders()
+    });
+
+    const payload = await readJsonSafe(response);
+    if (!response.ok) return false;
+
+    return payload.json?.admin === true;
+}
+
+// --- Data ---
 
 export async function loadDataFromServer() {
     const url = API_ENDPOINTS.DATA;
@@ -60,7 +135,7 @@ export async function saveDataToServer(projects, stats) {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: withAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ projects, stats })
         });
 
@@ -74,7 +149,6 @@ export async function saveDataToServer(projects, stats) {
         return true;
     } catch (error) {
         console.error('❌ Error saving data:', error);
-        // Show the concrete error (includes status + any server response)
         alert(error?.message || 'Failed to save data. Please check your connection.');
         return false;
     }
