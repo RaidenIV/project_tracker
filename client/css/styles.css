@@ -23,14 +23,6 @@
     --accent: #3278eb;     /* primary action */
     --accent-2: #2563c7;   /* hover / deeper */
     --progress: #07ff67;   /* progress bars */
-
-/* Animatable custom properties for iOS-style reorder (Chromium/modern browsers) */
-@property --flip-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --flip-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --hover-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --slide-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --slide-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
-
 }
 
 body {
@@ -183,54 +175,25 @@ opacity: 1;
             gap: 24px;
         }
 
-
         /* Project Card */
         .project-card {
-            /* Reorder slide offset + hover lift compose here */
-            --flip-x: 0px;
-            --flip-y: 0px;
-            --hover-y: 0px;
-            --slide-x: 0px;
-            --slide-y: 0px;
-
             background: var(--panel);
             border-radius: 16px;
             padding: 24px;
             box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             cursor: pointer;
+            transition: all 0.3s ease;
             min-height: 180px;
             position: relative;
-
-            transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
-
-            transform: translate3d(
-                calc(var(--flip-x) + var(--slide-x)),
-                calc(var(--flip-y) + var(--hover-y) + var(--slide-y)),
-                0
-            );
-            transform-origin: 50% 60%;
-            will-change: transform;
         }
 
         .project-card:hover {
-            --hover-y: -2px;
+            transform: translateY(-2px);
             box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
 
-        /* In edit mode, don't apply hover lift */
-        .project-grid.is-editing .project-card:hover {
-            --hover-y: 0px;
-        }
-
-.project-card.dragging {
-            /* the card being dragged must follow the pointer instantly — no easing */
-            transition: none !important;
-            animation: none !important;
-            z-index: 100;
-            --slide-x: 0px;
-            --slide-y: 0px;
-            --hover-y: 0px;
-            box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -4px -4px 10px rgba(255, 255, 255, 0.7);
+        .project-card.dragging {
+            opacity: 0.5;
         }
 
         .project-header {
@@ -365,16 +328,10 @@ opacity: 1;
             border-radius: 8px;
             padding: 12px;
             box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
-            cursor: default;
-            /* fade-out uses opacity/max-height/padding/margin; reorder slide uses transform.
-               Keep them on separate durations so slides feel snappy and fades feel deliberate. */
-            transition: opacity 0.5s ease-out, max-height 0.5s ease-out,
-                        padding 0.5s ease-out, margin 0.5s ease-out,
-                        transform 0.25s ease;
+            cursor: grab;
+            transition: all 0.5s ease-out;
             opacity: 1;
             transform: translateY(0);
-            will-change: transform;
-            position: relative;
         }
 
         .task-item.fading-out {
@@ -386,14 +343,12 @@ opacity: 1;
             margin-bottom: 0;
         }
 
+        .task-item:active {
+            cursor: grabbing;
+        }
+
         .task-item.dragging {
-            /* the item being dragged must track the pointer instantly — no easing */
-            transition: none;
-            z-index: 10;
-            opacity: 1;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18),
-                        inset 4px 4px 8px rgba(120, 120, 130, 0.35),
-                        inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+            opacity: 0.5;
         }
 
         .task-drag-handle {
@@ -402,16 +357,10 @@ opacity: 1;
             width: 16px;
             height: 16px;
             flex-shrink: 0;
-            cursor: grab;
         }
 
         .task-item:hover .task-drag-handle {
             opacity: 0.6;
-        }
-
-        .task-item.dragging .task-drag-handle {
-            cursor: grabbing;
-            opacity: 0.7;
         }
 
         .task-checkbox {
@@ -454,11 +403,6 @@ opacity: 1;
             font-family: inherit;
             outline: none;
             box-shadow: inset 2px 2px 4px rgba(120, 120, 130, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.85);
-        }
-
-        .task-input::placeholder {
-            color: var(--muted-2);
-            opacity: 0.6;
         }
 
         .task-delete-button {
@@ -1007,10 +951,34 @@ opacity: 1;
             width: 0;
         }
 
-        .modal-content::-webkit-scrollbar-button:increment,
-        .modal-content::-webkit-scrollbar-button:decrement {
+        /* ============================================================
+           Remove scrollbar arrow buttons on expanded project cards
+           (Chrome / Edge / other WebKit/Blink)
+           ============================================================ */
+
+        /* These show up as little up/down arrow buttons on some platforms.
+           Hide them for in-card scroll regions and project "expanded" areas. */
+        .tasks-container::-webkit-scrollbar-button,
+        .task-list::-webkit-scrollbar-button,
+        .modal-tasks::-webkit-scrollbar-button,
+        [id^="modal-task-list-"]::-webkit-scrollbar-button,
+        .project-card::-webkit-scrollbar-button {
             display: none;
+            height: 0;
+            width: 0;
         }
+
+        /* Variant selector some engines use for the arrows */
+        .tasks-container::-webkit-scrollbar-button:single-button,
+        .task-list::-webkit-scrollbar-button:single-button,
+        .modal-tasks::-webkit-scrollbar-button:single-button,
+        [id^="modal-task-list-"]::-webkit-scrollbar-button:single-button,
+        .project-card::-webkit-scrollbar-button:single-button {
+            display: none;
+            height: 0;
+            width: 0;
+        }
+
 
         /* Firefox */
         .modal-content {
@@ -1463,253 +1431,29 @@ opacity: 1;
             transform: scale(1.02);
         }
 
-        /* ============================================================
-           Responsive – tablet  (≤ 1024 px)
-           ============================================================ */
+        /* Responsive */
         @media (max-width: 1024px) {
             .project-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             }
         }
 
-        /* ============================================================
-           Responsive – tablet / large phone  (≤ 768 px)
-           ============================================================ */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
-                padding-top: 70px;
             }
-
+            
             .viewport {
                 width: 100% !important;
             }
-
+            
             .control-panel {
                 width: 100% !important;
                 position: relative;
             }
-
+            
             .control-panel-content {
                 position: relative;
                 top: 0;
             }
-
-            /* Modal fills more of the screen vertically */
-            .modal-content {
-                max-height: 88vh;
-                width: 94%;
-                padding: 24px;
-            }
-
-            /* Shortcuts hint shrinks so it doesn't eat screen real estate */
-            .shortcuts-hint {
-                font-size: 10px;
-                padding: 10px 12px;
-                max-width: 260px;
-            }
         }
-
-        /* ============================================================
-           Responsive – phone  (≤ 480 px)
-           ============================================================ */
-        @media (max-width: 480px) {
-            /* ── layout ── */
-            .container {
-                padding: 60px 10px 10px;
-                gap: 16px;
-            }
-
-            .viewport-header h1 {
-                font-size: 22px;
-                margin-bottom: 16px;
-            }
-
-            /* single-column card grid */
-            .project-grid {
-                grid-template-columns: 1fr;
-                gap: 14px;
-            }
-
-            /* ── project card ── */
-            .project-card {
-                padding: 18px;
-                min-height: auto;
-                border-radius: 14px;
-            }
-
-            .project-title {
-                font-size: 16px;
-            }
-
-            .project-stats {
-                font-size: 11px;
-                gap: 10px;
-            }
-
-            /* ── modal ── */
-            .modal-content {
-                width: 97%;
-                padding: 18px 16px 24px;
-                max-height: 92vh;
-                border-radius: 18px;
-            }
-
-            .modal-header-centered {
-                margin-bottom: 16px;
-            }
-
-            .modal-header-centered .modal-title {
-                font-size: 22px;
-            }
-
-            .modal-tabs {
-                margin-bottom: 16px;
-            }
-
-            .modal-tab {
-                padding: 10px 8px;
-                font-size: 13px;
-            }
-
-            /* stack action buttons vertically */
-            .modal-actions {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            /* ── task list – bigger tap targets ── */
-            .task-item {
-                padding: 14px 10px;
-                gap: 10px;
-                border-radius: 10px;
-            }
-
-            .task-checkbox {
-                width: 24px;
-                height: 24px;
-                border-width: 2px;
-                flex-shrink: 0;
-            }
-
-            .task-checkbox .icon {
-                width: 14px;
-                height: 14px;
-            }
-
-            .task-text,
-            .task-input {
-                font-size: 15px;
-            }
-
-            /* delete button always visible on phone (no hover) */
-            .task-item .delete-button {
-                opacity: 1;
-            }
-
-            .delete-button {
-                padding: 6px;
-            }
-
-            /* ── card-level action buttons always visible ── */
-            .project-card .copy-button,
-            .project-card .card-delete-button {
-                opacity: 1;
-            }
-
-            /* ── add-task button ── */
-            .modal-add-task-top {
-                padding: 14px;
-                font-size: 15px;
-            }
-
-            /* ── paste / notes textareas ── */
-            .notes-textarea {
-                min-height: 140px;
-                font-size: 15px;
-            }
-
-            /* ── control panel (collapsed to bottom on phone) ── */
-            .control-panel-content {
-                border-radius: 16px;
-                padding: 18px;
-            }
-
-            .add-project-button {
-                padding: 14px;
-                font-size: 15px;
-            }
-
-            /* ── password dialog ── */
-            .password-dialog {
-                padding: 24px 18px;
-                border-radius: 16px;
-            }
-
-            /* ── confirm dialog ── */
-            .confirm-dialog {
-                padding: 20px 16px;
-                border-radius: 14px;
-            }
-
-            .confirm-actions {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            /* ── hide the keyboard-shortcut hint entirely ── */
-            .shortcuts-hint {
-                display: none;
-            }
-
-            /* ── admin badge moves so it doesn't overlap the menu button ── */
-            .admin-indicator {
-                top: auto;
-                bottom: 16px;
-                right: 16px;
-                font-size: 11px;
-                padding: 6px 12px;
-            }
-
-            /* ── global: kill the 300 ms tap delay on interactive elements ── */
-            button,
-            .task-checkbox,
-            .task-item,
-            .project-card,
-            .stat-card,
-            .modal-tab,
-            .toggle-slider {
-                touch-action: manipulation;
-            }
-        }
-
-/* ============================================================================
-   Project drag-to-reorder (pointer-based slide)
-   ============================================================================ */
-
-/* Lock the page while a card is being dragged */
-.project-grid.is-reordering {
-    user-select: none;
-    touch-action: none;
-}
-
-/* Edit-mode cursors */
-.project-grid.is-editing .project-card {
-    cursor: grab;
-}
-
-.project-grid.is-editing .project-card:active {
-    cursor: grabbing;
-}
-
-.project-grid.is-reordering .project-card {
-    cursor: grabbing;
-}
-
-/* Idle cards slide smoothly while a sibling is being dragged.
-   Transitioning transform (not the custom properties) is universally
-   interpolated.  The JS only flips --slide-x/y when the insertion index
-   changes, so each 0.25 s slide plays cleanly to completion. */
-.project-grid.is-reordering .project-card:not(.dragging) {
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
