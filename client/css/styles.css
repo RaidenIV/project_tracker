@@ -28,7 +28,6 @@
 @property --flip-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --flip-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --hover-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --wiggle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @property --slide-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --slide-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
 
@@ -184,29 +183,13 @@ opacity: 1;
             gap: 24px;
         }
 
-        /* iOS home-screen style jiggle while in edit mode */
-        @keyframes xmgJiggle {
-            0% { --wiggle: -1.2deg; }
-            100% { --wiggle: 1.2deg; }
-        }
-
-        .project-grid.is-editing .project-card:not(.dragging) {
-            animation: xmgJiggle 160ms ease-in-out infinite alternate;
-        }
-
-        /* Desync phases so the grid doesn't wiggle in perfect sync */
-        .project-grid.is-editing .project-card:nth-child(3n + 1) { animation-delay: -40ms; }
-        .project-grid.is-editing .project-card:nth-child(3n + 2) { animation-delay: -80ms; }
-        .project-grid.is-editing .project-card:nth-child(3n + 3) { animation-delay: -120ms; }
-
 
         /* Project Card */
         .project-card {
-            /* iOS-style reorder: compose slide offset + FLIP translation + hover lift + jiggle */
+            /* Reorder slide offset + hover lift compose here */
             --flip-x: 0px;
             --flip-y: 0px;
             --hover-y: 0px;
-            --wiggle: 0deg;
             --slide-x: 0px;
             --slide-y: 0px;
 
@@ -218,15 +201,13 @@ opacity: 1;
             min-height: 180px;
             position: relative;
 
-            /* Only transition visual properties here; transform transitions are applied
-               selectively during reorder via is-reordering rules below */
             transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 
             transform: translate3d(
                 calc(var(--flip-x) + var(--slide-x)),
                 calc(var(--flip-y) + var(--hover-y) + var(--slide-y)),
                 0
-            ) rotate(var(--wiggle));
+            );
             transform-origin: 50% 60%;
             will-change: transform;
         }
@@ -248,7 +229,6 @@ opacity: 1;
             z-index: 100;
             --slide-x: 0px;
             --slide-y: 0px;
-            --wiggle: 0deg;
             --hover-y: 0px;
             box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -4px -4px 10px rgba(255, 255, 255, 0.7);
         }
@@ -1524,9 +1504,9 @@ opacity: 1;
 }
 
 /* Idle cards slide smoothly while a sibling is being dragged.
-   Transitioning the custom properties (not transform) lets the slide
-   compose cleanly with the wiggle animation that runs on --wiggle. */
+   Transitioning transform (not the custom properties) is universally
+   interpolated.  The JS only flips --slide-x/y when the insertion index
+   changes, so each 0.25 s slide plays cleanly to completion. */
 .project-grid.is-reordering .project-card:not(.dragging) {
-    transition: --slide-x 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                --slide-y 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
