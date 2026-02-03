@@ -1435,6 +1435,7 @@ opacity: 1;
 
 .project-grid.is-reordering {
     user-select: none;
+    touch-action: none;
 }
 
 .project-grid.is-reordering .project-card {
