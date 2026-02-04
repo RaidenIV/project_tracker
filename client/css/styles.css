@@ -182,7 +182,11 @@ opacity: 1;
             padding: 24px;
             box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             cursor: pointer;
-            transition: all 0.3s ease;
+            /* Drag-to-reorder uses --slide-x/--slide-y; keep transitions transform-only for snappy motion */
+            --slide-x: 0px;
+            --slide-y: 0px;
+            will-change: transform;
+            transition: transform 160ms ease, box-shadow 0.3s ease, opacity 0.2s ease;
             min-height: 180px;
             position: relative;
         }
@@ -191,6 +195,30 @@ opacity: 1;
             transform: translateY(-2px);
             box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
+
+        /* ─────────────────────────────────────────────────────────────
+           Project card drag-to-reorder (CSS grid slide engine)
+           ───────────────────────────────────────────────────────────── */
+
+        /* When reordering, every *idle* card is positioned via --slide-x/--slide-y. */
+        .project-grid.is-reordering .project-card {
+            transform: translate3d(var(--slide-x), var(--slide-y), 0);
+            transition: transform 140ms ease;
+        }
+
+        /* Prevent hover from fighting the slide transform while dragging. */
+        .project-grid.is-reordering .project-card:hover {
+            transform: translate3d(var(--slide-x), var(--slide-y), 0);
+        }
+
+        /* The dragged card is controlled entirely by inline transform (pointer delta). */
+        .project-grid.is-reordering .project-card.dragging {
+            transition: none !important;
+            cursor: grabbing;
+            opacity: 0.9;
+            z-index: 50;
+        }
+
 
         .project-card.dragging {
             opacity: 0.5;
@@ -233,6 +261,12 @@ opacity: 1;
         .project-card:hover .drag-handle {
             opacity: 1;
         }
+
+        /* In edit mode, always show the drag handle (no need to hover) */
+        .project-grid.is-editing .drag-handle {
+            opacity: 1;
+        }
+
 
         .project-title {
             font-size: 18px;
