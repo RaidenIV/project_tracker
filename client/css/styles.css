@@ -186,7 +186,7 @@ opacity: 1;
             --slide-x: 0px;
             --slide-y: 0px;
             will-change: transform;
-            transition: transform 160ms ease, box-shadow 0.3s ease, opacity 0.2s ease;
+            transition: transform 240ms ease, box-shadow 0.3s ease, opacity 0.2s ease;
             min-height: 180px;
             position: relative;
         }
@@ -203,7 +203,7 @@ opacity: 1;
         /* When reordering, every *idle* card is positioned via --slide-x/--slide-y. */
         .project-grid.is-reordering .project-card {
             transform: translate3d(var(--slide-x), var(--slide-y), 0);
-            transition: transform 140ms ease;
+            transition: transform 320ms cubic-bezier(.2,.8,.2,1);
         }
 
         /* Prevent hover from fighting the slide transform while dragging. */
