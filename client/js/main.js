@@ -717,6 +717,60 @@ function bindProjectEditModeExitHandlers() {
     }, true);
 }
 
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Auto-scroll while dragging (important on mobile / small viewports)
+// ──────────────────────────────────────────────────────────────────────────────
+
+let __projectDragScrollEl = null;
+
+function getScrollParent(el) {
+    let node = el;
+    while (node && node !== document.body) {
+        const s = window.getComputedStyle(node);
+        const oy = s.overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight) return node;
+        node = node.parentElement;
+    }
+    return document.scrollingElement || document.documentElement;
+}
+
+function autoScrollProjectDrag(clientY) {
+    if (!__projectDrag || !__projectDrag.active) return;
+
+    // Cache the scroll container for this gesture
+    if (!__projectDragScrollEl) __projectDragScrollEl = getScrollParent(__projectDrag.grid);
+
+    const el = __projectDragScrollEl;
+    if (!el) return;
+
+    const rect = (el === document.scrollingElement || el === document.documentElement)
+        ? { top: 0, bottom: window.innerHeight }
+        : el.getBoundingClientRect();
+
+    const EDGE = 90;          // px from edge where scrolling starts
+    const MAX_STEP = 22;      // px per pointermove near the edge
+
+    const distTop = clientY - rect.top;
+    const distBot = rect.bottom - clientY;
+
+    let step = 0;
+    if (distTop < EDGE) {
+        const t = Math.max(0, Math.min(1, (EDGE - distTop) / EDGE));
+        step = -Math.round(6 + t * (MAX_STEP - 6));
+    } else if (distBot < EDGE) {
+        const t = Math.max(0, Math.min(1, (EDGE - distBot) / EDGE));
+        step = Math.round(6 + t * (MAX_STEP - 6));
+    }
+
+    if (!step) return;
+
+    if (el === document.scrollingElement || el === document.documentElement) {
+        window.scrollBy(0, step);
+    } else {
+        el.scrollTop += step;
+    }
+}
 // ──────────────────────────────────────────────────────────────────────────────
 // Pointer handlers
 // ──────────────────────────────────────────────────────────────────────────────
@@ -742,7 +796,9 @@ function onProjectPointerMove(e) {
 
     // 2. Slide idle cards to make room / fill the gap
     updateProjectSlideItems(e.clientX, e.clientY);
+    autoScrollProjectDrag(e.clientY);
 }
+
 
 function onProjectPointerUp(e) {
     if (!__projectDrag) return;
@@ -831,19 +887,42 @@ function updateProjectSlideItems(clientX, clientY) {
     const idleSnaps = snapshots.filter(s => s.card !== sourceCard);
 
     // ── find insertion index among idle cards ──
-    // Walk in reading order; the first card whose snapshot centre is "after" the
-    // drag centre (lower row, or same row but to the right) is the insert-before
-    // target.  "Same row" = centres within 40 % of a card height vertically.
-    let insertionIndex = idleSnaps.length;                          // default: end
-    const rowBand = (idleSnaps[0]?.rect.height || 100) * 0.4;
+    // Improved heuristic:
+    //   1) Find the snapshot tile whose center is *closest* to the dragged tile center.
+    //   2) Insert before/after that tile based on which side of its center we are on.
+    // This is far less "jumpy" than a row-band scan on responsive grids.
+    let insertionIndex = idleSnaps.length; // default: end
+    if (idleSnaps.length) {
+        const rowBand = (idleSnaps[0]?.rect.height || 100) * 0.55;
 
-    for (let i = 0; i < idleSnaps.length; i++) {
-        const r  = idleSnaps[i].rect;
-        const cx = r.left + r.width  / 2;
+        let closestI = 0;
+        let bestD2 = Infinity;
+
+        for (let i = 0; i < idleSnaps.length; i++) {
+            const r = idleSnaps[i].rect;
+            const cx = r.left + r.width / 2;
+            const cy = r.top  + r.height / 2;
+            const dx = dCX - cx;
+            const dy = dCY - cy;
+
+            // weight Y a bit more to reduce accidental lateral swaps when scrolling
+            const d2 = (dx * dx) + (dy * dy * 1.35);
+            if (d2 < bestD2) {
+                bestD2 = d2;
+                closestI = i;
+            }
+        }
+
+        const r = idleSnaps[closestI].rect;
+        const cx = r.left + r.width / 2;
         const cy = r.top  + r.height / 2;
+        const sameRow = Math.abs(dCY - cy) <= rowBand;
 
-        if (dCY < cy - rowBand)                            { insertionIndex = i; break; }
-        if (Math.abs(dCY - cy) <= rowBand && dCX < cx)     { insertionIndex = i; break; }
+        // Decide before vs after the closest tile
+        if (sameRow) insertionIndex = (dCX < cx) ? closestI : (closestI + 1);
+        else        insertionIndex = (dCY < cy) ? closestI : (closestI + 1);
+
+        insertionIndex = Math.max(0, Math.min(idleSnaps.length, insertionIndex));
     }
 
     // targetIndex in the full array == insertionIndex in the idle (reduced) array.
@@ -888,6 +967,7 @@ function cleanupProjectDrag() {
     window.removeEventListener('pointerup',    onProjectPointerUp);
     window.removeEventListener('pointercancel', onProjectPointerCancel);
     __projectDrag = null;
+    __projectDragScrollEl = null;
 }
 
 
