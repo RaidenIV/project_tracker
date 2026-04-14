@@ -9,11 +9,75 @@
 <body>
     <div class="bg-gradient"></div>
 
-    <!-- Menu Button -->
+    <!-- ─── Auth Overlay ────────────────────────────────────────────────────── -->
+    <div class="auth-overlay hidden" id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="36" height="36">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
+                             M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2
+                             m-6 9l2 2 4-4"></path>
+                </svg>
+            </div>
+            <h1 class="auth-title">Project Tracker</h1>
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab auth-tab-active" id="loginTab">Sign In</button>
+                <button class="auth-tab" id="registerTab">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="auth-field">
+                    <label class="auth-label">Email</label>
+                    <input class="auth-input" id="loginEmail" type="email"
+                           placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Password</label>
+                    <input class="auth-input" id="loginPassword" type="password"
+                           placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <p class="auth-error hidden" id="loginError"></p>
+                <button class="auth-submit" id="loginSubmitBtn" data-label="Sign In">Sign In</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden">
+                <div class="auth-field">
+                    <label class="auth-label">Email</label>
+                    <input class="auth-input" id="registerEmail" type="email"
+                           placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Username</label>
+                    <input class="auth-input" id="registerUsername" type="text"
+                           placeholder="Your name" autocomplete="username">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Password</label>
+                    <input class="auth-input" id="registerPassword" type="password"
+                           placeholder="Min. 6 characters" autocomplete="new-password">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Confirm Password</label>
+                    <input class="auth-input" id="registerConfirm" type="password"
+                           placeholder="Repeat password" autocomplete="new-password">
+                </div>
+                <p class="auth-error hidden" id="registerError"></p>
+                <button class="auth-submit" id="registerSubmitBtn" data-label="Create Account">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Menu Button ──────────────────────────────────────────────────────── -->
     <div class="menu-container" id="menuContainer">
         <button class="menu-button" id="menuButton">
             <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
         <div class="menu-dropdown hidden" id="menuDropdown">
@@ -23,14 +87,26 @@
         </div>
     </div>
 
-    <!-- Main Container -->
+    <!-- ─── User Info (top-right) ────────────────────────────────────────────── -->
+    <div class="header-user-info hidden" id="headerUserInfo">
+        <span class="header-username" id="headerUsername"></span>
+        <button class="logout-btn" id="logoutBtn" title="Sign out">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6
+                         a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- ─── Main Container ───────────────────────────────────────────────────── -->
     <div class="container">
         <!-- Viewport -->
         <div class="viewport" id="viewport">
             <div class="viewport-header">
                 <h1>Active Projects</h1>
             </div>
-            
+
             <div class="empty-state" id="emptyState">
                 <div>
                     <p class="title">No active projects</p>
@@ -48,7 +124,8 @@
                     <h2>Control Panel</h2>
                     <button class="collapse-button" id="collapseButton">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
                 </div>
@@ -81,7 +158,8 @@
                 <!-- Add Project Button -->
                 <button class="add-project-button" id="addProjectButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 4v16m8-8H4"></path>
                     </svg>
                     Add Project
                 </button>
@@ -89,7 +167,8 @@
                 <!-- Undo Button -->
                 <button class="undo-button hidden" id="undoButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
                     </svg>
                     Undo
                 </button>
@@ -100,8 +179,8 @@
                     <select class="project-select" id="pasteProjectSelect">
                         <option value="">Select a project...</option>
                     </select>
-                    <textarea 
-                        class="paste-box" 
+                    <textarea
+                        class="paste-box"
                         id="pasteBox"
                         placeholder="Paste a list of tasks (one per line)&#10;Example:&#10;Fix bug in login page&#10;Update documentation&#10;Review pull requests"></textarea>
                     <button class="paste-button" id="pasteButton" disabled>Add Tasks to Project</button>
@@ -127,7 +206,8 @@
     <!-- Expand Button -->
     <button class="expand-button hidden" id="expandButton">
         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 19l-7-7 7-7"></path>
         </svg>
     </button>
 
