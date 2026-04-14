@@ -12,15 +12,12 @@
     <!-- ─── Auth Overlay ────────────────────────────────────────────────────── -->
     <div class="auth-overlay hidden" id="authOverlay">
         <div class="auth-card">
-            <div class="auth-logo">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="36" height="36">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
-                             M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2
-                             m-6 9l2 2 4-4"></path>
-                </svg>
-            </div>
-            <h1 class="auth-title">Project Tracker</h1>
+
+            <img
+                src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                alt="Logo"
+                class="auth-logo-img"
+            >
 
             <!-- Tabs -->
             <div class="auth-tabs">
@@ -37,8 +34,14 @@
                 </div>
                 <div class="auth-field">
                     <label class="auth-label">Password</label>
-                    <input class="auth-input" id="loginPassword" type="password"
-                           placeholder="••••••••" autocomplete="current-password">
+                    <div class="auth-input-wrap">
+                        <input class="auth-input" id="loginPassword" type="password"
+                               placeholder="••••••••" autocomplete="current-password">
+                        <button class="show-pw-btn" type="button" data-target="loginPassword" title="Show password">
+                            <svg class="eye-icon eye-show" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="eye-icon eye-hide hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.504-4.022M6.53 6.53A9.97 9.97 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.166M15 12a3 3 0 00-3-3m0 6a3 3 0 01-2.83-2M3 3l18 18"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <p class="auth-error hidden" id="loginError"></p>
                 <button class="auth-submit" id="loginSubmitBtn" data-label="Sign In">Sign In</button>
@@ -58,13 +61,25 @@
                 </div>
                 <div class="auth-field">
                     <label class="auth-label">Password</label>
-                    <input class="auth-input" id="registerPassword" type="password"
-                           placeholder="Min. 6 characters" autocomplete="new-password">
+                    <div class="auth-input-wrap">
+                        <input class="auth-input" id="registerPassword" type="password"
+                               placeholder="Min. 6 characters" autocomplete="new-password">
+                        <button class="show-pw-btn" type="button" data-target="registerPassword" title="Show password">
+                            <svg class="eye-icon eye-show" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="eye-icon eye-hide hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.504-4.022M6.53 6.53A9.97 9.97 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.166M15 12a3 3 0 00-3-3m0 6a3 3 0 01-2.83-2M3 3l18 18"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="auth-field">
                     <label class="auth-label">Confirm Password</label>
-                    <input class="auth-input" id="registerConfirm" type="password"
-                           placeholder="Repeat password" autocomplete="new-password">
+                    <div class="auth-input-wrap">
+                        <input class="auth-input" id="registerConfirm" type="password"
+                               placeholder="Repeat password" autocomplete="new-password">
+                        <button class="show-pw-btn" type="button" data-target="registerConfirm" title="Show password">
+                            <svg class="eye-icon eye-show" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="eye-icon eye-hide hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.504-4.022M6.53 6.53A9.97 9.97 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.166M15 12a3 3 0 00-3-3m0 6a3 3 0 01-2.83-2M3 3l18 18"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <p class="auth-error hidden" id="registerError"></p>
                 <button class="auth-submit" id="registerSubmitBtn" data-label="Create Account">Create Account</button>
@@ -76,8 +91,7 @@
     <div class="menu-container" id="menuContainer">
         <button class="menu-button" id="menuButton">
             <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 6h16M4 12h16M4 18h16"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
         <div class="menu-dropdown hidden" id="menuDropdown">
@@ -91,11 +105,11 @@
     <div class="header-user-info hidden" id="headerUserInfo">
         <span class="header-username" id="headerUsername"></span>
         <button class="logout-btn" id="logoutBtn" title="Sign out">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6
-                         a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
+            Sign out
         </button>
     </div>
 
@@ -106,26 +120,33 @@
             <div class="viewport-header">
                 <h1>Active Projects</h1>
             </div>
-
             <div class="empty-state" id="emptyState">
                 <div>
                     <p class="title">No active projects</p>
                     <p class="subtitle">Click "Add Project" to get started</p>
                 </div>
             </div>
-
             <div class="project-grid" id="projectGrid"></div>
         </div>
 
         <!-- Control Panel -->
         <div class="control-panel" id="controlPanel">
             <div class="control-panel-content">
+
+                <!-- Logo above control panel -->
+                <div class="panel-logo-wrap">
+                    <img
+                        src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                        alt="Logo"
+                        class="panel-logo-img"
+                    >
+                </div>
+
                 <div class="control-panel-header">
                     <h2>Control Panel</h2>
                     <button class="collapse-button" id="collapseButton">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 5l7 7-7 7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
                 </div>
@@ -158,8 +179,7 @@
                 <!-- Add Project Button -->
                 <button class="add-project-button" id="addProjectButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 4v16m8-8H4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Add Project
                 </button>
@@ -167,8 +187,7 @@
                 <!-- Undo Button -->
                 <button class="undo-button hidden" id="undoButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
                     </svg>
                     Undo
                 </button>
@@ -206,16 +225,13 @@
     <!-- Expand Button -->
     <button class="expand-button hidden" id="expandButton">
         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 19l-7-7 7-7"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
     </button>
 
     <!-- Project Modal -->
     <div class="modal-overlay" id="projectModal">
-        <div class="modal-content" id="modalContent">
-            <!-- Content populated by JavaScript -->
-        </div>
+        <div class="modal-content" id="modalContent"></div>
     </div>
 
     <!-- Confirmation Dialog -->
@@ -230,7 +246,6 @@
         </div>
     </div>
 
-    <!-- Load JavaScript Modules -->
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
