@@ -1906,6 +1906,18 @@ function initAuthScreen() {
     document.getElementById('loginTab')?.addEventListener('click', () => switchAuthTab('login'));
     document.getElementById('registerTab')?.addEventListener('click', () => switchAuthTab('register'));
 
+    // Show / hide password toggles
+    document.querySelectorAll('.show-pw-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = document.getElementById(btn.dataset.target);
+            if (!input) return;
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.querySelector('.eye-show').classList.toggle('hidden', isHidden);
+            btn.querySelector('.eye-hide').classList.toggle('hidden', !isHidden);
+        });
+    });
+
     // Login form
     document.getElementById('loginSubmitBtn')?.addEventListener('click', async () => {
         hideAuthError('login');
