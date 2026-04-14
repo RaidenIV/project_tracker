@@ -7,8 +7,15 @@ export const API_ENDPOINTS = {
     DATA: '/api/data',
     PROJECTS: '/api/projects',
     STATS: '/api/stats',
-    HEALTH: '/api/health'
+    HEALTH: '/api/health',
+    // Auth endpoints
+    AUTH_REGISTER: '/api/auth/register',
+    AUTH_LOGIN: '/api/auth/login',
+    AUTH_ME: '/api/auth/me'
 };
+
+// LocalStorage key for the JWT token
+export const TOKEN_KEY = 'tracker_token';
 
 // UI Configuration
 export const VIEWS = {

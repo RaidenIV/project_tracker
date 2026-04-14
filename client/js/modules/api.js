@@ -1,7 +1,19 @@
 // API calls to server
-// Enhanced error reporting: surfaces HTTP status + server response payload for faster debugging.
+// Every request attaches the JWT from localStorage.
+// A 401 response means the token is invalid/expired → force logout.
 
 import { API_ENDPOINTS } from './config.js';
+import { getToken, logout } from './auth.js';
+
+// ─── Internals ────────────────────────────────────────────────────────────────
+
+function authHeaders() {
+    const token = getToken();
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+}
 
 async function readJsonSafe(response) {
     const text = await response.text();
@@ -15,25 +27,34 @@ async function readJsonSafe(response) {
 
 function buildHttpError(prefix, url, response, payload) {
     let msg = `${prefix} (${response.status} ${response.statusText}) @ ${url}`;
-
-    // Prefer structured server fields when present
     const j = payload?.json;
     if (j && typeof j === 'object') {
         const serverErr = j.error || j.err || j.details || j.message;
         if (serverErr) msg += `\nServer: ${serverErr}`;
     } else if (payload?.text) {
-        // Fall back to raw body (trimmed)
         const body = payload.text.trim();
         if (body) msg += `\nResponse: ${body.slice(0, 800)}`;
     }
-
     return new Error(msg);
 }
+
+function handleUnauthorized() {
+    console.warn('Session expired or invalid token. Logging out.');
+    logout();
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function loadDataFromServer() {
     const url = API_ENDPOINTS.DATA;
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: authHeaders() });
+
+        if (response.status === 401) {
+            handleUnauthorized();
+            return { projects: [], stats: { completedTasks: 0, completedProjects: 0 } };
+        }
+
         const payload = await readJsonSafe(response);
 
         if (!response.ok) {
@@ -47,11 +68,7 @@ export async function loadDataFromServer() {
         };
     } catch (error) {
         console.error('Error loading data:', error);
-        // Return empty data as fallback
-        return {
-            projects: [],
-            stats: { completedTasks: 0, completedProjects: 0 }
-        };
+        return { projects: [], stats: { completedTasks: 0, completedProjects: 0 } };
     }
 }
 
@@ -60,9 +77,14 @@ export async function saveDataToServer(projects, stats) {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ projects, stats })
         });
+
+        if (response.status === 401) {
+            handleUnauthorized();
+            return false;
+        }
 
         const payload = await readJsonSafe(response);
 
@@ -74,7 +96,6 @@ export async function saveDataToServer(projects, stats) {
         return true;
     } catch (error) {
         console.error('❌ Error saving data:', error);
-        // Show the concrete error (includes status + any server response)
         alert(error?.message || 'Failed to save data. Please check your connection.');
         return false;
     }
@@ -83,7 +104,7 @@ export async function saveDataToServer(projects, stats) {
 export async function checkServerHealth() {
     const url = API_ENDPOINTS.HEALTH;
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: authHeaders() });
         const payload = await readJsonSafe(response);
 
         if (!response.ok) {
