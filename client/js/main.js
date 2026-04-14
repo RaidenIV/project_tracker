@@ -3,6 +3,7 @@
 import { VIEWS, SHORTCUTS } from './modules/config.js';
 import { state } from './modules/state.js';
 import { loadDataFromServer, saveDataToServer } from './modules/api.js';
+import { isLoggedIn, getCurrentUser, login, register, logout } from './modules/auth.js';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -1857,8 +1858,150 @@ window.performUndo = performUndo;
 // INITIALIZATION
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+// ============================================================================
+// AUTH SCREEN
+// ============================================================================
+
+function showAuthError(formId, message) {
+    const el = document.getElementById(formId + 'Error');
+    if (el) { el.textContent = message; el.classList.remove('hidden'); }
+}
+
+function hideAuthError(formId) {
+    const el = document.getElementById(formId + 'Error');
+    if (el) el.classList.add('hidden');
+}
+
+function setAuthLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Please wait…' : btn.dataset.label;
+}
+
+function switchAuthTab(tab) {
+    const loginTab  = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (tab === 'login') {
+        loginTab.classList.add('auth-tab-active');
+        registerTab.classList.remove('auth-tab-active');
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+    } else {
+        registerTab.classList.add('auth-tab-active');
+        loginTab.classList.remove('auth-tab-active');
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+    }
+    hideAuthError('login');
+    hideAuthError('register');
+}
+window.switchAuthTab = switchAuthTab;
+
+function initAuthScreen() {
+    // Tab switching
+    document.getElementById('loginTab')?.addEventListener('click', () => switchAuthTab('login'));
+    document.getElementById('registerTab')?.addEventListener('click', () => switchAuthTab('register'));
+
+    // Login form
+    document.getElementById('loginSubmitBtn')?.addEventListener('click', async () => {
+        hideAuthError('login');
+        const email    = document.getElementById('loginEmail')?.value.trim();
+        const password = document.getElementById('loginPassword')?.value;
+        if (!email || !password) { showAuthError('login', 'Please fill in all fields.'); return; }
+
+        setAuthLoading('loginSubmitBtn', true);
+        try {
+            const user = await login(email, password);
+            onAuthSuccess(user);
+        } catch (err) {
+            showAuthError('login', err.message);
+        } finally {
+            setAuthLoading('loginSubmitBtn', false);
+        }
+    });
+
+    // Enter key on login fields
+    ['loginEmail', 'loginPassword'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('loginSubmitBtn')?.click();
+        });
+    });
+
+    // Register form
+    document.getElementById('registerSubmitBtn')?.addEventListener('click', async () => {
+        hideAuthError('register');
+        const email    = document.getElementById('registerEmail')?.value.trim();
+        const username = document.getElementById('registerUsername')?.value.trim();
+        const password = document.getElementById('registerPassword')?.value;
+        const confirm  = document.getElementById('registerConfirm')?.value;
+
+        if (!email || !username || !password || !confirm) {
+            showAuthError('register', 'Please fill in all fields.'); return;
+        }
+        if (password !== confirm) {
+            showAuthError('register', 'Passwords do not match.'); return;
+        }
+        if (password.length < 6) {
+            showAuthError('register', 'Password must be at least 6 characters.'); return;
+        }
+
+        setAuthLoading('registerSubmitBtn', true);
+        try {
+            const user = await register(email, username, password);
+            onAuthSuccess(user);
+        } catch (err) {
+            showAuthError('register', err.message);
+        } finally {
+            setAuthLoading('registerSubmitBtn', false);
+        }
+    });
+
+    // Enter key on register fields
+    ['registerEmail', 'registerUsername', 'registerPassword', 'registerConfirm'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('registerSubmitBtn')?.click();
+        });
+    });
+
+    // Logout button
+    document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
+}
+
+function onAuthSuccess(user) {
+    state.setCurrentUser(user);
+
+    // Hide auth overlay
+    const overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    // Show username in header
+    const usernameEl = document.getElementById('headerUsername');
+    if (usernameEl) usernameEl.textContent = user.username;
+    const userInfoEl = document.getElementById('headerUserInfo');
+    if (userInfoEl) userInfoEl.classList.remove('hidden');
+
+    // Load app data
     initializeEventHandlers();
-    // Load data immediately without password prompt
     loadData();
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    initAuthScreen();
+
+    if (isLoggedIn()) {
+        const user = getCurrentUser();
+        onAuthSuccess(user);
+    } else {
+        // Show the auth overlay; don't init the app yet
+        const overlay = document.getElementById('authOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+    }
 });
