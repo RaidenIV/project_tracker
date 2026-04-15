@@ -1671,6 +1671,11 @@ function render() {
     document.getElementById('activeProjectsCount').textContent = state.getActiveProjects().length;
     document.getElementById('completedTasksCount').textContent = stats.completedTasks;
     document.getElementById('completedProjectsCount').textContent = stats.completedProjects;
+    // Incomplete tasks = sum of incomplete tasks across all active projects
+    const incompleteTasks = state.getActiveProjects()
+        .reduce((sum, p) => sum + p.tasks.filter(t => !t.completed).length, 0);
+    const incompleteEl = document.getElementById('incompleteTasksCount');
+    if (incompleteEl) incompleteEl.textContent = incompleteTasks;
     
     // Update total completion
     updateTotalCompletion();
@@ -2086,6 +2091,13 @@ function initAuthScreen() {
         setAuthLoading('loginSubmitBtn', true);
         try {
             const user = await login(email, password);
+            // Save email for Remember Me
+            const rememberMe = document.getElementById('rememberMe')?.checked;
+            if (rememberMe) {
+                localStorage.setItem('tracker_remember_email', email);
+            } else {
+                localStorage.removeItem('tracker_remember_email');
+            }
             onAuthSuccess(user);
         } catch (err) {
             showAuthError('login', err.message);
@@ -2137,8 +2149,27 @@ function initAuthScreen() {
         });
     });
 
-    // Logout button
-    document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
+    // Logout buttons (panel)
+    document.getElementById('panelLogoutBtn')?.addEventListener('click', () => logout());
+
+    // Remember Me — restore saved email if present
+    const savedEmail = localStorage.getItem('tracker_remember_email');
+    if (savedEmail) {
+        const emailEl = document.getElementById('loginEmail');
+        if (emailEl) emailEl.value = savedEmail;
+        const rememberEl = document.getElementById('rememberMe');
+        if (rememberEl) rememberEl.checked = true;
+    }
+
+    // Shortcuts toggle
+    document.getElementById('shortcutsToggle')?.addEventListener('click', () => {
+        const panel = document.getElementById('shortcutsPanel');
+        const wrapper = document.getElementById('shortcutsWrapper');
+        if (!panel) return;
+        const isHidden = panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', !isHidden);
+        wrapper.classList.toggle('shortcuts-wrapper--open', isHidden);
+    });
 }
 
 function onAuthSuccess(user) {
@@ -2148,11 +2179,11 @@ function onAuthSuccess(user) {
     const overlay = document.getElementById('authOverlay');
     if (overlay) overlay.classList.add('hidden');
 
-    // Show username in header
-    const usernameEl = document.getElementById('headerUsername');
-    if (usernameEl) usernameEl.textContent = user.username;
-    const userInfoEl = document.getElementById('headerUserInfo');
-    if (userInfoEl) userInfoEl.classList.remove('hidden');
+    // Show username in control panel
+    const panelUsername = document.getElementById('panelUsername');
+    if (panelUsername) panelUsername.textContent = user.username;
+    const panelUserInfo = document.getElementById('panelUserInfo');
+    if (panelUserInfo) panelUserInfo.classList.remove('hidden');
 
     // Load app data
     initializeEventHandlers();
