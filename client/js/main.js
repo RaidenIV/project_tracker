@@ -1298,19 +1298,19 @@ function openProjectModal(projectId) {
             </div>
             
             <!-- Modal Actions - Only in Tasks Tab -->
-            \${project.userRole === 'viewer' ? \`
+            ${project.userRole === 'viewer' ? `
             <div class="viewer-banner">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
-                You have viewer access \${project.ownerName ? '— shared by ' + project.ownerName : ''}
-            </div>\` : \`
+                You have viewer access ${project.ownerName ? '— shared by ' + project.ownerName : ''}
+            </div>` : `
             <div class="modal-actions">
-                \${project.userRole === 'owner' ? \`<button class="modal-delete-btn" onclick="confirmDeleteProject('\${project.id}')">Delete Project</button>\` : ''}
-                <button class="modal-done-btn" onclick="completeProjectFromModal('\${project.id}')">
-                    \${project.completed ? 'Mark as Active' : 'Mark as Complete'}
+                ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
+                <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
+                    ${project.completed ? 'Mark as Active' : 'Mark as Complete'}
                 </button>
-            </div>\`}
+            </div>`}
         </div>
         
         <!-- Members Section -->
