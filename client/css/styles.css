@@ -1657,3 +1657,320 @@ opacity: 1;
     object-fit: contain;
     filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.12));
 }
+
+/* ============================================================================
+   SHARING — role badges, shared indicator, members panel, invite form
+   ============================================================================ */
+
+/* ── Project card badges ──────────────────────────────────────────────────── */
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.role-badge--viewer {
+    background: rgba(120, 120, 130, 0.15);
+    color: var(--muted);
+    box-shadow: inset 2px 2px 4px rgba(120,120,130,0.2), inset -2px -2px 4px rgba(255,255,255,0.7);
+}
+
+.role-badge--editor {
+    background: rgba(50, 120, 235, 0.12);
+    color: var(--accent);
+    box-shadow: inset 2px 2px 4px rgba(50,120,235,0.1), inset -2px -2px 4px rgba(255,255,255,0.7);
+}
+
+.shared-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(50, 120, 235, 0.08);
+    box-shadow: inset 2px 2px 4px rgba(50,120,235,0.08), inset -2px -2px 4px rgba(255,255,255,0.7);
+    font-family: inherit;
+}
+
+.card-owner-name {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.project-card--viewer {
+    border-left: 3px solid rgba(120, 120, 130, 0.35);
+}
+
+/* ── Members count pill on tab ───────────────────────────────────────────── */
+
+.members-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* ── Viewer banner in modal ───────────────────────────────────────────────── */
+
+.viewer-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+}
+
+/* ── Members panel ───────────────────────────────────────────────────────── */
+
+.members-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 4px 0;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
+}
+
+.member-row--owner {
+    background: var(--panel);
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.12), -2px -2px 6px rgba(255,255,255,0.75);
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.member-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.15), -1px -1px 4px rgba(255,255,255,0.6);
+}
+
+.member-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--heading);
+    font-family: inherit;
+}
+
+.member-email {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: inherit;
+}
+
+.member-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Role badge inside member row */
+.member-role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-family: inherit;
+}
+
+.member-role-badge--owner  { background: rgba(50,120,235,0.12); color: var(--accent); }
+.member-role-badge--editor { background: rgba(50,120,235,0.08); color: var(--accent); }
+.member-role-badge--viewer { background: rgba(120,120,130,0.12); color: var(--muted); }
+
+/* Role select inside member row (owner can change roles) */
+.member-role-select {
+    padding: 4px 8px;
+    border-radius: 7px;
+    border: none;
+    background: var(--panel);
+    color: var(--heading);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7);
+    outline: none;
+}
+
+.member-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.member-remove-btn:hover {
+    background: rgba(200, 60, 60, 0.1);
+    color: #b03030;
+}
+
+.viewer-note {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    font-family: inherit;
+    text-align: center;
+    padding: 8px;
+}
+
+/* ── Invite form ─────────────────────────────────────────────────────────── */
+
+.invite-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
+}
+
+.invite-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--heading);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-family: inherit;
+    margin: 0;
+}
+
+.invite-row {
+    display: flex;
+    gap: 8px;
+}
+
+.invite-email-input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 9px;
+    border: none;
+    background: var(--panel);
+    color: var(--heading);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7);
+    transition: box-shadow 0.2s;
+}
+
+.invite-email-input:focus {
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7), 0 0 0 2px var(--accent);
+}
+
+.invite-role-select {
+    padding: 8px 10px;
+    border-radius: 9px;
+    border: none;
+    background: var(--panel);
+    color: var(--heading);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7);
+    outline: none;
+}
+
+.invite-role-hint {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: inherit;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.invite-error {
+    font-size: 12px;
+    color: #b03030;
+    font-family: inherit;
+    margin: 0;
+    padding: 6px 10px;
+    background: rgba(200,60,60,0.08);
+    border-radius: 7px;
+}
+
+.invite-error.hidden { display: none; }
+
+.invite-submit-btn {
+    width: 100%;
+    padding: 9px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.15), -2px -2px 5px rgba(255,255,255,0.6);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.invite-submit-btn:hover {
+    transform: scale(1.02);
+}
