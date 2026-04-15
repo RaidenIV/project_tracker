@@ -1173,7 +1173,7 @@ function openProjectModal(projectId) {
     
     const selectedTasks = state.getSelectedTasks(projectId);
     
-    content.innerHTML = `
+    content.innerHTML = `<div class="modal-scroll-inner">
         <div class="modal-header-centered">
             <div class="modal-title-container">
                 <div class="modal-title" id="modal-title-${project.id}" onclick="editModalTitle(${project.id})" style="cursor: pointer;">${project.title}</div>
@@ -1387,7 +1387,7 @@ function openProjectModal(projectId) {
                     onblur="saveProjectNotes(${project.id})">${project.notes || ''}</textarea>
             </div>
         </div>
-    `;
+    </div>`;
     
     modal.classList.add('active');
     
