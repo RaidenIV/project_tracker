@@ -43,6 +43,10 @@
                         </button>
                     </div>
                 </div>
+                <label class="remember-me-label">
+                    <input type="checkbox" id="rememberMe" class="remember-me-checkbox">
+                    <span>Remember me</span>
+                </label>
                 <p class="auth-error hidden" id="loginError"></p>
                 <button class="auth-submit" id="loginSubmitBtn" data-label="Sign In">Sign In</button>
             </div>
@@ -101,18 +105,6 @@
         </div>
     </div>
 
-    <!-- ─── User Info (top-right) ────────────────────────────────────────────── -->
-    <div class="header-user-info hidden" id="headerUserInfo">
-        <span class="header-username" id="headerUsername"></span>
-        <button class="logout-btn" id="logoutBtn" title="Sign out">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-            </svg>
-            Sign out
-        </button>
-    </div>
-
     <!-- ─── Main Container ───────────────────────────────────────────────────── -->
     <div class="container">
         <!-- Viewport -->
@@ -133,22 +125,29 @@
         <div class="control-panel" id="controlPanel">
             <div class="control-panel-content">
 
-                <!-- Logo above control panel -->
-                <div class="panel-logo-wrap">
+                <div class="control-panel-header">
                     <img
                         src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
                         alt="Logo"
-                        class="panel-logo-img"
+                        class="panel-logo-img-inline"
                     >
-                </div>
-
-                <div class="control-panel-header">
-                    <h2>Control Panel</h2>
-                    <button class="collapse-button" id="collapseButton">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
+                    <div class="panel-header-right">
+                        <div class="panel-user-info hidden" id="panelUserInfo">
+                            <span class="panel-username" id="panelUsername"></span>
+                            <button class="panel-logout-btn" id="panelLogoutBtn" title="Sign out">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Sign out
+                            </button>
+                        </div>
+                        <button class="collapse-button" id="collapseButton">
+                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Stats -->
@@ -160,6 +159,10 @@
                     <div class="stat-card">
                         <div class="stat-value" id="completedTasksCount">0</div>
                         <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="incompleteTasksCount">0</div>
+                        <div class="stat-label">Tasks Remaining</div>
                     </div>
                     <div class="stat-card" id="completedProjectsCard" onclick="switchToCompletedView()">
                         <div class="stat-value" id="completedProjectsCount">0</div>
@@ -208,17 +211,25 @@
         </div>
     </div>
 
-    <!-- Keyboard Shortcuts Hint -->
-    <div class="shortcuts-hint">
-        <div class="shortcuts-title">Keyboard Shortcuts</div>
-        <div class="shortcuts-grid">
-            <div class="shortcut-line"><kbd>N</kbd> New Project</div>
-            <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
-            <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
-            <div class="shortcut-line"><kbd>A</kbd> View Active</div>
-            <div class="shortcut-line"><kbd>D</kbd> Completed</div>
-            <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
-            <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
+    <!-- Keyboard Shortcuts (collapsible) -->
+    <div class="shortcuts-wrapper" id="shortcutsWrapper">
+        <button class="shortcuts-toggle" id="shortcutsToggle" title="Keyboard Shortcuts">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+            <span>Shortcuts</span>
+        </button>
+        <div class="shortcuts-panel hidden" id="shortcutsPanel">
+            <div class="shortcuts-grid">
+                <div class="shortcut-line"><kbd>N</kbd> New Project</div>
+                <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
+                <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
+                <div class="shortcut-line"><kbd>A</kbd> View Active</div>
+                <div class="shortcut-line"><kbd>D</kbd> Completed</div>
+                <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
+                <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
+            </div>
         </div>
     </div>
 
