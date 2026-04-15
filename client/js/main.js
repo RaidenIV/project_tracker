@@ -2,7 +2,12 @@
 
 import { VIEWS, SHORTCUTS } from './modules/config.js';
 import { state } from './modules/state.js';
-import { loadDataFromServer, saveDataToServer } from './modules/api.js';
+import {
+    loadDataFromServer, saveDataToServer,
+    createProjectOnServer, deleteProjectFromServer,
+    reorderProjectsOnServer,
+    shareProjectOnServer, updateCollaboratorRoleOnServer, removeCollaboratorFromServer
+} from './modules/api.js';
 import { isLoggedIn, getCurrentUser, login, register, logout } from './modules/auth.js';
 
 // ============================================================================
@@ -36,90 +41,104 @@ function sortTasks(tasks) {
 
 export async function loadData() {
     const data = await loadDataFromServer();
-    state.setProjects(data.projects);
-    state.setStats(data.stats);
+    // Normalise: ensure each project has an id field (server sets id = _id string)
+    const projects = (data.projects || []).map(p => ({ ...p, id: p.id || p._id }));
+    state.setProjects(projects);
+    state.setStats(data.stats || { completedTasks: 0, completedProjects: 0 });
     render();
 }
 
-// Save queue: prevents overlapping saves and reduces race conditions / partial writes.
+// Save queue: prevents overlapping saves and reduces race conditions.
 let __saveInFlight = false;
 let __saveQueued = false;
 
 async function saveData() {
-    // If a save is already running, just mark that we need another pass.
-    if (__saveInFlight) {
-        __saveQueued = true;
-        return;
-    }
-
+    if (__saveInFlight) { __saveQueued = true; return; }
     __saveInFlight = true;
     try {
         do {
             __saveQueued = false;
-
             const ok = await saveDataToServer(state.getProjects(), state.getStats());
             if (!ok) {
-                console.warn('Save failed (server returned error). Data is still in memory for this session.');
-                // If save fails, do not spin endlessly; exit queue.
+                console.warn('Save failed. Data is still in memory for this session.');
                 break;
             }
-
-            // If changes happened while saving, loop once more to persist the latest state.
         } while (__saveQueued);
     } finally {
         __saveInFlight = false;
     }
 }
 
+// Save only stats (used after delete, since project deletion is handled separately)
+async function saveStatsOnly() {
+    const { saveStatsToServer } = await import('./modules/api.js');
+    await saveStatsToServer(state.getStats());
+}
+
 // ============================================================================
 // PROJECT OPERATIONS
 // ============================================================================
 
-function addProject() {
-    
-    
+async function addProject() {
+    const tempId = Date.now();
     const newProject = {
-        id: Date.now(),
+        id: tempId,
         title: 'New Project',
         tasks: [],
         dateCreated: new Date().toISOString(),
         priority: state.getProjects().length,
         completed: false,
-        notes: ''
+        notes: '',
+        userRole: 'owner',
+        collaborators: []
     };
-    
+
     state.addProject(newProject);
-    saveData();
     render();
-    
-    // Auto-open modal for new project
+
+    // Create on server and get the MongoDB _id back
+    const created = await createProjectOnServer(newProject);
+    if (created) {
+        state.updateProject(tempId, {
+            _id: created._id || created.id,
+            id:  created.id  || created._id,
+            userRole: 'owner',
+            ownerName: state.getCurrentUser()?.username || '',
+            ownerEmail: state.getCurrentUser()?.email || '',
+            collaborators: []
+        });
+    }
+
+    // Auto-open modal for new project (use the real id now)
+    const finalProject = state.findProject(created?.id || tempId);
+    const finalId = finalProject?.id || tempId;
     setTimeout(() => {
-        openProjectModal(newProject.id);
-        setTimeout(() => editModalTitle(newProject.id), 100);
-    }, 100);
+        openProjectModal(finalId);
+        setTimeout(() => editModalTitle(finalId), 100);
+    }, 150);
 }
 
 function deleteProject(projectId) {
-    
-    
+    if (!state.isOwner(projectId)) {
+        alert('Only the project owner can delete it.');
+        return;
+    }
     const project = state.findProject(projectId);
-    if (project?.completed) {
-        state.decrementCompletedProjects();
-    }
+    const mongoId = project?._id;
+
+    if (project?.completed) state.decrementCompletedProjects();
     const completedTasks = project?.tasks.filter(t => t.completed).length || 0;
-    for (let i = 0; i < completedTasks; i++) {
-        state.decrementCompletedTasks();
-    }
-    
+    for (let i = 0; i < completedTasks; i++) state.decrementCompletedTasks();
+
     state.deleteProject(projectId);
-    saveData();
+    if (mongoId) deleteProjectFromServer(mongoId);
+    saveStatsOnly();
     render();
     updateUndoButton();
 }
 
 function completeProject(projectId) {
-    
-    
+    if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -140,7 +159,7 @@ function completeProject(projectId) {
 }
 
 function updateProjectTitle(projectId, newTitle) {
-    
+    if (!state.canEdit(projectId)) return;
     const titleCased = toTitleCase(newTitle);
     state.updateProject(projectId, { title: titleCased });
     saveData();
@@ -148,7 +167,7 @@ function updateProjectTitle(projectId, newTitle) {
 }
 
 function updateProjectNotes(projectId, notes) {
-    
+    if (!state.canEdit(projectId)) return;
     state.updateProject(projectId, { notes });
     saveData();
 }
@@ -189,8 +208,7 @@ function copyProjectToClipboard(projectId, evt) {
 // ============================================================================
 
 function toggleTask(projectId, taskId) {
-    
-    
+    if (!state.canEdit(projectId)) return; // viewers cannot toggle tasks
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -288,8 +306,7 @@ function updateProjectProgress(projectId) {
 }
 
 function deleteTask(projectId, taskId) {
-    
-    
+    if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -310,8 +327,7 @@ function deleteTask(projectId, taskId) {
 }
 
 function updateTaskText(projectId, taskId, newText) {
-    
-    
+    if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -326,8 +342,7 @@ function updateTaskText(projectId, taskId, newText) {
 }
 
 function addTaskToProject(projectId) {
-    
-    
+    if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -392,7 +407,7 @@ function reorderProjects(oldIndex, newIndex) {
     newProjects.forEach((p, i) => p.priority = i);
     
     state.setProjects(newProjects);
-    saveData();
+    reorderProjectsOnServer(newProjects);
     render();
 }
 
@@ -1178,7 +1193,7 @@ function openProjectModal(projectId) {
                 </div>
             </div>
             <div style="display: flex; gap: 4px;">
-                <button class="modal-copy-button" onclick="copyProjectToClipboard(${project.id}, event)">
+                <button class="modal-copy-button" onclick="copyProjectToClipboard('${project.id}', event)">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                     </svg>
@@ -1198,20 +1213,19 @@ function openProjectModal(projectId) {
             <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
         </div>
         
-        <!-- Tabs for Tasks and Notes -->
+        <!-- Tabs for Tasks, Notes and Members -->
         <div class="modal-tabs">
-            <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab(${project.id}, 'tasks')">
-                Tasks
-            </button>
-            <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab(${project.id}, 'notes')">
-                Notes
+            <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
+            <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')">Notes</button>
+            <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
+                Members ${(project.collaborators && project.collaborators.length > 0) ? `<span class="members-count">${project.collaborators.length}</span>` : ''}
             </button>
         </div>
         
         <!-- Tasks Section -->
         <div class="modal-section" id="tasks-section-${project.id}">
             <!-- Add Task Button at Top -->
-            <button class="modal-add-task-top" onclick="addTaskToModal(${project.id})">
+            <button class="modal-add-task-top" onclick="addTaskToModal('${project.id}')">
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -1276,7 +1290,7 @@ function openProjectModal(projectId) {
                         placeholder="Enter tasks here"
                         style="width: 100%; min-height: 80px; background: #e8ecf1; border: 1px solid rgba(47, 39, 206, 0.2); border-radius: 8px; padding: 12px; color: #2d3748; font-size: 12px; font-family: inherit; resize: vertical; box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9); outline: none;"></textarea>
                     <button 
-                        onclick="pasteTasksInModal(${project.id})"
+                        onclick="pasteTasksInModal('${project.id}')"
                         style="width: 100%; margin-top: 8px; padding: 8px; background: rgba(47, 39, 206, 0.2); border: none; border-radius: 8px; color: #2f27ce; font-size: 12px; cursor: pointer; font-family: inherit;">
                         Add Pasted Tasks
                     </button>
@@ -1284,16 +1298,85 @@ function openProjectModal(projectId) {
             </div>
             
             <!-- Modal Actions - Only in Tasks Tab -->
+            \${project.userRole === 'viewer' ? \`
+            <div class="viewer-banner">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                You have viewer access \${project.ownerName ? '— shared by ' + project.ownerName : ''}
+            </div>\` : \`
             <div class="modal-actions">
-                <button class="modal-delete-btn" onclick="confirmDeleteProject(${project.id})">
-                    Delete Project
+                \${project.userRole === 'owner' ? \`<button class="modal-delete-btn" onclick="confirmDeleteProject('\${project.id}')">Delete Project</button>\` : ''}
+                <button class="modal-done-btn" onclick="completeProjectFromModal('\${project.id}')">
+                    \${project.completed ? 'Mark as Active' : 'Mark as Complete'}
                 </button>
-                <button class="modal-done-btn" onclick="completeProjectFromModal(${project.id})">
-                    Mark as Complete
-                </button>
-            </div>
+            </div>\`}
         </div>
         
+        <!-- Members Section -->
+        <div class="modal-section hidden" id="members-section-${project.id}">
+            <div class="members-panel">
+                <!-- Owner -->
+                <div class="members-list">
+                    <div class="member-row member-row--owner">
+                        <div class="member-info">
+                            <span class="member-avatar">${(project.ownerName || 'O')[0].toUpperCase()}</span>
+                            <div>
+                                <div class="member-name">${project.ownerName || 'Owner'}</div>
+                                <div class="member-email">${project.ownerEmail || ''}</div>
+                            </div>
+                        </div>
+                        <span class="member-role-badge member-role-badge--owner">owner</span>
+                    </div>
+                    ${(project.collaborators || []).map(c => `
+                    <div class="member-row">
+                        <div class="member-info">
+                            <span class="member-avatar">${c.username[0].toUpperCase()}</span>
+                            <div>
+                                <div class="member-name">${c.username}</div>
+                                <div class="member-email">${c.email}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            ${project.userRole === 'owner' ? `
+                            <select class="member-role-select" onchange="changeCollaboratorRole('${project.id}', '${c.userId}', this.value)">
+                                <option value="viewer" ${c.role === 'viewer' ? 'selected' : ''}>viewer</option>
+                                <option value="editor" ${c.role === 'editor' ? 'selected' : ''}>editor</option>
+                            </select>
+                            <button class="member-remove-btn" onclick="removeCollaborator('${project.id}', '${c.userId}')" title="Remove">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            ` : `<span class="member-role-badge member-role-badge--${c.role}">${c.role}</span>`}
+                        </div>
+                    </div>
+                    `).join('')}
+                </div>
+
+                ${project.userRole === 'owner' ? `
+                <!-- Invite form (owner only) -->
+                <div class="invite-form">
+                    <h4 class="invite-title">Invite someone</h4>
+                    <div class="invite-row">
+                        <input class="invite-email-input" id="invite-email-${project.id}"
+                               type="email" placeholder="their@email.com">
+                        <select class="invite-role-select" id="invite-role-${project.id}">
+                            <option value="editor">editor</option>
+                            <option value="viewer">viewer</option>
+                        </select>
+                    </div>
+                    <p class="invite-role-hint" id="invite-role-hint-${project.id}">
+                        <strong>Editor</strong> — can add, edit and complete tasks<br>
+                        <strong>Viewer</strong> — read-only access
+                    </p>
+                    <p class="invite-error hidden" id="invite-error-${project.id}"></p>
+                    <button class="invite-submit-btn" onclick="inviteCollaborator('${project.id}')">Send Invite</button>
+                </div>
+                ` : '<p class="viewer-note">Contact the project owner to change member settings.</p>'}
+            </div>
+        </div>
+
         <!-- Notes Section -->
         <div class="modal-section hidden" id="notes-section-${project.id}">
             <div class="modal-notes">
@@ -1313,22 +1396,13 @@ function openProjectModal(projectId) {
 }
 
 function switchModalTab(projectId, tab) {
-    const tasksTab = document.getElementById(`tasks-tab-${projectId}`);
-    const notesTab = document.getElementById(`notes-tab-${projectId}`);
-    const tasksSection = document.getElementById(`tasks-section-${projectId}`);
-    const notesSection = document.getElementById(`notes-section-${projectId}`);
-    
-    if (tab === 'tasks') {
-        tasksTab.classList.add('active');
-        notesTab.classList.remove('active');
-        tasksSection.classList.remove('hidden');
-        notesSection.classList.add('hidden');
-    } else {
-        notesTab.classList.add('active');
-        tasksTab.classList.remove('active');
-        notesSection.classList.remove('hidden');
-        tasksSection.classList.add('hidden');
-    }
+    ['tasks', 'notes', 'members'].forEach(s => {
+        const sec = document.getElementById(`${s}-section-${projectId}`);
+        const btn = document.getElementById(`${s}-tab-${projectId}`);
+        if (!sec || !btn) return;
+        if (s === tab) { sec.classList.remove('hidden'); btn.classList.add('active'); }
+        else           { sec.classList.add('hidden');    btn.classList.remove('active'); }
+    });
 }
 
 function saveProjectNotes(projectId) {
@@ -1626,43 +1700,55 @@ function renderProjectCard(project) {
     const completedTasksCount = project.tasks.filter(t => t.completed).length;
     const totalTasks = project.tasks.length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
-    
+    const isShared = project.collaborators && project.collaborators.length > 0;
+    const isViewer = project.userRole === 'viewer';
+    const isEditor = project.userRole === 'editor';
+    const canOwnerDelete = project.userRole === 'owner';
+
     return `
-        <div class="project-card" 
+        <div class="project-card ${isViewer ? 'project-card--viewer' : ''}"
              data-project-id="${project.id}"
-             onclick="openProjectModal(${project.id})">
+             onclick="openProjectModal('${project.id}')">
             <div class="project-header">
                 <div class="project-title-container-centered">
                     <div class="project-title">${project.title}</div>
                 </div>
                 <div class="project-actions">
-                    <button class="copy-button" onclick="event.stopPropagation(); copyProjectToClipboard(${project.id}, event)">
+                    ${(isViewer || isEditor) ? `<span class="role-badge role-badge--${project.userRole}">${project.userRole}</span>` : ''}
+                    ${isShared && !isViewer && !isEditor ? `<span class="shared-badge" title="${project.collaborators.length} collaborator(s)">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                        </svg>
+                        ${project.collaborators.length}
+                    </span>` : ''}
+                    <button class="copy-button" onclick="event.stopPropagation(); copyProjectToClipboard('${project.id}', event)">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                     </button>
-                    <button class="card-delete-button" onclick="event.stopPropagation(); confirmDeleteProjectCard(${project.id})">
+                    ${canOwnerDelete ? `<button class="card-delete-button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
-                    </button>
+                    </button>` : ''}
                 </div>
             </div>
-            
+
             <div class="project-stats">
                 <span>${new Date(project.dateCreated).toLocaleDateString()}</span>
                 <span>•</span>
                 <span>${project.tasks.length} tasks</span>
                 <span>•</span>
                 <span>${completedTasksCount} done</span>
+                ${(isShared || isViewer || isEditor) ? `<span>•</span><span class="card-owner-name">${isViewer || isEditor ? 'by ' + (project.ownerName || 'Unknown') : 'shared'}</span>` : ''}
             </div>
-            
+
             <div class="progress-bar-container">
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
             </div>
             <div class="progress-text-large" data-progress-text="${project.id}">${progressPercentage}%</div>
             ${project.completed ? `
-            <button class="activate-button" onclick="event.stopPropagation(); completeProject(${project.id})">
+            <button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">
                 Activate
             </button>
             ` : ''}
@@ -1823,6 +1909,75 @@ Features:
     });
 }
 
+
+// ============================================================================
+// SHARING FUNCTIONS
+// ============================================================================
+
+async function inviteCollaborator(projectId) {
+    const emailEl = document.getElementById(`invite-email-${projectId}`);
+    const roleEl  = document.getElementById(`invite-role-${projectId}`);
+    const errEl   = document.getElementById(`invite-error-${projectId}`);
+    if (!emailEl || !roleEl) return;
+
+    const email = emailEl.value.trim();
+    const role  = roleEl.value;
+    if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+
+    if (!email) {
+        if (errEl) { errEl.textContent = 'Please enter an email address.'; errEl.classList.remove('hidden'); }
+        return;
+    }
+
+    const project = state.findProject(projectId);
+    if (!project?._id) return;
+
+    try {
+        const updated = await shareProjectOnServer(project._id, email, role);
+        if (updated) {
+            state.updateProject(projectId, {
+                collaborators: updated.collaborators || []
+            });
+            emailEl.value = '';
+            openProjectModal(projectId);
+            // Re-open on Members tab
+            setTimeout(() => switchModalTab(projectId, 'members'), 50);
+        }
+    } catch (err) {
+        if (errEl) { errEl.textContent = err.message; errEl.classList.remove('hidden'); }
+    }
+}
+
+async function changeCollaboratorRole(projectId, userId, newRole) {
+    const project = state.findProject(projectId);
+    if (!project?._id) return;
+    try {
+        const updated = await updateCollaboratorRoleOnServer(project._id, userId, newRole);
+        if (updated) {
+            state.updateProject(projectId, { collaborators: updated.collaborators || [] });
+        }
+    } catch (err) {
+        alert(`Failed to update role: ${err.message}`);
+        openProjectModal(projectId);
+        setTimeout(() => switchModalTab(projectId, 'members'), 50);
+    }
+}
+
+async function removeCollaborator(projectId, userId) {
+    const project = state.findProject(projectId);
+    if (!project?._id) return;
+    try {
+        const updated = await removeCollaboratorFromServer(project._id, userId);
+        if (updated) {
+            state.updateProject(projectId, { collaborators: updated.collaborators || [] });
+            openProjectModal(projectId);
+            setTimeout(() => switchModalTab(projectId, 'members'), 50);
+        }
+    } catch (err) {
+        alert(`Failed to remove collaborator: ${err.message}`);
+    }
+}
+
 // ============================================================================
 // GLOBAL FUNCTIONS (for HTML onclick handlers)
 // ============================================================================
@@ -1853,6 +2008,9 @@ window.switchModalTab = switchModalTab;
 window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
 window.performUndo = performUndo;
+window.inviteCollaborator = inviteCollaborator;
+window.changeCollaboratorRole = changeCollaboratorRole;
+window.removeCollaborator = removeCollaborator;
 
 // ============================================================================
 // INITIALIZATION
