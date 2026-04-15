@@ -840,28 +840,36 @@ opacity: 1;
         .modal-content {
             background: var(--panel);
             border-radius: 20px;
-            padding: 32px;
+            padding: 0;               /* padding moved to inner scroll div */
             max-width: 600px;
             width: 90%;
             max-height: 80vh;
-            overflow-y: auto;
+            overflow: hidden;         /* clips scrollbar to border-radius */
             box-shadow: 10px 10px 20px rgba(120, 120, 130, 0.30), -10px -10px 20px rgba(255, 255, 255, 0.42);
             transform: scale(0.9);
             transition: transform 0.3s ease;
         }
 
+        /* Inner scroll container — scrollbar stays inside the rounded clip */
+        .modal-scroll-inner {
+            overflow-y: auto;
+            max-height: 80vh;
+            padding: 32px;
+            box-sizing: border-box;
+        }
+
         /* Scrollbar inset from edges so it never touches rounded corners */
-        .modal-content::-webkit-scrollbar {
+        .modal-scroll-inner::-webkit-scrollbar {
             width: 8px;
         }
 
-        .modal-content::-webkit-scrollbar-track {
+        .modal-scroll-inner::-webkit-scrollbar-track {
             background: transparent;
             margin-top: 20px;    /* gap from top-right corner */
             margin-bottom: 20px; /* gap from bottom-right corner */
         }
 
-        .modal-content::-webkit-scrollbar-thumb {
+        .modal-scroll-inner::-webkit-scrollbar-thumb {
             /* transparent border + background-clip creates visual inset
                so thumb never overlaps the rounded corner of the container */
             background-color: rgba(0, 0, 0, 0.18);
@@ -870,13 +878,13 @@ opacity: 1;
             background-clip: padding-box;
         }
 
-        .modal-content::-webkit-scrollbar-thumb:hover {
+        .modal-scroll-inner::-webkit-scrollbar-thumb:hover {
             background-color: rgba(0, 0, 0, 0.32);
             border: 2px solid var(--panel);
             background-clip: padding-box;
         }
 
-        .modal-content::-webkit-scrollbar-button {
+        .modal-scroll-inner::-webkit-scrollbar-button {
             display: none;
             height: 0;
             width: 0;
@@ -912,7 +920,7 @@ opacity: 1;
 
 
         /* Firefox */
-        .modal-content {
+        .modal-scroll-inner {
             scrollbar-width: thin;
             scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
         }
