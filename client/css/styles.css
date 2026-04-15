@@ -850,23 +850,23 @@ opacity: 1;
             transition: transform 0.3s ease;
         }
 
-        /* Thin scrollbar so right-side rounded corners stay visible */
+        /* Scrollbar stays inside rounded corners */
         .modal-content::-webkit-scrollbar {
-            width: 12px;
+            width: 6px;
         }
 
         .modal-content::-webkit-scrollbar-track {
             background: transparent;
-            border-radius: 6px;
+            margin: 20px 0; /* keeps scrollbar away from rounded corners */
         }
 
         .modal-content::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.18);
-            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 3px;
         }
 
         .modal-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.28);
         }
 
         .modal-content::-webkit-scrollbar-button {
@@ -1366,19 +1366,26 @@ opacity: 1;
             .container {
                 flex-direction: column;
             }
-            
             .viewport {
                 width: 100% !important;
             }
-            
             .control-panel {
                 width: 100% !important;
                 position: relative;
             }
-            
             .control-panel-content {
                 position: relative;
                 top: 0;
+            }
+            /* Prevent browser from artificially bolding text on small screens */
+            * {
+                -webkit-text-stroke: 0 !important;
+                text-shadow: none !important;
+                font-synthesis: none !important;
+            }
+            body {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
             }
         }
 
@@ -1973,4 +1980,207 @@ opacity: 1;
 
 .invite-submit-btn:hover {
     transform: scale(1.02);
+}
+
+/* ============================================================================
+   DOTTED BACKGROUND  — app + auth screen
+   ============================================================================ */
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.auth-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.auth-card {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================================
+   SHORTCUTS — collapsible button
+   ============================================================================ */
+
+.shortcuts-wrapper {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.shortcuts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    background: var(--panel);
+    border: none;
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.15), -2px -2px 6px rgba(255,255,255,0.7);
+    transition: color 0.2s, transform 0.15s;
+    letter-spacing: 0.03em;
+}
+
+.shortcuts-toggle:hover {
+    color: var(--heading);
+    transform: scale(1.03);
+}
+
+.shortcuts-wrapper--open .shortcuts-toggle {
+    color: var(--heading);
+    box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
+}
+
+.shortcuts-panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.15), -2px -2px 6px rgba(255,255,255,0.7);
+    font-size: 11px;
+    color: var(--muted);
+    animation: shortcuts-in 0.18s ease;
+}
+
+.shortcuts-panel.hidden { display: none; }
+
+@keyframes shortcuts-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+}
+
+.shortcut-line { white-space: nowrap; }
+
+/* Remove old always-visible shortcuts-hint if still present */
+.shortcuts-hint { display: none; }
+
+/* ============================================================================
+   CONTROL PANEL HEADER — logo left, user info + collapse right
+   ============================================================================ */
+
+.control-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 8px;
+}
+
+.panel-logo-img-inline {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.1));
+    flex-shrink: 0;
+}
+
+.panel-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+/* Panel user info pill */
+.panel-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border-radius: 10px;
+    box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
+    overflow: hidden;
+}
+
+.panel-user-info.hidden { display: none; }
+
+.panel-username {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--heading);
+    padding: 5px 10px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.panel-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 8px;
+    border: none;
+    border-left: 1px solid rgba(0,0,0,0.08);
+    background: transparent;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.panel-logout-btn:hover {
+    background: rgba(200,60,60,0.1);
+    color: #b03030;
+}
+
+/* Hide the old floating top-right user badge */
+.header-user-info { display: none !important; }
+
+/* ============================================================================
+   REMEMBER ME checkbox
+   ============================================================================ */
+
+.remember-me-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.remember-me-checkbox {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
 }
