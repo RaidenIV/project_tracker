@@ -1,120 +1,166 @@
-// API calls to server
-// Every request attaches the JWT from localStorage.
-// A 401 response means the token is invalid/expired → force logout.
+// API layer — per-project CRUD + sharing + stats
+// All requests include the JWT Authorization header.
+// A 401 response forces a logout.
 
 import { API_ENDPOINTS } from './config.js';
 import { getToken, logout } from './auth.js';
 
 // ─── Internals ────────────────────────────────────────────────────────────────
 
-function authHeaders() {
+function authHeaders(extra) {
     const token = getToken();
     return {
         'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...extra
     };
 }
 
-async function readJsonSafe(response) {
-    const text = await response.text();
-    if (!text) return { text: '', json: null };
+async function request(method, url, body) {
+    const opts = { method, headers: authHeaders() };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+
+    let res;
+    try { res = await fetch(url, opts); }
+    catch (err) { throw new Error(`Network error: ${err.message}`); }
+
+    if (res.status === 401) { logout(); return null; }
+
+    let data;
+    try { data = await res.json(); }
+    catch { data = {}; }
+
+    if (!res.ok) {
+        const msg = data.error || data.message || `HTTP ${res.status}`;
+        throw new Error(msg);
+    }
+    return data;
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+export async function loadProjectsFromServer() {
     try {
-        return { text, json: JSON.parse(text) };
-    } catch {
-        return { text, json: null };
+        return await request('GET', API_ENDPOINTS.PROJECTS) || [];
+    } catch (err) {
+        console.error('Error loading projects:', err);
+        return [];
     }
 }
 
-function buildHttpError(prefix, url, response, payload) {
-    let msg = `${prefix} (${response.status} ${response.statusText}) @ ${url}`;
-    const j = payload?.json;
-    if (j && typeof j === 'object') {
-        const serverErr = j.error || j.err || j.details || j.message;
-        if (serverErr) msg += `\nServer: ${serverErr}`;
-    } else if (payload?.text) {
-        const body = payload.text.trim();
-        if (body) msg += `\nResponse: ${body.slice(0, 800)}`;
-    }
-    return new Error(msg);
-}
-
-function handleUnauthorized() {
-    console.warn('Session expired or invalid token. Logging out.');
-    logout();
-}
-
-// ─── Public API ───────────────────────────────────────────────────────────────
-
-export async function loadDataFromServer() {
-    const url = API_ENDPOINTS.DATA;
+export async function createProjectOnServer(project) {
     try {
-        const response = await fetch(url, { headers: authHeaders() });
-
-        if (response.status === 401) {
-            handleUnauthorized();
-            return { projects: [], stats: { completedTasks: 0, completedProjects: 0 } };
-        }
-
-        const payload = await readJsonSafe(response);
-
-        if (!response.ok) {
-            throw buildHttpError('Failed to fetch data', url, response, payload);
-        }
-
-        const data = payload.json || {};
-        return {
-            projects: data.projects || [],
-            stats: data.stats || { completedTasks: 0, completedProjects: 0 }
-        };
-    } catch (error) {
-        console.error('Error loading data:', error);
-        return { projects: [], stats: { completedTasks: 0, completedProjects: 0 } };
+        return await request('POST', API_ENDPOINTS.PROJECTS, project);
+    } catch (err) {
+        console.error('Error creating project:', err);
+        alert(`Failed to create project: ${err.message}`);
+        return null;
     }
 }
 
-export async function saveDataToServer(projects, stats) {
-    const url = API_ENDPOINTS.DATA;
+export async function saveProjectToServer(project) {
+    if (!project._id) {
+        console.warn('saveProjectToServer called without _id — skipping');
+        return false;
+    }
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({ projects, stats })
-        });
-
-        if (response.status === 401) {
-            handleUnauthorized();
-            return false;
-        }
-
-        const payload = await readJsonSafe(response);
-
-        if (!response.ok) {
-            throw buildHttpError('Failed to save data', url, response, payload);
-        }
-
-        console.log('✅ Data saved to MongoDB:', payload.json?.message ?? 'ok');
+        await request('PUT', API_ENDPOINTS.PROJECT(project._id), project);
         return true;
-    } catch (error) {
-        console.error('❌ Error saving data:', error);
-        alert(error?.message || 'Failed to save data. Please check your connection.');
+    } catch (err) {
+        console.error('Error saving project:', err);
+        alert(`Failed to save project: ${err.message}`);
         return false;
     }
 }
 
-export async function checkServerHealth() {
-    const url = API_ENDPOINTS.HEALTH;
+export async function deleteProjectFromServer(_id) {
+    if (!_id) return false;
     try {
-        const response = await fetch(url, { headers: authHeaders() });
-        const payload = await readJsonSafe(response);
+        await request('DELETE', API_ENDPOINTS.PROJECT(_id));
+        return true;
+    } catch (err) {
+        console.error('Error deleting project:', err);
+        alert(`Failed to delete project: ${err.message}`);
+        return false;
+    }
+}
 
-        if (!response.ok) {
-            throw buildHttpError('Health check failed', url, response, payload);
-        }
+export async function reorderProjectsOnServer(projects) {
+    try {
+        const priorities = projects
+            .filter(p => p._id)
+            .map(p => ({ _id: p._id, priority: p.priority }));
+        await request('PATCH', API_ENDPOINTS.PRIORITIES, { priorities });
+        return true;
+    } catch (err) {
+        console.error('Error reordering projects:', err);
+        return false;
+    }
+}
 
-        console.log('Server health:', payload.json);
-        return payload.json;
-    } catch (error) {
-        console.error('Error checking server health:', error);
+// ─── Sharing ──────────────────────────────────────────────────────────────────
+
+export async function shareProjectOnServer(_id, email, role) {
+    return request('POST', API_ENDPOINTS.SHARE(_id), { email, role });
+}
+
+export async function updateCollaboratorRoleOnServer(_id, userId, role) {
+    return request('PUT', API_ENDPOINTS.COLLABORATOR(_id, userId), { role });
+}
+
+export async function removeCollaboratorFromServer(_id, userId) {
+    return request('DELETE', API_ENDPOINTS.COLLABORATOR(_id, userId));
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+export async function loadStatsFromServer() {
+    try {
+        return await request('GET', API_ENDPOINTS.STATS) || { completedTasks: 0, completedProjects: 0 };
+    } catch (err) {
+        console.error('Error loading stats:', err);
+        return { completedTasks: 0, completedProjects: 0 };
+    }
+}
+
+export async function saveStatsToServer(stats) {
+    try {
+        await request('PUT', API_ENDPOINTS.STATS, stats);
+        return true;
+    } catch (err) {
+        console.error('Error saving stats:', err);
+        return false;
+    }
+}
+
+// ─── Health ───────────────────────────────────────────────────────────────────
+
+export async function checkServerHealth() {
+    try {
+        return await request('GET', API_ENDPOINTS.HEALTH);
+    } catch (err) {
+        console.error('Health check failed:', err);
         return null;
     }
+}
+
+// ─── Legacy compat shim ───────────────────────────────────────────────────────
+// main.js's saveData() calls saveDataToServer(projects, stats).
+// We translate that into individual saves + stats save here.
+
+export async function loadDataFromServer() {
+    const [projects, stats] = await Promise.all([
+        loadProjectsFromServer(),
+        loadStatsFromServer()
+    ]);
+    return { projects, stats };
+}
+
+export async function saveDataToServer(projects, stats) {
+    const saves = projects
+        .filter(p => p._id && p.userRole !== 'viewer')
+        .map(p => saveProjectToServer(p));
+    const statsSave = saveStatsToServer(stats);
+    const results = await Promise.all([...saves, statsSave]);
+    return results.every(Boolean);
 }
