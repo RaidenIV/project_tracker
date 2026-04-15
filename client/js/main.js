@@ -1248,13 +1248,13 @@ function openProjectModal(projectId) {
                         <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
                              data-task-item 
                              data-task-id="${task.id}"
-                             onclick="handleTaskClick(${project.id}, ${task.id}, event)">
+                             onclick="handleTaskClick('${project.id}', ${task.id}, event)">
                             <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                             </svg>
                             <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
                                  data-task-checkbox="${task.id}"
-                                 onclick="event.stopPropagation(); toggleTask(${project.id}, ${task.id})">
+                                 onclick="event.stopPropagation(); toggleTask('${project.id}', ${task.id})">
                                 ${task.completed ? `
                                     <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -1271,9 +1271,9 @@ function openProjectModal(projectId) {
                                    value="${task.text}"
                                    placeholder="New task"
                                    style="display: none;"
-                                   onblur="finishEditModalTask(${project.id}, ${task.id})"
-                                   onkeydown="if(event.key==='Enter') finishEditModalTask(${project.id}, ${task.id})">
-                            <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal(${project.id}, ${task.id})" style="opacity: 1;">
+                                   onblur="finishEditModalTask('${project.id}', ${task.id})"
+                                   onkeydown="if(event.key==='Enter') finishEditModalTask('${project.id}', ${task.id})">
+                            <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${project.id}', ${task.id})" style="opacity: 1;">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -1434,13 +1434,13 @@ function toggleHideCompleted() {
                 <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
                      data-task-item 
                      data-task-id="${task.id}"
-                     onclick="handleTaskClick(${projectId}, ${task.id}, event)">
+                     onclick="handleTaskClick('${projectId}', ${task.id}, event)">
                     <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                     </svg>
                     <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
                          data-task-checkbox="${task.id}"
-                         onclick="event.stopPropagation(); toggleTask(${projectId}, ${task.id})">
+                         onclick="event.stopPropagation(); toggleTask('${projectId}', ${task.id})">
                         ${task.completed ? `
                             <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -1457,9 +1457,9 @@ function toggleHideCompleted() {
                            value="${task.text}"
                            placeholder="New task"
                            style="display: none;"
-                           onblur="finishEditModalTask(${projectId}, ${task.id})"
-                           onkeydown="if(event.key==='Enter') finishEditModalTask(${projectId}, ${task.id})">
-                    <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal(${projectId}, ${task.id})" style="opacity: 1;">
+                           onblur="finishEditModalTask('${projectId}', ${task.id})"
+                           onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${task.id})">
+                    <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${task.id})" style="opacity: 1;">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
