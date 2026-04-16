@@ -850,12 +850,13 @@ opacity: 1;
             transition: transform 0.3s ease;
         }
 
-        /* Inner scroll container — scrollbar stays inside the rounded clip */
+        /* Inner scroll container — border-radius clips native scrollbar to corners */
         .modal-scroll-inner {
             overflow-y: auto;
             max-height: 80vh;
             padding: 32px;
             box-sizing: border-box;
+            border-radius: 20px; /* must match parent so scrollbar is clipped */
         }
 
         /* Scrollbar inset from edges so it never touches rounded corners */
@@ -2011,9 +2012,14 @@ body::before {
     background-size: 22px 22px;
 }
 
-/* Auth overlay inherits the body dots through its transparent background */
+/* Auth overlay: solid background so app doesn't show through,
+   dots come from body::before which renders above it via z-index layering.
+   We replicate the dot pattern here so it appears on the auth screen too. */
 .auth-overlay {
-    background: transparent;
+    background:
+        radial-gradient(circle, rgba(0,0,0,0.16) 1.2px, transparent 1.2px),
+        linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
+    background-size: 22px 22px, 100% 100%;
 }
 
 .auth-card {
