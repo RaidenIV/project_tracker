@@ -32,7 +32,11 @@ async function request(method, url, body) {
 
     if (!res.ok) {
         const msg = data.error || data.message || `HTTP ${res.status}`;
-        throw new Error(msg);
+        const error = new Error(msg);
+        error.status = res.status;
+        error.code = data.code || '';
+        error.payload = data;
+        throw error;
     }
     return data;
 }
@@ -60,16 +64,20 @@ export async function createProjectOnServer(project) {
 
 export async function saveProjectToServer(project) {
     if (!project._id) {
-        console.warn('saveProjectToServer called without _id — skipping');
-        return false;
+        return { ok: false, skipped: true };
     }
     try {
-        await request('PUT', API_ENDPOINTS.PROJECT(project._id), project);
-        return true;
+        const payload = { ...project, __clientKnownLastModified: project.lastModified || null };
+        const savedProject = await request('PUT', API_ENDPOINTS.PROJECT(project._id), payload);
+        return { ok: true, project: savedProject };
     } catch (err) {
         console.error('Error saving project:', err);
-        alert(`Failed to save project: ${err.message}`);
-        return false;
+        return {
+            ok: false,
+            conflict: err.code === 'PROJECT_CONFLICT' || err.status === 409,
+            message: err.message,
+            projectId: project.id || project._id
+        };
     }
 }
 
@@ -97,6 +105,16 @@ export async function reorderProjectsOnServer(projects) {
         return false;
     }
 }
+
+
+export async function archiveProjectOnServer(_id) {
+    return request('PUT', API_ENDPOINTS.PROJECT(_id), { archived: true });
+}
+
+export async function restoreProjectOnServer(_id) {
+    return request('PUT', API_ENDPOINTS.PROJECT(_id), { archived: false });
+}
+
 
 // ─── Sharing ──────────────────────────────────────────────────────────────────
 
@@ -179,9 +197,22 @@ export async function saveDataToServer(projects, stats) {
     const saves = projects
         .filter(p => p._id && p.userRole !== 'viewer')
         .map(p => saveProjectToServer(p));
-    const statsSave = saveStatsToServer(stats);
-    const results = await Promise.all([...saves, statsSave]);
-    return results.every(Boolean);
+
+    const [saveResults, statsOk] = await Promise.all([
+        Promise.all(saves),
+        saveStatsToServer(stats)
+    ]);
+
+    const conflicts = saveResults.filter(result => result && !result.ok && result.conflict);
+    const failures = saveResults.filter(result => result && !result.ok && !result.skipped);
+    const savedProjects = saveResults.filter(result => result?.ok).map(result => result.project);
+
+    return {
+        ok: failures.length === 0 && conflicts.length === 0 && statsOk,
+        conflicts,
+        failures,
+        savedProjects
+    };
 }
 
 
