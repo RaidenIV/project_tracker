@@ -72,6 +72,20 @@ const statsSchema = new mongoose.Schema({
 });
 const Stats = mongoose.model('Stats', statsSchema);
 
+const notificationSchema = new mongoose.Schema({
+    userId:      { type: String, required: true, index: true },
+    projectId:   { type: String, required: true },
+    projectTitle:{ type: String, default: 'Project' },
+    actorUserId: { type: String, required: true },
+    actorName:   { type: String, required: true },
+    type:        { type: String, default: 'project_updated' },
+    message:     { type: String, required: true },
+    read:        { type: Boolean, default: false },
+    createdAt:   { type: Date, default: Date.now }
+});
+notificationSchema.index({ userId: 1, createdAt: -1 });
+const Notification = mongoose.model('Notification', notificationSchema);
+
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 
 function authenticateToken(req, res, next) {
@@ -133,6 +147,94 @@ async function enrichProject(project, userId, accountMap) {
 async function buildAccountMap(ownerIds) {
     const accounts = await Account.find({ _id: { $in: ownerIds } }, 'username email');
     return Object.fromEntries(accounts.map(a => [a._id.toString(), a]));
+}
+
+
+function getProjectParticipantIds(project) {
+    return Array.from(new Set([
+        project.owner,
+        ...(project.collaborators || []).map(c => c.userId)
+    ].filter(Boolean)));
+}
+
+async function createProjectNotifications({ project, actor, type = 'project_updated', message, recipientIds }) {
+    const recipients = (recipientIds || getProjectParticipantIds(project))
+        .filter(userId => userId && userId !== actor.id);
+
+    if (!recipients.length || !message) return;
+
+    await Notification.insertMany(recipients.map(userId => ({
+        userId,
+        projectId: project._id.toString(),
+        projectTitle: project.title || 'Project',
+        actorUserId: actor.id,
+        actorName: actor.username || 'Someone',
+        type,
+        message,
+        read: false,
+        createdAt: new Date()
+    })));
+}
+
+function summarizeProjectUpdate(existingProject, incomingBody) {
+    const oldProject = existingProject.toObject ? existingProject.toObject() : existingProject;
+    const update = incomingBody || {};
+
+    if (typeof update.title === 'string' && update.title !== oldProject.title) {
+        return { type: 'project_renamed', message: `renamed the project to “${update.title}”` };
+    }
+
+    if (typeof update.completed === 'boolean' && update.completed !== !!oldProject.completed) {
+        return update.completed
+            ? { type: 'project_completed', message: 'marked the project as completed' }
+            : { type: 'project_reactivated', message: 'reactivated the project' };
+    }
+
+    if (Array.isArray(update.tasks)) {
+        const oldTasks = Array.isArray(oldProject.tasks) ? oldProject.tasks : [];
+        const newTasks = update.tasks;
+        const oldCount = oldTasks.length;
+        const newCount = newTasks.length;
+        const oldCompleted = oldTasks.filter(t => t.completed).length;
+        const newCompleted = newTasks.filter(t => t.completed).length;
+
+        if (newCount > oldCount) {
+            const diff = newCount - oldCount;
+            return { type: 'task_added', message: diff === 1 ? 'added a task' : `added ${diff} tasks` };
+        }
+        if (newCount < oldCount) {
+            const diff = oldCount - newCount;
+            return { type: 'task_deleted', message: diff === 1 ? 'deleted a task' : `deleted ${diff} tasks` };
+        }
+        if (newCompleted > oldCompleted) {
+            const diff = newCompleted - oldCompleted;
+            return { type: 'task_completed', message: diff === 1 ? 'completed a task' : `completed ${diff} tasks` };
+        }
+        if (newCompleted < oldCompleted) {
+            const diff = oldCompleted - newCompleted;
+            return { type: 'task_reopened', message: diff === 1 ? 'reopened a task' : `reopened ${diff} tasks` };
+        }
+
+        const oldTaskMap = new Map(oldTasks.map(task => [String(task.id), task]));
+        const renamedTask = newTasks.find(task => {
+            const previous = oldTaskMap.get(String(task.id));
+            return previous && previous.text !== task.text;
+        });
+        if (renamedTask) {
+            return { type: 'task_updated', message: 'updated task details' };
+        }
+    }
+
+    if (typeof update.notes === 'string' && update.notes !== (oldProject.notes || '')) {
+        return { type: 'notes_updated', message: 'updated the project notes' };
+    }
+
+    const keys = Object.keys(update).filter(key => key !== 'priority');
+    if (keys.length) {
+        return { type: 'project_updated', message: 'updated the project' };
+    }
+
+    return null;
 }
 
 // ─── Auth Routes ─────────────────────────────────────────────────────────────
@@ -237,6 +339,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
     }
 });
 
+
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
@@ -244,11 +347,21 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
         const update = { lastModified: new Date() };
         allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
 
+        const summary = summarizeProjectUpdate(req.project, req.body);
         const updated = await Project.findByIdAndUpdate(req.params.id, update, { new: true });
-        const pObj = updated.toObject();
-        pObj.id       = updated._id.toString();
-        pObj.userRole = req.userRole;
-        res.json(pObj);
+
+        if (summary && updated.collaborators.length > 0) {
+            await createProjectNotifications({
+                project: updated,
+                actor: req.user,
+                type: summary.type,
+                message: summary.message
+            });
+        }
+
+        const ownerMap = await buildAccountMap([updated.owner]);
+        const enriched = await enrichProject(updated, req.user.id, ownerMap);
+        res.json(enriched);
     } catch (err) {
         console.error('Error updating project:', err);
         res.status(500).json({ error: 'Failed to update project', details: err?.message });
@@ -312,10 +425,17 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
         project.lastModified = new Date();
         await project.save();
 
-        const pObj = project.toObject();
-        pObj.id       = project._id.toString();
-        pObj.userRole = 'owner';
-        res.json(pObj);
+        await createProjectNotifications({
+            project,
+            actor: req.user,
+            type: 'project_shared',
+            message: `shared “${project.title}” with you as ${role}` ,
+            recipientIds: [invitee._id.toString()]
+        });
+
+        const ownerMap = await buildAccountMap([project.owner]);
+        const enriched = await enrichProject(project, req.user.id, ownerMap);
+        res.json(enriched);
     } catch (err) {
         console.error('Error sharing project:', err);
         res.status(500).json({ error: 'Failed to share project', details: err?.message });
@@ -336,10 +456,17 @@ app.put('/api/projects/:id/collaborators/:userId', authenticateToken, requireRol
         req.project.lastModified = new Date();
         await req.project.save();
 
-        const pObj = req.project.toObject();
-        pObj.id       = req.project._id.toString();
-        pObj.userRole = 'owner';
-        res.json(pObj);
+        await createProjectNotifications({
+            project: req.project,
+            actor: req.user,
+            type: 'role_changed',
+            message: `changed your access to “${req.project.title}” to ${role}` ,
+            recipientIds: [collab.userId]
+        });
+
+        const ownerMap = await buildAccountMap([req.project.owner]);
+        const enriched = await enrichProject(req.project, req.user.id, ownerMap);
+        res.json(enriched);
     } catch (err) {
         console.error('Error updating collaborator:', err);
         res.status(500).json({ error: 'Failed to update collaborator', details: err?.message });
@@ -347,19 +474,73 @@ app.put('/api/projects/:id/collaborators/:userId', authenticateToken, requireRol
 });
 
 // DELETE /api/projects/:id/collaborators/:userId — remove collaborator (owner only)
+
 app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, requireRole('owner'), async (req, res) => {
     try {
+        const removedCollaborator = req.project.collaborators.find(c => c.userId === req.params.userId);
         req.project.collaborators = req.project.collaborators.filter(c => c.userId !== req.params.userId);
         req.project.lastModified = new Date();
         await req.project.save();
 
-        const pObj = req.project.toObject();
-        pObj.id       = req.project._id.toString();
-        pObj.userRole = 'owner';
-        res.json(pObj);
+        if (removedCollaborator) {
+            await createProjectNotifications({
+                project: req.project,
+                actor: req.user,
+                type: 'access_removed',
+                message: `removed your access to “${req.project.title}”`,
+                recipientIds: [removedCollaborator.userId]
+            });
+        }
+
+        const ownerMap = await buildAccountMap([req.project.owner]);
+        const enriched = await enrichProject(req.project, req.user.id, ownerMap);
+        res.json(enriched);
     } catch (err) {
         console.error('Error removing collaborator:', err);
         res.status(500).json({ error: 'Failed to remove collaborator', details: err?.message });
+    }
+});
+
+
+
+// ─── Notification Routes ─────────────────────────────────────────────────────
+
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    try {
+        const limit = Math.min(Math.max(parseInt(req.query.limit || '25', 10), 1), 100);
+        const [notifications, unreadCount] = await Promise.all([
+            Notification.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(limit),
+            Notification.countDocuments({ userId: req.user.id, read: false })
+        ]);
+        res.json({ notifications, unreadCount });
+    } catch (err) {
+        console.error('Error fetching notifications:', err);
+        res.status(500).json({ error: 'Failed to fetch notifications', details: err?.message });
+    }
+});
+
+app.post('/api/notifications/read-all', authenticateToken, async (req, res) => {
+    try {
+        await Notification.updateMany({ userId: req.user.id, read: false }, { $set: { read: true } });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error marking notifications read:', err);
+        res.status(500).json({ error: 'Failed to mark notifications read', details: err?.message });
+    }
+});
+
+app.post('/api/notifications/:notificationId/read', authenticateToken, async (req, res) => {
+    try {
+        const updated = await Notification.findOneAndUpdate(
+            { _id: req.params.notificationId, userId: req.user.id },
+            { $set: { read: true } },
+            { new: true }
+        );
+        if (!updated) return res.status(404).json({ error: 'Notification not found' });
+        res.json({ success: true, notification: updated });
+    } catch (err) {
+        console.error('Error marking notification read:', err);
+        res.status(500).json({ error: 'Failed to mark notification read', details: err?.message });
     }
 });
 

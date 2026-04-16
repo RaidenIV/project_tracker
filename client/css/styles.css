@@ -45,9 +45,12 @@ body {
         /* Container */
         .container {
             position: relative;
-            padding: 80px 24px 24px;
+            width: min(100%, 2400px);
+            margin: 0 auto;
+            padding: clamp(72px, 4vw, 92px) clamp(18px, 2vw, 28px) 24px;
             display: flex;
-            gap: 24px;
+            align-items: flex-start;
+            gap: clamp(18px, 1.5vw, 28px);
             min-height: 100vh;
             z-index: 1;
         }
@@ -125,11 +128,14 @@ body {
         /* Viewport */
         .viewport {
             transition: all 0.5s ease;
-            width: 75%;
+            flex: 1 1 auto;
+            width: auto;
+            min-width: 0;
         }
 
         .viewport.full {
             width: 100%;
+            flex-basis: 100%;
         }
 
         .viewport-header h1 {
@@ -170,15 +176,15 @@ body {
         /* Project Grid */
         .project-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 21vw, 360px), 1fr));
+            gap: clamp(18px, 1.5vw, 24px);
         }
 
         /* Project Card */
         .project-card {
             background: var(--panel);
             border-radius: 16px;
-            padding: 24px;
+            padding: clamp(18px, 1.4vw, 24px);
             box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
             cursor: pointer;
             /* Drag-to-reorder uses --slide-x/--slide-y; keep transitions transform-only for snappy motion */
@@ -246,7 +252,7 @@ body {
 
         .drag-handle {
             color: var(--heading);
-            opacity: 0;
+            opacity: 0.42;
             transition: opacity 0.3s ease;
             width: 16px;
             height: 16px;
@@ -362,14 +368,14 @@ body {
             padding: 12px;
             box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
             cursor: grab;
-            transition: all 0.5s ease-out;
+            transition: transform 0.16s ease, opacity 0.18s ease, background 0.2s ease, box-shadow 0.2s ease;
             opacity: 1;
             transform: translateY(0);
         }
 
         .task-item.fading-out {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-8px);
             max-height: 0;
             padding-top: 0;
             padding-bottom: 0;
@@ -381,7 +387,8 @@ body {
         }
 
         .task-item.dragging {
-            opacity: 0.5;
+            opacity: 0.65;
+            transition: none !important;
         }
 
         .task-drag-handle {
@@ -490,12 +497,16 @@ body {
 
         /* Control Panel */
         .control-panel {
-            width: 25%;
+            flex: 0 0 clamp(320px, 24vw, 430px);
+            width: clamp(320px, 24vw, 430px);
+            max-width: 430px;
             transition: all 0.5s ease;
         }
 
         .control-panel.collapsed {
             width: 0;
+            flex-basis: 0;
+            min-width: 0;
             overflow: hidden;
         }
 
@@ -504,7 +515,9 @@ body {
             top: 80px;
             background: var(--panel);
             border-radius: 20px;
-            padding: 24px;
+            padding: clamp(18px, 1.4vw, 24px);
+            max-height: calc(100vh - 104px);
+            overflow-y: auto;
             box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
         }
 
@@ -1411,26 +1424,44 @@ body {
         }
 
         /* Responsive */
+        @media (max-width: 1366px) {
+            .control-panel {
+                flex-basis: clamp(300px, 28vw, 380px);
+                width: clamp(300px, 28vw, 380px);
+            }
+        }
+
         @media (max-width: 1024px) {
             .project-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+
+            .panel-header-right {
+                align-items: flex-start;
             }
         }
 
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
+                width: 100%;
+                padding-top: 76px;
             }
             .viewport {
                 width: 100% !important;
+                flex-basis: 100%;
             }
             .control-panel {
                 width: 100% !important;
+                max-width: none;
+                flex-basis: auto;
                 position: relative;
             }
             .control-panel-content {
                 position: relative;
                 top: 0;
+                max-height: none;
+                overflow: visible;
             }
             /* Prevent browser from artificially bolding text on small screens */
             * {
@@ -2159,12 +2190,14 @@ body {
 /* Panel user info pill */
 .panel-user-info {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 0;
     background: var(--surface);
     border-radius: 10px;
     box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
     overflow: hidden;
+    min-width: 132px;
 }
 
 .panel-user-info.hidden { display: none; }
@@ -2174,25 +2207,28 @@ body {
     font-weight: 700;
     font-family: inherit;
     color: var(--heading);
-    padding: 5px 10px;
-    max-width: 100px;
+    padding: 7px 10px 6px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     letter-spacing: 0.02em;
+    text-align: center;
 }
 
 .panel-logout-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    padding: 5px 8px;
+    width: 100%;
+    padding: 6px 8px 7px;
     border: none;
-    border-left: 1px solid rgba(0,0,0,0.08);
+    border-top: 1px solid rgba(0,0,0,0.08);
     background: transparent;
     color: var(--muted);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -2230,4 +2266,216 @@ body {
     accent-color: var(--accent);
     cursor: pointer;
     flex-shrink: 0;
+}
+
+
+.project-title-input--card {
+    width: 100%;
+    min-width: 0;
+    padding: 6px 10px;
+    font-size: 17px;
+    border-radius: 10px;
+}
+
+.project-title-container {
+    min-width: 0;
+}
+
+.project-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-header {
+    gap: 10px;
+}
+
+
+.project-actions .edit-button,
+.project-actions .copy-button,
+.project-actions .card-delete-button {
+    opacity: 1;
+}
+
+@media (hover: hover) {
+    .project-actions .edit-button,
+    .project-actions .copy-button,
+    .project-actions .card-delete-button {
+        opacity: 0;
+    }
+
+    .project-card:hover .edit-button,
+    .project-card:hover .copy-button,
+    .project-card:hover .card-delete-button {
+        opacity: 1;
+    }
+}
+
+@media (hover: none) {
+    .drag-handle {
+        opacity: 0.75;
+    }
+}
+
+
+.shortcuts-toggle {
+    justify-content: center;
+    min-width: 180px;
+}
+
+
+.side-panel-section {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.32), inset -4px -4px 8px rgba(255, 255, 255, 0.82);
+}
+
+.side-panel-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.side-panel-section-header h3 {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--heading);
+    margin: 0;
+}
+
+.side-panel-section-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.section-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--panel);
+    color: var(--heading);
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.75);
+}
+
+.section-action-button {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.section-action-button:hover {
+    color: var(--accent-2);
+}
+
+.shared-projects-list,
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.side-project-card,
+.notification-card {
+    width: 100%;
+    border: none;
+    text-align: left;
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.72);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.side-project-card:hover,
+.notification-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 5px 5px 12px rgba(0,0,0,0.14), -2px -2px 6px rgba(255,255,255,0.74);
+}
+
+.side-project-card-header,
+.notification-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.side-project-card-title,
+.notification-project {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--heading);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.side-project-role,
+.notification-time {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.side-project-meta,
+.notification-message {
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
+.mini-progress-track {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.08);
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.mini-progress-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+}
+
+.notification-card--unread {
+    box-shadow: inset 0 0 0 2px rgba(50,120,235,0.18), 3px 3px 8px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.72);
+}
+
+.side-panel-empty {
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.28);
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
 }

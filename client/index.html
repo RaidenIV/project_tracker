@@ -187,6 +187,31 @@
                     Add Project
                 </button>
 
+                <!-- Shared Active Projects -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Shared Active Projects</h3>
+                        <span class="section-count-pill" id="sharedProjectsCount">0</span>
+                    </div>
+                    <div class="shared-projects-list" id="sharedProjectsList">
+                        <div class="side-panel-empty">No shared active projects</div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Notifications</h3>
+                        <div class="side-panel-section-actions">
+                            <span class="section-count-pill" id="notificationsUnreadCount">0</span>
+                            <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
+                        </div>
+                    </div>
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="side-panel-empty">No notifications yet</div>
+                    </div>
+                </div>
+
                 <!-- Undo Button -->
                 <button class="undo-button hidden" id="undoButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,11 +239,7 @@
     <!-- Keyboard Shortcuts (collapsible) -->
     <div class="shortcuts-wrapper" id="shortcutsWrapper">
         <button class="shortcuts-toggle" id="shortcutsToggle" title="Keyboard Shortcuts">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-            </svg>
-            <span>Shortcuts</span>
+            <span>Keyboard Shortcuts</span>
         </button>
         <div class="shortcuts-panel hidden" id="shortcutsPanel">
             <div class="shortcuts-grid">

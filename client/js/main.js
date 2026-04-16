@@ -6,7 +6,8 @@ import {
     loadDataFromServer, saveDataToServer,
     createProjectOnServer, deleteProjectFromServer,
     reorderProjectsOnServer,
-    shareProjectOnServer, updateCollaboratorRoleOnServer, removeCollaboratorFromServer
+    shareProjectOnServer, updateCollaboratorRoleOnServer, removeCollaboratorFromServer,
+    loadNotificationsFromServer, markNotificationReadOnServer, markAllNotificationsReadOnServer
 } from './modules/api.js';
 import { isLoggedIn, getCurrentUser, login, register, logout } from './modules/auth.js';
 
@@ -35,6 +36,13 @@ function sortTasks(tasks) {
     return [...incomplete, ...completed];
 }
 
+const notificationState = {
+    items: [],
+    unreadCount: 0,
+    hasLoadedOnce: false,
+    pollHandle: null
+};
+
 // ============================================================================
 // DATA MANAGEMENT
 // ============================================================================
@@ -46,6 +54,7 @@ export async function loadData() {
     state.setProjects(projects);
     state.setStats(data.stats || { completedTasks: 0, completedProjects: 0 });
     render();
+    await refreshNotifications();
 }
 
 // Save queue: prevents overlapping saves and reduces race conditions.
@@ -160,7 +169,8 @@ function completeProject(projectId) {
 
 function updateProjectTitle(projectId, newTitle) {
     if (!state.canEdit(projectId)) return;
-    const titleCased = toTitleCase(newTitle);
+    const trimmedTitle = (newTitle || '').trim();
+    const titleCased = toTitleCase(trimmedTitle || 'New Project');
     state.updateProject(projectId, { title: titleCased });
     saveData();
     render();
@@ -549,13 +559,13 @@ let __projectLongPressTimer = null;
 let __projectPendingPress = null;
 let __projectEditListenersBound = false;
 
+
 function setupProjectDragAndDrop() {
     const projectGrid = document.getElementById('projectGrid');
     if (!projectGrid) return;
 
     bindProjectEditModeExitHandlers();
 
-    // Prevent "click to open modal" firing right after a drag-reorder
     projectGrid.addEventListener('click', (e) => {
         if (__suppressNextProjectGridClick) {
             e.preventDefault();
@@ -563,7 +573,6 @@ function setupProjectDragAndDrop() {
             __suppressNextProjectGridClick = false;
             return;
         }
-        // In edit mode, clicks on tiles should not open the project modal
         if (__projectEditMode) {
             e.preventDefault();
             e.stopImmediatePropagation();
@@ -575,99 +584,23 @@ function setupProjectDragAndDrop() {
         card.setAttribute('draggable', 'false');
 
         card.addEventListener('pointerdown', (e) => {
-            
             if (e.button !== 0) return;
 
-            // Don't start a drag when the user is tapping a button / input inside the card
             const t = e.target;
-            if (t && t.closest && t.closest('button, input, textarea, select, a')) return;
+            const handle = t && t.closest ? t.closest('.drag-handle') : null;
+            if (t && t.closest && t.closest('button, input, textarea, select, a') && !handle) return;
+            if (!handle && !__projectEditMode) return;
 
-            const projectId = Number(card.getAttribute('data-project-id'));
+            const projectId = card.getAttribute('data-project-id');
             if (!projectId) return;
 
             const viewProjects = state.getCurrentViewProjects();
-            const startIndex = viewProjects.findIndex(p => p.id === projectId);
+            const startIndex = viewProjects.findIndex(p => String(p.id) === String(projectId));
             if (startIndex === -1) return;
 
-            const rect = card.getBoundingClientRect();
-
-            // ── NOT in edit mode: require a long-press to enter edit mode first ──
-            if (!__projectEditMode) {
-                clearProjectLongPress();
-
-                __projectPendingPress = {
-                    pointerId: e.pointerId,
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    lastX: e.clientX,
-                    lastY: e.clientY,
-                    grid: projectGrid,
-                    sourceCard: card,
-                    startIndex,
-                    active: true
-                };
-
-                try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
-
-                const CANCEL_MOVE = 8;
-                const LONG_PRESS_MS = 260;
-
-                const onPreMove = (ev) => {
-                    if (!__projectPendingPress || ev.pointerId !== __projectPendingPress.pointerId) return;
-                    __projectPendingPress.lastX = ev.clientX;
-                    __projectPendingPress.lastY = ev.clientY;
-                    if (Math.hypot(ev.clientX - __projectPendingPress.startX,
-                                   ev.clientY - __projectPendingPress.startY) > CANCEL_MOVE) {
-                        clearProjectLongPress();
-                        window.removeEventListener('pointermove', onPreMove);
-                    }
-                };
-
-                const onPreUp = (ev) => {
-                    if (__projectPendingPress && ev.pointerId === __projectPendingPress.pointerId) {
-                        clearProjectLongPress();
-                    }
-                    window.removeEventListener('pointermove', onPreMove);
-                };
-
-                window.addEventListener('pointermove', onPreMove, { passive: false });
-                window.addEventListener('pointerup',   onPreUp,   { passive: false, once: true });
-
-                __projectLongPressTimer = setTimeout(() => {
-                    if (!__projectPendingPress || !__projectPendingPress.active) return;
-
-                    // Long-press fired — enter edit mode and begin dragging immediately
-                    setProjectEditMode(true);
-                    __suppressNextProjectGridClick = true;
-
-                    __projectDrag = {
-                        pointerId:  __projectPendingPress.pointerId,
-                        startIndex,
-                        startX:     __projectPendingPress.startX,
-                        startY:     __projectPendingPress.startY,
-                        grid:       projectGrid,
-                        sourceCard: card,
-                        active:     false,
-                        snapshots:  null,
-                        targetIndex:     startIndex,
-                        lastTargetIndex: startIndex
-                    };
-
-                    startProjectSlide({ clientX: __projectPendingPress.lastX,
-                                        clientY: __projectPendingPress.lastY });
-
-                    window.addEventListener('pointermove',  onProjectPointerMove,   { passive: false });
-                    window.addEventListener('pointerup',    onProjectPointerUp,     { passive: false, once: true });
-                    window.addEventListener('pointercancel', onProjectPointerCancel, { passive: false, once: true });
-
-                    window.removeEventListener('pointermove', onPreMove);
-                    clearProjectLongPress();
-                }, LONG_PRESS_MS);
-
-                return;
-            }
-
-            // ── Already in edit mode: drag starts with a tiny movement threshold ──
+            e.preventDefault();
+            e.stopPropagation();
+            __suppressNextProjectGridClick = true;
             clearProjectLongPress();
 
             __projectDrag = {
@@ -1176,14 +1109,14 @@ function openProjectModal(projectId) {
     content.innerHTML = `<div class="modal-scroll-inner">
         <div class="modal-header-centered">
             <div class="modal-title-container">
-                <div class="modal-title" id="modal-title-${project.id}" onclick="editModalTitle(${project.id})" style="cursor: pointer;">${project.title}</div>
+                <div class="modal-title" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" style="cursor: pointer;">${project.title}</div>
                 <input type="text" 
                        class="modal-title-input" 
                        id="modal-title-input-${project.id}"
                        value="${project.title}"
                        style="display: none;"
-                       onblur="finishEditModalTitle(${project.id})"
-                       onkeydown="if(event.key==='Enter') finishEditModalTitle(${project.id})">
+                       onblur="finishEditModalTitle('${project.id}')"
+                       onkeydown="if(event.key==='Enter') finishEditModalTitle('${project.id}')" >
                 <div class="modal-stats">
                     <span>${new Date(project.dateCreated).toLocaleDateString()}</span>
                     <span>•</span>
@@ -1384,7 +1317,7 @@ function openProjectModal(projectId) {
                     class="notes-textarea"
                     id="notes-textarea-${project.id}"
                     placeholder="Add notes about this project..."
-                    onblur="saveProjectNotes(${project.id})">${project.notes || ''}</textarea>
+                    onblur="saveProjectNotes('${project.id}')">${project.notes || ''}</textarea>
             </div>
         </div>
     </div>`;
@@ -1679,6 +1612,8 @@ function render() {
     
     // Update total completion
     updateTotalCompletion();
+    renderSharedProjectsPanel();
+    renderNotificationsPanel();
     
     // Update undo button
     updateUndoButton();
@@ -1701,6 +1636,7 @@ function render() {
     updateProjectSelect();
 }
 
+
 function renderProjectCard(project) {
     const completedTasksCount = project.tasks.filter(t => t.completed).length;
     const totalTasks = project.tasks.length;
@@ -1708,6 +1644,7 @@ function renderProjectCard(project) {
     const isShared = project.collaborators && project.collaborators.length > 0;
     const isViewer = project.userRole === 'viewer';
     const isEditor = project.userRole === 'editor';
+    const canEditProject = state.canEdit(project.id);
     const canOwnerDelete = project.userRole === 'owner';
 
     return `
@@ -1715,8 +1652,21 @@ function renderProjectCard(project) {
              data-project-id="${project.id}"
              onclick="openProjectModal('${project.id}')">
             <div class="project-header">
-                <div class="project-title-container-centered">
-                    <div class="project-title">${project.title}</div>
+                <div class="project-title-container">
+                    ${canEditProject ? `<button class="drag-handle" type="button" title="Drag to reorder" onclick="event.stopPropagation();">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01"></path>
+                        </svg>
+                    </button>` : ''}
+                    <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${project.title}</div>
+                    <input type="text"
+                           class="project-title-input project-title-input--card"
+                           id="project-title-input-${project.id}"
+                           value="${project.title}"
+                           style="display: none;"
+                           onclick="event.stopPropagation();"
+                           onblur="finishEditProjectTitleOnCard('${project.id}')"
+                           onkeydown="if(event.key==='Enter'){ finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ cancelEditProjectTitleOnCard('${project.id}'); }">
                 </div>
                 <div class="project-actions">
                     ${(isViewer || isEditor) ? `<span class="role-badge role-badge--${project.userRole}">${project.userRole}</span>` : ''}
@@ -1726,12 +1676,17 @@ function renderProjectCard(project) {
                         </svg>
                         ${project.collaborators.length}
                     </span>` : ''}
-                    <button class="copy-button" onclick="event.stopPropagation(); copyProjectToClipboard('${project.id}', event)">
+                    ${canEditProject ? `<button class="edit-button" type="button" title="Edit project name" onclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>` : ''}
+                    <button class="copy-button" type="button" onclick="event.stopPropagation(); copyProjectToClipboard('${project.id}', event)">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                     </button>
-                    ${canOwnerDelete ? `<button class="card-delete-button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
+                    ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
@@ -1759,6 +1714,176 @@ function renderProjectCard(project) {
             ` : ''}
         </div>
     `;
+}
+
+
+
+function renderSharedProjectsPanel() {
+    const sharedProjectsList = document.getElementById('sharedProjectsList');
+    const sharedProjectsCount = document.getElementById('sharedProjectsCount');
+    if (!sharedProjectsList || !sharedProjectsCount) return;
+
+    const sharedActiveProjects = state.getActiveProjects().filter(project =>
+        project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
+    );
+
+    sharedProjectsCount.textContent = String(sharedActiveProjects.length);
+
+    if (!sharedActiveProjects.length) {
+        sharedProjectsList.innerHTML = '<div class="side-panel-empty">No shared active projects</div>';
+        return;
+    }
+
+    sharedProjectsList.innerHTML = sharedActiveProjects.map(project => {
+        const completedTasksCount = project.tasks.filter(task => task.completed).length;
+        const totalTasks = project.tasks.length;
+        const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+        const accessLabel = project.userRole === 'owner'
+            ? `${project.collaborators.length} collaborator${project.collaborators.length === 1 ? '' : 's'}`
+            : `${project.userRole} access`;
+        const ownerLabel = project.userRole === 'owner'
+            ? 'Owned by you'
+            : `Shared by ${project.ownerName || 'Unknown'}`;
+
+        return `
+            <button class="side-project-card" type="button" onclick="openProjectModal('${project.id}')">
+                <div class="side-project-card-header">
+                    <span class="side-project-card-title">${project.title}</span>
+                    <span class="side-project-role">${accessLabel}</span>
+                </div>
+                <div class="side-project-meta">${ownerLabel}</div>
+                <div class="mini-progress-track"><span style="width: ${progressPercentage}%"></span></div>
+            </button>
+        `;
+    }).join('');
+}
+
+function timeAgo(isoString) {
+    if (!isoString) return 'just now';
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const seconds = Math.max(1, Math.floor(diffMs / 1000));
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+    return `${Math.floor(months / 12)}y ago`;
+}
+
+function renderNotificationsPanel() {
+    const notificationsList = document.getElementById('notificationsList');
+    const notificationsUnreadCount = document.getElementById('notificationsUnreadCount');
+    if (!notificationsList || !notificationsUnreadCount) return;
+
+    notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
+
+    if (!notificationState.items.length) {
+        notificationsList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
+        return;
+    }
+
+    notificationsList.innerHTML = notificationState.items.map(notification => `
+        <button class="notification-card ${notification.read ? '' : 'notification-card--unread'}"
+                type="button"
+                onclick="openNotificationProject('${notification._id}', '${notification.projectId}')">
+            <div class="notification-card-header">
+                <span class="notification-project">${notification.projectTitle || 'Project'}</span>
+                <span class="notification-time">${timeAgo(notification.createdAt)}</span>
+            </div>
+            <div class="notification-message"><strong>${notification.actorName || 'Someone'}</strong> ${notification.message}</div>
+        </button>
+    `).join('');
+}
+
+async function refreshNotifications() {
+    const response = await loadNotificationsFromServer(30);
+    notificationState.items = response.notifications || [];
+    notificationState.unreadCount = response.unreadCount || 0;
+    notificationState.hasLoadedOnce = true;
+    renderNotificationsPanel();
+}
+
+function startNotificationPolling() {
+    if (notificationState.pollHandle) clearInterval(notificationState.pollHandle);
+    notificationState.pollHandle = setInterval(() => {
+        if (document.hidden) return;
+        refreshNotifications();
+    }, 15000);
+}
+
+async function markNotificationRead(notificationId, suppressRefresh = false) {
+    if (!notificationId) return;
+    const targetNotification = notificationState.items.find(item => item._id === notificationId);
+    if (targetNotification && targetNotification.read) return;
+    try {
+        await markNotificationReadOnServer(notificationId);
+        if (!suppressRefresh) await refreshNotifications();
+    } catch (err) {
+        console.error('Failed to mark notification read:', err);
+    }
+}
+
+async function openNotificationProject(notificationId, projectId) {
+    await markNotificationRead(notificationId, true);
+    const targetNotification = notificationState.items.find(item => item._id === notificationId);
+    if (targetNotification) targetNotification.read = true;
+    notificationState.unreadCount = notificationState.items.filter(item => !item.read).length;
+    renderNotificationsPanel();
+
+    const project = state.findProject(projectId);
+    if (project) {
+        if (project.completed) {
+            switchToCompletedView();
+        } else {
+            switchToActiveView();
+        }
+        openProjectModal(projectId);
+    }
+}
+
+async function markAllNotificationsRead() {
+    try {
+        await markAllNotificationsReadOnServer();
+        notificationState.items = notificationState.items.map(item => ({ ...item, read: true }));
+        notificationState.unreadCount = 0;
+        renderNotificationsPanel();
+    } catch (err) {
+        console.error('Failed to mark all notifications read:', err);
+    }
+}
+
+function editProjectTitleOnCard(projectId) {
+    const titleDiv = document.getElementById(`project-title-${projectId}`);
+    const titleInput = document.getElementById(`project-title-input-${projectId}`);
+    if (!titleDiv || !titleInput) return;
+    titleDiv.style.display = 'none';
+    titleInput.style.display = 'block';
+    titleInput.focus();
+    titleInput.select();
+}
+
+function finishEditProjectTitleOnCard(projectId) {
+    const titleDiv = document.getElementById(`project-title-${projectId}`);
+    const titleInput = document.getElementById(`project-title-input-${projectId}`);
+    if (!titleDiv || !titleInput) return;
+    updateProjectTitle(projectId, titleInput.value);
+    titleDiv.textContent = toTitleCase((titleInput.value || '').trim() || 'New Project');
+    titleDiv.style.display = 'block';
+    titleInput.style.display = 'none';
+}
+
+function cancelEditProjectTitleOnCard(projectId) {
+    const project = state.findProject(projectId);
+    const titleDiv = document.getElementById(`project-title-${projectId}`);
+    const titleInput = document.getElementById(`project-title-input-${projectId}`);
+    if (!titleDiv || !titleInput || !project) return;
+    titleInput.value = project.title;
+    titleDiv.style.display = 'block';
+    titleInput.style.display = 'none';
 }
 
 function updateProjectSelect() {
@@ -1834,6 +1959,8 @@ function initializeEventHandlers() {
     // Paste button
     document.getElementById('pasteButton').addEventListener('click', pasteTasks);
 
+    document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
+
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
     projectModal.addEventListener('click', (e) => {
@@ -1902,8 +2029,8 @@ Task Features:
 
 Features:
 - Click on project cards to view/edit details
-- Drag projects from anywhere on the card
-- Drag tasks to reorder them
+- Use the card drag handle to reorder projects
+- Drag tasks to reorder them faster
 - Use copy button (copies only incomplete tasks)
 - Click outside expanded cards to close them
 - Use the paste box in modals for bulk task import
@@ -2016,6 +2143,11 @@ window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
 window.changeCollaboratorRole = changeCollaboratorRole;
 window.removeCollaborator = removeCollaborator;
+window.editProjectTitleOnCard = editProjectTitleOnCard;
+window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
+window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
+window.openNotificationProject = openNotificationProject;
+window.markAllNotificationsRead = markAllNotificationsRead;
 
 // ============================================================================
 // INITIALIZATION
@@ -2188,6 +2320,7 @@ function onAuthSuccess(user) {
     // Load app data
     initializeEventHandlers();
     loadData();
+    startNotificationPolling();
 }
 
 // ============================================================================

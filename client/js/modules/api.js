@@ -112,6 +112,25 @@ export async function removeCollaboratorFromServer(_id, userId) {
     return request('DELETE', API_ENDPOINTS.COLLABORATOR(_id, userId));
 }
 
+const NOTIFICATIONS_BASE = '/api/notifications';
+
+export async function loadNotificationsFromServer(limit = 25) {
+    try {
+        return await request('GET', `${NOTIFICATIONS_BASE}?limit=${limit}`) || { notifications: [], unreadCount: 0 };
+    } catch (err) {
+        console.error('Error loading notifications:', err);
+        return { notifications: [], unreadCount: 0 };
+    }
+}
+
+export async function markNotificationReadOnServer(notificationId) {
+    return request('POST', `${NOTIFICATIONS_BASE}/${notificationId}/read`);
+}
+
+export async function markAllNotificationsReadOnServer() {
+    return request('POST', `${NOTIFICATIONS_BASE}/read-all`);
+}
+
 // ─── Stats ────────────────────────────────────────────────────────────────────
 
 export async function loadStatsFromServer() {
