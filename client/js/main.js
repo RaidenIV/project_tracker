@@ -193,6 +193,32 @@ function setSaveStatus(status, message) {
     pill.textContent = message;
 }
 
+function normalizeProject(project) {
+    if (!project || typeof project !== 'object') return null;
+    return {
+        ...project,
+        id: project.id || project._id || String(Date.now()),
+        _id: project._id || project.id,
+        title: project.title || 'Untitled Project',
+        notes: typeof project.notes === 'string' ? project.notes : '',
+        tasks: Array.isArray(project.tasks) ? project.tasks : [],
+        collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
+        activities: Array.isArray(project.activities) ? project.activities : [],
+        archived: Boolean(project.archived),
+        completed: Boolean(project.completed),
+        dateCreated: project.dateCreated || new Date().toISOString(),
+        lastModified: project.lastModified || project.dateCreated || new Date().toISOString()
+    };
+}
+
+function runRenderStep(stepName, fn) {
+    try {
+        fn();
+    } catch (err) {
+        console.error(`Render step failed: ${stepName}`, err);
+    }
+}
+
 function getVisibleBaseProjects() {
     return state.getCurrentViewProjects().filter(project => !project.archived);
 }
@@ -212,7 +238,7 @@ function matchesProjectSearch(project, query) {
 }
 
 function getFilteredProjects() {
-    let projects = [...getVisibleBaseProjects()];
+    let projects = [...getVisibleBaseProjects()].map(normalizeProject).filter(Boolean);
 
     if (uiState.ownerFilter === 'owned') projects = projects.filter(project => project.userRole === 'owner');
     if (uiState.ownerFilter === 'shared') projects = projects.filter(project => project.userRole !== 'owner');
@@ -647,13 +673,26 @@ function restoreProjectModalState(projectId, modalState) {
 // ============================================================================
 
 export async function loadData() {
-    const data = await loadDataFromServer();
-    // Normalise: ensure each project has an id field (server sets id = _id string)
-    const projects = (data.projects || []).map(p => ({ ...p, id: p.id || p._id }));
-    state.setProjects(projects);
-    state.setStats(data.stats || { completedTasks: 0, completedProjects: 0 });
-    render();
-    await refreshNotifications();
+    try {
+        const data = await loadDataFromServer();
+        const projects = (Array.isArray(data?.projects) ? data.projects : [])
+            .map(normalizeProject)
+            .filter(Boolean);
+        state.setProjects(projects);
+        state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
+        render();
+        try {
+            await refreshNotifications();
+        } catch (err) {
+            console.error('Failed to refresh notifications after load:', err);
+        }
+    } catch (err) {
+        console.error('Failed to load project data:', err);
+        state.setProjects([]);
+        state.setStats({ completedTasks: 0, completedProjects: 0 });
+        render();
+        setSaveStatus('error', 'Could not load projects');
+    }
 }
 
 // Save queue: prevents overlapping saves and reduces race conditions.
@@ -1772,7 +1811,7 @@ function openProjectModal(projectId, options = {}) {
             <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
             <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')">Notes</button>
             <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
-                Members ${(project.collaborators && project.collaborators.length > 0) ? `<span class="members-count">${project.collaborators.length}</span>` : ''}
+                Members ${(project.collaborators && project.collaborators.length > 0) ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
             <button class="modal-tab" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
         </div>
@@ -2328,58 +2367,59 @@ function render() {
     const displayProjects = getFilteredProjects();
     const projectGrid = document.getElementById('projectGrid');
     const emptyState = document.getElementById('emptyState');
-    
-    // Update stats
-    const stats = state.getStats();
-    document.getElementById('activeProjectsCount').textContent = state.getProjects().filter(project => !project.completed && !project.archived).length;
-    document.getElementById('completedTasksCount').textContent = stats.completedTasks;
-    document.getElementById('completedProjectsCount').textContent = stats.completedProjects;
-    // Incomplete tasks = sum of incomplete tasks across all active projects
+    if (!projectGrid || !emptyState) return;
+
+    const stats = state.getStats() || { completedTasks: 0, completedProjects: 0 };
+    const activeProjectsCountEl = document.getElementById('activeProjectsCount');
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    const completedProjectsCountEl = document.getElementById('completedProjectsCount');
+
+    if (activeProjectsCountEl) activeProjectsCountEl.textContent = state.getProjects().filter(project => !project.completed && !project.archived).length;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = stats.completedTasks || 0;
+    if (completedProjectsCountEl) completedProjectsCountEl.textContent = stats.completedProjects || 0;
+
     const incompleteTasks = state.getProjects().filter(project => !project.completed && !project.archived)
-        .reduce((sum, p) => sum + p.tasks.filter(t => !t.completed).length, 0);
+        .reduce((sum, p) => sum + (Array.isArray(p.tasks) ? p.tasks.filter(t => !t.completed).length : 0), 0);
     const incompleteEl = document.getElementById('incompleteTasksCount');
     if (incompleteEl) incompleteEl.textContent = incompleteTasks;
-    
-    // Update total completion
-    updateTotalCompletion();
-    renderSharedProjectsPanel();
-    renderArchivedProjectsPanel();
-    renderNotificationsPanel();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
-    syncAccountStatsToModal();
-    
-    // Update undo button
-    updateUndoButton();
-    
-    // Render projects
+
+    runRenderStep('total completion', updateTotalCompletion);
+    runRenderStep('shared projects panel', renderSharedProjectsPanel);
+    runRenderStep('archived projects panel', renderArchivedProjectsPanel);
+    runRenderStep('notifications panel', renderNotificationsPanel);
+    runRenderStep('saved views panel', renderSavedViewsPanel);
+    runRenderStep('active filter chips', renderActiveFilterChips);
+    runRenderStep('account stats', syncAccountStatsToModal);
+    runRenderStep('undo button', updateUndoButton);
+
     if (displayProjects.length === 0) {
         emptyState.style.display = 'flex';
         projectGrid.style.display = 'none';
         const emptyTitle = emptyState.querySelector('.title');
         const emptySubtitle = emptyState.querySelector('.subtitle');
-        emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
+        if (emptyTitle) emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
         if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Click "Add Project" to get started';
     } else {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
-        
-        // Setup drag and drop after rendering
+
         if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual') {
             setTimeout(setupProjectDragAndDrop, 100);
         }
     }
-    
-    updateProjectSelect();
+
+    runRenderStep('project select', updateProjectSelect);
 }
 
 
 function renderProjectCard(project) {
-    const completedTasksCount = project.tasks.filter(t => t.completed).length;
-    const totalTasks = project.tasks.length;
+    const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+    const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+    const completedTasksCount = tasks.filter(t => t.completed).length;
+    const totalTasks = tasks.length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
-    const isShared = project.collaborators && project.collaborators.length > 0;
+    const isShared = collaborators.length > 0;
     const isViewer = project.userRole === 'viewer';
     const isEditor = project.userRole === 'editor';
     const canEditProject = state.canEdit(project.id);
@@ -2409,11 +2449,11 @@ function renderProjectCard(project) {
                 </div>
                 <div class="project-actions">
                     ${(isViewer || isEditor) ? `<span class="role-badge role-badge--${project.userRole}">${project.userRole}</span>` : ''}
-                    ${isShared && !isViewer && !isEditor ? `<span class="shared-badge" title="${project.collaborators.length} collaborator(s)">
+                    ${isShared && !isViewer && !isEditor ? `<span class="shared-badge" title="${collaborators.length} collaborator(s)">
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
                         </svg>
-                        ${project.collaborators.length}
+                        ${collaborators.length}
                     </span>` : ''}
                     ${canEditProject ? `<button class="edit-button" type="button" title="Edit project name" onclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2436,7 +2476,7 @@ function renderProjectCard(project) {
             <div class="project-stats">
                 <span class="project-last-updated" title="Created ${formatCompactDateTime(project.dateCreated)}">Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
                 <span>•</span>
-                <span>${project.tasks.length} tasks</span>
+                <span>${tasks.length} tasks</span>
                 <span>•</span>
                 <span>${completedTasksCount} done</span>
                 ${(isShared || isViewer || isEditor) ? `<span>•</span><span class="card-owner-name">${isViewer || isEditor ? 'by ' + (project.ownerName || 'Unknown') : 'shared'}</span>` : ''}
@@ -2478,7 +2518,7 @@ function renderSharedProjectsPanel() {
         const totalTasks = project.tasks.length;
         const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
         const accessLabel = project.userRole === 'owner'
-            ? `${project.collaborators.length} collaborator${project.collaborators.length === 1 ? '' : 's'}`
+            ? `${collaborators.length} collaborator${project.collaborators.length === 1 ? '' : 's'}`
             : `${project.userRole} access`;
         const ownerLabel = project.userRole === 'owner'
             ? 'Owned by you'
