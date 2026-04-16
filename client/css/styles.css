@@ -259,6 +259,13 @@ body {
         }
 
         .drag-handle {
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
             color: var(--heading);
             opacity: 0.42;
             transition: opacity 0.3s ease;
@@ -268,6 +275,8 @@ body {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            border-radius: 0;
+            flex-shrink: 0;
         }
 
         .drag-handle:active {
@@ -536,10 +545,44 @@ body {
             top: 80px;
             background: var(--panel);
             border-radius: 20px;
+            --panel-scrollbar-width: 8px;
+            --panel-scrollbar-gap: 8px;
+            --panel-scrollbar-thumb: rgba(31, 36, 40, 0.16);
+            --panel-scrollbar-thumb-hover: rgba(31, 36, 40, 0.28);
             padding: clamp(18px, 1.4vw, 24px);
+            padding-right: calc(clamp(18px, 1.4vw, 24px) + var(--panel-scrollbar-width) + var(--panel-scrollbar-gap));
             max-height: calc(100vh - 104px);
             overflow-y: auto;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scrollbar-color: var(--panel-scrollbar-thumb) transparent;
             box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
+        }
+
+        .control-panel-content::-webkit-scrollbar {
+            width: var(--panel-scrollbar-width);
+        }
+
+        .control-panel-content::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 14px 0;
+        }
+
+        .control-panel-content::-webkit-scrollbar-thumb {
+            background-color: var(--panel-scrollbar-thumb);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .control-panel-content::-webkit-scrollbar-thumb:hover {
+            background-color: var(--panel-scrollbar-thumb-hover);
+        }
+
+        .control-panel-content::-webkit-scrollbar-button {
+            display: none;
+            width: 0;
+            height: 0;
         }
 
         .control-panel-header {
@@ -2217,15 +2260,25 @@ body {
 .panel-user-info.hidden { display: none; }
 
 .panel-user-pill {
+    appearance: none;
+    -webkit-appearance: none;
     display: inline-flex;
     align-items: center;
     gap: 10px;
     background: var(--surface);
+    border: none;
     border-radius: 12px;
     padding: 6px 10px 6px 8px;
     box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
     min-width: 0;
     max-width: 180px;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.panel-user-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 4px 4px 8px rgba(120,120,130,0.34), inset -4px -4px 8px rgba(255,255,255,0.86);
 }
 
 .panel-avatar,
@@ -2253,9 +2306,19 @@ body {
 
 .panel-avatar-fallback,
 .account-avatar-fallback {
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+}
+
+.panel-avatar-fallback svg,
+.account-avatar-fallback svg {
+    width: 72%;
+    height: 72%;
+    display: block;
 }
 
 .panel-username {
@@ -2509,6 +2572,11 @@ body {
     gap: 10px;
 }
 
+.project-last-updated {
+    color: var(--muted-2);
+    font-style: italic;
+}
+
 
 .project-actions .edit-button,
 .project-actions .copy-button,
@@ -2532,7 +2600,7 @@ body {
 
 @media (hover: none) {
     .drag-handle {
-        opacity: 0.75;
+        opacity: 0.6;
     }
 }
 
