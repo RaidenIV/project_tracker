@@ -183,3 +183,14 @@ export async function saveDataToServer(projects, stats) {
     const results = await Promise.all([...saves, statsSave]);
     return results.every(Boolean);
 }
+
+
+const ACCOUNT_BASE = '/api/account';
+
+export async function loadAccountProfileFromServer() {
+    return request('GET', ACCOUNT_BASE);
+}
+
+export async function updateAccountProfileOnServer(payload) {
+    return request('PUT', ACCOUNT_BASE, payload);
+}

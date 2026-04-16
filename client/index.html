@@ -99,9 +99,9 @@
             </svg>
         </button>
         <div class="menu-dropdown hidden" id="menuDropdown">
-            <a href="https://www.xodiamediagroup.com/">Home</a>
-            <a href="https://www.xodiamediagroup.com/upcoming-events">Upcoming Events</a>
-            <a href="https://www.xodiamediagroup.com/tools">Tools</a>
+            <button class="menu-dropdown-item" id="menuSignOutBtn" type="button">Sign Out</button>
+            <button class="menu-dropdown-item" id="menuAccountSettingsBtn" type="button">Account Settings</button>
+            <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
         </div>
     </div>
 
@@ -133,14 +133,13 @@
                     >
                     <div class="panel-header-right">
                         <div class="panel-user-info hidden" id="panelUserInfo">
-                            <span class="panel-username" id="panelUsername"></span>
-                            <button class="panel-logout-btn" id="panelLogoutBtn" title="Sign out">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                </svg>
-                                Sign out
-                            </button>
+                            <div class="panel-user-pill" id="panelUserPill">
+                                <div class="panel-avatar" id="panelAvatar">
+                                    <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
+                                    <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
+                                </div>
+                                <span class="panel-username" id="panelUsername"></span>
+                            </div>
                         </div>
                         <button class="collapse-button" id="collapseButton">
                             <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,6 +259,79 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
     </button>
+
+    <!-- Account Settings Modal -->
+    <div class="modal-overlay" id="accountSettingsModal">
+        <div class="modal-content account-modal-content">
+            <div class="account-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title">Account Settings</h2>
+                        <p class="account-modal-subtitle">Profile, stats, and account preferences</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeAccountSettingsModal()">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="account-profile-top">
+                    <div class="account-avatar account-avatar--large" id="accountAvatar">
+                        <img class="account-avatar-img hidden" id="accountAvatarImg" alt="Profile picture">
+                        <span class="account-avatar-fallback" id="accountAvatarFallback">U</span>
+                    </div>
+                    <div class="account-profile-copy">
+                        <div class="account-profile-name" id="accountDisplayName">User</div>
+                        <div class="account-profile-email" id="accountEmailText">you@example.com</div>
+                        <div class="account-avatar-actions">
+                            <input type="file" id="accountProfilePicInput" accept="image/*" class="visually-hidden">
+                            <button class="account-action-btn" type="button" onclick="triggerProfilePicUpload()">Upload Profile Picture</button>
+                            <button class="account-action-btn account-action-btn--secondary" type="button" onclick="removeProfilePicture()">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-form-grid">
+                    <div class="account-field">
+                        <label class="account-label" for="accountUsernameInput">User Name</label>
+                        <input class="account-input" id="accountUsernameInput" type="text" maxlength="40" placeholder="Your name">
+                    </div>
+                    <div class="account-field">
+                        <label class="account-label" for="accountEmailInput">Email</label>
+                        <input class="account-input" id="accountEmailInput" type="email" readonly>
+                    </div>
+                </div>
+
+                <div class="account-stats-section">
+                    <h3>Stats</h3>
+                    <div class="account-stats-grid">
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatCompletedTasks">0</div>
+                            <div class="account-stat-label">Completed Tasks</div>
+                        </div>
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatCompletedProjects">0</div>
+                            <div class="account-stat-label">Completed Projects</div>
+                        </div>
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatActiveProjects">0</div>
+                            <div class="account-stat-label">Active Projects</div>
+                        </div>
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatSharedProjects">0</div>
+                            <div class="account-stat-label">Shared Projects</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-modal-actions">
+                    <div class="account-modal-status" id="accountSettingsStatus"></div>
+                    <button class="modal-done-btn" type="button" id="accountSettingsSaveBtn" onclick="saveAccountSettingsFromModal()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Project Modal -->
     <div class="modal-overlay" id="projectModal">

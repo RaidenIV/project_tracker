@@ -7,7 +7,8 @@ import {
     createProjectOnServer, deleteProjectFromServer,
     reorderProjectsOnServer,
     shareProjectOnServer, updateCollaboratorRoleOnServer, removeCollaboratorFromServer,
-    loadNotificationsFromServer, markNotificationReadOnServer, markAllNotificationsReadOnServer
+    loadNotificationsFromServer, markNotificationReadOnServer, markAllNotificationsReadOnServer,
+    loadAccountProfileFromServer, updateAccountProfileOnServer
 } from './modules/api.js';
 import { isLoggedIn, getCurrentUser, login, register, logout } from './modules/auth.js';
 
@@ -42,6 +43,221 @@ const notificationState = {
     hasLoadedOnce: false,
     pollHandle: null
 };
+
+const accountState = {
+    user: null,
+    stats: {
+        completedTasks: 0,
+        completedProjects: 0,
+        ownedProjects: 0,
+        sharedProjects: 0,
+        activeProjects: 0
+    },
+    pendingProfilePic: null
+};
+
+function getUserInitials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'U';
+    return parts.slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('');
+}
+
+function setAvatarUI(imageEl, fallbackEl, profilePic, name) {
+    if (!imageEl || !fallbackEl) return;
+    const hasImage = Boolean(profilePic);
+    imageEl.src = hasImage ? profilePic : '';
+    imageEl.classList.toggle('hidden', !hasImage);
+    fallbackEl.classList.toggle('hidden', hasImage);
+    fallbackEl.textContent = getUserInitials(name);
+}
+
+function applyAccountUI(user) {
+    if (!user) return;
+    accountState.user = { ...(accountState.user || {}), ...user };
+    state.setCurrentUser(accountState.user);
+
+    const panelUsername = document.getElementById('panelUsername');
+    if (panelUsername) panelUsername.textContent = accountState.user.username || 'User';
+
+    const panelUserInfo = document.getElementById('panelUserInfo');
+    if (panelUserInfo) panelUserInfo.classList.remove('hidden');
+
+    setAvatarUI(
+        document.getElementById('panelAvatarImg'),
+        document.getElementById('panelAvatarFallback'),
+        accountState.user.profilePic,
+        accountState.user.username
+    );
+
+    setAvatarUI(
+        document.getElementById('accountAvatarImg'),
+        document.getElementById('accountAvatarFallback'),
+        accountState.pendingProfilePic !== null ? accountState.pendingProfilePic : accountState.user.profilePic,
+        accountState.user.username
+    );
+
+    const accountDisplayName = document.getElementById('accountDisplayName');
+    if (accountDisplayName) accountDisplayName.textContent = accountState.user.username || 'User';
+
+    const accountEmailText = document.getElementById('accountEmailText');
+    if (accountEmailText) accountEmailText.textContent = accountState.user.email || '';
+
+    const accountUsernameInput = document.getElementById('accountUsernameInput');
+    if (accountUsernameInput && document.activeElement !== accountUsernameInput) {
+        accountUsernameInput.value = accountState.user.username || '';
+    }
+
+    const accountEmailInput = document.getElementById('accountEmailInput');
+    if (accountEmailInput) accountEmailInput.value = accountState.user.email || '';
+}
+
+function syncAccountStatsToModal() {
+    const derivedSharedProjects = state.getProjects().filter(project => project.userRole !== 'owner').length;
+    const derivedActiveProjects = state.getActiveProjects().length;
+    const stats = {
+        completedTasks: state.getStats().completedTasks || accountState.stats.completedTasks || 0,
+        completedProjects: state.getStats().completedProjects || accountState.stats.completedProjects || 0,
+        activeProjects: accountState.stats.activeProjects || derivedActiveProjects,
+        sharedProjects: accountState.stats.sharedProjects || derivedSharedProjects
+    };
+
+    const map = {
+        accountStatCompletedTasks: stats.completedTasks,
+        accountStatCompletedProjects: stats.completedProjects,
+        accountStatActiveProjects: stats.activeProjects || derivedActiveProjects,
+        accountStatSharedProjects: stats.sharedProjects || derivedSharedProjects
+    };
+
+    Object.entries(map).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(value ?? 0);
+    });
+}
+
+function setAccountStatus(message = '', type = '') {
+    const el = document.getElementById('accountSettingsStatus');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.toggle('is-error', type === 'error');
+    el.classList.toggle('is-success', type === 'success');
+}
+
+async function refreshAccountProfile() {
+    try {
+        const response = await loadAccountProfileFromServer();
+        if (!response?.user) return;
+        accountState.user = response.user;
+        accountState.stats = response.stats || accountState.stats;
+        accountState.pendingProfilePic = null;
+        applyAccountUI(accountState.user);
+        syncAccountStatsToModal();
+    } catch (err) {
+        console.error('Failed to load account profile:', err);
+    }
+}
+
+function openAccountSettingsModal() {
+    applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+    syncAccountStatsToModal();
+    setAccountStatus('');
+    document.getElementById('accountSettingsModal')?.classList.add('active');
+}
+
+function closeAccountSettingsModal() {
+    accountState.pendingProfilePic = null;
+    setAccountStatus('');
+    document.getElementById('accountSettingsModal')?.classList.remove('active');
+}
+
+function triggerProfilePicUpload() {
+    document.getElementById('accountProfilePicInput')?.click();
+}
+
+function removeProfilePicture() {
+    accountState.pendingProfilePic = '';
+    applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+}
+
+async function handleProfilePicSelected(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        setAccountStatus('Please choose an image file.', 'error');
+        return;
+    }
+    const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Unable to read the image file.'));
+        reader.readAsDataURL(file);
+    }).catch((err) => {
+        setAccountStatus(err.message, 'error');
+        return '';
+    });
+    if (!dataUrl) return;
+    accountState.pendingProfilePic = dataUrl;
+    applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+    setAccountStatus('Profile picture ready to save.');
+}
+
+async function saveAccountSettingsFromModal() {
+    const usernameInput = document.getElementById('accountUsernameInput');
+    if (!usernameInput) return;
+
+    const username = usernameInput.value.trim();
+    if (!username) {
+        setAccountStatus('User name is required.', 'error');
+        return;
+    }
+
+    const saveButton = document.getElementById('accountSettingsSaveBtn');
+    if (saveButton) saveButton.disabled = true;
+    setAccountStatus('Saving…');
+
+    try {
+        const payload = { username };
+        if (accountState.pendingProfilePic !== null) payload.profilePic = accountState.pendingProfilePic;
+        const response = await updateAccountProfileOnServer(payload);
+        if (response?.user) {
+            accountState.user = response.user;
+            accountState.pendingProfilePic = null;
+            applyAccountUI(response.user);
+            await loadData();
+            await refreshNotifications();
+            setAccountStatus('Changes saved.', 'success');
+            setTimeout(() => closeAccountSettingsModal(), 700);
+        }
+    } catch (err) {
+        console.error('Failed to save account settings:', err);
+        setAccountStatus(err.message || 'Unable to save account settings.', 'error');
+    } finally {
+        if (saveButton) saveButton.disabled = false;
+    }
+}
+
+function captureProjectModalState(projectId) {
+    const modal = document.getElementById('projectModal');
+    if (!modal?.classList.contains('active')) return null;
+    const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
+    const activeTab = document.querySelector(`#modalContent .modal-tab.active`);
+    if (!scrollEl) return null;
+    return {
+        projectId: String(projectId),
+        scrollTop: scrollEl.scrollTop,
+        activeTab: activeTab ? activeTab.id.replace(/-(.+)$/, '').split('-')[0] : 'tasks'
+    };
+}
+
+function restoreProjectModalState(projectId, modalState) {
+    if (!modalState || String(modalState.projectId) !== String(projectId)) return;
+    const tab = ['tasks', 'notes', 'members'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
+    switchModalTab(projectId, tab);
+    const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
+    if (!scrollEl) return;
+    requestAnimationFrame(() => {
+        scrollEl.scrollTop = modalState.scrollTop || 0;
+    });
+}
 
 // ============================================================================
 // DATA MANAGEMENT
@@ -290,7 +506,7 @@ function performTaskToggle(projectId, taskId) {
     // Re-render to show new order
     const modalOpen = document.getElementById('projectModal').classList.contains('active');
     if (modalOpen) {
-        openProjectModal(projectId);
+        openProjectModal(projectId, { restoreState: modalState });
     } else {
         render();
     }
@@ -1090,7 +1306,7 @@ function setupTaskDragAndDrop(projectId) {
 // MODAL MANAGEMENT
 // ============================================================================
 
-function openProjectModal(projectId) {
+function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
     if (!project) return;
     
@@ -1351,9 +1567,9 @@ function toggleHideCompleted() {
     
     // Find the currently open modal project
     const modalContent = document.getElementById('modalContent');
-    const projectIdMatch = modalContent.innerHTML.match(/data-progress-bar="(\d+)"/);
-    if (projectIdMatch) {
-        const projectId = parseInt(projectIdMatch[1]);
+    const progressBar = modalContent.querySelector('[data-progress-bar]');
+    const projectId = progressBar?.getAttribute('data-progress-bar');
+    if (projectId) {
         const project = state.findProject(projectId);
         if (!project) return;
 
@@ -1529,7 +1745,7 @@ function pasteTasks() {
     
     const projectSelect = document.getElementById('pasteProjectSelect');
     const pasteBox = document.getElementById('pasteBox');
-    const projectId = parseInt(projectSelect.value);
+    const projectId = projectSelect.value;
     const taskText = pasteBox.value.trim();
     
     if (!projectId || !taskText) return;
@@ -1614,6 +1830,7 @@ function render() {
     updateTotalCompletion();
     renderSharedProjectsPanel();
     renderNotificationsPanel();
+    syncAccountStatsToModal();
     
     // Update undo button
     updateUndoButton();
@@ -1655,7 +1872,7 @@ function renderProjectCard(project) {
                 <div class="project-title-container">
                     ${canEditProject ? `<button class="drag-handle" type="button" title="Drag to reorder" onclick="event.stopPropagation();">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                         </svg>
                     </button>` : ''}
                     <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${project.title}</div>
@@ -1930,6 +2147,26 @@ function initializeEventHandlers() {
         }
     });
 
+    function closeMenuDropdown() {
+        menuOpen = false;
+        menuDropdown.classList.add('hidden');
+        menuButton.classList.remove('active');
+    }
+
+    document.getElementById('menuSignOutBtn')?.addEventListener('click', () => {
+        closeMenuDropdown();
+        logout();
+    });
+
+    document.getElementById('menuAccountSettingsBtn')?.addEventListener('click', () => {
+        closeMenuDropdown();
+        openAccountSettingsModal();
+    });
+
+    document.getElementById('menuUiOptionsBtn')?.addEventListener('click', () => {
+        closeMenuDropdown();
+    });
+
     // Control panel toggle
     const collapseButton = document.getElementById('collapseButton');
     const expandButton = document.getElementById('expandButton');
@@ -1973,6 +2210,13 @@ function initializeEventHandlers() {
     confirmDialog.addEventListener('click', (e) => {
         if (e.target === confirmDialog) {
             closeConfirmDialog();
+        }
+    });
+
+    const accountSettingsModal = document.getElementById('accountSettingsModal');
+    accountSettingsModal?.addEventListener('click', (e) => {
+        if (e.target === accountSettingsModal) {
+            closeAccountSettingsModal();
         }
     });
 
@@ -2122,6 +2366,11 @@ window.copyProjectToClipboard = copyProjectToClipboard;
 window.switchToActiveView = switchToActiveView;
 window.switchToCompletedView = switchToCompletedView;
 window.openProjectModal = openProjectModal;
+window.openAccountSettingsModal = openAccountSettingsModal;
+window.closeAccountSettingsModal = closeAccountSettingsModal;
+window.triggerProfilePicUpload = triggerProfilePicUpload;
+window.removeProfilePicture = removeProfilePicture;
+window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
 window.closeProjectModal = closeProjectModal;
 window.editModalTitle = editModalTitle;
 window.finishEditModalTitle = finishEditModalTitle;
@@ -2282,7 +2531,7 @@ function initAuthScreen() {
     });
 
     // Logout buttons (panel)
-    document.getElementById('panelLogoutBtn')?.addEventListener('click', () => logout());
+    document.getElementById('accountProfilePicInput')?.addEventListener('change', handleProfilePicSelected);
 
     // Remember Me — restore saved email if present
     const savedEmail = localStorage.getItem('tracker_remember_email');
@@ -2311,15 +2560,12 @@ function onAuthSuccess(user) {
     const overlay = document.getElementById('authOverlay');
     if (overlay) overlay.classList.add('hidden');
 
-    // Show username in control panel
-    const panelUsername = document.getElementById('panelUsername');
-    if (panelUsername) panelUsername.textContent = user.username;
-    const panelUserInfo = document.getElementById('panelUserInfo');
-    if (panelUserInfo) panelUserInfo.classList.remove('hidden');
+    applyAccountUI(user);
 
     // Load app data
     initializeEventHandlers();
     loadData();
+    refreshAccountProfile();
     startNotificationPolling();
 }
 

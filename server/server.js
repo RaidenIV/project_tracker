@@ -31,6 +31,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 const accountSchema = new mongoose.Schema({
     email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
     username:     { type: String, required: true, trim: true },
+    profilePic:   { type: String, default: '' },
     passwordHash: { type: String, required: true },
     createdAt:    { type: Date, default: Date.now }
 });
@@ -145,8 +146,19 @@ async function enrichProject(project, userId, accountMap) {
 }
 
 async function buildAccountMap(ownerIds) {
-    const accounts = await Account.find({ _id: { $in: ownerIds } }, 'username email');
+    const accounts = await Account.find({ _id: { $in: ownerIds } }, 'username email profilePic');
     return Object.fromEntries(accounts.map(a => [a._id.toString(), a]));
+}
+
+async function resolveActorForNotifications(actor) {
+    if (!actor?.id) {
+        return { id: actor?.id || '', username: actor?.username || 'Someone' };
+    }
+    const account = await Account.findById(actor.id, 'username');
+    return {
+        id: actor.id,
+        username: account?.username || actor.username || 'Someone'
+    };
 }
 
 
@@ -158,8 +170,9 @@ function getProjectParticipantIds(project) {
 }
 
 async function createProjectNotifications({ project, actor, type = 'project_updated', message, recipientIds }) {
+    const freshActor = await resolveActorForNotifications(actor);
     const recipients = (recipientIds || getProjectParticipantIds(project))
-        .filter(userId => userId && userId !== actor.id);
+        .filter(userId => userId && userId !== freshActor.id);
 
     if (!recipients.length || !message) return;
 
@@ -167,8 +180,8 @@ async function createProjectNotifications({ project, actor, type = 'project_upda
         userId,
         projectId: project._id.toString(),
         projectTitle: project.title || 'Project',
-        actorUserId: actor.id,
-        actorName: actor.username || 'Someone',
+        actorUserId: freshActor.id,
+        actorName: freshActor.username || 'Someone',
         type,
         message,
         read: false,
@@ -257,10 +270,10 @@ app.post('/api/auth/register', async (req, res) => {
         await Project.updateMany({ owner: 'default' }, { $set: { owner: newUserId } });
 
         const token = jwt.sign(
-            { id: newUserId, email: account.email, username: account.username },
+            { id: newUserId, email: account.email, username: account.username, profilePic: account.profilePic || '' },
             JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }
         );
-        res.status(201).json({ token, user: { id: newUserId, email: account.email, username: account.username } });
+        res.status(201).json({ token, user: { id: newUserId, email: account.email, username: account.username, profilePic: account.profilePic || '' } });
     } catch (err) {
         console.error('Register error:', err);
         res.status(500).json({ error: 'Registration failed', details: err?.message });
@@ -278,17 +291,27 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
 
         const token = jwt.sign(
-            { id: account._id.toString(), email: account.email, username: account.username },
+            { id: account._id.toString(), email: account.email, username: account.username, profilePic: account.profilePic || '' },
             JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }
         );
-        res.json({ token, user: { id: account._id, email: account.email, username: account.username } });
+        res.json({ token, user: { id: account._id, email: account.email, username: account.username, profilePic: account.profilePic || '' } });
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ error: 'Login failed', details: err?.message });
     }
 });
 
-app.get('/api/auth/me', authenticateToken, (req, res) => res.json({ user: req.user }));
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    const account = await Account.findById(req.user.id, 'email username profilePic createdAt');
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+    res.json({ user: {
+        id: account._id.toString(),
+        email: account.email,
+        username: account.username,
+        profilePic: account.profilePic || '',
+        createdAt: account.createdAt
+    }});
+});
 
 // ─── Project Routes ───────────────────────────────────────────────────────────
 
@@ -503,7 +526,98 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
 
 
 
+
+// ─── Account Routes ───────────────────────────────────────────────────────────
+
+app.get('/api/account', authenticateToken, async (req, res) => {
+    try {
+        const [account, stats, ownedProjects, sharedProjects, activeProjects] = await Promise.all([
+            Account.findById(req.user.id, 'email username profilePic createdAt'),
+            getOrCreateStats(req.user.id),
+            Project.countDocuments({ owner: req.user.id }),
+            Project.countDocuments({ 'collaborators.userId': req.user.id }),
+            Project.countDocuments({
+                $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }],
+                completed: false
+            })
+        ]);
+
+        if (!account) return res.status(404).json({ error: 'Account not found' });
+
+        res.json({
+            user: {
+                id: account._id.toString(),
+                email: account.email,
+                username: account.username,
+                profilePic: account.profilePic || '',
+                createdAt: account.createdAt
+            },
+            stats: {
+                completedTasks: stats.completedTasks || 0,
+                completedProjects: stats.completedProjects || 0,
+                ownedProjects,
+                sharedProjects,
+                activeProjects
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching account:', err);
+        res.status(500).json({ error: 'Failed to fetch account', details: err?.message });
+    }
+});
+
+app.put('/api/account', authenticateToken, async (req, res) => {
+    try {
+        const updates = {};
+        if (typeof req.body.username === 'string') {
+            const username = req.body.username.trim();
+            if (!username) return res.status(400).json({ error: 'User name is required' });
+            if (username.length > 40) return res.status(400).json({ error: 'User name must be 40 characters or fewer' });
+            updates.username = username;
+        }
+
+        if (req.body.profilePic !== undefined) {
+            const profilePic = String(req.body.profilePic || '');
+            if (profilePic.length > 1600000) {
+                return res.status(400).json({ error: 'Profile picture is too large' });
+            }
+            updates.profilePic = profilePic;
+        }
+
+        const account = await Account.findByIdAndUpdate(req.user.id, updates, { new: true, runValidators: true, select: 'email username profilePic createdAt' });
+        if (!account) return res.status(404).json({ error: 'Account not found' });
+
+        if (updates.username) {
+            await Project.updateMany(
+                { 'collaborators.userId': req.user.id },
+                { $set: { 'collaborators.$[collab].username': updates.username } },
+                { arrayFilters: [{ 'collab.userId': req.user.id }] }
+            );
+        }
+
+        const token = jwt.sign(
+            { id: account._id.toString(), email: account.email, username: account.username, profilePic: account.profilePic || '' },
+            JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }
+        );
+
+        res.json({
+            token,
+            user: {
+                id: account._id.toString(),
+                email: account.email,
+                username: account.username,
+                profilePic: account.profilePic || '',
+                createdAt: account.createdAt
+            }
+        });
+    } catch (err) {
+        console.error('Error updating account:', err);
+        res.status(500).json({ error: 'Failed to update account', details: err?.message });
+    }
+});
+
 // ─── Notification Routes ─────────────────────────────────────────────────────
+
 
 app.get('/api/notifications', authenticateToken, async (req, res) => {
     try {
