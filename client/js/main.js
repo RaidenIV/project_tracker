@@ -174,29 +174,46 @@ async function imageFileToOptimizedDataUrl(file) {
     });
 
     const rawDataUrl = await readUrl();
-    const bitmap = await new Promise((resolve, reject) => {
+    const sourceImage = await new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
         img.onerror = () => reject(new Error('Unable to process the selected image.'));
         img.src = rawDataUrl;
     });
 
-    const maxDim = 512;
-    const scale = Math.min(1, maxDim / Math.max(bitmap.width || 1, bitmap.height || 1));
-    const width = Math.max(1, Math.round((bitmap.width || 1) * scale));
-    const height = Math.max(1, Math.round((bitmap.height || 1) * scale));
+    const avatarSize = 512;
+    const sourceWidth = Math.max(1, sourceImage.naturalWidth || sourceImage.width || 1);
+    const sourceHeight = Math.max(1, sourceImage.naturalHeight || sourceImage.height || 1);
+
+    const cropSize = Math.min(sourceWidth, sourceHeight);
+    const cropX = Math.max(0, Math.round((sourceWidth - cropSize) / 2));
+    const cropY = Math.max(0, Math.round((sourceHeight - cropSize) / 2));
 
     const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = avatarSize;
+    canvas.height = avatarSize;
+
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return rawDataUrl;
-    ctx.fillStyle = '#e1e3e5';
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(bitmap, 0, 0, width, height);
 
-    let optimized = canvas.toDataURL('image/webp', 0.82);
-    if (!optimized || optimized === 'data:,') optimized = canvas.toDataURL('image/jpeg', 0.82);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#e1e3e5';
+    ctx.fillRect(0, 0, avatarSize, avatarSize);
+    ctx.drawImage(
+        sourceImage,
+        cropX,
+        cropY,
+        cropSize,
+        cropSize,
+        0,
+        0,
+        avatarSize,
+        avatarSize
+    );
+
+    let optimized = canvas.toDataURL('image/webp', 0.9);
+    if (!optimized || optimized === 'data:,') optimized = canvas.toDataURL('image/jpeg', 0.9);
     return optimized || rawDataUrl;
 }
 
