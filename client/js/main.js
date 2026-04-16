@@ -8,7 +8,8 @@ import {
     reorderProjectsOnServer,
     shareProjectOnServer, updateCollaboratorRoleOnServer, removeCollaboratorFromServer,
     loadNotificationsFromServer, markNotificationReadOnServer, markAllNotificationsReadOnServer,
-    loadAccountProfileFromServer, updateAccountProfileOnServer
+    loadAccountProfileFromServer, updateAccountProfileOnServer,
+    archiveProjectOnServer, restoreProjectOnServer
 } from './modules/api.js';
 import { isLoggedIn, getCurrentUser, login, register, logout } from './modules/auth.js';
 
@@ -63,6 +64,261 @@ const accountState = {
     },
     pendingProfilePic: null
 };
+
+const uiState = {
+    projectSearch: '',
+    ownerFilter: 'all',
+    sortMode: 'manual',
+    savedViews: [],
+    activeSavedViewId: '',
+    theme: 'default',
+    saveStatus: 'idle',
+    saveMessage: 'All changes saved',
+    commandPaletteOpen: false,
+    commandQuery: '',
+    commandActiveIndex: 0
+};
+
+const LOCAL_STORAGE_KEYS = {
+    SAVED_VIEWS: 'tracker_saved_views_v1',
+    THEME: 'tracker_ui_theme_v1'
+};
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function loadSavedViewsFromStorage() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+        uiState.savedViews = raw ? JSON.parse(raw) : [];
+    } catch {
+        uiState.savedViews = [];
+    }
+}
+
+function persistSavedViews() {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS, JSON.stringify(uiState.savedViews));
+}
+
+function loadThemePreference() {
+    uiState.theme = localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'default';
+    applyTheme(uiState.theme, false);
+}
+
+function applyTheme(themeName, persist = true) {
+    uiState.theme = themeName || 'default';
+    document.body.setAttribute('data-theme', uiState.theme === 'default' ? '' : uiState.theme);
+    if (uiState.theme === 'default') document.body.removeAttribute('data-theme');
+    if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
+    const status = document.getElementById('uiOptionsStatus');
+    if (status) status.textContent = `Current theme: ${uiState.theme === 'default' ? 'Industrial' : capitalizeFirstLetter(uiState.theme)}`;
+    renderThemeOptions();
+}
+
+
+function renderThemeOptions() {
+    document.querySelectorAll('[data-theme-option]').forEach(card => {
+        const isActive = card.getAttribute('data-theme-option') === uiState.theme;
+        card.classList.toggle('is-active', isActive);
+    });
+}
+
+function openUiOptionsModal() {
+    renderThemeOptions();
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${uiState.theme === 'default' ? 'Industrial' : capitalizeFirstLetter(uiState.theme)}`;
+    document.getElementById('uiOptionsModal')?.classList.add('active');
+}
+
+function closeUiOptionsModal() {
+    document.getElementById('uiOptionsModal')?.classList.remove('active');
+}
+
+function setSaveStatus(status, message) {
+    uiState.saveStatus = status;
+    uiState.saveMessage = message;
+    const pill = document.getElementById('saveStatusPill');
+    if (!pill) return;
+    pill.className = `save-status save-status--${status}`;
+    pill.textContent = message;
+}
+
+function getVisibleBaseProjects() {
+    return state.getCurrentViewProjects().filter(project => !project.archived);
+}
+
+function getArchivedProjects() {
+    return state.getProjects().filter(project => project.archived);
+}
+
+function matchesProjectSearch(project, query) {
+    if (!query) return true;
+    const haystack = [
+        project.title,
+        project.notes,
+        ...(project.tasks || []).map(task => task.text)
+    ].join(' ').toLowerCase();
+    return haystack.includes(query.toLowerCase());
+}
+
+function getFilteredProjects() {
+    let projects = [...getVisibleBaseProjects()];
+
+    if (uiState.ownerFilter === 'owned') projects = projects.filter(project => project.userRole === 'owner');
+    if (uiState.ownerFilter === 'shared') projects = projects.filter(project => project.userRole !== 'owner');
+    if (uiState.ownerFilter === 'collab') projects = projects.filter(project => (project.collaborators || []).length > 0);
+
+    if (uiState.projectSearch.trim()) {
+        const query = uiState.projectSearch.trim();
+        projects = projects.filter(project => matchesProjectSearch(project, query));
+    }
+
+    if (uiState.sortMode === 'recent') {
+        projects.sort((a, b) => new Date(b.lastModified || b.dateCreated) - new Date(a.lastModified || a.dateCreated));
+    } else if (uiState.sortMode === 'alpha') {
+        projects.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (uiState.sortMode === 'remaining') {
+        projects.sort((a, b) => {
+            const aRemaining = (a.tasks || []).filter(task => !task.completed).length;
+            const bRemaining = (b.tasks || []).filter(task => !task.completed).length;
+            return bRemaining - aRemaining;
+        });
+    } else if (uiState.sortMode === 'progress') {
+        projects.sort((a, b) => {
+            const aTotal = a.tasks?.length || 0;
+            const bTotal = b.tasks?.length || 0;
+            const aDone = a.tasks?.filter(task => task.completed).length || 0;
+            const bDone = b.tasks?.filter(task => task.completed).length || 0;
+            const aProgress = aTotal ? aDone / aTotal : 0;
+            const bProgress = bTotal ? bDone / bTotal : 0;
+            return bProgress - aProgress;
+        });
+    }
+
+    return projects;
+}
+
+function renderActiveFilterChips() {
+    const container = document.getElementById('activeFilterChips');
+    if (!container) return;
+    const chips = [];
+    if (uiState.projectSearch.trim()) chips.push(`Search: ${uiState.projectSearch.trim()}`);
+    if (uiState.ownerFilter !== 'all') chips.push(`Filter: ${uiState.ownerFilter}`);
+    if (uiState.sortMode !== 'manual') chips.push(`Sort: ${uiState.sortMode}`);
+    if (uiState.activeSavedViewId) {
+        const view = uiState.savedViews.find(item => item.id === uiState.activeSavedViewId);
+        if (view) chips.push(`Saved View: ${view.name}`);
+    }
+    container.innerHTML = chips.map(chip => `<span class="filter-chip">${escapeHtml(chip)}</span>`).join('');
+}
+
+function saveCurrentView() {
+    const name = window.prompt('Name this saved view:');
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const view = {
+        id: `view_${Date.now()}`,
+        name: trimmed,
+        projectSearch: uiState.projectSearch,
+        ownerFilter: uiState.ownerFilter,
+        sortMode: uiState.sortMode,
+        savedAt: new Date().toISOString()
+    };
+    uiState.savedViews.unshift(view);
+    uiState.activeSavedViewId = view.id;
+    persistSavedViews();
+    renderSavedViewsPanel();
+    renderActiveFilterChips();
+}
+
+function applySavedView(viewId) {
+    const view = uiState.savedViews.find(item => item.id === viewId);
+    if (!view) return;
+    uiState.projectSearch = view.projectSearch || '';
+    uiState.ownerFilter = view.ownerFilter || 'all';
+    uiState.sortMode = view.sortMode || 'manual';
+    uiState.activeSavedViewId = view.id;
+    const search = document.getElementById('projectSearchInput');
+    const filter = document.getElementById('projectOwnerFilter');
+    const sort = document.getElementById('projectSortSelect');
+    if (search) search.value = uiState.projectSearch;
+    if (filter) filter.value = uiState.ownerFilter;
+    if (sort) sort.value = uiState.sortMode;
+    render();
+}
+
+function deleteSavedView(viewId) {
+    uiState.savedViews = uiState.savedViews.filter(item => item.id !== viewId);
+    if (uiState.activeSavedViewId === viewId) uiState.activeSavedViewId = '';
+    persistSavedViews();
+    renderSavedViewsPanel();
+    renderActiveFilterChips();
+}
+
+function clearSavedViews() {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    persistSavedViews();
+    renderSavedViewsPanel();
+    renderActiveFilterChips();
+}
+
+function renderSavedViewsPanel() {
+    const list = document.getElementById('savedViewsList');
+    const count = document.getElementById('savedViewsCount');
+    if (!list || !count) return;
+    count.textContent = String(uiState.savedViews.length);
+    if (!uiState.savedViews.length) {
+        list.innerHTML = '<div class="side-panel-empty">No saved views yet</div>';
+        return;
+    }
+    list.innerHTML = uiState.savedViews.map(view => `
+        <div class="saved-view-card">
+            <button class="saved-view-main" type="button" onclick="applySavedView('${view.id}')">
+                <div class="saved-view-name">${escapeHtml(view.name)}</div>
+                <div class="saved-view-meta">${escapeHtml((view.projectSearch && `search “${view.projectSearch}”`) || 'no search')} • ${escapeHtml(view.ownerFilter)} • ${escapeHtml(view.sortMode)}</div>
+            </button>
+            <div class="saved-view-actions">
+                <button class="icon-button-small" type="button" onclick="applySavedView('${view.id}')">Open</button>
+                <button class="icon-button-small" type="button" onclick="deleteSavedView('${view.id}')">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderArchivedProjectsPanel() {
+    const list = document.getElementById('archivedProjectsList');
+    const count = document.getElementById('archivedProjectsCount');
+    if (!list || !count) return;
+    const archivedProjects = getArchivedProjects();
+    count.textContent = String(archivedProjects.length);
+    if (!archivedProjects.length) {
+        list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
+        return;
+    }
+    list.innerHTML = archivedProjects.map(project => `
+        <div class="archived-project-card">
+            <div>
+                <div class="archived-project-title">${escapeHtml(project.title)}</div>
+                <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
+            </div>
+            <div class="archived-project-actions">
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getProjectActivities(project) {
+    return Array.isArray(project?.activities) ? project.activities : [];
+}
 
 function getUserInitials(name) {
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -121,8 +377,8 @@ function applyAccountUI(user) {
 }
 
 function syncAccountStatsToModal() {
-    const derivedSharedProjects = state.getProjects().filter(project => project.userRole !== 'owner').length;
-    const derivedActiveProjects = state.getActiveProjects().length;
+    const derivedSharedProjects = state.getProjects().filter(project => project.userRole !== 'owner' && !project.archived).length;
+    const derivedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).length;
     const stats = {
         completedTasks: state.getStats().completedTasks || accountState.stats.completedTasks || 0,
         completedProjects: state.getStats().completedProjects || accountState.stats.completedProjects || 0,
@@ -332,7 +588,7 @@ function captureProjectModalState(projectId) {
 
 function restoreProjectModalState(projectId, modalState) {
     if (!modalState || String(modalState.projectId) !== String(projectId)) return;
-    const tab = ['tasks', 'notes', 'members'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
+    const tab = ['tasks', 'notes', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
     switchModalTab(projectId, tab);
     const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
     if (!scrollEl) return;
@@ -362,14 +618,33 @@ let __saveQueued = false;
 async function saveData() {
     if (__saveInFlight) { __saveQueued = true; return; }
     __saveInFlight = true;
+    setSaveStatus('saving', 'Saving changes…');
     try {
+        let finalResult = null;
         do {
             __saveQueued = false;
-            const ok = await saveDataToServer(state.getProjects(), state.getStats());
-            if (!ok) {
-                console.warn('Save failed. Data is still in memory for this session.');
+            finalResult = await saveDataToServer(state.getProjects(), state.getStats());
+            if (!finalResult?.ok) {
+                if (finalResult?.conflicts?.length) {
+                    setSaveStatus('conflict', 'Conflict detected — refresh to sync');
+                } else {
+                    setSaveStatus('error', 'Save failed — retrying on next change');
+                }
                 break;
             }
+            if (finalResult?.savedProjects?.length) {
+                finalResult.savedProjects.forEach(savedProject => {
+                    const projectId = savedProject.id || savedProject._id;
+                    if (!projectId) return;
+                    state.updateProject(projectId, {
+                        _id: savedProject._id || savedProject.id,
+                        id: savedProject.id || savedProject._id,
+                        lastModified: savedProject.lastModified,
+                        activities: savedProject.activities || state.findProject(projectId)?.activities || []
+                    });
+                });
+            }
+            setSaveStatus('saved', __saveQueued ? 'Saving queued changes…' : 'All changes saved');
         } while (__saveQueued);
     } finally {
         __saveInFlight = false;
@@ -587,6 +862,7 @@ function performTaskToggle(projectId, taskId) {
     
     // Re-render to show new order
     const modalOpen = document.getElementById('projectModal').classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
     if (modalOpen) {
         openProjectModal(projectId, { restoreState: modalState });
     } else {
@@ -1453,6 +1729,7 @@ function openProjectModal(projectId, options = {}) {
             <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
                 Members ${(project.collaborators && project.collaborators.length > 0) ? `<span class="members-count">${project.collaborators.length}</span>` : ''}
             </button>
+            <button class="modal-tab" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
         </div>
         
         <!-- Tasks Section -->
@@ -1539,6 +1816,7 @@ function openProjectModal(projectId, options = {}) {
                 You have viewer access ${project.ownerName ? '— shared by ' + project.ownerName : ''}
             </div>` : `
             <div class="modal-actions">
+                ${project.archived ? `<button class="modal-delete-btn" onclick="restoreArchivedProject('${project.id}')">Restore Project</button>` : `<button class="modal-delete-btn" onclick="archiveProject('${project.id}')">Archive Project</button>`}
                 ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
                 <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
                     ${project.completed ? 'Mark as Active' : 'Mark as Complete'}
@@ -1620,16 +1898,35 @@ function openProjectModal(projectId, options = {}) {
                     onblur="saveProjectNotes('${project.id}')">${project.notes || ''}</textarea>
             </div>
         </div>
+
+        <div class="modal-section hidden" id="history-section-${project.id}">
+            <div class="project-activity-list">
+                ${getProjectActivities(project).length ? getProjectActivities(project).map(activity => `
+                    <div class="project-activity-item">
+                        <div class="project-activity-meta">
+                            <span>${escapeHtml(activity.actorName || 'System')}</span>
+                            <span>${escapeHtml(formatCompactDateTime(activity.createdAt))}</span>
+                        </div>
+                        <div class="project-activity-message">${escapeHtml(activity.message || 'Updated the project')}</div>
+                    </div>
+                `).join('') : '<div class="side-panel-empty">No activity yet</div>'}
+            </div>
+        </div>
     </div>`;
     
     modal.classList.add('active');
+
+    if (options.restoreState) {
+        restoreProjectModalState(project.id, options.restoreState);
+    }
     
     // Setup drag and drop for tasks
     setTimeout(() => setupTaskDragAndDrop(project.id), 100);
 }
 
+
 function switchModalTab(projectId, tab) {
-    ['tasks', 'notes', 'members'].forEach(s => {
+    ['tasks', 'notes', 'members', 'history'].forEach(s => {
         const sec = document.getElementById(`${s}-section-${projectId}`);
         const btn = document.getElementById(`${s}-tab-${projectId}`);
         if (!sec || !btn) return;
@@ -1890,22 +2187,110 @@ function pasteTasksInModal(projectId) {
     openProjectModal(projectId);
 }
 
+async function archiveProject(projectId) {
+    const project = state.findProject(projectId);
+    if (!project || !project._id) return;
+    state.updateProject(projectId, { archived: true, lastModified: new Date().toISOString() });
+    await saveData();
+    closeProjectModal();
+    render();
+}
+
+async function restoreArchivedProject(projectId) {
+    const project = state.findProject(projectId);
+    if (!project || !project._id) return;
+    state.updateProject(projectId, { archived: false, lastModified: new Date().toISOString() });
+    await saveData();
+    render();
+}
+
+function getCommandPaletteActions() {
+    const currentVisible = getFilteredProjects();
+    return [
+        { id: 'new-project', title: 'Create new project', copy: 'Add a project and open it immediately.', run: () => addProject() },
+        { id: 'view-active', title: 'Switch to Active Projects', copy: 'Show active projects.', run: () => switchToActiveView() },
+        { id: 'view-completed', title: 'Switch to Completed Projects', copy: 'Show completed projects.', run: () => switchToCompletedView() },
+        { id: 'toggle-panel', title: 'Toggle control panel', copy: 'Collapse or expand the side panel.', run: () => {
+            const controlPanel = document.getElementById('controlPanel');
+            if (state.isControlPanelOpen()) document.getElementById('collapseButton')?.click();
+            else document.getElementById('expandButton')?.click();
+        } },
+        { id: 'open-account', title: 'Open account settings', copy: 'Edit your profile and stats.', run: () => openAccountSettingsModal() },
+        { id: 'open-ui', title: 'Open UI options', copy: 'Change the current theme.', run: () => openUiOptionsModal() },
+        { id: 'mark-notifications', title: 'Mark all notifications as read', copy: 'Clear unread notification badges.', run: () => markAllNotificationsRead() },
+        ...currentVisible.slice(0, 10).map(project => ({
+            id: `open-${project.id}`,
+            title: `Open ${project.title}`,
+            copy: `Open project details. Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}.`,
+            run: () => openProjectModal(project.id)
+        })),
+        ...getArchivedProjects().slice(0, 10).map(project => ({
+            id: `restore-${project.id}`,
+            title: `Restore ${project.title}`,
+            copy: 'Restore this archived project.',
+            run: () => restoreArchivedProject(project.id)
+        }))
+    ];
+}
+
+function renderCommandPalette() {
+    const list = document.getElementById('commandPaletteList');
+    const input = document.getElementById('commandPaletteInput');
+    if (!list || !input) return;
+    const query = uiState.commandQuery.trim().toLowerCase();
+    const actions = getCommandPaletteActions().filter(action => {
+        if (!query) return true;
+        return `${action.title} ${action.copy}`.toLowerCase().includes(query);
+    });
+    if (uiState.commandActiveIndex >= actions.length) uiState.commandActiveIndex = 0;
+    list.innerHTML = actions.length ? actions.map((action, index) => `
+        <button class="command-palette-item ${index === uiState.commandActiveIndex ? 'is-active' : ''}" type="button" data-command-id="${action.id}">
+            <span class="command-palette-title">${escapeHtml(action.title)}</span>
+            <span class="command-palette-copy">${escapeHtml(action.copy)}</span>
+        </button>
+    `).join('') : '<div class="side-panel-empty">No commands found</div>';
+
+    list.querySelectorAll('[data-command-id]').forEach((button, index) => {
+        button.addEventListener('click', () => {
+            actions[index]?.run();
+            closeCommandPalette();
+        });
+    });
+}
+
+function openCommandPalette() {
+    uiState.commandPaletteOpen = true;
+    uiState.commandQuery = '';
+    uiState.commandActiveIndex = 0;
+    const modal = document.getElementById('commandPaletteModal');
+    const input = document.getElementById('commandPaletteInput');
+    if (modal) modal.classList.add('active');
+    if (input) input.value = '';
+    renderCommandPalette();
+    setTimeout(() => input?.focus(), 20);
+}
+
+function closeCommandPalette() {
+    uiState.commandPaletteOpen = false;
+    document.getElementById('commandPaletteModal')?.classList.remove('active');
+}
+
 // ============================================================================
 // UI RENDERING
 // ============================================================================
 
 function render() {
-    const displayProjects = state.getCurrentViewProjects();
+    const displayProjects = getFilteredProjects();
     const projectGrid = document.getElementById('projectGrid');
     const emptyState = document.getElementById('emptyState');
     
     // Update stats
     const stats = state.getStats();
-    document.getElementById('activeProjectsCount').textContent = state.getActiveProjects().length;
+    document.getElementById('activeProjectsCount').textContent = state.getProjects().filter(project => !project.completed && !project.archived).length;
     document.getElementById('completedTasksCount').textContent = stats.completedTasks;
     document.getElementById('completedProjectsCount').textContent = stats.completedProjects;
     // Incomplete tasks = sum of incomplete tasks across all active projects
-    const incompleteTasks = state.getActiveProjects()
+    const incompleteTasks = state.getProjects().filter(project => !project.completed && !project.archived)
         .reduce((sum, p) => sum + p.tasks.filter(t => !t.completed).length, 0);
     const incompleteEl = document.getElementById('incompleteTasksCount');
     if (incompleteEl) incompleteEl.textContent = incompleteTasks;
@@ -1913,7 +2298,10 @@ function render() {
     // Update total completion
     updateTotalCompletion();
     renderSharedProjectsPanel();
+    renderArchivedProjectsPanel();
     renderNotificationsPanel();
+    renderSavedViewsPanel();
+    renderActiveFilterChips();
     syncAccountStatsToModal();
     
     // Update undo button
@@ -1924,14 +2312,18 @@ function render() {
         emptyState.style.display = 'flex';
         projectGrid.style.display = 'none';
         const emptyTitle = emptyState.querySelector('.title');
-        emptyTitle.textContent = state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects';
+        const emptySubtitle = emptyState.querySelector('.subtitle');
+        emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
+        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Click "Add Project" to get started';
     } else {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
         
         // Setup drag and drop after rendering
-        setTimeout(setupProjectDragAndDrop, 100);
+        if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual') {
+            setTimeout(setupProjectDragAndDrop, 100);
+        }
     }
     
     updateProjectSelect();
@@ -1947,6 +2339,7 @@ function renderProjectCard(project) {
     const isEditor = project.userRole === 'editor';
     const canEditProject = state.canEdit(project.id);
     const canOwnerDelete = project.userRole === 'owner';
+    const canReorderProject = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual';
 
     return `
         <div class="project-card ${isViewer ? 'project-card--viewer' : ''}"
@@ -1954,7 +2347,7 @@ function renderProjectCard(project) {
              onclick="openProjectModal('${project.id}')">
             <div class="project-header">
                 <div class="project-title-container">
-                    ${canEditProject ? `<button class="drag-handle" type="button" title="Drag to reorder" onclick="event.stopPropagation();">
+                    ${canReorderProject ? `<button class="drag-handle" type="button" title="Drag to reorder" onclick="event.stopPropagation();">
                         <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                         </svg>
@@ -2024,7 +2417,7 @@ function renderSharedProjectsPanel() {
     const sharedProjectsCount = document.getElementById('sharedProjectsCount');
     if (!sharedProjectsList || !sharedProjectsCount) return;
 
-    const sharedActiveProjects = state.getActiveProjects().filter(project =>
+    const sharedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).filter(project =>
         project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
     );
 
@@ -2249,6 +2642,7 @@ function initializeEventHandlers() {
 
     document.getElementById('menuUiOptionsBtn')?.addEventListener('click', () => {
         closeMenuDropdown();
+        openUiOptionsModal();
     });
 
     document.getElementById('panelUserPill')?.addEventListener('click', () => {
@@ -2308,10 +2702,63 @@ function initializeEventHandlers() {
         }
     });
 
+    document.getElementById('uiOptionsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'uiOptionsModal') closeUiOptionsModal();
+    });
+
+    document.getElementById('commandPaletteModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'commandPaletteModal') closeCommandPalette();
+    });
+
+    document.getElementById('projectSearchInput')?.addEventListener('input', (e) => {
+        uiState.projectSearch = e.target.value || '';
+        uiState.activeSavedViewId = '';
+        render();
+    });
+    document.getElementById('projectOwnerFilter')?.addEventListener('change', (e) => {
+        uiState.ownerFilter = e.target.value || 'all';
+        uiState.activeSavedViewId = '';
+        render();
+    });
+    document.getElementById('projectSortSelect')?.addEventListener('change', (e) => {
+        uiState.sortMode = e.target.value || 'manual';
+        uiState.activeSavedViewId = '';
+        render();
+    });
+    document.getElementById('saveCurrentViewBtn')?.addEventListener('click', saveCurrentView);
+    document.getElementById('clearSavedViewsBtn')?.addEventListener('click', clearSavedViews);
+    document.querySelectorAll('[data-theme-option]').forEach(button => {
+        button.addEventListener('click', () => applyTheme(button.getAttribute('data-theme-option')));
+    });
+    document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
+        uiState.commandQuery = e.target.value || '';
+        uiState.commandActiveIndex = 0;
+        renderCommandPalette();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        const tagName = e.target.tagName;
+        if ((tagName === 'INPUT' || tagName === 'TEXTAREA') && !(uiState.commandPaletteOpen && e.target.id === 'commandPaletteInput')) {
             return;
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (uiState.commandPaletteOpen) closeCommandPalette();
+            else openCommandPalette();
+            return;
+        }
+
+        if (uiState.commandPaletteOpen) {
+            const actions = getCommandPaletteActions().filter(action => {
+                const query = uiState.commandQuery.trim().toLowerCase();
+                return !query || `${action.title} ${action.copy}`.toLowerCase().includes(query);
+            });
+            if (e.key === 'Escape') { closeCommandPalette(); return; }
+            if (e.key === 'ArrowDown') { e.preventDefault(); uiState.commandActiveIndex = Math.min(actions.length - 1, uiState.commandActiveIndex + 1); renderCommandPalette(); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); uiState.commandActiveIndex = Math.max(0, uiState.commandActiveIndex - 1); renderCommandPalette(); return; }
+            if (e.key === 'Enter') { e.preventDefault(); actions[uiState.commandActiveIndex]?.run(); closeCommandPalette(); return; }
         }
         
         switch(e.key.toLowerCase()) {
@@ -2367,7 +2814,8 @@ Features:
 - Click outside expanded cards to close them
 - Use the paste box in modals for bulk task import
 - Stats are clickable to switch views
-- Use tabs in modal for Tasks and Notes`);
+- Use tabs in modal for Tasks, Notes, Members, and History
+- Ctrl/Cmd+K opens the command palette`);
                 break;
         }
     });
@@ -2485,6 +2933,12 @@ window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.openNotificationProject = openNotificationProject;
 window.markAllNotificationsRead = markAllNotificationsRead;
+window.applySavedView = applySavedView;
+window.deleteSavedView = deleteSavedView;
+window.restoreArchivedProject = restoreArchivedProject;
+window.archiveProject = archiveProject;
+window.closeUiOptionsModal = closeUiOptionsModal;
+window.openUiOptionsModal = openUiOptionsModal;
 
 // ============================================================================
 // INITIALIZATION
@@ -2649,6 +3103,7 @@ function onAuthSuccess(user) {
     if (overlay) overlay.classList.add('hidden');
 
     applyAccountUI(user);
+    setSaveStatus('saved', 'All changes saved');
 
     // Load app data
     initializeEventHandlers();
@@ -2662,6 +3117,8 @@ function onAuthSuccess(user) {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadSavedViewsFromStorage();
+    loadThemePreference();
     initAuthScreen();
 
     if (isLoggedIn()) {
