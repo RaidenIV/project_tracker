@@ -2,16 +2,33 @@
 
 import { VIEWS, SHORTCUTS } from './modules/config.js';
 import { state } from './modules/state.js';
-import {
-    loadDataFromServer, saveDataToServer,
-    createProjectOnServer, deleteProjectFromServer,
+import * as api from './modules/api.js';
+import * as auth from './modules/auth.js';
+
+const {
+    loadDataFromServer,
+    saveDataToServer,
+    createProjectOnServer,
+    deleteProjectFromServer,
     reorderProjectsOnServer,
-    shareProjectOnServer, updateCollaboratorRoleOnServer, removeCollaboratorFromServer,
-    loadNotificationsFromServer, markNotificationReadOnServer, markAllNotificationsReadOnServer,
-    loadAccountProfileFromServer, updateAccountProfileOnServer,
-    archiveProjectOnServer, restoreProjectOnServer
-} from './modules/api.js';
-import { isLoggedIn, getCurrentUser, login, register, logout } from './modules/auth.js';
+    shareProjectOnServer,
+    updateCollaboratorRoleOnServer,
+    removeCollaboratorFromServer
+} = api;
+
+const loadNotificationsFromServer = api.loadNotificationsFromServer || (async () => ({ notifications: [], unreadCount: 0 }));
+const markNotificationReadOnServer = api.markNotificationReadOnServer || (async () => ({ success: true }));
+const markAllNotificationsReadOnServer = api.markAllNotificationsReadOnServer || (async () => ({ success: true }));
+const loadAccountProfileFromServer = api.loadAccountProfileFromServer || (async () => ({ user: auth.getCurrentUser?.() || null, stats: {} }));
+const updateAccountProfileOnServer = api.updateAccountProfileOnServer || (async (payload = {}) => ({ user: { ...(auth.getCurrentUser?.() || {}), ...payload } }));
+const archiveProjectOnServer = api.archiveProjectOnServer || (async () => ({ success: false }));
+const restoreProjectOnServer = api.restoreProjectOnServer || (async () => ({ success: false }));
+
+const isLoggedIn = auth.isLoggedIn;
+const getCurrentUser = auth.getCurrentUser;
+const login = auth.login;
+const register = auth.register;
+const logout = auth.logout;
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -548,14 +565,21 @@ async function imageFileToOptimizedDataUrl(file) {
 async function refreshAccountProfile() {
     try {
         const response = await loadAccountProfileFromServer();
-        if (!response?.user) return;
-        accountState.user = response.user;
-        accountState.stats = response.stats || accountState.stats;
+        const fallbackUser = getCurrentUser?.() || accountState.user;
+        if (!response?.user && !fallbackUser) return;
+        accountState.user = response?.user || fallbackUser;
+        accountState.stats = response?.stats || accountState.stats;
         accountState.pendingProfilePic = null;
         applyAccountUI(accountState.user);
         syncAccountStatsToModal();
     } catch (err) {
         console.error('Failed to load account profile:', err);
+        const fallbackUser = getCurrentUser?.() || accountState.user;
+        if (fallbackUser) {
+            accountState.user = fallbackUser;
+            applyAccountUI(accountState.user);
+            syncAccountStatsToModal();
+        }
     }
 }
 
@@ -674,6 +698,9 @@ function restoreProjectModalState(projectId, modalState) {
 
 export async function loadData() {
     try {
+        if (typeof loadDataFromServer !== 'function') {
+            throw new Error('API module does not expose loadDataFromServer');
+        }
         const data = await loadDataFromServer();
         const projects = (Array.isArray(data?.projects) ? data.projects : [])
             .map(normalizeProject)
@@ -2579,9 +2606,15 @@ function renderNotificationsPanel() {
 }
 
 async function refreshNotifications() {
-    const response = await loadNotificationsFromServer(30);
-    notificationState.items = response.notifications || [];
-    notificationState.unreadCount = response.unreadCount || 0;
+    try {
+        const response = await loadNotificationsFromServer(30);
+        notificationState.items = response?.notifications || [];
+        notificationState.unreadCount = response?.unreadCount || 0;
+    } catch (err) {
+        console.error('Failed to refresh notifications:', err);
+        notificationState.items = [];
+        notificationState.unreadCount = 0;
+    }
     notificationState.hasLoadedOnce = true;
     renderNotificationsPanel();
 }
@@ -3183,18 +3216,38 @@ function initAuthScreen() {
 function onAuthSuccess(user) {
     state.setCurrentUser(user);
 
-    // Hide auth overlay
     const overlay = document.getElementById('authOverlay');
     if (overlay) overlay.classList.add('hidden');
 
-    applyAccountUI(user);
+    try {
+        applyAccountUI(user || getCurrentUser?.() || { username: 'User', email: '' });
+    } catch (err) {
+        console.error('Failed to apply account UI during auth success:', err);
+    }
     setSaveStatus('saved', 'All changes saved');
 
-    // Load app data
-    initializeEventHandlers();
-    loadData();
-    refreshAccountProfile();
-    startNotificationPolling();
+    try {
+        initializeEventHandlers();
+    } catch (err) {
+        console.error('Failed to initialize event handlers:', err);
+    }
+
+    Promise.resolve()
+        .then(() => loadData())
+        .catch(err => {
+            console.error('Initial data load failed:', err);
+            setSaveStatus('error', 'Could not load user data');
+        });
+
+    Promise.resolve()
+        .then(() => refreshAccountProfile())
+        .catch(err => console.error('Initial account profile load failed:', err));
+
+    try {
+        startNotificationPolling();
+    } catch (err) {
+        console.error('Failed to start notification polling:', err);
+    }
 }
 
 // ============================================================================
