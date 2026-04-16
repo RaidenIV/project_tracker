@@ -112,6 +112,29 @@
             <div class="viewport-header">
                 <h1>Active Projects</h1>
             </div>
+
+            <div class="view-toolbar">
+                <div class="view-toolbar-search-wrap">
+                    <input class="view-toolbar-search" id="projectSearchInput" type="search" placeholder="Search projects, tasks, or notes">
+                </div>
+                <select class="view-toolbar-select" id="projectOwnerFilter">
+                    <option value="all">All Access</option>
+                    <option value="owned">Owned by Me</option>
+                    <option value="shared">Shared with Me</option>
+                    <option value="collab">Has Collaborators</option>
+                </select>
+                <select class="view-toolbar-select" id="projectSortSelect">
+                    <option value="manual">Manual Order</option>
+                    <option value="recent">Recently Updated</option>
+                    <option value="alpha">Alphabetical</option>
+                    <option value="remaining">Most Remaining Tasks</option>
+                    <option value="progress">Highest Progress</option>
+                </select>
+                <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
+            </div>
+
+            <div class="view-filter-chips" id="activeFilterChips"></div>
+
             <div class="empty-state" id="emptyState">
                 <div>
                     <p class="title">No active projects</p>
@@ -148,6 +171,8 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
 
                 <!-- Stats -->
                 <div class="stats">
@@ -186,6 +211,20 @@
                     Add Project
                 </button>
 
+                <!-- Saved Views -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Saved Views</h3>
+                        <div class="side-panel-section-actions">
+                            <span class="section-count-pill" id="savedViewsCount">0</span>
+                            <button class="section-action-button" id="clearSavedViewsBtn" type="button">Clear</button>
+                        </div>
+                    </div>
+                    <div class="saved-views-list" id="savedViewsList">
+                        <div class="side-panel-empty">No saved views yet</div>
+                    </div>
+                </div>
+
                 <!-- Shared Active Projects -->
                 <div class="side-panel-section">
                     <div class="side-panel-section-header">
@@ -194,6 +233,17 @@
                     </div>
                     <div class="shared-projects-list" id="sharedProjectsList">
                         <div class="side-panel-empty">No shared active projects</div>
+                    </div>
+                </div>
+
+                <!-- Archived Projects -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Archived Projects</h3>
+                        <span class="section-count-pill" id="archivedProjectsCount">0</span>
+                    </div>
+                    <div class="archived-projects-list" id="archivedProjectsList">
+                        <div class="side-panel-empty">No archived projects</div>
                     </div>
                 </div>
 
@@ -248,6 +298,7 @@
                 <div class="shortcut-line"><kbd>A</kbd> View Active</div>
                 <div class="shortcut-line"><kbd>D</kbd> Completed</div>
                 <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
+                <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
                 <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
             </div>
         </div>
@@ -329,6 +380,59 @@
                     <div class="account-modal-status" id="accountSettingsStatus"></div>
                     <button class="modal-done-btn" type="button" id="accountSettingsSaveBtn" onclick="saveAccountSettingsFromModal()">Save Changes</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Options Modal -->
+    <div class="modal-overlay" id="uiOptionsModal">
+        <div class="modal-content ui-options-modal-content">
+            <div class="account-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title">UI Options</h2>
+                        <p class="account-modal-subtitle">Choose a visual theme for the app</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="theme-grid" id="themeGrid">
+                    <button class="theme-card" type="button" data-theme-option="default">
+                        <span class="theme-card-title">Industrial</span>
+                        <span class="theme-card-copy">The current neomorphic grey theme.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="glass">
+                        <span class="theme-card-title">Glassmorphic</span>
+                        <span class="theme-card-copy">Soft blur, lighter panels, and translucent cards.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="midnight">
+                        <span class="theme-card-title">Midnight</span>
+                        <span class="theme-card-copy">Dark interface with blue accents for late-night sessions.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="blueprint">
+                        <span class="theme-card-title">Blueprint</span>
+                        <span class="theme-card-copy">Cool steel-blue surfaces with higher contrast.</span>
+                    </button>
+                </div>
+
+                <div class="account-modal-actions">
+                    <div class="account-modal-status" id="uiOptionsStatus"></div>
+                    <button class="modal-done-btn" type="button" onclick="closeUiOptionsModal()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="modal-overlay" id="commandPaletteModal">
+        <div class="modal-content command-palette-content">
+            <div class="command-palette-shell">
+                <input class="command-palette-input" id="commandPaletteInput" type="text" placeholder="Search commands">
+                <div class="command-palette-list" id="commandPaletteList"></div>
             </div>
         </div>
     </div>
