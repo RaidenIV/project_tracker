@@ -41,10 +41,31 @@ function sortTasks(tasks) {
 
 const DEFAULT_PROFILE_ICON_SVG = `
 <svg viewBox="0 0 32 32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none">
-    <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M26 27c0-5.523-4.477-10-10-10S6 21.477 6 27" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    <circle cx="16" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <g>
+        <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+        <path d="M26,27L26,27 c0-5.523-4.477-10-10-10h0c-5.523,0-10,4.477-10,10v0" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+        <circle cx="16" cy="11" r="6" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+    </g>
 </svg>`;
+
+const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w';
+const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
+
+const THEME_OPTIONS = {
+    'industrial-light': { label: 'Industrial Light', family: 'industrial', mode: 'light' },
+    'industrial-dark': { label: 'Industrial Dark', family: 'industrial', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
+    'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
+    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' }
+};
+
+const LEGACY_THEME_MAP = {
+    default: 'industrial-light',
+    glass: 'glass-light',
+    midnight: 'industrial-dark',
+    blueprint: 'blueprint-light'
+};
 
 const notificationState = {
     items: [],
@@ -71,7 +92,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'default',
+    theme: 'industrial-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -93,6 +114,31 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function normalizeThemeName(themeName) {
+    const resolved = LEGACY_THEME_MAP[themeName] || themeName;
+    return THEME_OPTIONS[resolved] ? resolved : 'industrial-light';
+}
+
+function getThemeMeta(themeName) {
+    return THEME_OPTIONS[normalizeThemeName(themeName)];
+}
+
+function getThemeLabel(themeName) {
+    return getThemeMeta(themeName).label;
+}
+
+function syncThemeBranding() {
+    const meta = getThemeMeta(uiState.theme);
+    document.body.setAttribute('data-theme', uiState.theme);
+    document.body.setAttribute('data-theme-family', meta.family);
+    document.body.setAttribute('data-color-mode', meta.mode);
+
+    const panelLogo = document.querySelector('.panel-logo-img-inline');
+    if (panelLogo) {
+        panelLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
+}
+
 function loadSavedViewsFromStorage() {
     try {
         const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
@@ -107,17 +153,16 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'default';
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'industrial-light');
     applyTheme(uiState.theme, false);
 }
 
 function applyTheme(themeName, persist = true) {
-    uiState.theme = themeName || 'default';
-    document.body.setAttribute('data-theme', uiState.theme === 'default' ? '' : uiState.theme);
-    if (uiState.theme === 'default') document.body.removeAttribute('data-theme');
+    uiState.theme = normalizeThemeName(themeName);
+    syncThemeBranding();
     if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
     const status = document.getElementById('uiOptionsStatus');
-    if (status) status.textContent = `Current theme: ${uiState.theme === 'default' ? 'Industrial' : capitalizeFirstLetter(uiState.theme)}`;
+    if (status) status.textContent = `Current theme: ${getThemeLabel(uiState.theme)}`;
     renderThemeOptions();
 }
 
@@ -131,7 +176,7 @@ function renderThemeOptions() {
 
 function openUiOptionsModal() {
     renderThemeOptions();
-    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${uiState.theme === 'default' ? 'Industrial' : capitalizeFirstLetter(uiState.theme)}`;
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeLabel(uiState.theme)}`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
