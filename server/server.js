@@ -52,6 +52,14 @@ const collaboratorSchema = new mongoose.Schema({
     role:     { type: String, enum: ['viewer', 'editor'], default: 'editor' }
 }, { _id: false });
 
+const activitySchema = new mongoose.Schema({
+    actorUserId: { type: String, default: '' },
+    actorName:   { type: String, default: 'System' },
+    type:        { type: String, default: 'project_updated' },
+    message:     { type: String, required: true },
+    createdAt:   { type: Date, default: Date.now }
+}, { _id: false });
+
 const projectSchema = new mongoose.Schema({
     title:         { type: String, default: 'New Project' },
     tasks:         [taskSchema],
@@ -60,8 +68,10 @@ const projectSchema = new mongoose.Schema({
     completed:     { type: Boolean, default: false },
     completedDate: String,
     notes:         { type: String, default: '' },
+    archived:      { type: Boolean, default: false },
     owner:         { type: String, required: true },   // Account._id as string
     collaborators: [collaboratorSchema],
+    activities:    { type: [activitySchema], default: [] },
     lastModified:  { type: Date, default: Date.now }
 });
 const Project = mongoose.model('Project', projectSchema);
@@ -190,12 +200,31 @@ async function createProjectNotifications({ project, actor, type = 'project_upda
     })));
 }
 
+function appendProjectActivity(project, actor, type, message) {
+    if (!project || !message) return;
+    const activities = Array.isArray(project.activities) ? project.activities : [];
+    activities.unshift({
+        actorUserId: actor?.id || '',
+        actorName: actor?.username || 'System',
+        type: type || 'project_updated',
+        message,
+        createdAt: new Date()
+    });
+    project.activities = activities.slice(0, 60);
+}
+
 function summarizeProjectUpdate(existingProject, incomingBody) {
     const oldProject = existingProject.toObject ? existingProject.toObject() : existingProject;
     const update = incomingBody || {};
 
     if (typeof update.title === 'string' && update.title !== oldProject.title) {
         return { type: 'project_renamed', message: `renamed the project to “${update.title}”` };
+    }
+
+    if (typeof update.archived === 'boolean' && update.archived !== !!oldProject.archived) {
+        return update.archived
+            ? { type: 'project_archived', message: 'archived the project' }
+            : { type: 'project_restored', message: 'restored the project' };
     }
 
     if (typeof update.completed === 'boolean' && update.completed !== !!oldProject.completed) {
@@ -346,8 +375,10 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completed:     completed    || false,
             completedDate: completedDate || null,
             notes:         notes        || '',
+            archived:      false,
             owner:         req.user.id,
             collaborators: [],
+            activities:    [{ actorUserId: req.user.id, actorName: req.user.username, type: 'project_created', message: 'created the project', createdAt: new Date() }],
             lastModified:  new Date()
         }).save();
 
@@ -367,12 +398,23 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'priority', 'completed', 'completedDate', 'notes'];
+        const allowed = ['title', 'tasks', 'priority', 'completed', 'completedDate', 'notes', 'archived'];
+        const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
+        if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
+            const serverModified = new Date(req.project.lastModified || 0);
+            if (serverModified.getTime() > clientKnownLastModified.getTime()) {
+                return res.status(409).json({ error: 'This project was updated elsewhere. Refresh to load the newest version.', code: 'PROJECT_CONFLICT' });
+            }
+        }
+
         const update = { lastModified: new Date() };
         allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
 
         const summary = summarizeProjectUpdate(req.project, req.body);
-        const updated = await Project.findByIdAndUpdate(req.params.id, update, { new: true });
+        Object.assign(req.project, update);
+        if (summary) appendProjectActivity(req.project, req.user, summary.type, summary.message);
+        await req.project.save();
+        const updated = req.project;
 
         if (summary && updated.collaborators.length > 0) {
             await createProjectNotifications({
@@ -447,6 +489,7 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
             role
         });
         project.lastModified = new Date();
+        appendProjectActivity(project, req.user, 'project_shared', `shared “${project.title}” with ${invitee.username} as ${role}`);
         await project.save();
 
         await createProjectNotifications({
@@ -478,6 +521,7 @@ app.put('/api/projects/:id/collaborators/:userId', authenticateToken, requireRol
 
         collab.role = role;
         req.project.lastModified = new Date();
+        appendProjectActivity(req.project, req.user, 'role_changed', `changed ${collab.username}'s access to ${role}`);
         await req.project.save();
 
         await createProjectNotifications({
@@ -504,6 +548,7 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
         const removedCollaborator = req.project.collaborators.find(c => c.userId === req.params.userId);
         req.project.collaborators = req.project.collaborators.filter(c => c.userId !== req.params.userId);
         req.project.lastModified = new Date();
+        if (removedCollaborator) appendProjectActivity(req.project, req.user, 'access_removed', `removed ${removedCollaborator.username}'s access`);
         await req.project.save();
 
         if (removedCollaborator) {
@@ -536,10 +581,11 @@ app.get('/api/account', authenticateToken, async (req, res) => {
             Account.findById(req.user.id, 'email username profilePic createdAt'),
             getOrCreateStats(req.user.id),
             Project.countDocuments({ owner: req.user.id }),
-            Project.countDocuments({ 'collaborators.userId': req.user.id }),
+            Project.countDocuments({ 'collaborators.userId': req.user.id, archived: false }),
             Project.countDocuments({
                 $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }],
-                completed: false
+                completed: false,
+                archived: false
             })
         ]);
 
