@@ -27,20 +27,19 @@
 
 body {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Dank Mono', monospace;
-            background: var(--bg);
+            background:
+                radial-gradient(circle, rgba(0,0,0,0.16) 1.2px, transparent 1.2px),
+                linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
+            background-size: 22px 22px, 100% 100%;
+            background-attachment: fixed;
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Background gradient effect */
+        /* Background gradient effect — now handled by body directly */
         .bg-gradient {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
-opacity: 1;
-            pointer-events: none;
-            z-index: 0;
+            display: none;
         }
 
         /* Container */
@@ -2002,15 +2001,7 @@ opacity: 1;
    DOTTED BACKGROUND  — app + auth screen
    ============================================================================ */
 
-body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-image: radial-gradient(circle, rgba(0,0,0,0.16) 1.2px, transparent 1.2px);
-    background-size: 22px 22px;
-}
+/* Dots now baked into body background directly — no ::before needed */
 
 /* Auth overlay: solid background so app doesn't show through,
    dots come from body::before which renders above it via z-index layering.
