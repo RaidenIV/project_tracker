@@ -37,6 +37,14 @@ function sortTasks(tasks) {
     return [...incomplete, ...completed];
 }
 
+
+const DEFAULT_PROFILE_ICON_SVG = `
+<svg viewBox="0 0 32 32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M26 27c0-5.523-4.477-10-10-10S6 21.477 6 27" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="16" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+</svg>`;
+
 const notificationState = {
     items: [],
     unreadCount: 0,
@@ -68,7 +76,8 @@ function setAvatarUI(imageEl, fallbackEl, profilePic, name) {
     imageEl.src = hasImage ? profilePic : '';
     imageEl.classList.toggle('hidden', !hasImage);
     fallbackEl.classList.toggle('hidden', hasImage);
-    fallbackEl.textContent = getUserInitials(name);
+    fallbackEl.innerHTML = hasImage ? '' : DEFAULT_PROFILE_ICON_SVG;
+    fallbackEl.setAttribute('aria-label', hasImage ? '' : `${name || 'User'} default profile icon`);
 }
 
 function applyAccountUI(user) {
@@ -142,6 +151,56 @@ function setAccountStatus(message = '', type = '') {
     el.classList.toggle('is-success', type === 'success');
 }
 
+
+function formatCompactDateTime(value) {
+    if (!value) return 'Unknown';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Unknown';
+    return date.toLocaleString([], {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+}
+
+async function imageFileToOptimizedDataUrl(file) {
+    const readUrl = () => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Unable to read the image file.'));
+        reader.readAsDataURL(file);
+    });
+
+    const rawDataUrl = await readUrl();
+    const bitmap = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Unable to process the selected image.'));
+        img.src = rawDataUrl;
+    });
+
+    const maxDim = 512;
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width || 1, bitmap.height || 1));
+    const width = Math.max(1, Math.round((bitmap.width || 1) * scale));
+    const height = Math.max(1, Math.round((bitmap.height || 1) * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return rawDataUrl;
+    ctx.fillStyle = '#e1e3e5';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    let optimized = canvas.toDataURL('image/webp', 0.82);
+    if (!optimized || optimized === 'data:,') optimized = canvas.toDataURL('image/jpeg', 0.82);
+    return optimized || rawDataUrl;
+}
+
+
 async function refreshAccountProfile() {
     try {
         const response = await loadAccountProfileFromServer();
@@ -179,25 +238,31 @@ function removeProfilePicture() {
 }
 
 async function handleProfilePicSelected(event) {
-    const file = event?.target?.files?.[0];
+    const input = event?.target;
+    const file = input?.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
         setAccountStatus('Please choose an image file.', 'error');
+        if (input) input.value = '';
         return;
     }
-    const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(new Error('Unable to read the image file.'));
-        reader.readAsDataURL(file);
-    }).catch((err) => {
-        setAccountStatus(err.message, 'error');
-        return '';
-    });
-    if (!dataUrl) return;
-    accountState.pendingProfilePic = dataUrl;
-    applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
-    setAccountStatus('Profile picture ready to save.');
+
+    try {
+        const dataUrl = await imageFileToOptimizedDataUrl(file);
+        if (!dataUrl) return;
+        if (dataUrl.length > 1_500_000) {
+            setAccountStatus('Image is still too large. Please use a smaller photo.', 'error');
+            if (input) input.value = '';
+            return;
+        }
+        accountState.pendingProfilePic = dataUrl;
+        applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+        setAccountStatus('Profile picture ready to save.', 'success');
+    } catch (err) {
+        setAccountStatus(err.message || 'Unable to process the selected image.', 'error');
+    } finally {
+        if (input) input.value = '';
+    }
 }
 
 async function saveAccountSettingsFromModal() {
@@ -1334,7 +1399,9 @@ function openProjectModal(projectId, options = {}) {
                        onblur="finishEditModalTitle('${project.id}')"
                        onkeydown="if(event.key==='Enter') finishEditModalTitle('${project.id}')" >
                 <div class="modal-stats">
-                    <span>${new Date(project.dateCreated).toLocaleDateString()}</span>
+                    <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span>Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
                     <span>•</span>
                     <span>${totalTasks} tasks</span>
                     <span>•</span>
@@ -1871,7 +1938,7 @@ function renderProjectCard(project) {
             <div class="project-header">
                 <div class="project-title-container">
                     ${canEditProject ? `<button class="drag-handle" type="button" title="Drag to reorder" onclick="event.stopPropagation();">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                         </svg>
                     </button>` : ''}
@@ -1912,7 +1979,7 @@ function renderProjectCard(project) {
             </div>
 
             <div class="project-stats">
-                <span>${new Date(project.dateCreated).toLocaleDateString()}</span>
+                <span class="project-last-updated" title="Created ${formatCompactDateTime(project.dateCreated)}">Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
                 <span>•</span>
                 <span>${project.tasks.length} tasks</span>
                 <span>•</span>
@@ -2165,6 +2232,10 @@ function initializeEventHandlers() {
 
     document.getElementById('menuUiOptionsBtn')?.addEventListener('click', () => {
         closeMenuDropdown();
+    });
+
+    document.getElementById('panelUserPill')?.addEventListener('click', () => {
+        openAccountSettingsModal();
     });
 
     // Control panel toggle
