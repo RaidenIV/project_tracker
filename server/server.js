@@ -1,3 +1,4 @@
+const http = require('http');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -752,7 +753,11 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
 });
 
-app.listen(PORT, () => {
+// Node's default maxHeaderSize is 8 KB, which trips a 431 when the browser
+// sends large accumulated cookies. 32 KB covers real-world usage while staying
+// well within safe limits.
+const server = http.createServer({ maxHeaderSize: 32 * 1024 }, app);
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Serving frontend from: ${path.join(__dirname, '..', 'client')}`);
 });

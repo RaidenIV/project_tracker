@@ -26,6 +26,15 @@ async function request(method, url, body) {
 
     if (res.status === 401) { logout(); return null; }
 
+    // 431 means the browser is sending headers that are too large (usually
+    // accumulated cookies). Surface a clear message instead of a cryptic code.
+    if (res.status === 431) {
+        throw new Error(
+            'Request headers too large (HTTP 431). ' +
+            'Try clearing your cookies for this site, then reload.'
+        );
+    }
+
     let data;
     try { data = await res.json(); }
     catch { data = {}; }
