@@ -85,9 +85,14 @@ class AppState {
     findProject(projectId)        { return this.projects.find(p => p.id === projectId); }
 
     updateProject(projectId, updates) {
-        this.projects = this.projects.map(p =>
-            p.id === projectId ? { ...p, ...updates } : p
-        );
+        this.projects = this.projects.map(p => {
+            if (p.id !== projectId) return p;
+            const next = { ...p, ...updates };
+            if (updates && typeof updates === 'object' && !Object.prototype.hasOwnProperty.call(updates, 'lastModified') && Object.keys(updates).length > 0) {
+                next.lastModified = new Date().toISOString();
+            }
+            return next;
+        });
     }
 
     deleteProject(projectId) {

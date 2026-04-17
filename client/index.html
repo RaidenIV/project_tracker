@@ -105,6 +105,24 @@
                     <button class="menu-dropdown-item" id="menuSignOutBtn" type="button">Sign Out</button>
                     <button class="menu-dropdown-item" id="menuAccountSettingsBtn" type="button">Account Settings</button>
                     <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
+                    <div class="menu-dropdown-separator"></div>
+                    <div class="menu-shortcuts-wrapper" id="shortcutsWrapper">
+                        <button class="menu-dropdown-item menu-dropdown-item--toggle" id="shortcutsToggle" type="button" aria-expanded="false">
+                            Keyboard Shortcuts
+                        </button>
+                        <div class="menu-shortcuts-panel hidden" id="shortcutsPanel">
+                            <div class="shortcuts-grid">
+                                <div class="shortcut-line"><kbd>N</kbd> New Project</div>
+                                <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
+                                <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
+                                <div class="shortcut-line"><kbd>A</kbd> View Active</div>
+                                <div class="shortcut-line"><kbd>D</kbd> Completed</div>
+                                <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
+                                <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
+                                <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -161,16 +179,22 @@
                 <div class="control-panel-scroll-inner">
 
                 <div class="control-panel-header">
+                    <div class="panel-header-spacer" aria-hidden="true"></div>
                     <img
                         src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
                         alt="Logo"
                         class="panel-logo-img-inline"
                     >
-                    <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
+                    <div class="panel-header-actions">
+                        <button class="panel-minimize-button" id="minimizePanelButton" type="button" aria-label="Minimize control panel">
+                            Minimize
+                        </button>
+                        <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
+                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
@@ -282,25 +306,6 @@
                         placeholder="Paste a list of tasks (one per line)&#10;Example:&#10;Fix bug in login page&#10;Update documentation&#10;Review pull requests"></textarea>
                     <button class="paste-button" id="pasteButton" disabled>Add Tasks to Project</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Keyboard Shortcuts (collapsible) -->
-    <div class="shortcuts-wrapper" id="shortcutsWrapper">
-        <button class="shortcuts-toggle" id="shortcutsToggle" title="Keyboard Shortcuts">
-            <span>Keyboard Shortcuts</span>
-        </button>
-        <div class="shortcuts-panel hidden" id="shortcutsPanel">
-            <div class="shortcuts-grid">
-                <div class="shortcut-line"><kbd>N</kbd> New Project</div>
-                <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
-                <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
-                <div class="shortcut-line"><kbd>A</kbd> View Active</div>
-                <div class="shortcut-line"><kbd>D</kbd> Completed</div>
-                <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
-                <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
-                <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
             </div>
         </div>
     </div>

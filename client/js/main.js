@@ -210,6 +210,14 @@ function setSaveStatus(status, message) {
     pill.textContent = message;
 }
 
+function projectUpdate(updates = {}, options = {}) {
+    const payload = { ...updates };
+    if (!options.skipTouch && !Object.prototype.hasOwnProperty.call(payload, 'lastModified')) {
+        payload.lastModified = new Date().toISOString();
+    }
+    return payload;
+}
+
 function normalizeProject(project) {
     if (!project || typeof project !== 'object') return null;
     return {
@@ -747,12 +755,12 @@ async function saveData() {
                 finalResult.savedProjects.forEach(savedProject => {
                     const projectId = savedProject.id || savedProject._id;
                     if (!projectId) return;
-                    state.updateProject(projectId, {
+                    state.updateProject(projectId, projectUpdate({
                         _id: savedProject._id || savedProject.id,
                         id: savedProject.id || savedProject._id,
                         lastModified: savedProject.lastModified,
                         activities: savedProject.activities || state.findProject(projectId)?.activities || []
-                    });
+                    }, { skipTouch: true }));
                 });
             }
             setSaveStatus('saved', __saveQueued ? 'Saving queued changes…' : 'All changes saved');
@@ -774,11 +782,13 @@ async function saveStatsOnly() {
 
 async function addProject() {
     const tempId = Date.now();
+    const createdAt = new Date().toISOString();
     const newProject = {
         id: tempId,
         title: 'New Project',
         tasks: [],
-        dateCreated: new Date().toISOString(),
+        dateCreated: createdAt,
+        lastModified: createdAt,
         priority: state.getProjects().length,
         completed: false,
         notes: '',
@@ -792,14 +802,15 @@ async function addProject() {
     // Create on server and get the MongoDB _id back
     const created = await createProjectOnServer(newProject);
     if (created) {
-        state.updateProject(tempId, {
+        state.updateProject(tempId, projectUpdate({
             _id: created._id || created.id,
             id:  created.id  || created._id,
+            lastModified: created.lastModified || createdAt,
             userRole: 'owner',
             ownerName: state.getCurrentUser()?.username || '',
             ownerEmail: state.getCurrentUser()?.email || '',
             collaborators: []
-        });
+        }, { skipTouch: true }));
     }
 
     // Auto-open modal for new project (use the real id now)
@@ -842,10 +853,10 @@ function completeProject(projectId) {
         state.decrementCompletedProjects();
     }
     
-    state.updateProject(projectId, {
+    state.updateProject(projectId, projectUpdate({
         completed: newCompleted,
         completedDate: newCompleted ? new Date().toISOString() : null
-    });
+    }));
     
     saveData();
     render();
@@ -855,14 +866,14 @@ function updateProjectTitle(projectId, newTitle) {
     if (!state.canEdit(projectId)) return;
     const trimmedTitle = (newTitle || '').trim();
     const titleCased = toTitleCase(trimmedTitle || 'New Project');
-    state.updateProject(projectId, { title: titleCased });
+    state.updateProject(projectId, projectUpdate({ title: titleCased }));
     saveData();
     render();
 }
 
 function updateProjectNotes(projectId, notes) {
     if (!state.canEdit(projectId)) return;
-    state.updateProject(projectId, { notes });
+    state.updateProject(projectId, projectUpdate({ notes }));
     saveData();
 }
 
@@ -964,7 +975,7 @@ function performTaskToggle(projectId, taskId) {
     
     // Sort tasks after toggling
     const sortedTasks = sortTasks(updatedTasks);
-    state.updateProject(projectId, { tasks: sortedTasks });
+    state.updateProject(projectId, projectUpdate({ tasks: sortedTasks }));
     saveData();
     
     // Re-render to show new order
@@ -1010,7 +1021,7 @@ function deleteTask(projectId, taskId) {
     state.saveUndoState('deleteTask', { projectId, task: { ...taskToDelete } });
     
     const updatedTasks = project.tasks.filter(t => t.id !== taskId);
-    state.updateProject(projectId, { tasks: updatedTasks });
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     render();
     updateUndoButton();
@@ -1027,7 +1038,7 @@ function updateTaskText(projectId, taskId, newText) {
         t.id === taskId ? { ...t, text: capitalized } : t
     );
     
-    state.updateProject(projectId, { tasks: updatedTasks });
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     render();
 }
@@ -1041,7 +1052,7 @@ function addTaskToProject(projectId) {
     // Add new tasks at the beginning (they'll appear first after sorting)
     const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
-    state.updateProject(projectId, { tasks: updatedTasks });
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     
     return newTask.id;
@@ -1057,7 +1068,7 @@ function reorderTasks(projectId, oldIndex, newIndex) {
     const [movedTask] = tasks.splice(oldIndex, 1);
     tasks.splice(newIndex, 0, movedTask);
     
-    state.updateProject(projectId, { tasks });
+    state.updateProject(projectId, projectUpdate({ tasks }));
     saveData();
     openProjectModal(projectId);
 }
@@ -1135,7 +1146,7 @@ function performUndo() {
         const project = state.findProject(projectId);
         if (project) {
             const updatedTasks = sortTasks([...project.tasks, task]);
-            state.updateProject(projectId, { tasks: updatedTasks });
+            state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
             
             if (task.completed) {
                 state.incrementCompletedTasks();
@@ -2254,7 +2265,7 @@ function pasteTasks() {
     }));
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
-    state.updateProject(projectId, { tasks: updatedTasks });
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     
     pasteBox.value = '';
     projectSelect.value = '';
@@ -2288,7 +2299,7 @@ function pasteTasksInModal(projectId) {
     }));
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
-    state.updateProject(projectId, { tasks: updatedTasks });
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     
     saveData();
     openProjectModal(projectId);
@@ -2297,7 +2308,7 @@ function pasteTasksInModal(projectId) {
 async function archiveProject(projectId) {
     const project = state.findProject(projectId);
     if (!project || !project._id) return;
-    state.updateProject(projectId, { archived: true, lastModified: new Date().toISOString() });
+    state.updateProject(projectId, projectUpdate({ archived: true }));
     await saveData();
     closeProjectModal();
     render();
@@ -2306,7 +2317,7 @@ async function archiveProject(projectId) {
 async function restoreArchivedProject(projectId) {
     const project = state.findProject(projectId);
     if (!project || !project._id) return;
-    state.updateProject(projectId, { archived: false, lastModified: new Date().toISOString() });
+    state.updateProject(projectId, projectUpdate({ archived: false }));
     await saveData();
     render();
 }
@@ -2720,21 +2731,18 @@ function initializeEventHandlers() {
 
     if (menuButton && menuDropdown && menuContainer) menuButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        menuOpen = !menuOpen;
         if (menuOpen) {
-            menuDropdown.classList.remove('hidden');
-            menuButton.classList.add('active');
-        } else {
-            menuDropdown.classList.add('hidden');
-            menuButton.classList.remove('active');
+            closeMenuDropdown();
+            return;
         }
+        menuOpen = true;
+        menuDropdown.classList.remove('hidden');
+        menuButton.classList.add('active');
     });
 
     document.addEventListener('click', (e) => {
         if (menuOpen && menuContainer && !menuContainer.contains(e.target)) {
-            menuOpen = false;
-            menuDropdown.classList.add('hidden');
-            menuButton.classList.remove('active');
+            closeMenuDropdown();
         }
     });
 
@@ -2742,6 +2750,9 @@ function initializeEventHandlers() {
         menuOpen = false;
         menuDropdown?.classList.add('hidden');
         menuButton?.classList.remove('active');
+        document.getElementById('shortcutsPanel')?.classList.add('hidden');
+        document.getElementById('shortcutsWrapper')?.classList.remove('menu-shortcuts-wrapper--open');
+        document.getElementById('shortcutsToggle')?.setAttribute('aria-expanded', 'false');
     }
 
     document.getElementById('menuSignOutBtn')?.addEventListener('click', () => {
@@ -2765,23 +2776,30 @@ function initializeEventHandlers() {
 
     // Control panel toggle
     const collapseButton = document.getElementById('collapseButton');
+    const minimizePanelButton = document.getElementById('minimizePanelButton');
     const expandButton = document.getElementById('expandButton');
     const controlPanel = document.getElementById('controlPanel');
     const viewport = document.getElementById('viewport');
 
-    collapseButton?.addEventListener('click', () => {
+    const collapseControlPanel = () => {
+        if (!controlPanel || !viewport || !expandButton) return;
         state.setControlPanelOpen(false);
         controlPanel.classList.add('collapsed');
         viewport.classList.add('full');
         expandButton.classList.remove('hidden');
-    });
+    };
 
-    expandButton?.addEventListener('click', () => {
+    const expandControlPanel = () => {
+        if (!controlPanel || !viewport || !expandButton) return;
         state.setControlPanelOpen(true);
         controlPanel.classList.remove('collapsed');
         viewport.classList.remove('full');
         expandButton.classList.add('hidden');
-    });
+    };
+
+    collapseButton?.addEventListener('click', collapseControlPanel);
+    minimizePanelButton?.addEventListener('click', collapseControlPanel);
+    expandButton?.addEventListener('click', expandControlPanel);
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
@@ -2961,9 +2979,10 @@ async function inviteCollaborator(projectId) {
     try {
         const updated = await shareProjectOnServer(project._id, email, role);
         if (updated) {
-            state.updateProject(projectId, {
-                collaborators: updated.collaborators || []
-            });
+            state.updateProject(projectId, projectUpdate({
+                collaborators: updated.collaborators || [],
+                lastModified: updated.lastModified || new Date().toISOString()
+            }, { skipTouch: true }));
             emailEl.value = '';
             openProjectModal(projectId);
             // Re-open on Members tab
@@ -2980,7 +2999,7 @@ async function changeCollaboratorRole(projectId, userId, newRole) {
     try {
         const updated = await updateCollaboratorRoleOnServer(project._id, userId, newRole);
         if (updated) {
-            state.updateProject(projectId, { collaborators: updated.collaborators || [] });
+            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
         }
     } catch (err) {
         alert(`Failed to update role: ${err.message}`);
@@ -2995,7 +3014,7 @@ async function removeCollaborator(projectId, userId) {
     try {
         const updated = await removeCollaboratorFromServer(project._id, userId);
         if (updated) {
-            state.updateProject(projectId, { collaborators: updated.collaborators || [] });
+            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
             openProjectModal(projectId);
             setTimeout(() => switchModalTab(projectId, 'members'), 50);
         }
@@ -3199,13 +3218,16 @@ function initAuthScreen() {
     }
 
     // Shortcuts toggle
-    document.getElementById('shortcutsToggle')?.addEventListener('click', () => {
+    document.getElementById('shortcutsToggle')?.addEventListener('click', (e) => {
+        e.stopPropagation();
         const panel = document.getElementById('shortcutsPanel');
         const wrapper = document.getElementById('shortcutsWrapper');
-        if (!panel) return;
+        const toggle = document.getElementById('shortcutsToggle');
+        if (!panel || !wrapper || !toggle) return;
         const isHidden = panel.classList.contains('hidden');
         panel.classList.toggle('hidden', !isHidden);
-        wrapper.classList.toggle('shortcuts-wrapper--open', isHidden);
+        wrapper.classList.toggle('menu-shortcuts-wrapper--open', isHidden);
+        toggle.setAttribute('aria-expanded', String(isHidden));
     });
 }
 

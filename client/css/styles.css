@@ -2570,69 +2570,19 @@ body {
 }
 
 /* ============================================================================
-   SHORTCUTS — collapsible button
+   SHORTCUTS — moved into navigation menu
    ============================================================================ */
 
 .shortcuts-wrapper {
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 30;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    display: none;
 }
 
 .shortcuts-toggle {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 14px;
-    background: var(--panel);
-    border: none;
-    border-radius: 12px;
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    box-shadow: 4px 4px 12px rgba(0,0,0,0.15), -2px -2px 6px rgba(255,255,255,0.7);
-    transition: color 0.2s, transform 0.15s;
-    letter-spacing: 0.03em;
-}
-
-.shortcuts-toggle:hover {
-    color: var(--heading);
-    transform: scale(1.03);
-}
-
-.shortcuts-wrapper--open .shortcuts-toggle {
-    color: var(--heading);
-    box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
+    display: none;
 }
 
 .shortcuts-panel {
-    background: var(--panel);
-    border-radius: 12px;
-    padding: 14px 16px;
-    box-shadow: 4px 4px 12px rgba(0,0,0,0.15), -2px -2px 6px rgba(255,255,255,0.7);
-    font-size: 11px;
-    color: var(--muted);
-    animation: shortcuts-in 0.18s ease;
-}
-
-.shortcuts-panel.hidden { display: none; }
-
-@keyframes shortcuts-in {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.shortcuts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 16px;
+    display: none;
 }
 
 .shortcut-line { white-space: nowrap; }
@@ -2641,15 +2591,11 @@ body {
 .shortcuts-hint { display: none; }
 
 /* ============================================================================
-   CONTROL PANEL HEADER — logo left, user info + collapse right
+   CONTROL PANEL HEADER — centered logo with actions on the right
    ============================================================================ */
 
 .control-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 24px;
-    gap: 8px;
 }
 
 .panel-logo-img-inline {
@@ -2658,13 +2604,6 @@ body {
     object-fit: contain;
     filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.1));
     flex-shrink: 0;
-}
-
-.panel-header-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
 }
 
 /* Panel user info pill */
@@ -2979,6 +2918,7 @@ body {
 
 .project-title-container {
     min-width: 0;
+    flex: 1 1 220px;
 }
 
 .project-title {
@@ -2995,6 +2935,176 @@ body {
 .project-last-updated {
     color: var(--muted-2);
     font-style: italic;
+}
+
+.top-app-bar,
+.top-app-bar > *,
+.view-toolbar,
+.view-toolbar-search-wrap,
+.panel-user-info,
+.panel-user-pill,
+.viewport,
+.control-panel,
+.project-grid,
+.project-card,
+.project-header,
+.project-title-container,
+.project-actions,
+.project-stats {
+    min-width: 0;
+}
+
+.top-app-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.view-toolbar {
+    grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 132px)) auto;
+}
+
+.panel-user-info {
+    justify-self: end;
+}
+
+.panel-user-pill {
+    width: auto;
+    max-width: clamp(126px, 14vw, 180px);
+}
+
+.project-card {
+    overflow: hidden;
+}
+
+.project-header {
+    flex-wrap: wrap;
+}
+
+.project-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 0 1 auto;
+    flex-shrink: 0;
+    max-width: 100%;
+}
+
+.project-stats {
+    flex-wrap: wrap;
+    row-gap: 6px;
+}
+
+.menu-dropdown-separator {
+    height: 1px;
+    margin: 4px 12px 8px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+body[data-color-mode="dark"] .menu-dropdown-separator {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.menu-shortcuts-wrapper {
+    padding: 0 8px 8px;
+}
+
+.menu-dropdown-item--toggle {
+    margin-bottom: 6px;
+}
+
+.menu-shortcuts-panel {
+    margin: 0 8px 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--muted);
+    box-shadow: var(--inset-shadow);
+    animation: shortcuts-in 0.18s ease;
+}
+
+.menu-shortcuts-wrapper--open .menu-dropdown-item--toggle {
+    background: var(--surface);
+    box-shadow: var(--inset-shadow);
+}
+
+.menu-shortcuts-panel.hidden {
+    display: none;
+}
+
+@keyframes shortcuts-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.menu-shortcuts-panel .shortcuts-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+.control-panel-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel-header-spacer {
+    min-height: 1px;
+}
+
+.panel-logo-img-inline {
+    justify-self: center;
+}
+
+.panel-header-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+    gap: 8px;
+    min-width: 0;
+}
+
+.panel-minimize-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--heading);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: var(--inset-shadow);
+}
+
+.panel-minimize-button:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 1700px) {
+    .view-toolbar {
+        grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(0, 126px)) auto;
+    }
+}
+
+@media (max-width: 1480px) {
+    .panel-user-pill {
+        max-width: 148px;
+    }
+
+    .view-toolbar {
+        grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 120px)) auto;
+    }
+}
+
+@media (max-width: 1200px) {
+    .project-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
 }
 
 
@@ -3543,7 +3653,7 @@ body[data-color-mode="dark"] .view-toolbar-select {
 
 @media (max-width: 1100px) {
     .top-app-bar {
-        grid-template-columns: auto 1fr;
+        grid-template-columns: auto minmax(0, 1fr);
     }
 
     .panel-user-info {
@@ -3552,7 +3662,7 @@ body[data-color-mode="dark"] .view-toolbar-select {
     }
 
     .view-toolbar {
-        grid-template-columns: 1fr auto auto;
+        grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 1fr));
     }
 
     .view-toolbar-button {
@@ -3610,6 +3720,20 @@ body[data-color-mode="dark"] .view-toolbar-select {
         justify-self: stretch;
     }
 
+    .control-panel-header {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 10px;
+    }
+
+    .panel-header-spacer {
+        display: none;
+    }
+
+    .panel-header-actions {
+        justify-self: center;
+    }
+
     .viewport,
     .control-panel {
         flex: 1 1 100%;
@@ -3620,6 +3744,10 @@ body[data-color-mode="dark"] .view-toolbar-select {
 
     .project-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .project-stats {
+        gap: 10px;
     }
 
     .viewport-header h1 {
