@@ -87,33 +87,28 @@
                 </div>
                 <p class="auth-error hidden" id="registerError"></p>
                 <button class="auth-submit" id="registerSubmitBtn" data-label="Create Account">Create Account</button>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <!-- ─── Menu Button ──────────────────────────────────────────────────────── -->
-    <div class="menu-container" id="menuContainer">
-        <button class="menu-button" id="menuButton">
-            <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-        <div class="menu-dropdown hidden" id="menuDropdown">
-            <button class="menu-dropdown-item" id="menuSignOutBtn" type="button">Sign Out</button>
-            <button class="menu-dropdown-item" id="menuAccountSettingsBtn" type="button">Account Settings</button>
-            <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
         </div>
     </div>
 
     <!-- ─── Main Container ───────────────────────────────────────────────────── -->
     <div class="container">
-        <!-- Viewport -->
-        <div class="viewport" id="viewport">
-            <div class="viewport-header">
-                <h1>Active Projects</h1>
+        <div class="top-app-bar">
+            <div class="menu-container" id="menuContainer">
+                <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation menu">
+                    <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="menu-dropdown hidden" id="menuDropdown">
+                    <button class="menu-dropdown-item" id="menuSignOutBtn" type="button">Sign Out</button>
+                    <button class="menu-dropdown-item" id="menuAccountSettingsBtn" type="button">Account Settings</button>
+                    <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
+                </div>
             </div>
 
-            <div class="view-toolbar">
+            <div class="view-toolbar top-view-toolbar">
                 <div class="view-toolbar-search-wrap">
                     <input class="view-toolbar-search" id="projectSearchInput" type="search" placeholder="Search projects, tasks, or notes">
                 </div>
@@ -133,6 +128,22 @@
                 <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
             </div>
 
+            <div class="panel-user-info hidden" id="panelUserInfo">
+                <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
+                    <div class="panel-avatar" id="panelAvatar">
+                        <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
+                        <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
+                    </div>
+                    <span class="panel-username" id="panelUsername"></span>
+                </button>
+            </div>
+        </div>
+        <!-- Viewport -->
+        <div class="viewport" id="viewport">
+            <div class="viewport-header">
+                <h1>Active Projects</h1>
+            </div>
+
             <div class="view-filter-chips" id="activeFilterChips"></div>
 
             <div class="empty-state" id="emptyState">
@@ -147,6 +158,7 @@
         <!-- Control Panel -->
         <div class="control-panel" id="controlPanel">
             <div class="control-panel-content">
+                <div class="control-panel-scroll-inner">
 
                 <div class="control-panel-header">
                     <img
@@ -154,22 +166,11 @@
                         alt="Logo"
                         class="panel-logo-img-inline"
                     >
-                    <div class="panel-header-right">
-                        <div class="panel-user-info hidden" id="panelUserInfo">
-                            <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
-                                <div class="panel-avatar" id="panelAvatar">
-                                    <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
-                                    <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
-                                </div>
-                                <span class="panel-username" id="panelUsername"></span>
-                            </button>
-                        </div>
-                        <button class="collapse-button" id="collapseButton">
-                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>

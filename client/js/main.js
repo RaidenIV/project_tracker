@@ -911,36 +911,32 @@ function toggleTask(projectId, taskId) {
     
     const willBeCompleted = !task.completed;
     
-    // If marking as complete, show checkmark first, then fade
+    // If marking as complete, show a confirmed check animation before fading out
     if (willBeCompleted) {
         const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
         if (taskElement) {
-            // Immediately stamp the checkmark and strikethrough onto the live element
             const checkbox = taskElement.querySelector(`[data-task-checkbox="${taskId}"]`);
             if (checkbox) {
-                checkbox.classList.add('checked');
+                checkbox.classList.add('checked', 'checkmark-pop');
                 checkbox.innerHTML = `
                     <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"></path>
                     </svg>
                 `;
             }
-            const taskText = taskElement.querySelector(`[data-task-text="${taskId}"]`);
-            if (taskText) {
-                taskText.classList.add('completed');
-            }
 
-            // Let the browser paint the checkmark, then fade out
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    taskElement.classList.add('fading-out');
-                });
-            });
+            const taskText = taskElement.querySelector(`[data-task-text="${taskId}"]`);
+            if (taskText) taskText.classList.add('completed');
+
+            taskElement.classList.add('completing');
+
+            setTimeout(() => {
+                taskElement.classList.add('fading-out');
+            }, 360);
             
-            // Wait for fade animation, then update state
             setTimeout(() => {
                 performTaskToggle(projectId, taskId);
-            }, 500); // Match the CSS transition duration
+            }, 700);
             return;
         }
     }
@@ -2722,7 +2718,7 @@ function initializeEventHandlers() {
     const menuContainer = document.getElementById('menuContainer');
     let menuOpen = false;
 
-    menuButton.addEventListener('click', (e) => {
+    if (menuButton && menuDropdown && menuContainer) menuButton.addEventListener('click', (e) => {
         e.stopPropagation();
         menuOpen = !menuOpen;
         if (menuOpen) {
@@ -2735,7 +2731,7 @@ function initializeEventHandlers() {
     });
 
     document.addEventListener('click', (e) => {
-        if (menuOpen && !menuContainer.contains(e.target)) {
+        if (menuOpen && menuContainer && !menuContainer.contains(e.target)) {
             menuOpen = false;
             menuDropdown.classList.add('hidden');
             menuButton.classList.remove('active');
@@ -2744,8 +2740,8 @@ function initializeEventHandlers() {
 
     function closeMenuDropdown() {
         menuOpen = false;
-        menuDropdown.classList.add('hidden');
-        menuButton.classList.remove('active');
+        menuDropdown?.classList.add('hidden');
+        menuButton?.classList.remove('active');
     }
 
     document.getElementById('menuSignOutBtn')?.addEventListener('click', () => {
@@ -2773,14 +2769,14 @@ function initializeEventHandlers() {
     const controlPanel = document.getElementById('controlPanel');
     const viewport = document.getElementById('viewport');
 
-    collapseButton.addEventListener('click', () => {
+    collapseButton?.addEventListener('click', () => {
         state.setControlPanelOpen(false);
         controlPanel.classList.add('collapsed');
         viewport.classList.add('full');
         expandButton.classList.remove('hidden');
     });
 
-    expandButton.addEventListener('click', () => {
+    expandButton?.addEventListener('click', () => {
         state.setControlPanelOpen(true);
         controlPanel.classList.remove('collapsed');
         viewport.classList.remove('full');
@@ -2788,26 +2784,26 @@ function initializeEventHandlers() {
     });
 
     // Add project button
-    document.getElementById('addProjectButton').addEventListener('click', addProject);
+    document.getElementById('addProjectButton')?.addEventListener('click', addProject);
 
     // Undo button
-    document.getElementById('undoButton').addEventListener('click', performUndo);
+    document.getElementById('undoButton')?.addEventListener('click', performUndo);
 
     // Paste button
-    document.getElementById('pasteButton').addEventListener('click', pasteTasks);
+    document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
     document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
-    projectModal.addEventListener('click', (e) => {
+    projectModal?.addEventListener('click', (e) => {
         if (e.target === projectModal) {
             closeProjectModal();
         }
     });
 
     const confirmDialog = document.getElementById('confirmDialog');
-    confirmDialog.addEventListener('click', (e) => {
+    confirmDialog?.addEventListener('click', (e) => {
         if (e.target === confirmDialog) {
             closeConfirmDialog();
         }
