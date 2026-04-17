@@ -232,7 +232,8 @@ function normalizeProject(project) {
         archived: Boolean(project.archived),
         completed: Boolean(project.completed),
         dateCreated: project.dateCreated || new Date().toISOString(),
-        lastModified: project.lastModified || project.dateCreated || new Date().toISOString()
+        lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
+        __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
     };
 }
 
@@ -759,6 +760,7 @@ async function saveData() {
                         _id: savedProject._id || savedProject.id,
                         id: savedProject.id || savedProject._id,
                         lastModified: savedProject.lastModified,
+                        __syncedLastModified: savedProject.lastModified || state.findProject(projectId)?.__syncedLastModified || null,
                         activities: savedProject.activities || state.findProject(projectId)?.activities || []
                     }, { skipTouch: true }));
                 });
@@ -806,6 +808,7 @@ async function addProject() {
             _id: created._id || created.id,
             id:  created.id  || created._id,
             lastModified: created.lastModified || createdAt,
+            __syncedLastModified: created.lastModified || createdAt,
             userRole: 'owner',
             ownerName: state.getCurrentUser()?.username || '',
             ownerEmail: state.getCurrentUser()?.email || '',
@@ -2713,10 +2716,11 @@ function updateProjectSelect() {
     const activeProjects = state.getActiveProjects();
     const projectSelect = document.getElementById('pasteProjectSelect');
     const pasteButton = document.getElementById('pasteButton');
-    
+    if (!projectSelect || !pasteButton) return;
+
     projectSelect.innerHTML = '<option value="">Select a project...</option>' +
         activeProjects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-    
+
     projectSelect.addEventListener('change', () => {
         pasteButton.disabled = !projectSelect.value;
     });
@@ -2780,29 +2784,29 @@ function initializeEventHandlers() {
 
     // Control panel toggle
     const collapseButton = document.getElementById('collapseButton');
-    const minimizePanelButton = document.getElementById('minimizePanelButton');
     const expandButton = document.getElementById('expandButton');
     const controlPanel = document.getElementById('controlPanel');
     const viewport = document.getElementById('viewport');
 
     const collapseControlPanel = () => {
-        if (!controlPanel || !viewport || !expandButton) return;
+        if (!controlPanel || !expandButton) return;
         state.setControlPanelOpen(false);
         controlPanel.classList.add('collapsed');
-        viewport.classList.add('full');
+        viewport?.classList.remove('full');
         expandButton.classList.remove('hidden');
+        collapseButton?.classList.add('hidden');
     };
 
     const expandControlPanel = () => {
-        if (!controlPanel || !viewport || !expandButton) return;
+        if (!controlPanel || !expandButton) return;
         state.setControlPanelOpen(true);
         controlPanel.classList.remove('collapsed');
-        viewport.classList.remove('full');
+        viewport?.classList.remove('full');
         expandButton.classList.add('hidden');
+        collapseButton?.classList.remove('hidden');
     };
 
     collapseButton?.addEventListener('click', collapseControlPanel);
-    minimizePanelButton?.addEventListener('click', collapseControlPanel);
     expandButton?.addEventListener('click', expandControlPanel);
 
     // Add project button
@@ -2985,7 +2989,8 @@ async function inviteCollaborator(projectId) {
         if (updated) {
             state.updateProject(projectId, projectUpdate({
                 collaborators: updated.collaborators || [],
-                lastModified: updated.lastModified || new Date().toISOString()
+                lastModified: updated.lastModified || new Date().toISOString(),
+                __syncedLastModified: updated.lastModified || new Date().toISOString()
             }, { skipTouch: true }));
             emailEl.value = '';
             openProjectModal(projectId);
@@ -3003,7 +3008,7 @@ async function changeCollaboratorRole(projectId, userId, newRole) {
     try {
         const updated = await updateCollaboratorRoleOnServer(project._id, userId, newRole);
         if (updated) {
-            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
+            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString(), __syncedLastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
         }
     } catch (err) {
         alert(`Failed to update role: ${err.message}`);
@@ -3018,7 +3023,7 @@ async function removeCollaborator(projectId, userId) {
     try {
         const updated = await removeCollaboratorFromServer(project._id, userId);
         if (updated) {
-            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
+            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString(), __syncedLastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
             openProjectModal(projectId);
             setTimeout(() => switchModalTab(projectId, 'members'), 50);
         }

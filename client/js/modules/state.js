@@ -88,7 +88,9 @@ class AppState {
         this.projects = this.projects.map(p => {
             if (p.id !== projectId) return p;
             const next = { ...p, ...updates };
-            if (updates && typeof updates === 'object' && !Object.prototype.hasOwnProperty.call(updates, 'lastModified') && Object.keys(updates).length > 0) {
+            const keys = updates && typeof updates === 'object' ? Object.keys(updates) : [];
+            const onlySyncMetadata = keys.length > 0 && keys.every(key => ['_id', 'id', '__syncedLastModified', 'activities', 'userRole', 'ownerName', 'ownerEmail', 'collaborators'].includes(key));
+            if (updates && typeof updates === 'object' && !onlySyncMetadata && !Object.prototype.hasOwnProperty.call(updates, 'lastModified') && keys.length > 0) {
                 next.lastModified = new Date().toISOString();
             }
             return next;

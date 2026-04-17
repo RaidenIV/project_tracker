@@ -214,6 +214,24 @@ function appendProjectActivity(project, actor, type, message) {
     project.activities = activities.slice(0, 60);
 }
 
+function comparableProjectValue(value) {
+    if (value === undefined) return '__undefined__';
+    if (value === null) return null;
+    if (value instanceof Date) return value.toISOString();
+    if (Array.isArray(value)) return value.map(comparableProjectValue);
+    if (value && typeof value === 'object') {
+        return Object.keys(value).sort().reduce((acc, key) => {
+            acc[key] = comparableProjectValue(value[key]);
+            return acc;
+        }, {});
+    }
+    return value;
+}
+
+function projectFieldChanged(existingValue, incomingValue) {
+    return JSON.stringify(comparableProjectValue(existingValue)) !== JSON.stringify(comparableProjectValue(incomingValue));
+}
+
 function summarizeProjectUpdate(existingProject, incomingBody) {
     const oldProject = existingProject.toObject ? existingProject.toObject() : existingProject;
     const update = incomingBody || {};
@@ -408,13 +426,20 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
             }
         }
 
-        const update = { lastModified: new Date() };
-        allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
+        const changedFields = {};
+        allowed.forEach(key => {
+            if (req.body[key] === undefined) return;
+            if (projectFieldChanged(req.project[key], req.body[key])) {
+                changedFields[key] = req.body[key];
+            }
+        });
 
-        const summary = summarizeProjectUpdate(req.project, req.body);
-        Object.assign(req.project, update);
-        if (summary) appendProjectActivity(req.project, req.user, summary.type, summary.message);
-        await req.project.save();
+        const summary = summarizeProjectUpdate(req.project, changedFields);
+        if (Object.keys(changedFields).length > 0) {
+            Object.assign(req.project, changedFields, { lastModified: new Date() });
+            if (summary) appendProjectActivity(req.project, req.user, summary.type, summary.message);
+            await req.project.save();
+        }
         const updated = req.project;
 
         if (summary && updated.collaborators.length > 0) {

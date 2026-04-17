@@ -186,12 +186,14 @@
                         class="panel-logo-img-inline"
                     >
                     <div class="panel-header-actions">
-                        <button class="panel-minimize-button" id="minimizePanelButton" type="button" aria-label="Minimize control panel">
-                            Minimize
-                        </button>
                         <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
                             <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <button class="expand-button hidden" id="expandButton" type="button" aria-label="Expand control panel">
+                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                             </svg>
                         </button>
                     </div>
@@ -293,29 +295,9 @@
                     </svg>
                     Undo
                 </button>
-
-                <!-- Paste Section -->
-                <div class="paste-section">
-                    <h3>Paste Tasks</h3>
-                    <select class="project-select" id="pasteProjectSelect">
-                        <option value="">Select a project...</option>
-                    </select>
-                    <textarea
-                        class="paste-box"
-                        id="pasteBox"
-                        placeholder="Paste a list of tasks (one per line)&#10;Example:&#10;Fix bug in login page&#10;Update documentation&#10;Review pull requests"></textarea>
-                    <button class="paste-button" id="pasteButton" disabled>Add Tasks to Project</button>
-                </div>
             </div>
         </div>
     </div>
-
-    <!-- Expand Button -->
-    <button class="expand-button hidden" id="expandButton">
-        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-    </button>
 
     <!-- Account Settings Modal -->
     <div class="modal-overlay" id="accountSettingsModal">

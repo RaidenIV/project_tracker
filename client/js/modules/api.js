@@ -187,6 +187,15 @@ export async function checkServerHealth() {
 // main.js's saveData() calls saveDataToServer(projects, stats).
 // We translate that into individual saves + stats save here.
 
+
+function isProjectDirty(project) {
+    if (!project?._id || project.userRole === 'viewer') return false;
+    const current = project.lastModified || project.dateCreated || null;
+    const synced = project.__syncedLastModified || null;
+    return !synced || current !== synced;
+}
+
+
 // Loads projects and stats in parallel. Errors are intentionally not caught
 // here — they propagate to loadData() in main.js, which handles UI feedback.
 export async function loadDataFromServer() {
@@ -199,7 +208,7 @@ export async function loadDataFromServer() {
 
 export async function saveDataToServer(projects, stats) {
     const saves = projects
-        .filter(p => p._id && p.userRole !== 'viewer')
+        .filter(isProjectDirty)
         .map(p => saveProjectToServer(p));
 
     const [saveResults, statsOk] = await Promise.all([
