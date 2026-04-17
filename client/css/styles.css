@@ -307,16 +307,17 @@ body {
         }
 
         .top-app-bar {
+            --app-bar-control-height: 42px;
             flex: 0 0 100%;
             display: grid;
             grid-template-columns: auto minmax(0, 1fr) auto;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             position: sticky;
             top: 18px;
             z-index: 60;
-            padding: 14px;
-            border-radius: 20px;
+            padding: 10px 12px;
+            border-radius: 18px;
             background: var(--panel);
             box-shadow: var(--card-shadow);
             backdrop-filter: blur(18px);
@@ -338,8 +339,9 @@ body {
         }
 
         .menu-button {
-            width: 48px;
-            height: 48px;
+            width: var(--app-bar-control-height);
+            height: var(--app-bar-control-height);
+            min-width: var(--app-bar-control-height);
             border-radius: 12px;
             background: var(--panel);
             border: none;
@@ -347,6 +349,7 @@ body {
             display: flex;
             align-items: center;
             justify-content: center;
+            align-self: center;
             box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
         }
@@ -2677,11 +2680,13 @@ body {
     -webkit-appearance: none;
     display: inline-flex;
     align-items: center;
+    align-self: center;
     gap: 10px;
+    min-height: var(--app-bar-control-height, 42px);
     background: var(--surface);
     border: none;
     border-radius: 12px;
-    padding: 6px 10px 6px 8px;
+    padding: 5px 10px 5px 8px;
     box-shadow: inset 3px 3px 6px rgba(120,120,130,0.3), inset -3px -3px 6px rgba(255,255,255,0.8);
     min-width: 0;
     max-width: 180px;
@@ -3225,8 +3230,8 @@ body {
 .view-toolbar {
     display: grid;
     grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(118px, 132px)) auto;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 0;
     align-items: center;
 }
 
@@ -3234,13 +3239,16 @@ body {
 .view-toolbar-select,
 .view-toolbar-button {
     width: 100%;
-    min-height: 44px;
+    height: var(--app-bar-control-height, 42px);
+    min-height: var(--app-bar-control-height, 42px);
     border: none;
     border-radius: 12px;
     background: var(--panel);
     color: var(--heading);
     font-family: inherit;
     font-size: 13px;
+    line-height: 1.2;
+    align-self: center;
     box-shadow: var(--card-shadow);
 }
 
@@ -3268,6 +3276,9 @@ body[data-color-mode="dark"] .view-toolbar-select {
 }
 
 .view-toolbar-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 0 16px;
     font-weight: 700;
     cursor: pointer;
@@ -3571,9 +3582,9 @@ body[data-color-mode="dark"] .view-toolbar-select {
     .top-app-bar {
         grid-template-columns: 1fr;
         align-items: stretch;
-        padding: 12px;
+        padding: 10px;
         top: 10px;
-        gap: 10px;
+        gap: 8px;
     }
 
     .menu-container,
