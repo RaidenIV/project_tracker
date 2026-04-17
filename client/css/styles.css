@@ -4178,3 +4178,195 @@ body[data-color-mode="dark"] .menu-dropdown-item--danger:hover {
         justify-content: flex-start;
     }
 }
+
+
+/* ============================================================================
+   V7 HEADER / NAV / COLLAPSED PANEL REFINEMENTS
+   ============================================================================ */
+
+.top-app-bar {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+.top-app-bar-title {
+    display: none !important;
+}
+
+.top-view-toolbar {
+    margin-left: 0 !important;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.view-toolbar {
+    display: grid;
+    grid-template-columns: minmax(252px, 396px) minmax(118px, 146px) minmax(118px, 146px) auto;
+    width: auto !important;
+    justify-content: start !important;
+    gap: 8px;
+}
+
+.view-toolbar-search-wrap {
+    width: min(100%, clamp(252px, 26vw, 396px)) !important;
+    max-width: clamp(252px, 26vw, 396px) !important;
+}
+
+.menu-dropdown-item--account {
+    justify-content: space-between;
+}
+
+.menu-account-label {
+    min-width: 0;
+}
+
+.menu-account-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(120, 130, 150, 0.16);
+    color: var(--heading);
+}
+
+.menu-account-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.menu-account-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--heading);
+}
+
+.control-panel-header {
+    align-items: center;
+}
+
+.panel-header-main {
+    gap: 12px;
+}
+
+.control-panel .panel-user-info {
+    margin-right: 8px;
+}
+
+.panel-header-actions {
+    margin-left: 8px;
+    padding-left: 4px;
+}
+
+.control-panel {
+    --expanded-panel-width: clamp(320px, 24vw, 430px);
+    flex: 0 0 var(--expanded-panel-width);
+    width: var(--expanded-panel-width);
+    max-width: 430px;
+}
+
+.control-panel.collapsed {
+    flex: 0 0 var(--expanded-panel-width) !important;
+    width: var(--expanded-panel-width) !important;
+    min-width: var(--expanded-panel-width) !important;
+    max-width: 430px !important;
+}
+
+.control-panel.collapsed .control-panel-content {
+    width: 112px;
+    margin-left: 0;
+}
+
+.control-panel.collapsed .control-panel-scroll-inner {
+    width: 112px;
+}
+
+@media (max-width: 1500px) {
+    .top-app-bar {
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+
+    .top-view-toolbar {
+        flex: 1 1 100%;
+    }
+
+    .view-toolbar {
+        width: 100% !important;
+        grid-template-columns: minmax(220px, 1fr) minmax(112px, 146px) minmax(112px, 146px) auto;
+    }
+
+    .view-toolbar-search-wrap {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .control-panel.collapsed {
+        flex: 0 0 112px !important;
+        width: 112px !important;
+        min-width: 112px !important;
+        max-width: 112px !important;
+    }
+
+    .control-panel.collapsed .control-panel-content,
+    .control-panel.collapsed .control-panel-scroll-inner {
+        width: 112px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .top-app-bar {
+        align-items: stretch;
+    }
+
+    .view-toolbar {
+        grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 1fr)) auto;
+    }
+
+    .control-panel.collapsed {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    .control-panel.collapsed .control-panel-content,
+    .control-panel.collapsed .control-panel-scroll-inner {
+        width: auto;
+    }
+}
+
+@media (max-width: 860px) {
+    .top-app-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .top-view-toolbar {
+        flex: 1 1 auto;
+    }
+
+    .view-toolbar {
+        grid-template-columns: 1fr;
+        width: 100% !important;
+    }
+
+    .view-toolbar-search-wrap {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}

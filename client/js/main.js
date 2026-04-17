@@ -458,6 +458,13 @@ function applyAccountUI(user) {
         accountState.user.username
     );
 
+    setAvatarUI(
+        document.getElementById('menuAccountAvatarImg'),
+        document.getElementById('menuAccountAvatarFallback'),
+        accountState.user.profilePic,
+        accountState.user.username
+    );
+
     const accountDisplayName = document.getElementById('accountDisplayName');
     if (accountDisplayName) accountDisplayName.textContent = accountState.user.username || 'User';
 

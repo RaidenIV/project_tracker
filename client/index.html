@@ -102,7 +102,13 @@
                     </svg>
                 </button>
                 <div class="menu-dropdown hidden" id="menuDropdown">
-                    <button class="menu-dropdown-item" id="menuAccountSettingsBtn" type="button">Account Settings</button>
+                    <button class="menu-dropdown-item menu-dropdown-item--account" id="menuAccountSettingsBtn" type="button">
+                        <span class="menu-account-label">Account Settings</span>
+                        <span class="menu-account-avatar" aria-hidden="true">
+                            <img class="menu-account-avatar-img hidden" id="menuAccountAvatarImg" alt="Profile picture">
+                            <span class="menu-account-avatar-fallback" id="menuAccountAvatarFallback">U</span>
+                        </span>
+                    </button>
                     <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
                     <div class="menu-dropdown-separator"></div>
                     <div class="menu-shortcuts-wrapper" id="shortcutsWrapper">
