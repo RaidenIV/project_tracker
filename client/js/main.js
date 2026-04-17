@@ -1222,6 +1222,17 @@ function updateTotalCompletion() {
     }
 }
 
+function setViewTitle(title) {
+    const viewportTitle = document.querySelector('.viewport-header h1');
+    if (viewportTitle) viewportTitle.textContent = title;
+    const appBarTitle = document.getElementById('topAppBarTitle');
+    if (appBarTitle) appBarTitle.textContent = title;
+}
+
+function syncViewTitle() {
+    setViewTitle(state.getView() === VIEWS.COMPLETED ? 'Completed Projects' : 'Active Projects');
+}
+
 // ============================================================================
 // VIEW MANAGEMENT
 // ============================================================================
@@ -1230,7 +1241,7 @@ function switchToActiveView() {
     state.setView(VIEWS.ACTIVE);
     document.getElementById('activeProjectsCard').classList.add('active');
     document.getElementById('completedProjectsCard').classList.remove('active');
-    document.querySelector('.viewport-header h1').textContent = 'Active Projects';
+    setViewTitle('Active Projects');
     render();
 }
 
@@ -1238,7 +1249,7 @@ function switchToCompletedView() {
     state.setView(VIEWS.COMPLETED);
     document.getElementById('completedProjectsCard').classList.add('active');
     document.getElementById('activeProjectsCard').classList.remove('active');
-    document.querySelector('.viewport-header h1').textContent = 'Completed Projects';
+    setViewTitle('Completed Projects');
     render();
 }
 
@@ -2423,6 +2434,7 @@ function render() {
     if (incompleteEl) incompleteEl.textContent = incompleteTasks;
 
     runRenderStep('total completion', updateTotalCompletion);
+    runRenderStep('view title', syncViewTitle);
     runRenderStep('shared projects panel', renderSharedProjectsPanel);
     runRenderStep('archived projects panel', renderArchivedProjectsPanel);
     runRenderStep('notifications panel', renderNotificationsPanel);

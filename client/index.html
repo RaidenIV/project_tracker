@@ -102,7 +102,6 @@
                     </svg>
                 </button>
                 <div class="menu-dropdown hidden" id="menuDropdown">
-                    <button class="menu-dropdown-item" id="menuSignOutBtn" type="button">Sign Out</button>
                     <button class="menu-dropdown-item" id="menuAccountSettingsBtn" type="button">Account Settings</button>
                     <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
                     <div class="menu-dropdown-separator"></div>
@@ -123,8 +122,18 @@
                             </div>
                         </div>
                     </div>
+                    <div class="menu-dropdown-separator menu-dropdown-separator--footer"></div>
+                    <button class="menu-dropdown-item menu-dropdown-item--danger" id="menuSignOutBtn" type="button">
+                        <svg class="menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H9"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 20H6a2 2 0 01-2-2V6a2 2 0 012-2h7"></path>
+                        </svg>
+                        <span>Sign Out</span>
+                    </button>
                 </div>
             </div>
+
+            <div class="top-app-bar-title" id="topAppBarTitle">Active Projects</div>
 
             <div class="view-toolbar top-view-toolbar">
                 <div class="view-toolbar-search-wrap">
@@ -141,19 +150,9 @@
                     <option value="recent">Recently Updated</option>
                     <option value="alpha">Alphabetical</option>
                     <option value="remaining">Most Remaining Tasks</option>
-                    <option value="progress">Highest Progress</option>
+                    <option value="progress">Highest Completion</option>
                 </select>
                 <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
-            </div>
-
-            <div class="panel-user-info hidden" id="panelUserInfo">
-                <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
-                    <div class="panel-avatar" id="panelAvatar">
-                        <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
-                        <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
-                    </div>
-                    <span class="panel-username" id="panelUsername"></span>
-                </button>
             </div>
         </div>
         <!-- Viewport -->
@@ -179,12 +178,22 @@
                 <div class="control-panel-scroll-inner">
 
                 <div class="control-panel-header">
-                    <div class="panel-header-spacer" aria-hidden="true"></div>
-                    <img
-                        src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
-                        alt="Logo"
-                        class="panel-logo-img-inline"
-                    >
+                    <div class="panel-header-main">
+                        <img
+                            src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                            alt="Logo"
+                            class="panel-logo-img-inline"
+                        >
+                        <div class="panel-user-info hidden" id="panelUserInfo">
+                            <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
+                                <div class="panel-avatar" id="panelAvatar">
+                                    <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
+                                    <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
+                                </div>
+                                <span class="panel-username" id="panelUsername"></span>
+                            </button>
+                        </div>
+                    </div>
                     <div class="panel-header-actions">
                         <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
                             <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
