@@ -44,12 +44,9 @@ async function request(method, url, body) {
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
 export async function loadProjectsFromServer() {
-    try {
-        return await request('GET', API_ENDPOINTS.PROJECTS) || [];
-    } catch (err) {
-        console.error('Error loading projects:', err);
-        return [];
-    }
+    // Let errors propagate to loadDataFromServer / loadData so the UI
+    // can surface a meaningful error instead of silently returning [].
+    return await request('GET', API_ENDPOINTS.PROJECTS) || [];
 }
 
 export async function createProjectOnServer(project) {
@@ -152,12 +149,8 @@ export async function markAllNotificationsReadOnServer() {
 // ─── Stats ────────────────────────────────────────────────────────────────────
 
 export async function loadStatsFromServer() {
-    try {
-        return await request('GET', API_ENDPOINTS.STATS) || { completedTasks: 0, completedProjects: 0 };
-    } catch (err) {
-        console.error('Error loading stats:', err);
-        return { completedTasks: 0, completedProjects: 0 };
-    }
+    // Let errors propagate so loadData can catch and surface them.
+    return await request('GET', API_ENDPOINTS.STATS) || { completedTasks: 0, completedProjects: 0 };
 }
 
 export async function saveStatsToServer(stats) {
@@ -185,6 +178,8 @@ export async function checkServerHealth() {
 // main.js's saveData() calls saveDataToServer(projects, stats).
 // We translate that into individual saves + stats save here.
 
+// Loads projects and stats in parallel. Errors are intentionally not caught
+// here — they propagate to loadData() in main.js, which handles UI feedback.
 export async function loadDataFromServer() {
     const [projects, stats] = await Promise.all([
         loadProjectsFromServer(),

@@ -2,7 +2,7 @@
 
 import { state } from './state.js';
 import { requireAdmin } from './auth.js';
-import { saveDataToServer } from './api.js';
+import { createProjectOnServer, saveDataToServer } from './api.js';
 
 // Capitalize first letter of first word
 function capitalizeFirstLetter(text) {
@@ -18,24 +18,35 @@ function toTitleCase(text) {
         .join(' ');
 }
 
-export function addProject() {
+export async function addProject() {
     if (!requireAdmin()) return;
-    
+
+    const tempId = String(Date.now());
     const newProject = {
-        id: Date.now(),
+        id: tempId,
         title: 'New Project',
         tasks: [],
         dateCreated: new Date().toISOString(),
         priority: state.getProjects().length,
         completed: false,
-        notes: ''
+        notes: '',
+        userRole: 'owner',
+        collaborators: []
     };
-    
+
     state.addProject(newProject);
-    saveData();
-    
-    // Will be implemented in ui.js
-    return newProject;
+
+    // Persist on the server and swap the temp id for the real MongoDB _id.
+    const created = await createProjectOnServer(newProject);
+    if (created) {
+        state.updateProject(tempId, {
+            _id: created._id || created.id,
+            id:  created.id  || created._id,
+            userRole: 'owner'
+        });
+    }
+
+    return state.findProject(created?.id || tempId) || newProject;
 }
 
 export function deleteProject(projectId) {
