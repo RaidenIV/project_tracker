@@ -1785,12 +1785,14 @@ function setupTaskDragAndDrop(projectId) {
 function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
     if (!project) return;
-    
+
+    const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+    const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
     const hideCompleted = state.shouldHideCompletedTasks();
-    const displayTasks = hideCompleted ? project.tasks.filter(t => !t.completed) : project.tasks;
-    
-    const completedTasks = project.tasks.filter(t => t.completed).length;
-    const totalTasks = project.tasks.length;
+    const displayTasks = hideCompleted ? tasks.filter(t => !t.completed) : tasks;
+
+    const completedTasks = tasks.filter(t => t.completed).length;
+    const totalTasks = tasks.length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
     const modal = document.getElementById('projectModal');
@@ -1845,7 +1847,7 @@ function openProjectModal(projectId, options = {}) {
             <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
             <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')">Notes</button>
             <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
-                Members ${(project.collaborators && project.collaborators.length > 0) ? `<span class="members-count">${collaborators.length}</span>` : ''}
+                Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
             <button class="modal-tab" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
         </div>
@@ -2548,11 +2550,13 @@ function renderSharedProjectsPanel() {
     }
 
     sharedProjectsList.innerHTML = sharedActiveProjects.map(project => {
-        const completedTasksCount = project.tasks.filter(task => task.completed).length;
-        const totalTasks = project.tasks.length;
+        const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+        const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+        const completedTasksCount = tasks.filter(task => task.completed).length;
+        const totalTasks = tasks.length;
         const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
         const accessLabel = project.userRole === 'owner'
-            ? `${collaborators.length} collaborator${project.collaborators.length === 1 ? '' : 's'}`
+            ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`
             : `${project.userRole} access`;
         const ownerLabel = project.userRole === 'owner'
             ? 'Owned by you'
