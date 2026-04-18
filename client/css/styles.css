@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
 
 * {
             margin: 0;
@@ -6,537 +6,285 @@
             box-sizing: border-box;
         }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   THEME SYSTEM — three styles per frontend-design-reference.md
-   • Console — flat dark admin-tool (DJ Database DNA)
-   • Nebula  — glass floating panel (Galaxy Visualizer DNA)
-   • Duplex  — dual-theme editorial (BPM Detective DNA), light + dark
-   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+    /* Industrial Grey Palette */
+    --bg: #c5c7c9;
+    --bg-2: #d6d8da;
+    --bg-3: #b6b8bb;
 
-/* ─── Console (default, dark only) ─────────────────────────────────────── */
-:root,
-body[data-theme="console"] {
-    /* Surfaces */
-    --bg: #0b0b0c;
-    --bg-2: #0d0d0e;
-    --bg-3: #0a0a0b;
-    --panel: #131316;
-    --surface: #0f0f12;
-    --surface-2: #1b1b20;
+    --panel: #e1e3e5;
+    --surface: #c9cbcd;
+    --surface-2: #bfc1c3;
 
-    /* Text */
-    --text: #f2f2f4;
-    --heading: #ffffff;
-    --muted: #a7a7ad;
-    --muted-2: #8a8a90;
-    --text-invert: #0b0b0c;
+    --text: #252a2f;
+    --heading: #1f2428;
+    --muted: #3c4043;
+    --muted-2: #4b4f52;
+    --text-invert: #f4f7fb;
 
-    /* Accent — electric blue */
-    --accent: #0099ff;
-    --accent-2: #0088ee;
-    --progress: #0099ff;
+    --accent: #3278eb;
+    --accent-2: #2563c7;
+    --progress: #3278eb;
 
-    /* Status */
-    --success: #9fe6b8;
-    --warning: #ffd38a;
-    --danger: #dc2626;
-    --danger-hover: #b91c1c;
+    --card-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
+    --inset-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.28);
+}
 
-    /* Structure */
-    --line: #2a2a2f;
-    --glass-border: transparent;
+body[data-theme="industrial-dark"] {
+    --bg: #161b21;
+    --bg-2: #202733;
+    --bg-3: #0f141b;
+    --panel: #252d37;
+    --surface: #1b232d;
+    --surface-2: #2d3743;
+    --text: #dfe7f0;
+    --heading: #f6fbff;
+    --muted: #9caaba;
+    --muted-2: #8291a2;
+    --accent: #5d9dff;
+    --accent-2: #3576dc;
+    --progress: #5d9dff;
+    --card-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
+    --inset-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 12px 24px rgba(255,255,255,0.02);
+}
 
-    /* Shadows — Console is flat; border does the work */
-    --card-shadow: none;
-    --card-shadow-hover: 0 4px 20px rgba(0, 153, 255, 0.15);
+body[data-theme="glass-light"] {
+    --bg: #b7caf0;
+    --bg-2: #ddecff;
+    --bg-3: #8ca7d8;
+    --panel: rgba(255, 255, 255, 0.18);
+    --surface: rgba(255, 255, 255, 0.12);
+    --surface-2: rgba(255, 255, 255, 0.24);
+    --text: #17304d;
+    --heading: #0d2037;
+    --muted: #46627d;
+    --muted-2: #5c7690;
+    --accent: #2d7ff9;
+    --accent-2: #165dc8;
+    --progress: #2d7ff9;
+    --card-shadow: 0 20px 50px rgba(34, 56, 92, 0.18);
     --inset-shadow: none;
-
-    /* Scrollbar (3px hairline per Nebula spec, Console colors) */
-    --scrollbar-width: 3px;
-    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
+    --glass-border: rgba(255, 255, 255, 0.32);
 }
 
-/* ─── Nebula (glass, dark only) ────────────────────────────────────────── */
-body[data-theme="nebula"] {
-    --bg: #050812;
-    --bg-2: #0a1124;
-    --bg-3: #020410;
-    --panel: rgba(0, 0, 0, 0.65);
-    --surface: rgba(255, 255, 255, 0.04);
-    --surface-2: rgba(255, 255, 255, 0.02);
-
-    --text: rgba(255, 255, 255, 0.96);
-    --heading: #ffffff;
-    --muted: rgba(255, 255, 255, 0.55);
-    --muted-2: rgba(255, 255, 255, 0.35);
-    --text-invert: #0b0b0c;
-
-    --accent: #3b82f6;
-    --accent-2: #2563eb;
-    --progress: #3b82f6;
-
-    --success: #4ade80;
-    --warning: #ffd38a;
-    --danger: #ff6060;
-    --danger-hover: #ff4040;
-
-    --line: rgba(255, 255, 255, 0.11);
-    --glass-border: rgba(255, 255, 255, 0.11);
-
-    /* Glass shadow recipe — top highlight is critical */
-    --card-shadow: 0 18px 60px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    --card-shadow-hover: 0 22px 72px rgba(59, 130, 246, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.10);
-    --inset-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-
-    --scrollbar-width: 3px;
-    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
+body[data-theme="glass-dark"] {
+    --bg: #0c1423;
+    --bg-2: #1a2a47;
+    --bg-3: #07101d;
+    --panel: rgba(15, 26, 45, 0.52);
+    --surface: rgba(20, 35, 58, 0.38);
+    --surface-2: rgba(28, 45, 73, 0.5);
+    --text: #dce9fb;
+    --heading: #f4f8ff;
+    --muted: #a6b8d4;
+    --muted-2: #8ca1c0;
+    --accent: #61a4ff;
+    --accent-2: #3d7ddb;
+    --progress: #61a4ff;
+    --card-shadow: 0 20px 56px rgba(0, 0, 0, 0.34);
+    --inset-shadow: none;
+    --glass-border: rgba(181, 212, 255, 0.2);
 }
 
-/* ─── Duplex Dark (editorial, dark variant) ────────────────────────────── */
-body[data-theme="duplex-dark"] {
-    --bg: #04070f;
-    --bg-2: #0a1224;
-    --bg-3: #020307;
-
-    --panel: rgba(6, 10, 22, 0.97);
-    --surface: rgba(255, 255, 255, 0.06);
-    --surface-2: rgba(255, 255, 255, 0.04);
-
-    --text: #ffffff;
-    --heading: #ffffff;
-    --muted: #6b8aaa;
-    --muted-2: #5a6a88;
-    --text-invert: #ffffff;
-
-    --accent: #3b82f6;
-    --accent-2: #60a5fa;
-    --progress: #3b82f6;
-
-    --success: #4ade80;
-    --warning: #fbbf24;
-    --danger: #dc2626;
-    --danger-hover: #b91c1c;
-
-    --line: rgba(255, 255, 255, 0.13);
-    --glass-border: rgba(255, 255, 255, 0.13);
-
-    --card-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-    --card-shadow-hover: 0 24px 72px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(59, 130, 246, 0.2);
-    --inset-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-
-    --scrollbar-width: 3px;
-    --scrollbar-thumb: rgba(255, 255, 255, 0.14);
-    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.26);
+body[data-theme="blueprint-light"] {
+    --bg: #bfcfe0;
+    --bg-2: #d6e3ef;
+    --bg-3: #a8bfd3;
+    --panel: #dce8f4;
+    --surface: #c4d5e4;
+    --surface-2: #b1c5d8;
+    --text: #233447;
+    --heading: #17293b;
+    --muted: #486176;
+    --muted-2: #5a7286;
+    --accent: #2d78d4;
+    --accent-2: #1d5eac;
+    --progress: #2d78d4;
+    --card-shadow: 6px 6px 16px rgba(64, 91, 117, 0.18), -4px -4px 10px rgba(255,255,255,0.72);
+    --inset-shadow: inset 4px 4px 8px rgba(98, 124, 148, 0.28), inset -4px -4px 8px rgba(255,255,255,0.84);
 }
 
-/* ─── Duplex Light (editorial, default light mode) ─────────────────────── */
-body[data-theme="duplex-light"] {
-    --bg: #eef2ff;
-    --bg-2: #dde6ff;
-    --bg-3: #c8d4ff;
-
-    --panel: rgba(255, 255, 255, 0.97);
-    --surface: rgba(0, 0, 0, 0.04);
-    --surface-2: rgba(0, 0, 0, 0.02);
-
-    --text: #0b1020;
-    --heading: #000000;
-    --muted: #4a5a75;
-    --muted-2: #6b7a9a;
-    --text-invert: #ffffff;
-
-    --accent: #3b82f6;
-    --accent-2: #1d4ed8;
-    --progress: #3b82f6;
-
-    --success: #16a34a;
-    --warning: #d97706;
-    --danger: #dc2626;
-    --danger-hover: #b91c1c;
-
-    --line: rgba(0, 0, 0, 0.09);
-    --glass-border: rgba(0, 0, 0, 0.09);
-
-    --card-shadow: 0 20px 60px rgba(100, 120, 200, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.03);
-    --card-shadow-hover: 0 24px 72px rgba(59, 130, 246, 0.18), inset 0 0 0 1px rgba(59, 130, 246, 0.12);
-    --inset-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
-
-    --scrollbar-width: 3px;
-    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
-    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+body[data-theme="blueprint-dark"] {
+    --bg: #0f1724;
+    --bg-2: #16283d;
+    --bg-3: #0a1018;
+    --panel: #182638;
+    --surface: #101d2c;
+    --surface-2: #23344b;
+    --text: #dae7f4;
+    --heading: #f2f8ff;
+    --muted: #99b0c8;
+    --muted-2: #8198ae;
+    --accent: #5b9df2;
+    --accent-2: #3279d2;
+    --progress: #5b9df2;
+    --card-shadow: 0 18px 36px rgba(0,0,0,0.3);
+    --inset-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 10px 20px rgba(255,255,255,0.02);
 }
 
-/* ─── Base body ─────────────────────────────────────────────────────────
-   Rajdhani is the UI font across all three styles.
-   Duplex uses Inter for display headings (added selectively below).
-   ──────────────────────────────────────────────────────────────────── */
 body {
-    font-family: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    background:
-        radial-gradient(ellipse at 50% 0%, rgba(0, 153, 255, 0.06) 0%, transparent 55%),
-        linear-gradient(to bottom, var(--bg-2), var(--bg) 60%, var(--bg-3));
-    background-attachment: fixed;
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    letter-spacing: 0.01em;
-}
 
-/* ─── Theme-specific body backgrounds ──────────────────────────────── */
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Dank Mono', monospace;
+            background:
+                radial-gradient(circle, rgba(0,0,0,0.16) 1.2px, transparent 1.2px),
+                linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
+            background-size: 22px 22px, 100% 100%;
+            background-attachment: fixed;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-/* Console — radial accent top, subtle */
-body[data-theme="console"] {
-    background:
-        radial-gradient(ellipse at 50% 0%, rgba(0, 153, 255, 0.06) 0%, transparent 55%),
-        linear-gradient(to bottom, var(--bg-2), var(--bg) 60%, var(--bg-3));
-    background-attachment: fixed;
-}
+        body[data-theme^="glass"] .control-panel-content,
+        body[data-theme^="glass"] .project-card,
+        body[data-theme^="glass"] .menu-button,
+        body[data-theme^="glass"] .shortcuts-panel,
+        body[data-theme^="glass"] .shortcuts-toggle,
+        body[data-theme^="glass"] .side-project-card,
+        body[data-theme^="glass"] .notification-card,
+        body[data-theme^="glass"] .side-panel-section,
+        body[data-theme^="glass"] .auth-card,
+        body[data-theme^="glass"] .modal-content,
+        body[data-theme^="glass"] .confirm-dialog {
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.28);
+        }
+        body[data-theme^="glass"] {
+            font-family: 'Rajdhani', 'Inter', 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(72, 132, 255, 0.22), transparent 28%),
+                linear-gradient(135deg, var(--bg-2), var(--bg), var(--bg-3));
+            background-attachment: fixed;
+        }
 
-/* Nebula — cosmic gradient behind the glass (per Galaxy Visualizer) */
-body[data-theme="nebula"] {
-    background:
-        radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.18) 0%, transparent 45%),
-        radial-gradient(ellipse at 80% 80%, rgba(130, 80, 255, 0.12) 0%, transparent 45%),
-        linear-gradient(135deg, #050812 0%, #0a1124 50%, #020410 100%);
-    background-attachment: fixed;
-}
 
-/* Duplex Dark — radial from the markdown spec */
-body[data-theme="duplex-dark"] {
-    background: radial-gradient(ellipse at 40% 35%, rgba(20, 30, 60, 0.85) 0%, #000 70%);
-    background-attachment: fixed;
-}
+        body[data-theme^="glass"] button,
+        body[data-theme^="glass"] input,
+        body[data-theme^="glass"] select,
+        body[data-theme^="glass"] textarea {
+            font-family: inherit;
+            letter-spacing: 0.02em;
+        }
 
-/* Duplex Light — diagonal gradient from the markdown spec */
-body[data-theme="duplex-light"] {
-    background: linear-gradient(150deg, #eef2ff 0%, #dde6ff 100%);
-    background-attachment: fixed;
-}
+        body[data-theme^="glass"] .control-panel-content,
+        body[data-theme^="glass"] .project-card,
+        body[data-theme^="glass"] .menu-button,
+        body[data-theme^="glass"] .menu-dropdown,
+        body[data-theme^="glass"] .shortcuts-panel,
+        body[data-theme^="glass"] .shortcuts-toggle,
+        body[data-theme^="glass"] .side-project-card,
+        body[data-theme^="glass"] .notification-card,
+        body[data-theme^="glass"] .side-panel-section,
+        body[data-theme^="glass"] .auth-card,
+        body[data-theme^="glass"] .modal-content,
+        body[data-theme^="glass"] .confirm-dialog,
+        body[data-theme^="glass"] .saved-view-main,
+        body[data-theme^="glass"] .archived-project-card,
+        body[data-theme^="glass"] .command-palette-item,
+        body[data-theme^="glass"] .theme-card,
+        body[data-theme^="glass"] .save-status,
+        body[data-theme^="glass"] .stat-card,
+        body[data-theme^="glass"] .panel-user-pill {
+            background: var(--panel);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
 
-/* ─── Display font for Duplex titles (Inter + tight tracking) ─────── */
-body[data-theme^="duplex"] .viewport-header h1,
-body[data-theme^="duplex"] .account-modal-title,
-body[data-theme^="duplex"] .auth-card h1,
-body[data-theme^="duplex"] .top-app-bar-title {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-}
+        body[data-theme^="glass"] .view-toolbar-search,
+        body[data-theme^="glass"] .view-toolbar-select,
+        body[data-theme^="glass"] .view-toolbar-button,
+        body[data-theme^="glass"] .task-item,
+        body[data-theme^="glass"] .task-input,
+        body[data-theme^="glass"] .task-checkbox,
+        body[data-theme^="glass"] .project-title-input,
+        body[data-theme^="glass"] .modal-title-input,
+        body[data-theme^="glass"] .notes-textarea,
+        body[data-theme^="glass"] .project-select,
+        body[data-theme^="glass"] .paste-box,
+        body[data-theme^="glass"] .paste-button,
+        body[data-theme^="glass"] .undo-button,
+        body[data-theme^="glass"] .add-project-button,
+        body[data-theme^="glass"] .member-row,
+        body[data-theme^="glass"] .invite-form,
+        body[data-theme^="glass"] .invite-email-input,
+        body[data-theme^="glass"] .invite-role-select,
+        body[data-theme^="glass"] .member-role-select,
+        body[data-theme^="glass"] .account-form-input,
+        body[data-theme^="glass"] .account-stat-card,
+        body[data-theme^="glass"] .panel-avatar,
+        body[data-theme^="glass"] .account-avatar,
+        body[data-theme^="glass"] .progress-bar-container,
+        body[data-theme^="glass"] .modal-tab,
+        body[data-theme^="glass"] .modal-add-task,
+        body[data-theme^="glass"] .modal-add-task-top,
+        body[data-theme^="glass"] .menu-dropdown-item,
+        body[data-theme^="glass"] .toggle-slider,
+        body[data-theme^="glass"] .toggle-slider:before {
+            background: var(--surface);
+            box-shadow: none;
+            border: 1px solid rgba(255,255,255,0.16);
+        }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   NEBULA — glassmorphic panels with inset top highlight
-   ═══════════════════════════════════════════════════════════════════════ */
-body[data-theme="nebula"] .control-panel-scroll-inner,
-body[data-theme="nebula"] .project-card,
-body[data-theme="nebula"] .menu-button,
-body[data-theme="nebula"] .menu-dropdown,
-body[data-theme="nebula"] .shortcuts-panel,
-body[data-theme="nebula"] .shortcuts-toggle,
-body[data-theme="nebula"] .side-project-card,
-body[data-theme="nebula"] .notification-card,
-body[data-theme="nebula"] .side-panel-section,
-body[data-theme="nebula"] .auth-card,
-body[data-theme="nebula"] .modal-content,
-body[data-theme="nebula"] .confirm-dialog,
-body[data-theme="nebula"] .saved-view-main,
-body[data-theme="nebula"] .archived-project-card,
-body[data-theme="nebula"] .command-palette-item,
-body[data-theme="nebula"] .theme-card,
-body[data-theme="nebula"] .save-status,
-body[data-theme="nebula"] .stat-card,
-body[data-theme="nebula"] .panel-user-pill,
-body[data-theme="nebula"] .top-app-bar {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.58) 100%);
-    backdrop-filter: blur(26px) saturate(1.25);
-    -webkit-backdrop-filter: blur(26px) saturate(1.25);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--card-shadow);
-}
+        body[data-theme^="glass"] .menu-button.active,
+        body[data-theme^="glass"] .menu-dropdown-item:hover,
+        body[data-theme^="glass"] .modal-tab.active,
+        body[data-theme^="glass"] .stat-card.active,
+        body[data-theme^="glass"] .view-toolbar-button:hover,
+        body[data-theme^="glass"] .panel-user-pill:hover {
+            box-shadow: 0 18px 40px rgba(27, 43, 73, 0.18);
+        }
 
-/* Nested glass surfaces — subtle, not shouty */
-body[data-theme="nebula"] .view-toolbar-search,
-body[data-theme="nebula"] .view-toolbar-select,
-body[data-theme="nebula"] .view-toolbar-button,
-body[data-theme="nebula"] .task-item,
-body[data-theme="nebula"] .task-input,
-body[data-theme="nebula"] .project-title-input,
-body[data-theme="nebula"] .modal-title-input,
-body[data-theme="nebula"] .notes-textarea,
-body[data-theme="nebula"] .project-select,
-body[data-theme="nebula"] .paste-box,
-body[data-theme="nebula"] .invite-email-input,
-body[data-theme="nebula"] .invite-role-select,
-body[data-theme="nebula"] .member-role-select,
-body[data-theme="nebula"] .account-form-input,
-body[data-theme="nebula"] .account-input,
-body[data-theme="nebula"] .auth-input,
-body[data-theme="nebula"] .account-stat-card,
-body[data-theme="nebula"] .panel-avatar,
-body[data-theme="nebula"] .account-avatar,
-body[data-theme="nebula"] .progress-bar-container,
-body[data-theme="nebula"] .modal-tab,
-body[data-theme="nebula"] .menu-dropdown-item {
-    background: var(--surface);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
+        body[data-theme^="glass"] .project-card:hover,
+        body[data-theme^="glass"] .theme-card.is-active,
+        body[data-theme^="glass"] .command-palette-item.is-active {
+            box-shadow: 0 22px 46px rgba(23, 41, 73, 0.22);
+        }
 
-/* Nebula hover — accent lift */
-body[data-theme="nebula"] .project-card:hover,
-body[data-theme="nebula"] .theme-card.is-active,
-body[data-theme="nebula"] .command-palette-item.is-active {
-    border-color: rgba(96, 165, 250, 0.5);
-    box-shadow: var(--card-shadow-hover);
-    transform: translateY(-2px);
-}
+        body[data-theme^="glass"] .task-checkbox.checked,
+        body[data-theme^="glass"] .add-project-button,
+        body[data-theme^="glass"] .paste-button,
+        body[data-theme^="glass"] .modal-done-btn,
+        body[data-theme^="glass"] .modal-add-task-top,
+        body[data-theme^="glass"] .auth-submit,
+        body[data-theme^="glass"] .invite-submit-btn,
+        body[data-theme^="glass"] .activate-button {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border: none;
+            box-shadow: 0 16px 30px rgba(50, 120, 235, 0.24);
+        }
 
-/* Nebula accent buttons — 135deg gradient per spec */
-body[data-theme="nebula"] .add-project-button,
-body[data-theme="nebula"] .paste-button,
-body[data-theme="nebula"] .modal-done-btn,
-body[data-theme="nebula"] .modal-add-task-top,
-body[data-theme="nebula"] .auth-submit,
-body[data-theme="nebula"] .invite-submit-btn,
-body[data-theme="nebula"] .activate-button {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.85) 0%, rgba(37, 99, 235, 0.85) 100%);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
-    backdrop-filter: blur(8px);
-}
-body[data-theme="nebula"] .add-project-button:hover,
-body[data-theme="nebula"] .paste-button:hover,
-body[data-theme="nebula"] .modal-done-btn:hover,
-body[data-theme="nebula"] .auth-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
-}
+        body[data-theme^="glass"] .task-checkbox.checked {
+            border-color: transparent;
+        }
 
-body[data-theme="nebula"] .task-checkbox.checked {
-    background: #3b82f6;
-    border-color: transparent;
-}
+        body[data-theme^="glass"] .panel-avatar,
+        body[data-theme^="glass"] .account-avatar,
+        body[data-theme^="glass"] .panel-user-pill,
+        body[data-theme^="glass"] .view-toolbar-search,
+        body[data-theme^="glass"] .view-toolbar-select,
+        body[data-theme^="glass"] .view-toolbar-button,
+        body[data-theme^="glass"] .task-item,
+        body[data-theme^="glass"] .theme-card,
+        body[data-theme^="glass"] .saved-view-main,
+        body[data-theme^="glass"] .notification-card,
+        body[data-theme^="glass"] .side-project-card,
+        body[data-theme^="glass"] .archived-project-card,
+        body[data-theme^="glass"] .menu-dropdown-item,
+        body[data-theme^="glass"] .modal-tab,
+        body[data-theme^="glass"] .account-form-input,
+        body[data-theme^="glass"] .account-stat-card {
+            border-radius: 18px;
+        }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   CONSOLE — flat dark admin panel, border-led, no glass
-   ═══════════════════════════════════════════════════════════════════════ */
-body[data-theme="console"] .control-panel-scroll-inner,
-body[data-theme="console"] .project-card,
-body[data-theme="console"] .side-project-card,
-body[data-theme="console"] .notification-card,
-body[data-theme="console"] .side-panel-section,
-body[data-theme="console"] .auth-card,
-body[data-theme="console"] .modal-content,
-body[data-theme="console"] .confirm-dialog,
-body[data-theme="console"] .saved-view-main,
-body[data-theme="console"] .archived-project-card,
-body[data-theme="console"] .theme-card,
-body[data-theme="console"] .stat-card,
-body[data-theme="console"] .top-app-bar,
-body[data-theme="console"] .command-palette-item {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    box-shadow: none;
-    border-radius: 14px;
-}
-
-/* Console card elevation — brighter bg on nested cards */
-body[data-theme="console"] .stat-card,
-body[data-theme="console"] .side-project-card,
-body[data-theme="console"] .archived-project-card,
-body[data-theme="console"] .saved-view-main,
-body[data-theme="console"] .notification-card {
-    background: var(--bg-2);
-}
-
-/* Console inputs — dark bg, accent focus halo */
-body[data-theme="console"] .view-toolbar-search,
-body[data-theme="console"] .view-toolbar-select,
-body[data-theme="console"] .view-toolbar-button,
-body[data-theme="console"] .task-item,
-body[data-theme="console"] .task-input,
-body[data-theme="console"] .project-title-input,
-body[data-theme="console"] .modal-title-input,
-body[data-theme="console"] .notes-textarea,
-body[data-theme="console"] .project-select,
-body[data-theme="console"] .paste-box,
-body[data-theme="console"] .invite-email-input,
-body[data-theme="console"] .invite-role-select,
-body[data-theme="console"] .member-role-select,
-body[data-theme="console"] .account-form-input,
-body[data-theme="console"] .account-input,
-body[data-theme="console"] .auth-input,
-body[data-theme="console"] .menu-button,
-body[data-theme="console"] .menu-dropdown,
-body[data-theme="console"] .menu-dropdown-item {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--text);
-    border-radius: 10px;
-    box-shadow: none;
-}
-
-body[data-theme="console"] .view-toolbar-search:focus,
-body[data-theme="console"] .view-toolbar-select:focus,
-body[data-theme="console"] .task-input:focus,
-body[data-theme="console"] .project-title-input:focus,
-body[data-theme="console"] .account-input:focus,
-body[data-theme="console"] .auth-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(0, 153, 255, 0.1);
-    outline: none;
-}
-
-/* Console project card hover — accent glow */
-body[data-theme="console"] .project-card:hover,
-body[data-theme="console"] .theme-card.is-active,
-body[data-theme="console"] .command-palette-item.is-active {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: var(--card-shadow-hover);
-}
-
-/* Console primary buttons — solid accent */
-body[data-theme="console"] .add-project-button,
-body[data-theme="console"] .paste-button,
-body[data-theme="console"] .modal-done-btn,
-body[data-theme="console"] .modal-add-task-top,
-body[data-theme="console"] .auth-submit,
-body[data-theme="console"] .invite-submit-btn,
-body[data-theme="console"] .activate-button {
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    box-shadow: none;
-    transition: all 0.3s ease;
-}
-body[data-theme="console"] .add-project-button:hover,
-body[data-theme="console"] .paste-button:hover,
-body[data-theme="console"] .modal-done-btn:hover,
-body[data-theme="console"] .auth-submit:hover {
-    background: var(--accent-2);
-}
-
-/* Console — the signature red "commit" save button per the markdown */
-body[data-theme="console"] .confirm-delete,
-body[data-theme="console"] .account-action-btn:not(.account-action-btn--secondary) {
-    background: var(--danger);
-    color: #ffffff;
-    border: none;
-}
-body[data-theme="console"] .confirm-delete:hover {
-    background: var(--danger-hover);
-}
-
-body[data-theme="console"] .task-checkbox.checked {
-    background: var(--accent);
-    border-color: transparent;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   DUPLEX (light + dark) — editorial, centered, subtle
-   ═══════════════════════════════════════════════════════════════════════ */
-body[data-theme^="duplex"] .control-panel-scroll-inner,
-body[data-theme^="duplex"] .project-card,
-body[data-theme^="duplex"] .side-project-card,
-body[data-theme^="duplex"] .notification-card,
-body[data-theme^="duplex"] .side-panel-section,
-body[data-theme^="duplex"] .auth-card,
-body[data-theme^="duplex"] .modal-content,
-body[data-theme^="duplex"] .confirm-dialog,
-body[data-theme^="duplex"] .saved-view-main,
-body[data-theme^="duplex"] .archived-project-card,
-body[data-theme^="duplex"] .theme-card,
-body[data-theme^="duplex"] .stat-card,
-body[data-theme^="duplex"] .top-app-bar,
-body[data-theme^="duplex"] .command-palette-item {
-    background: var(--panel);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--card-shadow);
-    border-radius: 18px;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-}
-
-/* Duplex inputs */
-body[data-theme^="duplex"] .view-toolbar-search,
-body[data-theme^="duplex"] .view-toolbar-select,
-body[data-theme^="duplex"] .view-toolbar-button,
-body[data-theme^="duplex"] .task-item,
-body[data-theme^="duplex"] .task-input,
-body[data-theme^="duplex"] .project-title-input,
-body[data-theme^="duplex"] .modal-title-input,
-body[data-theme^="duplex"] .notes-textarea,
-body[data-theme^="duplex"] .project-select,
-body[data-theme^="duplex"] .paste-box,
-body[data-theme^="duplex"] .account-input,
-body[data-theme^="duplex"] .auth-input,
-body[data-theme^="duplex"] .menu-dropdown-item {
-    background: var(--surface);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    color: var(--text);
-}
-
-body[data-theme^="duplex"] .view-toolbar-search:focus,
-body[data-theme^="duplex"] .task-input:focus,
-body[data-theme^="duplex"] .account-input:focus,
-body[data-theme^="duplex"] .auth-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    outline: none;
-}
-
-/* Duplex hover — subtle, no aggressive lift */
-body[data-theme^="duplex"] .project-card:hover,
-body[data-theme^="duplex"] .theme-card.is-active,
-body[data-theme^="duplex"] .command-palette-item.is-active {
-    box-shadow: var(--card-shadow-hover);
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-/* Duplex accent buttons */
-body[data-theme^="duplex"] .add-project-button,
-body[data-theme^="duplex"] .paste-button,
-body[data-theme^="duplex"] .modal-done-btn,
-body[data-theme^="duplex"] .modal-add-task-top,
-body[data-theme^="duplex"] .auth-submit,
-body[data-theme^="duplex"] .invite-submit-btn,
-body[data-theme^="duplex"] .activate-button {
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
-    transition: all 0.22s ease;
-}
-body[data-theme^="duplex"] .add-project-button:hover,
-body[data-theme^="duplex"] .modal-done-btn:hover {
-    background: var(--accent-2);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
-}
-
-/* Duplex Light — accent tints on buttons that were too harsh */
-body[data-theme="duplex-light"] .view-toolbar-button,
-body[data-theme="duplex-light"] .menu-button {
-    background: rgba(255, 255, 255, 0.7);
-    color: var(--text);
-}
-
-body[data-theme^="duplex"] .task-checkbox.checked {
-    background: var(--accent);
-    border-color: transparent;
-}
-
-body[data-theme^="duplex"] .confirm-delete {
-    background: var(--danger);
-    color: #ffffff;
-}
-body[data-theme^="duplex"] .confirm-delete:hover { background: var(--danger-hover); }
+        body[data-theme^="glass"] .panel-avatar-fallback,
+        body[data-theme^="glass"] .account-avatar-fallback {
+            color: var(--accent);
+        }
 
 
         /* Background gradient effect — now handled by body directly */
@@ -1102,26 +850,106 @@ body[data-theme^="duplex"] .confirm-delete:hover { background: var(--danger-hove
         }
 
 
-        /* ─── Control Panel Scroll (3px hairline per design reference) ─────
-           The previous implementation used a 10px scrollbar + 10px gutter + 
-           corner caps — too chunky, breaks the glass feel in Nebula and the 
-           minimalist feel in Console. Replaced with the Nebula recipe: 3px 
-           thumb, transparent track, themed via --scrollbar-* vars. 
-           ──────────────────────────────────────────────────────────────── */
         .control-panel-content {
             --modal-radius: 20px;
             --modal-padding: clamp(18px, 1.4vw, 24px);
-            position: relative;
+            --modal-scrollbar-width: 10px;
+            --modal-scrollbar-gap: 10px;
+            --modal-scrollbar-corner-cap: 18px;
+            --modal-scrollbar-thumb: rgba(31, 36, 40, 0.18);
+            --modal-scrollbar-thumb-hover: rgba(31, 36, 40, 0.30);
+            position: sticky;
+            top: 80px;
             isolation: isolate;
+            background: var(--panel);
+            border-radius: var(--modal-radius);
+            padding: var(--modal-padding);
+            padding-right: calc(
+                var(--modal-padding) - 4px +
+                var(--modal-scrollbar-width) +
+                var(--modal-scrollbar-gap)
+            );
+            max-height: calc(100vh - 104px);
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scrollbar-color: var(--modal-scrollbar-thumb) transparent;
+            box-shadow: var(--card-shadow);
+        }
+
+        .control-panel-content::before,
+        .control-panel-content::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            width: calc(var(--modal-scrollbar-width) + var(--modal-scrollbar-gap) + 8px);
+            height: var(--modal-scrollbar-corner-cap);
+            background: var(--panel);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .control-panel-content::before {
+            top: 0;
+            border-top-right-radius: var(--modal-radius);
+        }
+
+        .control-panel-content::after {
+            bottom: 0;
+            border-bottom-right-radius: var(--modal-radius);
+        }
+
+        .control-panel-content::-webkit-scrollbar {
+            width: var(--modal-scrollbar-width);
+        }
+
+        .control-panel-content::-webkit-scrollbar-track {
             background: transparent;
-            box-shadow: none;
+        }
+
+        .control-panel-content::-webkit-scrollbar-thumb {
+            background-color: var(--modal-scrollbar-thumb);
+            border-radius: 999px;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .control-panel-content::-webkit-scrollbar-thumb:hover {
+            background-color: var(--modal-scrollbar-thumb-hover);
+        }
+
+        .control-panel-content::-webkit-scrollbar-button,
+        .control-panel-content::-webkit-scrollbar-button:single-button {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        .control-panel-content::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+
+        .control-panel-content {
             padding: 0;
             overflow: hidden;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .control-panel-content::before,
+        .control-panel-content::after {
+            display: none;
         }
 
         .control-panel-scroll-inner {
             --modal-radius: 20px;
             --modal-padding: clamp(18px, 1.4vw, 24px);
+            --modal-scrollbar-width: 10px;
+            --modal-scrollbar-gap: 10px;
+            --modal-scrollbar-corner-cap: 18px;
+            --modal-scrollbar-thumb: rgba(31, 36, 40, 0.18);
+            --modal-scrollbar-thumb-hover: rgba(31, 36, 40, 0.30);
             position: relative;
             isolation: isolate;
             background: var(--panel);
@@ -1130,44 +958,70 @@ body[data-theme^="duplex"] .confirm-delete:hover { background: var(--danger-hove
             max-height: calc(100vh - 104px);
             overflow-y: auto;
             box-sizing: border-box;
-            /* Gutter per design reference: padding-right adds breathing room
-               between content and the scrollbar. The markdown describes a
-               padding + negative-margin variant for fluid-width containers;
-               here the panel has a fixed clamp() width from its parent, so
-               padding-right alone is sufficient. */
             padding: var(--modal-padding);
-            padding-right: calc(var(--modal-padding) + 8px);
-
-            /* Firefox */
+            padding-right: calc(
+                var(--modal-padding) - 4px +
+                var(--modal-scrollbar-width) +
+                var(--modal-scrollbar-gap)
+            );
+            scrollbar-gutter: stable;
             scrollbar-width: thin;
-            scrollbar-color: var(--scrollbar-thumb) transparent;
+            scrollbar-color: var(--modal-scrollbar-thumb) transparent;
         }
 
-        /* WebKit — 3px hairline */
-        .control-panel-scroll-inner::-webkit-scrollbar {
-            width: var(--scrollbar-width);
+        .control-panel-scroll-inner::before,
+        .control-panel-scroll-inner::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            width: calc(var(--modal-scrollbar-width) + var(--modal-scrollbar-gap) + 8px);
+            height: var(--modal-scrollbar-corner-cap);
+            background: var(--panel);
+            pointer-events: none;
+            z-index: 2;
         }
+
+        .control-panel-scroll-inner::before {
+            top: 0;
+            border-top-right-radius: var(--modal-radius);
+        }
+
+        .control-panel-scroll-inner::after {
+            bottom: 0;
+            border-bottom-right-radius: var(--modal-radius);
+        }
+
+        .control-panel-scroll-inner::-webkit-scrollbar {
+            width: var(--modal-scrollbar-width);
+        }
+
         .control-panel-scroll-inner::-webkit-scrollbar-track {
             background: transparent;
         }
+
         .control-panel-scroll-inner::-webkit-scrollbar-thumb {
-            background: var(--scrollbar-thumb);
+            background-color: var(--modal-scrollbar-thumb);
             border-radius: 999px;
+            border: 3px solid transparent;
+            background-clip: padding-box;
         }
+
         .control-panel-scroll-inner::-webkit-scrollbar-thumb:hover {
-            background: var(--scrollbar-thumb-hover);
+            background-color: var(--modal-scrollbar-thumb-hover);
         }
-        .control-panel-scroll-inner::-webkit-scrollbar-button {
+
+        .control-panel-scroll-inner::-webkit-scrollbar-button,
+        .control-panel-scroll-inner::-webkit-scrollbar-button:single-button,
+        .control-panel-content::-webkit-scrollbar-button,
+        .control-panel-content::-webkit-scrollbar-button:single-button {
             display: none;
-            width: 0; height: 0;
+            width: 0;
+            height: 0;
         }
+
         .control-panel-scroll-inner::-webkit-scrollbar-corner {
             background: transparent;
         }
-
-        /* Legacy .control-panel-content scroll rules — disabled (scroll now
-           lives on .control-panel-scroll-inner). Old corner-cap ::before /
-           ::after are removed in favor of the gutter trick. */
 
         .control-panel-header {
             display: flex;

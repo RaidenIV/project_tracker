@@ -69,25 +69,19 @@ const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea
 const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'console':      { label: 'Console',      family: 'console', mode: 'dark' },
-    'nebula':       { label: 'Nebula',       family: 'nebula',  mode: 'dark' },
-    'duplex-light': { label: 'Duplex Light', family: 'duplex',  mode: 'light' },
-    'duplex-dark':  { label: 'Duplex Dark',  family: 'duplex',  mode: 'dark' }
+    'industrial-light': { label: 'Industrial Light', family: 'industrial', mode: 'light' },
+    'industrial-dark': { label: 'Industrial Dark', family: 'industrial', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
+    'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
+    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' }
 };
 
 const LEGACY_THEME_MAP = {
-    // Old 6-theme keys → new 4-theme keys
-    'industrial-light': 'console',
-    'industrial-dark':  'console',
-    'glass-light':      'nebula',
-    'glass-dark':       'nebula',
-    'blueprint-light':  'duplex-light',
-    'blueprint-dark':   'duplex-dark',
-    // Pre-industrial legacy names, preserved
-    default:   'console',
-    glass:     'nebula',
-    midnight:  'console',
-    blueprint: 'duplex-light'
+    default: 'industrial-light',
+    glass: 'glass-light',
+    midnight: 'industrial-dark',
+    blueprint: 'blueprint-light'
 };
 
 const notificationState = {
@@ -115,7 +109,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'console',
+    theme: 'industrial-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -139,7 +133,7 @@ function escapeHtml(value) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'console';
+    return THEME_OPTIONS[resolved] ? resolved : 'industrial-light';
 }
 
 function getThemeMeta(themeName) {
@@ -176,7 +170,7 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'industrial-light');
     applyTheme(uiState.theme, false);
 }
 
