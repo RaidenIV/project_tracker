@@ -2532,8 +2532,6 @@ function renderProjectCard(project) {
             </div>
 
             <div class="project-stats">
-                <span class="project-last-updated" title="Created ${formatCompactDateTime(project.dateCreated)}">Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
-                <span>•</span>
                 <span>${tasks.length} tasks</span>
                 <span>•</span>
                 <span>${completedTasksCount} done</span>
@@ -2544,11 +2542,14 @@ function renderProjectCard(project) {
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
             </div>
             <div class="progress-text-large" data-progress-text="${project.id}">${progressPercentage}%</div>
-            ${project.completed ? `
-            <button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">
-                Activate
-            </button>
-            ` : ''}
+            <div class="project-card-footer">
+                <span class="project-last-updated" title="Created ${formatCompactDateTime(project.dateCreated)}">Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
+                ${project.completed ? `
+                <button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">
+                    Activate
+                </button>
+                ` : ''}
+            </div>
         </div>
     `;
 }
