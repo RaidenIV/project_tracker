@@ -4370,3 +4370,171 @@ body[data-color-mode="dark"] .menu-dropdown-item--danger:hover {
         max-width: none !important;
     }
 }
+
+/* ============================================================================
+   V9 HEADER / GRID / COLLAPSED PANEL REFINEMENTS
+   ============================================================================ */
+
+.top-app-bar-title,
+.viewport-header {
+    display: none !important;
+}
+
+.top-app-bar {
+    flex: 0 0 100%;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-radius: 0 !important;
+}
+
+.menu-container,
+.top-view-toolbar {
+    flex: 0 0 auto;
+    margin: 0 !important;
+}
+
+.view-toolbar {
+    width: auto !important;
+    justify-content: start !important;
+    grid-template-columns: minmax(264px, 300px) minmax(118px, 132px) minmax(118px, 132px) auto;
+    gap: 8px;
+}
+
+.view-toolbar-search-wrap {
+    width: 100% !important;
+    max-width: 300px !important;
+}
+
+.project-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.control-panel {
+    --expanded-panel-width: clamp(320px, 24vw, 430px);
+    flex: 0 0 var(--expanded-panel-width);
+    width: var(--expanded-panel-width);
+    min-width: var(--expanded-panel-width);
+    max-width: 430px;
+}
+
+.control-panel.collapsed {
+    flex: 0 0 var(--expanded-panel-width) !important;
+    width: var(--expanded-panel-width) !important;
+    min-width: var(--expanded-panel-width) !important;
+    max-width: 430px !important;
+}
+
+.control-panel.collapsed .control-panel-content,
+.control-panel.collapsed .control-panel-scroll-inner {
+    width: 128px !important;
+}
+
+.control-panel.collapsed .control-panel-scroll-inner {
+    padding: 14px 14px !important;
+}
+
+.control-panel.collapsed .control-panel-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px !important;
+}
+
+.control-panel.collapsed .panel-header-main {
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+}
+
+.control-panel.collapsed .panel-header-actions {
+    margin-left: auto !important;
+    padding-left: 10px !important;
+    flex: 0 0 auto !important;
+}
+
+.control-panel.collapsed .panel-logo-img-inline {
+    height: 28px;
+    max-width: 56px;
+}
+
+.control-panel.collapsed .expand-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+}
+
+@media (max-width: 1680px) {
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1180px) {
+    .view-toolbar {
+        grid-template-columns: minmax(220px, 1fr) minmax(112px, 132px) minmax(112px, 132px) auto;
+        width: 100% !important;
+    }
+
+    .top-view-toolbar {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1100px) {
+    .top-app-bar {
+        align-items: stretch;
+    }
+
+    .top-view-toolbar {
+        flex: 1 1 100%;
+    }
+
+    .view-toolbar {
+        grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 1fr)) auto;
+        width: 100% !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    .control-panel.collapsed .control-panel-content,
+    .control-panel.collapsed .control-panel-scroll-inner {
+        width: auto !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .top-app-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .view-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .view-toolbar-search-wrap {
+        max-width: none !important;
+    }
+
+    .project-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
