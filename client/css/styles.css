@@ -4688,3 +4688,196 @@ body[data-color-mode="dark"] .menu-dropdown-item--danger:hover {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
+
+
+/* ============================================================================
+   V11 CARD FOOTER + PANEL HEADER POLISH
+   ============================================================================ */
+
+:root {
+    --collapsed-panel-width: 132px;
+}
+
+.project-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.project-title {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    text-wrap: pretty;
+    line-height: 1.22;
+}
+
+.project-stats {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.project-card-footer {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 14px;
+}
+
+.project-last-updated {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    color: var(--muted-2, var(--muted));
+    font-style: italic;
+}
+
+.project-card-footer .project-last-updated {
+    justify-content: flex-start;
+}
+
+.project-card-footer .activate-button {
+    margin-left: auto;
+}
+
+.panel-user-info,
+.control-panel .panel-user-info {
+    flex: 0 0 auto !important;
+    min-width: 0;
+}
+
+.panel-user-pill,
+.control-panel .panel-user-pill {
+    flex: 0 0 auto;
+    min-width: max-content;
+    max-width: min(100%, 212px);
+    padding: 5px 12px 5px 8px;
+}
+
+.panel-avatar,
+.account-avatar,
+.menu-account-avatar {
+    overflow: hidden;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
+.panel-avatar,
+.account-avatar {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.panel-avatar-img,
+.account-avatar-img,
+.menu-account-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+}
+
+.panel-header-main {
+    gap: 12px;
+}
+
+.panel-header-actions {
+    gap: 12px;
+    padding-left: 12px !important;
+}
+
+.collapse-button,
+.expand-button {
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: 12px;
+    background: var(--surface);
+    border: none;
+    box-shadow: var(--inset-shadow);
+    background-clip: padding-box;
+    isolation: isolate;
+}
+
+.control-panel.collapsed,
+body.control-panel-is-collapsed .control-panel,
+body.control-panel-is-collapsed .control-panel.collapsed {
+    width: var(--collapsed-panel-width) !important;
+    min-width: var(--collapsed-panel-width) !important;
+    max-width: var(--collapsed-panel-width) !important;
+    flex-basis: var(--collapsed-panel-width) !important;
+}
+
+.control-panel.collapsed .control-panel-content,
+.control-panel.collapsed .control-panel-scroll-inner,
+body.control-panel-is-collapsed .control-panel .control-panel-content,
+body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
+body.control-panel-is-collapsed .control-panel.collapsed .control-panel-content,
+body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner {
+    width: var(--collapsed-panel-width);
+}
+
+.control-panel.collapsed .control-panel-header,
+body.control-panel-is-collapsed .control-panel .control-panel-header,
+body.control-panel-is-collapsed .control-panel.collapsed .control-panel-header {
+    gap: 18px !important;
+}
+
+.control-panel.collapsed .panel-header-main,
+body.control-panel-is-collapsed .control-panel .panel-header-main,
+body.control-panel-is-collapsed .control-panel.collapsed .panel-header-main {
+    flex: 0 0 auto !important;
+}
+
+.control-panel.collapsed .panel-header-actions,
+body.control-panel-is-collapsed .control-panel .panel-header-actions,
+body.control-panel-is-collapsed .control-panel.collapsed .panel-header-actions {
+    margin-left: auto !important;
+    padding-left: 18px !important;
+}
+
+.control-panel.collapsed .expand-button,
+body.control-panel-is-collapsed .control-panel .expand-button,
+body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+}
+
+@media (min-width: 1800px) and (max-width: 2000px) and (max-height: 1250px) {
+    .container {
+        grid-template-columns: minmax(0, 1fr) 360px !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: minmax(0, 1fr) var(--collapsed-panel-width) !important;
+    }
+
+    .control-panel {
+        width: 360px !important;
+        min-width: 360px !important;
+        max-width: 360px !important;
+    }
+
+    .control-panel .panel-user-pill {
+        max-width: 220px;
+    }
+}
+
+@media (max-width: 860px) {
+    .project-card-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .project-card-footer .activate-button {
+        margin-left: 0;
+    }
+}
