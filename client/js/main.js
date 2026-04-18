@@ -2807,13 +2807,21 @@ function initializeEventHandlers() {
     const controlPanel = document.getElementById('controlPanel');
     const viewport = document.getElementById('viewport');
 
+    const syncControlPanelState = () => {
+        const isCollapsed = !!controlPanel?.classList.contains('collapsed');
+        document.body.classList.toggle('control-panel-is-collapsed', isCollapsed);
+        collapseButton?.classList.toggle('hidden', isCollapsed);
+        expandButton?.classList.toggle('hidden', !isCollapsed);
+        collapseButton?.setAttribute('aria-expanded', String(!isCollapsed));
+        expandButton?.setAttribute('aria-expanded', String(isCollapsed));
+    };
+
     const collapseControlPanel = () => {
         if (!controlPanel || !expandButton) return;
         state.setControlPanelOpen(false);
         controlPanel.classList.add('collapsed');
         viewport?.classList.remove('full');
-        expandButton.classList.remove('hidden');
-        collapseButton?.classList.add('hidden');
+        syncControlPanelState();
     };
 
     const expandControlPanel = () => {
@@ -2821,12 +2829,12 @@ function initializeEventHandlers() {
         state.setControlPanelOpen(true);
         controlPanel.classList.remove('collapsed');
         viewport?.classList.remove('full');
-        expandButton.classList.add('hidden');
-        collapseButton?.classList.remove('hidden');
+        syncControlPanelState();
     };
 
     collapseButton?.addEventListener('click', collapseControlPanel);
     expandButton?.addEventListener('click', expandControlPanel);
+    syncControlPanelState();
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
