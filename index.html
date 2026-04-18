@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Project Tracker</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <!-- ─── Auth Overlay ────────────────────────────────────────────────────── -->
+    <div class="auth-overlay hidden" id="authOverlay">
+        <div class="auth-card">
+
+            <img
+                src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                alt="Logo"
+                class="auth-logo-img"
+            >
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab auth-tab-active" id="loginTab">Sign In</button>
+                <button class="auth-tab" id="registerTab">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="auth-field">
+                    <label class="auth-label">Email</label>
+                    <input class="auth-input" id="loginEmail" type="email"
+                           placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Password</label>
+                    <div class="auth-input-wrap">
+                        <input class="auth-input" id="loginPassword" type="password"
+                               placeholder="••••••••" autocomplete="current-password">
+                        <button class="show-pw-btn" type="button" data-target="loginPassword" title="Show password">
+                            <svg class="eye-icon eye-show" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="eye-icon eye-hide hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.504-4.022M6.53 6.53A9.97 9.97 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.166M15 12a3 3 0 00-3-3m0 6a3 3 0 01-2.83-2M3 3l18 18"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <label class="remember-me-label">
+                    <input type="checkbox" id="rememberMe" class="remember-me-checkbox">
+                    <span>Remember me</span>
+                </label>
+                <p class="auth-error hidden" id="loginError"></p>
+                <button class="auth-submit" id="loginSubmitBtn" data-label="Sign In">Sign In</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden">
+                <div class="auth-field">
+                    <label class="auth-label">Email</label>
+                    <input class="auth-input" id="registerEmail" type="email"
+                           placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Username</label>
+                    <input class="auth-input" id="registerUsername" type="text"
+                           placeholder="Your name" autocomplete="username">
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Password</label>
+                    <div class="auth-input-wrap">
+                        <input class="auth-input" id="registerPassword" type="password"
+                               placeholder="Min. 6 characters" autocomplete="new-password">
+                        <button class="show-pw-btn" type="button" data-target="registerPassword" title="Show password">
+                            <svg class="eye-icon eye-show" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="eye-icon eye-hide hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.504-4.022M6.53 6.53A9.97 9.97 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.166M15 12a3 3 0 00-3-3m0 6a3 3 0 01-2.83-2M3 3l18 18"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Confirm Password</label>
+                    <div class="auth-input-wrap">
+                        <input class="auth-input" id="registerConfirm" type="password"
+                               placeholder="Repeat password" autocomplete="new-password">
+                        <button class="show-pw-btn" type="button" data-target="registerConfirm" title="Show password">
+                            <svg class="eye-icon eye-show" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="eye-icon eye-hide hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.504-4.022M6.53 6.53A9.97 9.97 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.166M15 12a3 3 0 00-3-3m0 6a3 3 0 01-2.83-2M3 3l18 18"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <p class="auth-error hidden" id="registerError"></p>
+                <button class="auth-submit" id="registerSubmitBtn" data-label="Create Account">Create Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Main Container ───────────────────────────────────────────────────── -->
+    <div class="container">
+        <div class="top-app-bar">
+            <div class="menu-container" id="menuContainer">
+                <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation menu">
+                    <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="menu-dropdown hidden" id="menuDropdown">
+                    <button class="menu-dropdown-item menu-dropdown-item--account" id="menuAccountSettingsBtn" type="button">
+                        <span class="menu-account-label">Account Settings</span>
+                        <span class="menu-account-avatar" aria-hidden="true">
+                            <img class="menu-account-avatar-img hidden" id="menuAccountAvatarImg" alt="Profile picture">
+                            <span class="menu-account-avatar-fallback" id="menuAccountAvatarFallback">U</span>
+                        </span>
+                    </button>
+                    <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
+                    <div class="menu-dropdown-separator"></div>
+                    <div class="menu-shortcuts-wrapper" id="shortcutsWrapper">
+                        <button class="menu-dropdown-item menu-dropdown-item--toggle" id="shortcutsToggle" type="button" aria-expanded="false">
+                            Keyboard Shortcuts
+                        </button>
+                        <div class="menu-shortcuts-panel hidden" id="shortcutsPanel">
+                            <div class="shortcuts-grid">
+                                <div class="shortcut-line"><kbd>N</kbd> New Project</div>
+                                <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
+                                <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
+                                <div class="shortcut-line"><kbd>A</kbd> View Active</div>
+                                <div class="shortcut-line"><kbd>D</kbd> Completed</div>
+                                <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
+                                <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
+                                <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-dropdown-separator menu-dropdown-separator--footer"></div>
+                    <button class="menu-dropdown-item menu-dropdown-item--danger" id="menuSignOutBtn" type="button">
+                        <svg class="menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H9"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 20H6a2 2 0 01-2-2V6a2 2 0 012-2h7"></path>
+                        </svg>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="top-app-bar-title" id="topAppBarTitle">Active Projects</div>
+
+            <div class="view-toolbar top-view-toolbar">
+                <div class="view-toolbar-search-wrap">
+                    <input class="view-toolbar-search" id="projectSearchInput" type="search" placeholder="Search projects, tasks, or notes">
+                </div>
+                <select class="view-toolbar-select" id="projectOwnerFilter">
+                    <option value="all">All Access</option>
+                    <option value="owned">Owned by Me</option>
+                    <option value="shared">Shared with Me</option>
+                    <option value="collab">Has Collaborators</option>
+                </select>
+                <select class="view-toolbar-select" id="projectSortSelect">
+                    <option value="manual">Manual Order</option>
+                    <option value="recent">Recently Updated</option>
+                    <option value="alpha">Alphabetical</option>
+                    <option value="remaining">Most Remaining Tasks</option>
+                    <option value="progress">Highest Completion</option>
+                </select>
+                <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
+            </div>
+        </div>
+        <!-- Viewport -->
+        <div class="viewport" id="viewport">
+            <div class="viewport-header">
+                <h1>Active Projects</h1>
+            </div>
+
+            <div class="view-filter-chips" id="activeFilterChips"></div>
+
+            <div class="empty-state" id="emptyState">
+                <div>
+                    <p class="title">No active projects</p>
+                    <p class="subtitle">Click "Add Project" to get started</p>
+                </div>
+            </div>
+            <div class="project-grid" id="projectGrid"></div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel" id="controlPanel">
+            <div class="control-panel-content">
+                <div class="control-panel-scroll-inner">
+
+                <div class="control-panel-header">
+                    <div class="panel-header-main">
+                        <img
+                            src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                            alt="Logo"
+                            class="panel-logo-img-inline"
+                        >
+                        <div class="panel-user-info hidden" id="panelUserInfo">
+                            <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
+                                <div class="panel-avatar" id="panelAvatar">
+                                    <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
+                                    <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
+                                </div>
+                                <span class="panel-username" id="panelUsername"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-header-actions">
+                        <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
+                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 15l6-6 6 6"></path>
+                            </svg>
+                        </button>
+                        <button class="expand-button hidden" id="expandButton" type="button" aria-label="Expand control panel">
+                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
+
+                <!-- Stats -->
+                <div class="stats">
+                    <div class="stat-card active" id="activeProjectsCard" onclick="switchToActiveView()">
+                        <div class="stat-value" id="activeProjectsCount">0</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="completedTasksCount">0</div>
+                        <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="incompleteTasksCount">0</div>
+                        <div class="stat-label">Tasks Remaining</div>
+                    </div>
+                    <div class="stat-card" id="completedProjectsCard" onclick="switchToCompletedView()">
+                        <div class="stat-value" id="completedProjectsCount">0</div>
+                        <div class="stat-label">Projects Completed</div>
+                    </div>
+                </div>
+
+                <!-- Total Completion Percentage -->
+                <div class="total-completion-section">
+                    <h3>Total Completion</h3>
+                    <div class="total-completion-display">
+                        <div class="total-percentage" id="totalPercentage">0%</div>
+                        <div class="total-percentage-label">across all projects</div>
+                    </div>
+                </div>
+
+                <!-- Add Project Button -->
+                <button class="add-project-button" id="addProjectButton">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Project
+                </button>
+
+                <!-- Saved Views -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Saved Views</h3>
+                        <div class="side-panel-section-actions">
+                            <span class="section-count-pill" id="savedViewsCount">0</span>
+                            <button class="section-action-button" id="clearSavedViewsBtn" type="button">Clear</button>
+                        </div>
+                    </div>
+                    <div class="saved-views-list" id="savedViewsList">
+                        <div class="side-panel-empty">No saved views yet</div>
+                    </div>
+                </div>
+
+                <!-- Shared Active Projects -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Shared Active Projects</h3>
+                        <span class="section-count-pill" id="sharedProjectsCount">0</span>
+                    </div>
+                    <div class="shared-projects-list" id="sharedProjectsList">
+                        <div class="side-panel-empty">No shared active projects</div>
+                    </div>
+                </div>
+
+                <!-- Archived Projects -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Archived Projects</h3>
+                        <span class="section-count-pill" id="archivedProjectsCount">0</span>
+                    </div>
+                    <div class="archived-projects-list" id="archivedProjectsList">
+                        <div class="side-panel-empty">No archived projects</div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Notifications</h3>
+                        <div class="side-panel-section-actions">
+                            <span class="section-count-pill" id="notificationsUnreadCount">0</span>
+                            <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
+                        </div>
+                    </div>
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="side-panel-empty">No notifications yet</div>
+                    </div>
+                </div>
+
+                <!-- Undo Button -->
+                <button class="undo-button hidden" id="undoButton">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                    Undo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Settings Modal -->
+    <div class="modal-overlay" id="accountSettingsModal">
+        <div class="modal-content account-modal-content">
+            <div class="account-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title">Account Settings</h2>
+                        <p class="account-modal-subtitle">Profile, stats, and account preferences</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeAccountSettingsModal()">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="account-profile-top">
+                    <div class="account-avatar account-avatar--large" id="accountAvatar">
+                        <img class="account-avatar-img hidden" id="accountAvatarImg" alt="Profile picture">
+                        <span class="account-avatar-fallback" id="accountAvatarFallback">U</span>
+                    </div>
+                    <div class="account-profile-copy">
+                        <div class="account-profile-name" id="accountDisplayName">User</div>
+                        <div class="account-profile-email" id="accountEmailText">you@example.com</div>
+                        <div class="account-avatar-actions">
+                            <input type="file" id="accountProfilePicInput" accept="image/*" class="visually-hidden">
+                            <button class="account-action-btn" type="button" onclick="triggerProfilePicUpload()">Upload Profile Picture</button>
+                            <button class="account-action-btn account-action-btn--secondary" type="button" onclick="removeProfilePicture()">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-form-grid">
+                    <div class="account-field">
+                        <label class="account-label" for="accountUsernameInput">User Name</label>
+                        <input class="account-input" id="accountUsernameInput" type="text" maxlength="40" placeholder="Your name">
+                    </div>
+                    <div class="account-field">
+                        <label class="account-label" for="accountEmailInput">Email</label>
+                        <input class="account-input" id="accountEmailInput" type="email" readonly>
+                    </div>
+                </div>
+
+                <div class="account-stats-section">
+                    <h3>Stats</h3>
+                    <div class="account-stats-grid">
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatCompletedTasks">0</div>
+                            <div class="account-stat-label">Completed Tasks</div>
+                        </div>
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatCompletedProjects">0</div>
+                            <div class="account-stat-label">Completed Projects</div>
+                        </div>
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatActiveProjects">0</div>
+                            <div class="account-stat-label">Active Projects</div>
+                        </div>
+                        <div class="account-stat-card">
+                            <div class="account-stat-value" id="accountStatSharedProjects">0</div>
+                            <div class="account-stat-label">Shared Projects</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-modal-actions">
+                    <div class="account-modal-status" id="accountSettingsStatus"></div>
+                    <button class="modal-done-btn" type="button" id="accountSettingsSaveBtn" onclick="saveAccountSettingsFromModal()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Options Modal -->
+    <div class="modal-overlay" id="uiOptionsModal">
+        <div class="modal-content ui-options-modal-content">
+            <div class="account-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title">UI Options</h2>
+                        <p class="account-modal-subtitle">Pick a tracker style based on the Console, Nebula, and Duplex systems from the frontend reference</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="theme-grid" id="themeGrid">
+                    <button class="theme-card" type="button" data-theme-option="console-light">
+                        <span class="theme-card-kicker">Console</span>
+                        <span class="theme-card-title">Console Light</span>
+                        <span class="theme-card-copy">Structured XODIA dashboard surfaces adapted into a brighter daytime variant.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="console-dark">
+                        <span class="theme-card-kicker">Console</span>
+                        <span class="theme-card-title">Console Dark</span>
+                        <span class="theme-card-copy">Data-dense Rajdhani cards, electric blue accents, and the dark Console control room look.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="nebula-light">
+                        <span class="theme-card-kicker">Nebula</span>
+                        <span class="theme-card-title">Nebula Light</span>
+                        <span class="theme-card-copy">A lighter glass-panel treatment with floating surfaces, blur, and airy canvas-style layering.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="nebula-dark">
+                        <span class="theme-card-kicker">Nebula</span>
+                        <span class="theme-card-title">Nebula Dark</span>
+                        <span class="theme-card-copy">Deep glass overlays, AIGOX branding, and the high-contrast panel language from the visualizer reference.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="duplex-light">
+                        <span class="theme-card-kicker">Duplex</span>
+                        <span class="theme-card-title">Duplex Light</span>
+                        <span class="theme-card-copy">Editorial light mode with centered-tool clarity, Inter display text, and softer utility surfaces.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-option="duplex-dark">
+                        <span class="theme-card-kicker">Duplex</span>
+                        <span class="theme-card-title">Duplex Dark</span>
+                        <span class="theme-card-copy">The Duplex columnar tool language translated into a darker, focused late-night workspace.</span>
+                    </button>
+                </div>
+
+                <div class="account-modal-actions">
+                    <div class="account-modal-status" id="uiOptionsStatus"></div>
+                    <button class="modal-done-btn" type="button" onclick="closeUiOptionsModal()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="modal-overlay" id="commandPaletteModal">
+        <div class="modal-content command-palette-content">
+            <div class="command-palette-shell">
+                <input class="command-palette-input" id="commandPaletteInput" type="text" placeholder="Search commands">
+                <div class="command-palette-list" id="commandPaletteList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div class="modal-overlay" id="projectModal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div class="modal-overlay" id="confirmDialog">
+        <div class="confirm-dialog">
+            <h3>Delete Project?</h3>
+            <p id="confirmMessage">Are you sure you want to delete this project? This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="confirm-cancel" onclick="closeConfirmDialog()">Cancel</button>
+                <button class="confirm-delete" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
