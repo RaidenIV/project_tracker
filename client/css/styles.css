@@ -4538,3 +4538,153 @@ body[data-color-mode="dark"] .menu-dropdown-item--danger:hover {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ============================================================================
+   V10 TOP-ALIGNED CONTROL PANEL + VERTICAL COLLAPSE REFINEMENT
+   ============================================================================ */
+
+@media (min-width: 1101px) {
+    .container {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) clamp(320px, 24vw, 430px);
+        grid-template-areas:
+            "toolbar panel"
+            "viewport panel";
+        align-items: start;
+        column-gap: clamp(18px, 1.5vw, 28px);
+        row-gap: clamp(18px, 1.5vw, 28px);
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: minmax(0, 1fr) 112px;
+    }
+
+    .top-app-bar {
+        grid-area: toolbar;
+        width: 100%;
+        align-self: start;
+    }
+
+    .viewport {
+        grid-area: viewport;
+        width: 100%;
+        min-width: 0;
+        align-self: start;
+    }
+
+    .control-panel {
+        grid-area: panel;
+        grid-row: 1 / span 2;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: none !important;
+        align-self: start;
+    }
+
+    .control-panel-content {
+        position: sticky;
+        top: 18px;
+    }
+
+    .control-panel-scroll-inner {
+        max-height: calc(100vh - 44px);
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        align-items: start;
+    }
+
+    .control-panel-header {
+        align-items: center;
+    }
+
+    .panel-header-actions {
+        gap: 10px;
+        margin-left: 0 !important;
+        padding-left: 6px !important;
+    }
+
+    .collapse-button,
+    .expand-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+    }
+
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        width: 112px !important;
+        min-width: 112px !important;
+        max-width: 112px !important;
+        flex-basis: 112px !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner {
+        max-height: 72px;
+        padding: 14px 12px !important;
+        overflow: hidden;
+    }
+
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner > :not(.control-panel-header),
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner > :not(.control-panel-header) {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .control-panel-header,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px !important;
+        margin-bottom: 0;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-header-main,
+    body.control-panel-is-collapsed .control-panel.collapsed .panel-header-main {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-user-info,
+    body.control-panel-is-collapsed .control-panel.collapsed .panel-user-info,
+    body.control-panel-is-collapsed .control-panel .collapse-button,
+    body.control-panel-is-collapsed .control-panel.collapsed .collapse-button {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-header-actions,
+    body.control-panel-is-collapsed .control-panel.collapsed .panel-header-actions {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px !important;
+        margin-left: auto !important;
+        padding-left: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-logo-img-inline,
+    body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline {
+        height: 28px;
+        width: auto;
+        max-width: 56px;
+        display: block;
+    }
+
+    body.control-panel-is-collapsed .control-panel .expand-button,
+    body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
+        display: inline-flex !important;
+    }
+}
+
+@media (min-width: 1101px) and (max-width: 1680px) {
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
