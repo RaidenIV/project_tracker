@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap');
 
 * {
             margin: 0;
@@ -4880,4 +4880,717 @@ body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
     .project-card-footer .activate-button {
         margin-left: 0;
     }
+}
+
+
+/* ========================================================================== 
+   FRONTEND DESIGN REFERENCE ALIGNMENT — Console / Nebula / Duplex
+   ========================================================================== */
+
+body[data-theme="console-light"] {
+    --bg: #f4f5f7;
+    --bg-2: #fafbfc;
+    --bg-3: #e8ebf0;
+    --panel: #ffffff;
+    --surface: #f6f7f9;
+    --surface-2: #eef1f5;
+    --text: #20242a;
+    --heading: #14181d;
+    --muted: #65707d;
+    --muted-2: #7d8896;
+    --accent: #0099ff;
+    --accent-2: #0088ee;
+    --progress: #0099ff;
+    --line: #d8dde5;
+    --body-bg: linear-gradient(180deg, #fafbfc 0%, #f1f4f8 100%);
+    --panel-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+    --panel-border: 1px solid var(--line);
+    --surface-border: 1px solid var(--line);
+    --surface-fill: var(--panel);
+    --surface-fill-subtle: var(--surface);
+    --surface-fill-input: #ffffff;
+    --surface-fill-elevated: #fbfcfe;
+    --topbar-fill: rgba(255, 255, 255, 0.96);
+    --panel-backdrop: none;
+    --surface-backdrop: none;
+    --focus-ring: 0 0 0 3px rgba(0, 153, 255, 0.10);
+    --scrollbar-thumb: rgba(15, 23, 42, 0.20);
+    --scrollbar-thumb-hover: rgba(15, 23, 42, 0.34);
+    --tracker-body-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-display-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --tracker-radius-xl: 14px;
+    --tracker-radius-lg: 12px;
+    --tracker-accent-shadow: 0 8px 24px rgba(0, 153, 255, 0.14);
+}
+
+body[data-theme="console-dark"] {
+    --bg: #0b0b0c;
+    --bg-2: #111216;
+    --bg-3: #09090b;
+    --panel: #131316;
+    --surface: #1b1b20;
+    --surface-2: #22222a;
+    --text: #f2f2f4;
+    --heading: #ffffff;
+    --muted: #a7a7ad;
+    --muted-2: #91919a;
+    --accent: #0099ff;
+    --accent-2: #0088ee;
+    --progress: #0099ff;
+    --line: #2a2a2f;
+    --body-bg: linear-gradient(180deg, #0b0b0c 0%, #101014 100%);
+    --panel-shadow: 0 18px 34px rgba(0, 0, 0, 0.32);
+    --panel-border: 1px solid var(--line);
+    --surface-border: 1px solid var(--line);
+    --surface-fill: var(--panel);
+    --surface-fill-subtle: var(--surface);
+    --surface-fill-input: #0f0f12;
+    --surface-fill-elevated: #17181c;
+    --topbar-fill: rgba(19, 19, 22, 0.96);
+    --panel-backdrop: none;
+    --surface-backdrop: none;
+    --focus-ring: 0 0 0 3px rgba(0, 153, 255, 0.10);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.20);
+    --tracker-body-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-display-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --tracker-radius-xl: 14px;
+    --tracker-radius-lg: 12px;
+    --tracker-accent-shadow: 0 10px 28px rgba(0, 153, 255, 0.14);
+}
+
+body[data-theme="nebula-light"] {
+    --bg: #dbe7ff;
+    --bg-2: #eef4ff;
+    --bg-3: #c6d7fb;
+    --panel: rgba(255, 255, 255, 0.62);
+    --surface: rgba(255, 255, 255, 0.42);
+    --surface-2: rgba(255, 255, 255, 0.54);
+    --text: #11233c;
+    --heading: #081629;
+    --muted: rgba(17, 35, 60, 0.62);
+    --muted-2: rgba(17, 35, 60, 0.48);
+    --accent: #3b82f6;
+    --accent-2: #2563eb;
+    --progress: #3b82f6;
+    --line: rgba(255, 255, 255, 0.38);
+    --body-bg:
+        radial-gradient(circle at top left, rgba(255,255,255,0.68), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(59,130,246,0.16), transparent 28%),
+        linear-gradient(135deg, #eaf1ff 0%, #d8e6ff 48%, #c5d8ff 100%);
+    --panel-shadow: 0 18px 60px rgba(62, 92, 145, 0.18), inset 0 1px 0 rgba(255,255,255,0.38);
+    --panel-border: 1px solid rgba(255, 255, 255, 0.48);
+    --surface-border: 1px solid rgba(255, 255, 255, 0.42);
+    --surface-fill: linear-gradient(180deg, rgba(255,255,255,0.74) 0%, rgba(255,255,255,0.58) 100%);
+    --surface-fill-subtle: rgba(255,255,255,0.34);
+    --surface-fill-input: rgba(255,255,255,0.44);
+    --surface-fill-elevated: rgba(255,255,255,0.52);
+    --topbar-fill: linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.56) 100%);
+    --panel-backdrop: blur(26px) saturate(1.25);
+    --surface-backdrop: blur(16px) saturate(1.12);
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.18);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.24);
+    --tracker-body-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-display-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --tracker-radius-xl: 18px;
+    --tracker-radius-lg: 12px;
+    --tracker-accent-shadow: 0 8px 24px rgba(59, 130, 246, 0.24);
+}
+
+body[data-theme="nebula-dark"] {
+    --bg: #07101d;
+    --bg-2: #0c172a;
+    --bg-3: #182846;
+    --panel: rgba(15, 26, 45, 0.58);
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --text: rgba(255, 255, 255, 0.96);
+    --heading: #ffffff;
+    --muted: rgba(255, 255, 255, 0.55);
+    --muted-2: rgba(255, 255, 255, 0.35);
+    --accent: #3b82f6;
+    --accent-2: #2563eb;
+    --progress: #3b82f6;
+    --line: rgba(255, 255, 255, 0.12);
+    --body-bg:
+        radial-gradient(circle at top left, rgba(86, 137, 255, 0.14), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 24%),
+        linear-gradient(135deg, #07101d 0%, #0d1729 45%, #182846 100%);
+    --panel-shadow: 0 18px 60px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255,255,255,0.08);
+    --panel-border: 1px solid rgba(255, 255, 255, 0.11);
+    --surface-border: 1px solid rgba(255, 255, 255, 0.10);
+    --surface-fill: linear-gradient(180deg, rgba(0,0,0,0.74) 0%, rgba(0,0,0,0.58) 100%);
+    --surface-fill-subtle: rgba(255,255,255,0.02);
+    --surface-fill-input: rgba(255,255,255,0.04);
+    --surface-fill-elevated: rgba(255,255,255,0.06);
+    --topbar-fill: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.56) 100%);
+    --panel-backdrop: blur(26px) saturate(1.25);
+    --surface-backdrop: blur(16px) saturate(1.12);
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.22);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.20);
+    --tracker-body-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-display-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --tracker-radius-xl: 18px;
+    --tracker-radius-lg: 12px;
+    --tracker-accent-shadow: 0 10px 28px rgba(59, 130, 246, 0.24);
+}
+
+body[data-theme="duplex-light"] {
+    --bg: #eef2ff;
+    --bg-2: #f8faff;
+    --bg-3: #dde6ff;
+    --panel: rgba(255, 255, 255, 0.97);
+    --surface: rgba(0, 0, 0, 0.04);
+    --surface-2: rgba(0, 0, 0, 0.06);
+    --text: #000000;
+    --heading: #000000;
+    --muted: #5a6a88;
+    --muted-2: #6b8aaa;
+    --accent: #3b82f6;
+    --accent-2: #2563eb;
+    --progress: #3b82f6;
+    --line: rgba(0, 0, 0, 0.09);
+    --body-bg: linear-gradient(150deg, #eef2ff 0%, #dde6ff 100%);
+    --panel-shadow: 0 20px 60px rgba(100, 120, 200, 0.12), inset 0 0 0 1px rgba(0,0,0,0.03);
+    --panel-border: 1px solid rgba(0, 0, 0, 0.09);
+    --surface-border: 1px solid rgba(0, 0, 0, 0.12);
+    --surface-fill: rgba(255,255,255,0.97);
+    --surface-fill-subtle: rgba(255,255,255,0.86);
+    --surface-fill-input: rgba(0,0,0,0.04);
+    --surface-fill-elevated: rgba(255,255,255,0.92);
+    --topbar-fill: rgba(255,255,255,0.98);
+    --panel-backdrop: blur(28px);
+    --surface-backdrop: none;
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.14);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.24);
+    --tracker-body-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-display-font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --tracker-radius-xl: 18px;
+    --tracker-radius-lg: 12px;
+    --tracker-accent-shadow: 0 10px 28px rgba(59, 130, 246, 0.18);
+}
+
+body[data-theme="duplex-dark"] {
+    --bg: #000000;
+    --bg-2: #061022;
+    --bg-3: #13203b;
+    --panel: rgba(6, 10, 22, 0.97);
+    --surface: rgba(255, 255, 255, 0.05);
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --text: #ffffff;
+    --heading: #ffffff;
+    --muted: #6b8aaa;
+    --muted-2: #5a6a88;
+    --accent: #3b82f6;
+    --accent-2: #2563eb;
+    --progress: #3b82f6;
+    --line: rgba(255, 255, 255, 0.13);
+    --body-bg: radial-gradient(ellipse at 40% 35%, rgba(20,30,60,0.85) 0%, #000 70%);
+    --panel-shadow: 0 20px 60px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.04);
+    --panel-border: 1px solid rgba(255, 255, 255, 0.13);
+    --surface-border: 1px solid rgba(255, 255, 255, 0.12);
+    --surface-fill: rgba(6,10,22,0.97);
+    --surface-fill-subtle: rgba(255,255,255,0.03);
+    --surface-fill-input: rgba(255,255,255,0.06);
+    --surface-fill-elevated: rgba(255,255,255,0.05);
+    --topbar-fill: rgba(6,10,22,0.98);
+    --panel-backdrop: blur(28px);
+    --surface-backdrop: none;
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.18);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.20);
+    --tracker-body-font: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-display-font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --tracker-mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --tracker-radius-xl: 18px;
+    --tracker-radius-lg: 12px;
+    --tracker-accent-shadow: 0 12px 30px rgba(59, 130, 246, 0.20);
+}
+
+body[data-theme^="console"],
+body[data-theme^="nebula"],
+body[data-theme^="duplex"] {
+    font-family: var(--tracker-body-font) !important;
+    background: var(--body-bg) !important;
+    background-attachment: fixed !important;
+    color: var(--text);
+}
+
+body[data-theme^="console"] .bg-gradient,
+body[data-theme^="nebula"] .bg-gradient,
+body[data-theme^="duplex"] .bg-gradient {
+    display: none !important;
+}
+
+body[data-theme-family="duplex"] .top-app-bar-title,
+body[data-theme-family="duplex"] .viewport-header h1,
+body[data-theme-family="duplex"] .theme-card-title,
+body[data-theme-family="duplex"] .account-modal-title,
+body[data-theme-family="duplex"] .auth-card h1,
+body[data-theme-family="duplex"] .auth-tab {
+    font-family: var(--tracker-display-font) !important;
+    letter-spacing: -0.02em;
+}
+
+body[data-theme-family="console"] .top-app-bar-title,
+body[data-theme-family="console"] .viewport-header h1,
+body[data-theme-family="console"] .account-modal-title,
+body[data-theme-family="console"] .theme-card-title,
+body[data-theme-family="console"] .stat-value,
+body[data-theme-family="nebula"] .top-app-bar-title,
+body[data-theme-family="nebula"] .viewport-header h1,
+body[data-theme-family="nebula"] .account-modal-title,
+body[data-theme-family="nebula"] .theme-card-title,
+body[data-theme-family="nebula"] .stat-value {
+    font-family: var(--tracker-display-font) !important;
+}
+
+body[data-theme-family="console"] .top-app-bar,
+body[data-theme-family="nebula"] .top-app-bar,
+body[data-theme-family="duplex"] .top-app-bar {
+    background: var(--topbar-fill) !important;
+    border: var(--panel-border) !important;
+    box-shadow: var(--panel-shadow) !important;
+    backdrop-filter: var(--panel-backdrop);
+    -webkit-backdrop-filter: var(--panel-backdrop);
+    border-radius: var(--tracker-radius-xl);
+}
+
+body[data-theme-family="console"] .control-panel-scroll-inner,
+body[data-theme-family="console"] .project-card,
+body[data-theme-family="console"] .menu-button,
+body[data-theme-family="console"] .menu-dropdown,
+body[data-theme-family="console"] .shortcuts-panel,
+body[data-theme-family="console"] .side-project-card,
+body[data-theme-family="console"] .notification-card,
+body[data-theme-family="console"] .side-panel-section,
+body[data-theme-family="console"] .auth-card,
+body[data-theme-family="console"] .modal-content,
+body[data-theme-family="console"] .confirm-dialog,
+body[data-theme-family="console"] .saved-view-main,
+body[data-theme-family="console"] .archived-project-card,
+body[data-theme-family="console"] .command-palette-item,
+body[data-theme-family="console"] .theme-card,
+body[data-theme-family="console"] .save-status,
+body[data-theme-family="console"] .stat-card,
+body[data-theme-family="console"] .panel-user-pill,
+body[data-theme-family="console"] .viewport,
+body[data-theme-family="duplex"] .control-panel-scroll-inner,
+body[data-theme-family="duplex"] .project-card,
+body[data-theme-family="duplex"] .menu-button,
+body[data-theme-family="duplex"] .menu-dropdown,
+body[data-theme-family="duplex"] .shortcuts-panel,
+body[data-theme-family="duplex"] .side-project-card,
+body[data-theme-family="duplex"] .notification-card,
+body[data-theme-family="duplex"] .side-panel-section,
+body[data-theme-family="duplex"] .auth-card,
+body[data-theme-family="duplex"] .modal-content,
+body[data-theme-family="duplex"] .confirm-dialog,
+body[data-theme-family="duplex"] .saved-view-main,
+body[data-theme-family="duplex"] .archived-project-card,
+body[data-theme-family="duplex"] .command-palette-item,
+body[data-theme-family="duplex"] .theme-card,
+body[data-theme-family="duplex"] .save-status,
+body[data-theme-family="duplex"] .stat-card,
+body[data-theme-family="duplex"] .panel-user-pill,
+body[data-theme-family="duplex"] .viewport,
+body[data-theme-family="nebula"] .control-panel-scroll-inner,
+body[data-theme-family="nebula"] .project-card,
+body[data-theme-family="nebula"] .menu-button,
+body[data-theme-family="nebula"] .menu-dropdown,
+body[data-theme-family="nebula"] .shortcuts-panel,
+body[data-theme-family="nebula"] .side-project-card,
+body[data-theme-family="nebula"] .notification-card,
+body[data-theme-family="nebula"] .side-panel-section,
+body[data-theme-family="nebula"] .auth-card,
+body[data-theme-family="nebula"] .modal-content,
+body[data-theme-family="nebula"] .confirm-dialog,
+body[data-theme-family="nebula"] .saved-view-main,
+body[data-theme-family="nebula"] .archived-project-card,
+body[data-theme-family="nebula"] .command-palette-item,
+body[data-theme-family="nebula"] .theme-card,
+body[data-theme-family="nebula"] .save-status,
+body[data-theme-family="nebula"] .stat-card,
+body[data-theme-family="nebula"] .panel-user-pill,
+body[data-theme-family="nebula"] .viewport {
+    background: var(--surface-fill) !important;
+    border: var(--panel-border) !important;
+    box-shadow: var(--panel-shadow) !important;
+    border-radius: var(--tracker-radius-xl) !important;
+    backdrop-filter: var(--panel-backdrop);
+    -webkit-backdrop-filter: var(--panel-backdrop);
+}
+
+body[data-theme-family="console"] .view-toolbar-search,
+body[data-theme-family="console"] .view-toolbar-select,
+body[data-theme-family="console"] .view-toolbar-button,
+body[data-theme-family="console"] .task-item,
+body[data-theme-family="console"] .task-input,
+body[data-theme-family="console"] .task-checkbox,
+body[data-theme-family="console"] .project-title-input,
+body[data-theme-family="console"] .modal-title-input,
+body[data-theme-family="console"] .notes-textarea,
+body[data-theme-family="console"] .project-select,
+body[data-theme-family="console"] .paste-box,
+body[data-theme-family="console"] .paste-button,
+body[data-theme-family="console"] .undo-button,
+body[data-theme-family="console"] .add-project-button,
+body[data-theme-family="console"] .member-row,
+body[data-theme-family="console"] .invite-form,
+body[data-theme-family="console"] .invite-email-input,
+body[data-theme-family="console"] .invite-role-select,
+body[data-theme-family="console"] .member-role-select,
+body[data-theme-family="console"] .account-form-input,
+body[data-theme-family="console"] .account-stat-card,
+body[data-theme-family="console"] .panel-avatar,
+body[data-theme-family="console"] .account-avatar,
+body[data-theme-family="console"] .progress-bar-container,
+body[data-theme-family="console"] .modal-tab,
+body[data-theme-family="console"] .modal-add-task,
+body[data-theme-family="console"] .modal-add-task-top,
+body[data-theme-family="console"] .menu-dropdown-item,
+body[data-theme-family="console"] .toggle-slider,
+body[data-theme-family="duplex"] .view-toolbar-search,
+body[data-theme-family="duplex"] .view-toolbar-select,
+body[data-theme-family="duplex"] .view-toolbar-button,
+body[data-theme-family="duplex"] .task-item,
+body[data-theme-family="duplex"] .task-input,
+body[data-theme-family="duplex"] .task-checkbox,
+body[data-theme-family="duplex"] .project-title-input,
+body[data-theme-family="duplex"] .modal-title-input,
+body[data-theme-family="duplex"] .notes-textarea,
+body[data-theme-family="duplex"] .project-select,
+body[data-theme-family="duplex"] .paste-box,
+body[data-theme-family="duplex"] .paste-button,
+body[data-theme-family="duplex"] .undo-button,
+body[data-theme-family="duplex"] .add-project-button,
+body[data-theme-family="duplex"] .member-row,
+body[data-theme-family="duplex"] .invite-form,
+body[data-theme-family="duplex"] .invite-email-input,
+body[data-theme-family="duplex"] .invite-role-select,
+body[data-theme-family="duplex"] .member-role-select,
+body[data-theme-family="duplex"] .account-form-input,
+body[data-theme-family="duplex"] .account-stat-card,
+body[data-theme-family="duplex"] .panel-avatar,
+body[data-theme-family="duplex"] .account-avatar,
+body[data-theme-family="duplex"] .progress-bar-container,
+body[data-theme-family="duplex"] .modal-tab,
+body[data-theme-family="duplex"] .modal-add-task,
+body[data-theme-family="duplex"] .modal-add-task-top,
+body[data-theme-family="duplex"] .menu-dropdown-item,
+body[data-theme-family="duplex"] .toggle-slider,
+body[data-theme-family="nebula"] .view-toolbar-search,
+body[data-theme-family="nebula"] .view-toolbar-select,
+body[data-theme-family="nebula"] .view-toolbar-button,
+body[data-theme-family="nebula"] .task-item,
+body[data-theme-family="nebula"] .task-input,
+body[data-theme-family="nebula"] .task-checkbox,
+body[data-theme-family="nebula"] .project-title-input,
+body[data-theme-family="nebula"] .modal-title-input,
+body[data-theme-family="nebula"] .notes-textarea,
+body[data-theme-family="nebula"] .project-select,
+body[data-theme-family="nebula"] .paste-box,
+body[data-theme-family="nebula"] .paste-button,
+body[data-theme-family="nebula"] .undo-button,
+body[data-theme-family="nebula"] .add-project-button,
+body[data-theme-family="nebula"] .member-row,
+body[data-theme-family="nebula"] .invite-form,
+body[data-theme-family="nebula"] .invite-email-input,
+body[data-theme-family="nebula"] .invite-role-select,
+body[data-theme-family="nebula"] .member-role-select,
+body[data-theme-family="nebula"] .account-form-input,
+body[data-theme-family="nebula"] .account-stat-card,
+body[data-theme-family="nebula"] .panel-avatar,
+body[data-theme-family="nebula"] .account-avatar,
+body[data-theme-family="nebula"] .progress-bar-container,
+body[data-theme-family="nebula"] .modal-tab,
+body[data-theme-family="nebula"] .modal-add-task,
+body[data-theme-family="nebula"] .modal-add-task-top,
+body[data-theme-family="nebula"] .menu-dropdown-item,
+body[data-theme-family="nebula"] .toggle-slider {
+    background: var(--surface-fill-input) !important;
+    border: var(--surface-border) !important;
+    box-shadow: none !important;
+    color: inherit;
+    backdrop-filter: var(--surface-backdrop);
+    -webkit-backdrop-filter: var(--surface-backdrop);
+}
+
+body[data-theme-family="console"] .view-toolbar-search:focus,
+body[data-theme-family="console"] .view-toolbar-select:focus,
+body[data-theme-family="console"] .task-input:focus,
+body[data-theme-family="console"] .notes-textarea:focus,
+body[data-theme-family="duplex"] .view-toolbar-search:focus,
+body[data-theme-family="duplex"] .view-toolbar-select:focus,
+body[data-theme-family="duplex"] .task-input:focus,
+body[data-theme-family="duplex"] .notes-textarea:focus,
+body[data-theme-family="nebula"] .view-toolbar-search:focus,
+body[data-theme-family="nebula"] .view-toolbar-select:focus,
+body[data-theme-family="nebula"] .task-input:focus,
+body[data-theme-family="nebula"] .notes-textarea:focus {
+    box-shadow: var(--focus-ring) !important;
+    border-color: var(--accent) !important;
+    outline: none;
+}
+
+body[data-theme-family="console"] button,
+body[data-theme-family="console"] input,
+body[data-theme-family="console"] select,
+body[data-theme-family="console"] textarea,
+body[data-theme-family="nebula"] button,
+body[data-theme-family="nebula"] input,
+body[data-theme-family="nebula"] select,
+body[data-theme-family="nebula"] textarea,
+body[data-theme-family="duplex"] button,
+body[data-theme-family="duplex"] input,
+body[data-theme-family="duplex"] select,
+body[data-theme-family="duplex"] textarea {
+    font-family: var(--tracker-body-font) !important;
+}
+
+body[data-theme-family="nebula"] #controls,
+body[data-theme-family="nebula"] .control-panel,
+body[data-theme-family="nebula"] .control-panel * {
+    font-family: 'Rajdhani', sans-serif !important;
+}
+
+body[data-theme-family="console"] .add-project-button,
+body[data-theme-family="console"] .paste-button,
+body[data-theme-family="console"] .modal-done-btn,
+body[data-theme-family="console"] .modal-add-task-top,
+body[data-theme-family="console"] .auth-submit,
+body[data-theme-family="console"] .invite-submit-btn,
+body[data-theme-family="console"] .activate-button {
+    background: var(--accent) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: var(--tracker-accent-shadow) !important;
+}
+
+body[data-theme-family="nebula"] .add-project-button,
+body[data-theme-family="nebula"] .paste-button,
+body[data-theme-family="nebula"] .modal-done-btn,
+body[data-theme-family="nebula"] .modal-add-task-top,
+body[data-theme-family="nebula"] .auth-submit,
+body[data-theme-family="nebula"] .invite-submit-btn,
+body[data-theme-family="nebula"] .activate-button {
+    background: linear-gradient(135deg, rgba(59,130,246,0.85) 0%, rgba(37,99,235,0.85) 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(96,165,250,0.3) !important;
+    box-shadow: var(--tracker-accent-shadow) !important;
+}
+
+body[data-theme-family="duplex"] .add-project-button,
+body[data-theme-family="duplex"] .paste-button,
+body[data-theme-family="duplex"] .modal-done-btn,
+body[data-theme-family="duplex"] .modal-add-task-top,
+body[data-theme-family="duplex"] .auth-submit,
+body[data-theme-family="duplex"] .invite-submit-btn,
+body[data-theme-family="duplex"] .activate-button {
+    background: rgba(59,130,246,0.14) !important;
+    color: inherit !important;
+    border: 1px solid rgba(59,130,246,0.35) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme-family="duplex"] .add-project-button:hover,
+body[data-theme-family="duplex"] .paste-button:hover,
+body[data-theme-family="duplex"] .modal-done-btn:hover,
+body[data-theme-family="duplex"] .modal-add-task-top:hover,
+body[data-theme-family="duplex"] .auth-submit:hover,
+body[data-theme-family="duplex"] .invite-submit-btn:hover,
+body[data-theme-family="duplex"] .activate-button:hover {
+    background: rgba(59,130,246,0.20) !important;
+}
+
+body[data-theme-family="console"] .project-card:hover,
+body[data-theme-family="console"] .theme-card.is-active,
+body[data-theme-family="console"] .command-palette-item.is-active {
+    border-color: var(--accent) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,153,255,0.15) !important;
+}
+
+body[data-theme-family="nebula"] .project-card:hover,
+body[data-theme-family="nebula"] .theme-card.is-active,
+body[data-theme-family="nebula"] .command-palette-item.is-active {
+    border-color: rgba(96,165,250,0.6) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59,130,246,0.24) !important;
+}
+
+body[data-theme-family="duplex"] .project-card:hover,
+body[data-theme-family="duplex"] .theme-card.is-active,
+body[data-theme-family="duplex"] .command-palette-item.is-active {
+    border-color: rgba(59,130,246,0.35) !important;
+    box-shadow: 0 16px 40px rgba(59,130,246,0.12) !important;
+}
+
+body[data-theme-family="nebula"] .section-toggle,
+body[data-theme-family="nebula"] .side-panel-section h3,
+body[data-theme-family="nebula"] .total-completion-section h3,
+body[data-theme-family="nebula"] .account-modal-subtitle,
+body[data-theme-family="nebula"] .theme-card-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+body[data-theme-family="duplex"] .account-modal-subtitle,
+body[data-theme-family="duplex"] .theme-card-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+}
+
+.theme-card-kicker {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.theme-card[data-theme-option^="console"] {
+    background: linear-gradient(180deg, rgba(19,19,22,0.98) 0%, rgba(27,27,32,0.98) 100%) !important;
+    color: #f2f2f4 !important;
+    border: 1px solid rgba(0,153,255,0.16) !important;
+    box-shadow: 0 18px 34px rgba(0,0,0,0.26) !important;
+}
+
+.theme-card[data-theme-option^="console"] .theme-card-copy,
+.theme-card[data-theme-option^="console"] .theme-card-kicker {
+    color: rgba(255,255,255,0.66) !important;
+}
+
+.theme-card[data-theme-option^="nebula"] {
+    background: linear-gradient(180deg, rgba(0,0,0,0.74) 0%, rgba(0,0,0,0.58) 100%) !important;
+    color: rgba(255,255,255,0.96) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    backdrop-filter: blur(26px) saturate(1.2);
+    -webkit-backdrop-filter: blur(26px) saturate(1.2);
+}
+
+.theme-card[data-theme-option^="nebula"] .theme-card-copy,
+.theme-card[data-theme-option^="nebula"] .theme-card-kicker {
+    color: rgba(255,255,255,0.6) !important;
+}
+
+.theme-card[data-theme-option^="duplex"] {
+    background: rgba(255,255,255,0.96) !important;
+    color: #000 !important;
+    border: 1px solid rgba(0,0,0,0.09) !important;
+    box-shadow: 0 20px 60px rgba(100,120,200,0.10), inset 0 0 0 1px rgba(0,0,0,0.03) !important;
+}
+
+.theme-card[data-theme-option^="duplex"] .theme-card-title {
+    font-family: 'Inter', sans-serif !important;
+}
+
+.theme-card[data-theme-option^="duplex"] .theme-card-copy,
+.theme-card[data-theme-option^="duplex"] .theme-card-kicker {
+    color: #5a6a88 !important;
+}
+
+
+.theme-card[data-theme-option="console-light"] {
+    background: linear-gradient(180deg, #ffffff 0%, #f3f6fa 100%) !important;
+    color: #14181d !important;
+    border-color: rgba(0,153,255,0.14) !important;
+    box-shadow: 0 16px 32px rgba(15,23,42,0.08) !important;
+}
+
+.theme-card[data-theme-option="console-light"] .theme-card-copy,
+.theme-card[data-theme-option="console-light"] .theme-card-kicker {
+    color: #65707d !important;
+}
+
+.theme-card[data-theme-option="nebula-light"] {
+    background: linear-gradient(180deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.62) 100%) !important;
+    color: #0d2037 !important;
+    border-color: rgba(255,255,255,0.52) !important;
+    box-shadow: 0 18px 48px rgba(62,92,145,0.16), inset 0 1px 0 rgba(255,255,255,0.4) !important;
+}
+
+.theme-card[data-theme-option="nebula-light"] .theme-card-copy,
+.theme-card[data-theme-option="nebula-light"] .theme-card-kicker {
+    color: rgba(13,32,55,0.62) !important;
+}
+
+.theme-card[data-theme-option="duplex-dark"] {
+    background: rgba(6,10,22,0.97) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.13) !important;
+}
+
+.theme-card[data-theme-option="duplex-dark"] .theme-card-copy,
+.theme-card[data-theme-option="duplex-dark"] .theme-card-kicker {
+    color: #6b8aaa !important;
+}
+
+body[data-theme-family="console"] .theme-card.is-active,
+body[data-theme-family="nebula"] .theme-card.is-active,
+body[data-theme-family="duplex"] .theme-card.is-active {
+    outline: none;
+}
+
+/* Control-panel scrollbar aligned with the Nebula reference hairline scrollbar. */
+.control-panel-content,
+.control-panel-scroll-inner {
+    scrollbar-gutter: auto !important;
+}
+
+.control-panel-content::before,
+.control-panel-content::after,
+.control-panel-scroll-inner::before,
+.control-panel-scroll-inner::after {
+    display: none !important;
+}
+
+.control-panel-scroll-inner {
+    padding-right: 8px !important;
+    margin-right: -8px !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--scrollbar-thumb) transparent !important;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar {
+    width: 3px !important;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb) !important;
+    border-radius: 999px !important;
+    border: none !important;
+    background-clip: border-box !important;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover) !important;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-button,
+.control-panel-scroll-inner::-webkit-scrollbar-button:single-button,
+.control-panel-content::-webkit-scrollbar-button,
+.control-panel-content::-webkit-scrollbar-button:single-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-corner,
+.control-panel-content::-webkit-scrollbar-corner {
+    background: transparent !important;
 }
