@@ -40,8 +40,9 @@ async function request(method, url, body) {
     catch { data = {}; }
 
     if (!res.ok) {
-        const msg = data.error || data.message || `HTTP ${res.status}`;
-        const error = new Error(msg);
+        const baseMsg = data.error || data.message || `HTTP ${res.status}`;
+        const details = data.details ? ` (${data.details})` : '';
+        const error = new Error(`${baseMsg}${details}`);
         error.status = res.status;
         error.code = data.code || '';
         error.payload = data;

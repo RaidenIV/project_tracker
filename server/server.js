@@ -218,18 +218,63 @@ function comparableProjectValue(value) {
     if (value === undefined) return '__undefined__';
     if (value === null) return null;
     if (value instanceof Date) return value.toISOString();
+
     if (Array.isArray(value)) return value.map(comparableProjectValue);
+
     if (value && typeof value === 'object') {
+        if (typeof value.toObject === 'function') {
+            return comparableProjectValue(value.toObject({ depopulate: true, versionKey: false }));
+        }
+        if (typeof value.toJSON === 'function' && value.constructor?.name !== 'Object') {
+            return comparableProjectValue(value.toJSON());
+        }
+        if (value._bsontype === 'ObjectId' && typeof value.toString === 'function') {
+            return value.toString();
+        }
+
         return Object.keys(value).sort().reduce((acc, key) => {
+            if (key === '__v') return acc;
             acc[key] = comparableProjectValue(value[key]);
             return acc;
         }, {});
     }
+
     return value;
 }
 
 function projectFieldChanged(existingValue, incomingValue) {
     return JSON.stringify(comparableProjectValue(existingValue)) !== JSON.stringify(comparableProjectValue(incomingValue));
+}
+
+function sanitizeTask(task, index = 0) {
+    const fallbackId = Date.now() + index;
+    const numericId = Number(task?.id);
+    const hasValidId = Number.isFinite(numericId);
+    return {
+        id: hasValidId ? numericId : fallbackId,
+        text: typeof task?.text === 'string' ? task.text : '',
+        completed: !!task?.completed,
+        completedDate: task?.completedDate ? String(task.completedDate) : null
+    };
+}
+
+function sanitizeIncomingProjectUpdate(body = {}) {
+    const sanitized = {};
+
+    if (body.title !== undefined) sanitized.title = String(body.title ?? '');
+    if (body.tasks !== undefined) sanitized.tasks = Array.isArray(body.tasks)
+        ? body.tasks.map((task, index) => sanitizeTask(task, index))
+        : [];
+    if (body.priority !== undefined) {
+        const numericPriority = Number(body.priority);
+        sanitized.priority = Number.isFinite(numericPriority) ? numericPriority : 0;
+    }
+    if (body.completed !== undefined) sanitized.completed = !!body.completed;
+    if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
+    if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
+    if (body.archived !== undefined) sanitized.archived = !!body.archived;
+
+    return sanitized;
 }
 
 function summarizeProjectUpdate(existingProject, incomingBody) {
@@ -426,15 +471,17 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
             }
         }
 
+        const incoming = sanitizeIncomingProjectUpdate(req.body || {});
+        const currentProject = req.project.toObject({ depopulate: true, versionKey: false });
         const changedFields = {};
         allowed.forEach(key => {
-            if (req.body[key] === undefined) return;
-            if (projectFieldChanged(req.project[key], req.body[key])) {
-                changedFields[key] = req.body[key];
+            if (incoming[key] === undefined) return;
+            if (projectFieldChanged(currentProject[key], incoming[key])) {
+                changedFields[key] = incoming[key];
             }
         });
 
-        const summary = summarizeProjectUpdate(req.project, changedFields);
+        const summary = summarizeProjectUpdate(currentProject, changedFields);
         if (Object.keys(changedFields).length > 0) {
             Object.assign(req.project, changedFields, { lastModified: new Date() });
             if (summary) appendProjectActivity(req.project, req.user, summary.type, summary.message);
