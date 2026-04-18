@@ -65,37 +65,23 @@ const DEFAULT_PROFILE_ICON_SVG = `
     </g>
 </svg>`;
 
-const LOGO_SET = {
-    aigox: {
-        light: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w',
-        dark: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w'
-    },
-    xodia: {
-        light: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/7803d573-dd87-40ed-9570-0bc7c5ed8915/xodia_logo_black.png?format=750w',
-        dark: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/c311da3d-6fbf-446a-858c-227fa011e7e3/Xodia+MEDIA+Group+%28TRANS%29+%281%29+%281%29.png?format=750w'
-    }
-};
+const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w';
+const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'console-light': { label: 'Console Light', family: 'console', mode: 'light', logoSet: 'xodia' },
-    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark', logoSet: 'xodia' },
-    'nebula-light': { label: 'Nebula Light', family: 'nebula', mode: 'light', logoSet: 'aigox' },
-    'nebula-dark': { label: 'Nebula Dark', family: 'nebula', mode: 'dark', logoSet: 'aigox' },
-    'duplex-light': { label: 'Duplex Light', family: 'duplex', mode: 'light', logoSet: 'xodia' },
-    'duplex-dark': { label: 'Duplex Dark', family: 'duplex', mode: 'dark', logoSet: 'xodia' }
+    'industrial-light': { label: 'Industrial Light', family: 'industrial', mode: 'light' },
+    'industrial-dark': { label: 'Industrial Dark', family: 'industrial', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
+    'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
+    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' }
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'console-dark',
-    glass: 'nebula-dark',
-    midnight: 'console-dark',
-    blueprint: 'duplex-light',
-    'industrial-light': 'console-light',
-    'industrial-dark': 'console-dark',
-    'glass-light': 'nebula-light',
-    'glass-dark': 'nebula-dark',
-    'blueprint-light': 'duplex-light',
-    'blueprint-dark': 'duplex-dark'
+    default: 'industrial-light',
+    glass: 'glass-light',
+    midnight: 'industrial-dark',
+    blueprint: 'blueprint-light'
 };
 
 const notificationState = {
@@ -123,7 +109,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'console-dark',
+    theme: 'industrial-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -147,7 +133,7 @@ function escapeHtml(value) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'console-dark';
+    return THEME_OPTIONS[resolved] ? resolved : 'industrial-light';
 }
 
 function getThemeMeta(themeName) {
@@ -164,12 +150,10 @@ function syncThemeBranding() {
     document.body.setAttribute('data-theme-family', meta.family);
     document.body.setAttribute('data-color-mode', meta.mode);
 
-    const logoSet = LOGO_SET[meta.logoSet] || LOGO_SET.xodia;
-    const nextLogo = meta.mode === 'dark' ? logoSet.dark : logoSet.light;
-
-    document.querySelectorAll('.panel-logo-img-inline, .auth-logo-img').forEach(logo => {
-        logo.src = nextLogo;
-    });
+    const panelLogo = document.querySelector('.panel-logo-img-inline');
+    if (panelLogo) {
+        panelLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
 }
 
 function loadSavedViewsFromStorage() {
@@ -186,7 +170,7 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'industrial-light');
     applyTheme(uiState.theme, false);
 }
 
@@ -195,7 +179,7 @@ function applyTheme(themeName, persist = true) {
     syncThemeBranding();
     if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
     const status = document.getElementById('uiOptionsStatus');
-    if (status) status.textContent = `Current style: ${getThemeLabel(uiState.theme)}`;
+    if (status) status.textContent = `Current theme: ${getThemeLabel(uiState.theme)}`;
     renderThemeOptions();
 }
 
@@ -209,7 +193,7 @@ function renderThemeOptions() {
 
 function openUiOptionsModal() {
     renderThemeOptions();
-    document.getElementById('uiOptionsStatus').textContent = `Current style: ${getThemeLabel(uiState.theme)}`;
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeLabel(uiState.theme)}`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
