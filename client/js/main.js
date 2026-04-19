@@ -77,6 +77,12 @@ const THEME_OPTIONS = {
     'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' }
 };
 
+const THEME_FAMILY_OPTIONS = {
+    industrial: { label: 'Industrial' },
+    glass: { label: 'Glassmorphic' },
+    blueprint: { label: 'Blueprint' }
+};
+
 const LEGACY_THEME_MAP = {
     default: 'industrial-light',
     glass: 'glass-light',
@@ -144,6 +150,32 @@ function getThemeLabel(themeName) {
     return getThemeMeta(themeName).label;
 }
 
+function buildThemeName(themeFamily, colorMode) {
+    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'industrial';
+    const mode = colorMode === 'dark' ? 'dark' : 'light';
+    const candidate = `${family}-${mode}`;
+    return THEME_OPTIONS[candidate] ? candidate : 'industrial-light';
+}
+
+function getColorModeLabel(colorMode) {
+    return colorMode === 'dark' ? 'Dark Mode' : 'Light Mode';
+}
+
+function getThemeFamilyLabel(themeFamily) {
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Industrial';
+}
+
+function syncColorModeToggle() {
+    const toggle = document.getElementById('colorModeToggleBtn');
+    if (!toggle) return;
+    const meta = getThemeMeta(uiState.theme);
+    const isDark = meta.mode === 'dark';
+    toggle.classList.toggle('is-dark', isDark);
+    toggle.setAttribute('aria-pressed', String(isDark));
+    toggle.setAttribute('title', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+    toggle.setAttribute('aria-label', `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
+}
+
 function syncThemeBranding() {
     const meta = getThemeMeta(uiState.theme);
     document.body.setAttribute('data-theme', uiState.theme);
@@ -177,23 +209,34 @@ function loadThemePreference() {
 function applyTheme(themeName, persist = true) {
     uiState.theme = normalizeThemeName(themeName);
     syncThemeBranding();
+    syncColorModeToggle();
     if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
     const status = document.getElementById('uiOptionsStatus');
-    if (status) status.textContent = `Current theme: ${getThemeLabel(uiState.theme)}`;
+    if (status) {
+        const meta = getThemeMeta(uiState.theme);
+        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    }
     renderThemeOptions();
 }
 
+function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
+    const currentMeta = getThemeMeta(uiState.theme);
+    const nextMode = preferredMode || currentMeta.mode || 'light';
+    applyTheme(buildThemeName(themeFamily, nextMode), persist);
+}
 
 function renderThemeOptions() {
-    document.querySelectorAll('[data-theme-option]').forEach(card => {
-        const isActive = card.getAttribute('data-theme-option') === uiState.theme;
+    const activeFamily = getThemeMeta(uiState.theme).family;
+    document.querySelectorAll('[data-theme-family-option]').forEach(card => {
+        const isActive = card.getAttribute('data-theme-family-option') === activeFamily;
         card.classList.toggle('is-active', isActive);
     });
 }
 
 function openUiOptionsModal() {
     renderThemeOptions();
-    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeLabel(uiState.theme)}`;
+    const meta = getThemeMeta(uiState.theme);
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -2895,8 +2938,13 @@ function initializeEventHandlers() {
     });
     document.getElementById('saveCurrentViewBtn')?.addEventListener('click', saveCurrentView);
     document.getElementById('clearSavedViewsBtn')?.addEventListener('click', clearSavedViews);
-    document.querySelectorAll('[data-theme-option]').forEach(button => {
-        button.addEventListener('click', () => applyTheme(button.getAttribute('data-theme-option')));
+    document.querySelectorAll('[data-theme-family-option]').forEach(button => {
+        button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
+    });
+    document.getElementById('colorModeToggleBtn')?.addEventListener('click', () => {
+        const meta = getThemeMeta(uiState.theme);
+        const nextMode = meta.mode === 'dark' ? 'light' : 'dark';
+        applyTheme(buildThemeName(meta.family, nextMode));
     });
     document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
         uiState.commandQuery = e.target.value || '';

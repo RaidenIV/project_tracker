@@ -164,6 +164,13 @@
                     <option value="progress">Highest Completion</option>
                 </select>
                 <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
+                <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                    <span class="color-mode-toggle-track">
+                        <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                        <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                        <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                    </span>
+                </button>
             </div>
         </div>
         <!-- Viewport -->
@@ -399,7 +406,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme and light or dark mode for the app</p>
+                        <p class="account-modal-subtitle">Choose a visual theme. Use the toggle next to Save View to switch light and dark mode.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,29 +416,17 @@
                 </div>
 
                 <div class="theme-grid" id="themeGrid">
-                    <button class="theme-card" type="button" data-theme-option="industrial-light">
-                        <span class="theme-card-title">Industrial Light</span>
-                        <span class="theme-card-copy">The current light industrial look with the original control-panel logo.</span>
+                    <button class="theme-card" type="button" data-theme-family-option="industrial">
+                        <span class="theme-card-title">Industrial</span>
+                        <span class="theme-card-copy">Machine-cut panels, hard edges, and the industrial surface treatment.</span>
                     </button>
-                    <button class="theme-card" type="button" data-theme-option="industrial-dark">
-                        <span class="theme-card-title">Industrial Dark</span>
-                        <span class="theme-card-copy">A darker industrial variant with the alternate dark-mode logo.</span>
+                    <button class="theme-card" type="button" data-theme-family-option="glass">
+                        <span class="theme-card-title">Glassmorphic</span>
+                        <span class="theme-card-copy">Blurred translucent panels, brighter project cards, and a fully glass control panel.</span>
                     </button>
-                    <button class="theme-card" type="button" data-theme-option="glass-light">
-                        <span class="theme-card-title">Glassmorphic Light</span>
-                        <span class="theme-card-copy">A full glass redesign with Rajdhani, blur, transparency, and light-mode branding.</span>
-                    </button>
-                    <button class="theme-card" type="button" data-theme-option="glass-dark">
-                        <span class="theme-card-title">Glassmorphic Dark</span>
-                        <span class="theme-card-copy">A darker glass redesign with Rajdhani, higher contrast, and the dark-mode logo.</span>
-                    </button>
-                    <button class="theme-card" type="button" data-theme-option="blueprint-light">
-                        <span class="theme-card-title">Blueprint Light</span>
-                        <span class="theme-card-copy">Cool steel-blue surfaces with higher contrast and the original light logo.</span>
-                    </button>
-                    <button class="theme-card" type="button" data-theme-option="blueprint-dark">
-                        <span class="theme-card-title">Blueprint Dark</span>
-                        <span class="theme-card-copy">A dark steel-blue interface with the alternate dark-mode logo.</span>
+                    <button class="theme-card" type="button" data-theme-family-option="blueprint">
+                        <span class="theme-card-title">Blueprint</span>
+                        <span class="theme-card-copy">Steel-blue surfaces with higher contrast and the blueprint-inspired palette.</span>
                     </button>
                 </div>
 

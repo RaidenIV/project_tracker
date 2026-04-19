@@ -188,3 +188,142 @@ body[data-theme^="glass"] .control-panel-content,
 
 
         
+body[data-theme="glass-light"] {
+    --glass-project-card-bg: rgba(255, 255, 255, 0.52);
+    --glass-project-surface: rgba(255, 255, 255, 0.74);
+    --glass-control-surface: rgba(255, 255, 255, 0.22);
+    --glass-card-text: #000000;
+    --glass-card-muted: rgba(0, 0, 0, 0.68);
+}
+
+body[data-theme="glass-dark"] {
+    --glass-project-card-bg: rgba(255, 255, 255, 0.58);
+    --glass-project-surface: rgba(255, 255, 255, 0.76);
+    --glass-control-surface: rgba(34, 54, 86, 0.30);
+    --glass-card-text: #000000;
+    --glass-card-muted: rgba(0, 0, 0, 0.68);
+}
+
+body[data-theme^="glass"] .color-mode-toggle {
+    background: var(--panel);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+body[data-theme^="glass"] .color-mode-toggle-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255,255,255,0.24);
+    box-shadow: none;
+}
+
+body[data-theme^="glass"] .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light,
+body[data-theme^="glass"] .color-mode-toggle.is-dark .color-mode-toggle-option--dark {
+    color: var(--accent);
+}
+
+body[data-theme^="glass"] .project-card {
+    background: var(--glass-project-card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.40);
+    box-shadow: 0 18px 42px rgba(23, 41, 73, 0.18);
+    overflow: hidden;
+    background-clip: padding-box;
+}
+
+body[data-theme^="glass"] .project-card .task-item,
+body[data-theme^="glass"] .project-card .task-input,
+body[data-theme^="glass"] .project-card .progress-bar-container,
+body[data-theme^="glass"] .project-card .project-title-input {
+    background: var(--glass-project-surface);
+    border: 1px solid rgba(255,255,255,0.30);
+    box-shadow: none;
+}
+
+body[data-theme^="glass"] .project-card .project-title,
+body[data-theme^="glass"] .project-card .project-title-input,
+body[data-theme^="glass"] .project-card .task-text,
+body[data-theme^="glass"] .project-card .progress-text-large,
+body[data-theme^="glass"] .project-card .drag-handle,
+body[data-theme^="glass"] .project-card .task-drag-handle,
+body[data-theme^="glass"] .project-card .edit-button,
+body[data-theme^="glass"] .project-card .copy-button,
+body[data-theme^="glass"] .project-card .card-delete-button {
+    color: var(--glass-card-text);
+}
+
+body[data-theme^="glass"] .project-card .project-stats,
+body[data-theme^="glass"] .project-card .progress-text,
+body[data-theme^="glass"] .project-card .project-last-updated,
+body[data-theme^="glass"] .project-card .card-owner-name,
+body[data-theme^="glass"] .project-card .task-text.completed {
+    color: var(--glass-card-muted);
+}
+
+body[data-theme^="glass"] .control-panel .stat-card,
+body[data-theme^="glass"] .control-panel .undo-button,
+body[data-theme^="glass"] .control-panel .collapse-button,
+body[data-theme^="glass"] .control-panel .expand-button,
+body[data-theme^="glass"] .control-panel .save-status,
+body[data-theme^="glass"] .control-panel .section-count-pill,
+body[data-theme^="glass"] .control-panel .side-project-card,
+body[data-theme^="glass"] .control-panel .notification-card,
+body[data-theme^="glass"] .control-panel .task-item,
+body[data-theme^="glass"] .control-panel .panel-user-pill,
+body[data-theme^="glass"] .control-panel .panel-avatar {
+    background: var(--glass-control-surface);
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: 0 14px 32px rgba(23, 41, 73, 0.14);
+}
+
+body[data-theme^="glass"] .control-panel .stat-card,
+body[data-theme^="glass"] .control-panel .undo-button,
+body[data-theme^="glass"] .control-panel .collapse-button,
+body[data-theme^="glass"] .control-panel .expand-button,
+body[data-theme^="glass"] .control-panel .save-status,
+body[data-theme^="glass"] .control-panel .section-count-pill {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+body[data-theme^="glass"] .control-panel .stat-card.active {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(97, 164, 255, 0.38);
+    box-shadow: 0 16px 32px rgba(61, 125, 219, 0.18);
+}
+
+body[data-theme^="glass"] .control-panel .stat-card.active .stat-value,
+body[data-theme^="glass"] .control-panel .stat-card.active .stat-label {
+    color: var(--accent) !important;
+}
+
+body[data-theme^="glass"] .control-panel .add-project-button,
+body[data-theme^="glass"] .control-panel .paste-button {
+    border: 1px solid rgba(255,255,255,0.16);
+    box-shadow: 0 16px 30px rgba(50, 120, 235, 0.24);
+}
+
+body[data-theme^="glass"] .control-panel .undo-button,
+body[data-theme^="glass"] .control-panel .collapse-button,
+body[data-theme^="glass"] .control-panel .expand-button {
+    color: var(--heading);
+}
+
+body[data-theme^="glass"] .account-modal-content,
+body[data-theme^="glass"] .ui-options-modal-content,
+body[data-theme^="glass"] .modal-content,
+body[data-theme^="glass"] .theme-card {
+    overflow: hidden;
+    background-clip: padding-box;
+}
+
+body[data-theme^="glass"] .account-modal-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body[data-theme^="glass"] .account-modal-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
