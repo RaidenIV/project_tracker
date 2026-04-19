@@ -4913,12 +4913,34 @@ body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
     padding-right: var(--modal-padding) !important;
 }
 
-/* kill the decorative "corner caps" that used to mask the scrollbar */
+/* kill the decorative "corner caps" that used to mask the scrollbar --
+   NB: .control-panel-scroll-inner::after is intentionally excluded here; it
+   gets repurposed below as a bottom spacer to fix scroll padding. */
 .control-panel-content::before,
 .control-panel-content::after,
-.control-panel-scroll-inner::before,
-.control-panel-scroll-inner::after {
+.control-panel-scroll-inner::before {
     display: none !important;
+}
+
+/* Fix: last element's bottom padding was getting clipped on scroll.
+   Chromium doesn't include a scroll container's padding-bottom in its
+   scrollHeight, so when you scroll to the end the bottom padding disappears.
+   Solution: drop the container's padding-bottom and use an in-flow ::after
+   spacer that IS counted as scrollable content. */
+.control-panel:not(.collapsed) .control-panel-scroll-inner {
+    padding-bottom: 0 !important;
+}
+
+.control-panel:not(.collapsed) .control-panel-scroll-inner::after {
+    content: '' !important;
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: var(--modal-padding) !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    pointer-events: none;
+    flex-shrink: 0;
 }
 
 /* --- 2. Fix clipped expand button on the minimized control panel ------------
@@ -4957,19 +4979,19 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
    as one piece. */
 .control-panel {
     transition:
-        flex-basis 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        width      0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        min-width  0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        max-width  0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        flex-basis 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        width      0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        min-width  0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        max-width  0.55s cubic-bezier(0.22, 1, 0.36, 1) !important;
     will-change: width;
 }
 
 .control-panel-content,
 .control-panel-scroll-inner {
     transition:
-        width      0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        width      0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        padding    0.55s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: width, max-height;
 }
 
@@ -4978,10 +5000,10 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
 .panel-header-actions,
 .panel-logo-img-inline {
     transition:
-        gap       0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        margin    0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        padding   0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        gap       0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        margin    0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        padding   0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        max-width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* respect users who prefer reduced motion */
