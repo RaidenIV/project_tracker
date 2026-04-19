@@ -1,0 +1,190 @@
+body[data-theme="glass-light"] {
+    --bg: #b7caf0;
+    --bg-2: #ddecff;
+    --bg-3: #8ca7d8;
+    --panel: rgba(255, 255, 255, 0.18);
+    --surface: rgba(255, 255, 255, 0.12);
+    --surface-2: rgba(255, 255, 255, 0.24);
+    --text: #17304d;
+    --heading: #0d2037;
+    --muted: #46627d;
+    --muted-2: #5c7690;
+    --accent: #2d7ff9;
+    --accent-2: #165dc8;
+    --progress: #2d7ff9;
+    --card-shadow: 0 20px 50px rgba(34, 56, 92, 0.18);
+    --inset-shadow: none;
+    --glass-border: rgba(255, 255, 255, 0.32);
+}
+
+body[data-theme="glass-dark"] {
+    --bg: #0c1423;
+    --bg-2: #1a2a47;
+    --bg-3: #07101d;
+    --panel: rgba(15, 26, 45, 0.52);
+    --surface: rgba(20, 35, 58, 0.38);
+    --surface-2: rgba(28, 45, 73, 0.5);
+    --text: #dce9fb;
+    --heading: #f4f8ff;
+    --muted: #a6b8d4;
+    --muted-2: #8ca1c0;
+    --accent: #61a4ff;
+    --accent-2: #3d7ddb;
+    --progress: #61a4ff;
+    --card-shadow: 0 20px 56px rgba(0, 0, 0, 0.34);
+    --inset-shadow: none;
+    --glass-border: rgba(181, 212, 255, 0.2);
+}
+
+body[data-theme^="glass"] .control-panel-content,
+        body[data-theme^="glass"] .project-card,
+        body[data-theme^="glass"] .menu-button,
+        body[data-theme^="glass"] .shortcuts-panel,
+        body[data-theme^="glass"] .shortcuts-toggle,
+        body[data-theme^="glass"] .side-project-card,
+        body[data-theme^="glass"] .notification-card,
+        body[data-theme^="glass"] .side-panel-section,
+        body[data-theme^="glass"] .auth-card,
+        body[data-theme^="glass"] .modal-content,
+        body[data-theme^="glass"] .confirm-dialog {
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.28);
+        }
+        body[data-theme^="glass"] {
+            font-family: 'Rajdhani', 'Inter', 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(72, 132, 255, 0.22), transparent 28%),
+                linear-gradient(135deg, var(--bg-2), var(--bg), var(--bg-3));
+            background-attachment: fixed;
+        }
+
+
+        body[data-theme^="glass"] button,
+        body[data-theme^="glass"] input,
+        body[data-theme^="glass"] select,
+        body[data-theme^="glass"] textarea {
+            font-family: inherit;
+            letter-spacing: 0.02em;
+        }
+
+        body[data-theme^="glass"] .control-panel-content,
+        body[data-theme^="glass"] .project-card,
+        body[data-theme^="glass"] .menu-button,
+        body[data-theme^="glass"] .menu-dropdown,
+        body[data-theme^="glass"] .shortcuts-panel,
+        body[data-theme^="glass"] .shortcuts-toggle,
+        body[data-theme^="glass"] .side-project-card,
+        body[data-theme^="glass"] .notification-card,
+        body[data-theme^="glass"] .side-panel-section,
+        body[data-theme^="glass"] .auth-card,
+        body[data-theme^="glass"] .modal-content,
+        body[data-theme^="glass"] .confirm-dialog,
+        body[data-theme^="glass"] .saved-view-main,
+        body[data-theme^="glass"] .archived-project-card,
+        body[data-theme^="glass"] .command-palette-item,
+        body[data-theme^="glass"] .theme-card,
+        body[data-theme^="glass"] .save-status,
+        body[data-theme^="glass"] .stat-card,
+        body[data-theme^="glass"] .panel-user-pill {
+            background: var(--panel);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        body[data-theme^="glass"] .view-toolbar-search,
+        body[data-theme^="glass"] .view-toolbar-select,
+        body[data-theme^="glass"] .view-toolbar-button,
+        body[data-theme^="glass"] .task-item,
+        body[data-theme^="glass"] .task-input,
+        body[data-theme^="glass"] .task-checkbox,
+        body[data-theme^="glass"] .project-title-input,
+        body[data-theme^="glass"] .modal-title-input,
+        body[data-theme^="glass"] .notes-textarea,
+        body[data-theme^="glass"] .project-select,
+        body[data-theme^="glass"] .paste-box,
+        body[data-theme^="glass"] .paste-button,
+        body[data-theme^="glass"] .undo-button,
+        body[data-theme^="glass"] .add-project-button,
+        body[data-theme^="glass"] .member-row,
+        body[data-theme^="glass"] .invite-form,
+        body[data-theme^="glass"] .invite-email-input,
+        body[data-theme^="glass"] .invite-role-select,
+        body[data-theme^="glass"] .member-role-select,
+        body[data-theme^="glass"] .account-form-input,
+        body[data-theme^="glass"] .account-stat-card,
+        body[data-theme^="glass"] .panel-avatar,
+        body[data-theme^="glass"] .account-avatar,
+        body[data-theme^="glass"] .progress-bar-container,
+        body[data-theme^="glass"] .modal-tab,
+        body[data-theme^="glass"] .modal-add-task,
+        body[data-theme^="glass"] .modal-add-task-top,
+        body[data-theme^="glass"] .menu-dropdown-item,
+        body[data-theme^="glass"] .toggle-slider,
+        body[data-theme^="glass"] .toggle-slider:before {
+            background: var(--surface);
+            box-shadow: none;
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+
+        body[data-theme^="glass"] .menu-button.active,
+        body[data-theme^="glass"] .menu-dropdown-item:hover,
+        body[data-theme^="glass"] .modal-tab.active,
+        body[data-theme^="glass"] .stat-card.active,
+        body[data-theme^="glass"] .view-toolbar-button:hover,
+        body[data-theme^="glass"] .panel-user-pill:hover {
+            box-shadow: 0 18px 40px rgba(27, 43, 73, 0.18);
+        }
+
+        body[data-theme^="glass"] .project-card:hover,
+        body[data-theme^="glass"] .theme-card.is-active,
+        body[data-theme^="glass"] .command-palette-item.is-active {
+            box-shadow: 0 22px 46px rgba(23, 41, 73, 0.22);
+        }
+
+        body[data-theme^="glass"] .task-checkbox.checked,
+        body[data-theme^="glass"] .add-project-button,
+        body[data-theme^="glass"] .paste-button,
+        body[data-theme^="glass"] .modal-done-btn,
+        body[data-theme^="glass"] .modal-add-task-top,
+        body[data-theme^="glass"] .auth-submit,
+        body[data-theme^="glass"] .invite-submit-btn,
+        body[data-theme^="glass"] .activate-button {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border: none;
+            box-shadow: 0 16px 30px rgba(50, 120, 235, 0.24);
+        }
+
+        body[data-theme^="glass"] .task-checkbox.checked {
+            border-color: transparent;
+        }
+
+        body[data-theme^="glass"] .panel-avatar,
+        body[data-theme^="glass"] .account-avatar,
+        body[data-theme^="glass"] .panel-user-pill,
+        body[data-theme^="glass"] .view-toolbar-search,
+        body[data-theme^="glass"] .view-toolbar-select,
+        body[data-theme^="glass"] .view-toolbar-button,
+        body[data-theme^="glass"] .task-item,
+        body[data-theme^="glass"] .theme-card,
+        body[data-theme^="glass"] .saved-view-main,
+        body[data-theme^="glass"] .notification-card,
+        body[data-theme^="glass"] .side-project-card,
+        body[data-theme^="glass"] .archived-project-card,
+        body[data-theme^="glass"] .menu-dropdown-item,
+        body[data-theme^="glass"] .modal-tab,
+        body[data-theme^="glass"] .account-form-input,
+        body[data-theme^="glass"] .account-stat-card {
+            border-radius: 18px;
+        }
+
+        body[data-theme^="glass"] .panel-avatar-fallback,
+        body[data-theme^="glass"] .account-avatar-fallback {
+            color: var(--accent);
+        }
+
+
+        
