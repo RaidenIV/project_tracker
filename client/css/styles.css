@@ -4881,3 +4881,118 @@ body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
         margin-left: 0;
     }
 }
+
+/* ============================================================================
+   CONTROL PANEL FIXES
+   1. Hide scrollbar (keep scrolling).
+   2. Fix collapsed-state expand button getting clipped by the right edge.
+   3. Smooth minimize / maximize animation.
+   ============================================================================ */
+
+/* --- 1. Hide scrollbar while preserving scroll functionality ----------------
+   The previous setup showed a thin scrollbar on .control-panel-scroll-inner
+   (the real scroller) and used decorative ::before/::after "corner caps" plus
+   extra right-padding to reserve visual space for it. All of that becomes
+   unnecessary once the bar is hidden. */
+.control-panel-content,
+.control-panel-scroll-inner {
+    scrollbar-width: none;            /* Firefox */
+    -ms-overflow-style: none;         /* legacy IE/Edge */
+}
+
+.control-panel-content::-webkit-scrollbar,
+.control-panel-scroll-inner::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none;                    /* Chrome / Safari / modern Edge */
+}
+
+/* reclaim the right-padding previously reserved for the scrollbar, but only
+   for the expanded state — the collapsed state uses its own tighter padding */
+.control-panel:not(.collapsed) .control-panel-scroll-inner {
+    padding-right: var(--modal-padding) !important;
+}
+
+/* kill the decorative "corner caps" that used to mask the scrollbar */
+.control-panel-content::before,
+.control-panel-content::after,
+.control-panel-scroll-inner::before,
+.control-panel-scroll-inner::after {
+    display: none !important;
+}
+
+/* --- 2. Fix clipped expand button on the minimized control panel ------------
+   At 132px wide, the header packed logo + 18px gap + 18px actions padding +
+   36px button = ~128px into 104px of usable space, pushing the button past
+   the rounded right edge. Give it a touch more width and tighten the header. */
+:root {
+    --collapsed-panel-width: 148px;
+}
+
+.control-panel.collapsed .control-panel-header,
+body.control-panel-is-collapsed .control-panel .control-panel-header,
+body.control-panel-is-collapsed .control-panel.collapsed .control-panel-header {
+    gap: 8px !important;
+}
+
+.control-panel.collapsed .panel-header-actions,
+body.control-panel-is-collapsed .control-panel .panel-header-actions,
+body.control-panel-is-collapsed .control-panel.collapsed .panel-header-actions {
+    margin-left: auto !important;
+    padding-left: 0 !important;
+    gap: 0 !important;
+}
+
+.control-panel.collapsed .panel-logo-img-inline,
+body.control-panel-is-collapsed .control-panel .panel-logo-img-inline,
+body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline {
+    max-width: 56px;
+}
+
+/* --- 3. Smooth minimize / maximize animation --------------------------------
+   The outer .control-panel already had `transition: all 0.5s ease` but the
+   inner wrappers (.control-panel-content, .control-panel-scroll-inner) had
+   no transition, so their widths and max-height snapped. We also unify the
+   timing function and duration across the wrappers so the whole panel glides
+   as one piece. */
+.control-panel {
+    transition:
+        flex-basis 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        width      0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        min-width  0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        max-width  0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    will-change: width;
+}
+
+.control-panel-content,
+.control-panel-scroll-inner {
+    transition:
+        width      0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: width, max-height;
+}
+
+.control-panel-header,
+.panel-header-main,
+.panel-header-actions,
+.panel-logo-img-inline {
+    transition:
+        gap       0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        margin    0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        padding   0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .control-panel,
+    .control-panel-content,
+    .control-panel-scroll-inner,
+    .control-panel-header,
+    .panel-header-main,
+    .panel-header-actions,
+    .panel-logo-img-inline {
+        transition: none !important;
+    }
+}
