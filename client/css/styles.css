@@ -4936,11 +4936,15 @@ body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
     display: block !important;
     position: static !important;
     width: auto !important;
-    height: var(--modal-padding) !important;
+    height: calc(var(--modal-padding) + 14px) !important;
+    margin-top: 8px !important;
     background: transparent !important;
     border-radius: 0 !important;
     pointer-events: none;
-    flex-shrink: 0;
+}
+
+.control-panel:not(.collapsed) .control-panel-scroll-inner > :last-child {
+    margin-bottom: 0 !important;
 }
 
 /* --- 2. Fix clipped expand button on the minimized control panel ------------
@@ -4979,31 +4983,41 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
    as one piece. */
 .control-panel {
     transition:
-        flex-basis 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        width      0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        min-width  0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        max-width  0.55s cubic-bezier(0.22, 1, 0.36, 1) !important;
+        flex-basis 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        width      0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        min-width  0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        max-width  0.8s cubic-bezier(0.22, 1, 0.36, 1) !important;
     will-change: width;
 }
 
 .control-panel-content,
 .control-panel-scroll-inner {
     transition:
-        width      0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        padding    0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: width, max-height;
+        width        0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        max-height   0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        padding      0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        border-radius 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: width, max-height, padding;
 }
 
 .control-panel-header,
 .panel-header-main,
 .panel-header-actions,
-.panel-logo-img-inline {
+.panel-logo-img-inline,
+.expand-button,
+.collapse-button {
     transition:
-        gap       0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        margin    0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        padding   0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        max-width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        gap         0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        margin      0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        padding     0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        max-width   0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        width       0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        min-width   0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        height      0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        transform   0.25s ease,
+        box-shadow  0.25s ease,
+        opacity     0.35s ease;
 }
 
 /* respect users who prefer reduced motion */
