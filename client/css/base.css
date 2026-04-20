@@ -574,92 +574,84 @@ body {
             text-align: right;
         }
 
-        /* Control Panel */
+        /* Control Panel — fixed right-side sidebar (collapsible via slide-off) */
         .control-panel {
-            flex: 0 0 clamp(420px, 44vw, 720px);
-            width: clamp(420px, 44vw, 720px);
-            max-width: 720px;
-            transition: all 0.5s ease;
-        }
-
-
-        .control-panel-content {
-            --modal-radius: 20px;
-            --modal-padding: clamp(18px, 1.4vw, 24px);
-            --modal-scrollbar-width: 10px;
-            --modal-scrollbar-gap: 10px;
-            --modal-scrollbar-corner-cap: 18px;
-            --modal-scrollbar-thumb: rgba(31, 36, 40, 0.18);
-            --modal-scrollbar-thumb-hover: rgba(31, 36, 40, 0.30);
-            position: sticky;
-            top: 80px;
-            isolation: isolate;
-            background: var(--panel);
-            border-radius: var(--modal-radius);
-            padding: var(--modal-padding);
-            padding-right: calc(
-                var(--modal-padding) - 4px +
-                var(--modal-scrollbar-width) +
-                var(--modal-scrollbar-gap)
-            );
-            max-height: calc(100vh - 104px);
-            overflow-y: auto;
-            scrollbar-gutter: stable;
-            scrollbar-width: thin;
-            scrollbar-color: var(--modal-scrollbar-thumb) transparent;
-            box-shadow: var(--card-shadow);
-        }
-
-        .control-panel-content::before,
-        .control-panel-content::after {
-            content: "";
-            position: absolute;
-            right: 0;
-            width: calc(var(--modal-scrollbar-width) + var(--modal-scrollbar-gap) + 8px);
-            height: var(--modal-scrollbar-corner-cap);
-            background: var(--panel);
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .control-panel-content::before {
+            position: fixed;
             top: 0;
-            border-top-right-radius: var(--modal-radius);
-        }
-
-        .control-panel-content::after {
+            right: 0;
             bottom: 0;
-            border-bottom-right-radius: var(--modal-radius);
+            width: clamp(360px, 30vw, 480px);
+            max-width: 480px;
+            z-index: 55;
+            padding: 18px 18px 18px 0;
+            transform: translateX(0);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            /* No flex involvement — sidebar overlays the container */
+            flex: 0 0 auto;
         }
 
-        .control-panel-content::-webkit-scrollbar {
-            width: var(--modal-scrollbar-width);
+        .control-panel.collapsed {
+            transform: translateX(100%);
+            pointer-events: none;
         }
 
-        .control-panel-content::-webkit-scrollbar-track {
-            background: transparent;
+        /* Container reserves space on the right for the expanded sidebar.
+           When collapsed (body flag set by JS), that reservation vanishes. */
+        .container {
+            padding-right: clamp(calc(360px + 32px), calc(30vw + 32px), calc(480px + 32px));
+            transition: padding-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .control-panel-content::-webkit-scrollbar-thumb {
-            background-color: var(--modal-scrollbar-thumb);
-            border-radius: 999px;
-            border: 3px solid transparent;
-            background-clip: padding-box;
+        body.control-panel-is-collapsed .container {
+            padding-right: clamp(18px, 2vw, 28px);
         }
 
-        .control-panel-content::-webkit-scrollbar-thumb:hover {
-            background-color: var(--modal-scrollbar-thumb-hover);
+        /* Always-visible edge toggle — pinned to the right edge of the viewport.
+           When panel is open: sits at the panel's left edge, arrow points right (close).
+           When panel is collapsed: sits at the screen's right edge, arrow points left (open). */
+        .panel-edge-toggle {
+            position: fixed;
+            top: 50%;
+            right: clamp(360px, 30vw, 480px);
+            transform: translate(50%, -50%);
+            z-index: 60;
+            width: 32px;
+            height: 56px;
+            padding: 0;
+            border: none;
+            border-radius: 10px;
+            background: var(--panel);
+            color: var(--heading);
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.2s ease,
+                        box-shadow 0.2s ease;
         }
 
-        .control-panel-content::-webkit-scrollbar-button,
-        .control-panel-content::-webkit-scrollbar-button:single-button {
-            display: none;
-            width: 0;
-            height: 0;
+        .panel-edge-toggle svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .control-panel-content::-webkit-scrollbar-corner {
-            background: transparent;
+        .panel-edge-toggle:hover {
+            background: var(--surface);
+        }
+
+        /* When panel is collapsed: pin toggle to screen's right edge, flip arrow. */
+        body.control-panel-is-collapsed .panel-edge-toggle {
+            right: 0;
+            transform: translate(0, -50%);
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        body.control-panel-is-collapsed .panel-edge-toggle svg {
+            transform: rotate(180deg);
         }
 
 
@@ -668,6 +660,7 @@ body {
             overflow: hidden;
             background: transparent;
             box-shadow: none;
+            height: 100%;
         }
 
         .control-panel-content::before,
@@ -688,7 +681,8 @@ body {
             background: var(--panel);
             border-radius: var(--modal-radius);
             box-shadow: var(--card-shadow);
-            max-height: calc(100vh - 104px);
+            height: 100%;
+            max-height: none;
             overflow-y: auto;
             box-sizing: border-box;
             padding: var(--modal-padding);
@@ -784,40 +778,6 @@ body {
         }
 
 
-        .control-panel.collapsed {
-            flex-basis: 112px;
-            width: 112px;
-            min-width: 112px;
-            max-width: 112px;
-            overflow: visible;
-        }
-
-        .control-panel.collapsed .control-panel-scroll-inner {
-            padding: 14px 12px;
-            overflow: hidden;
-            max-height: none;
-        }
-
-        .control-panel.collapsed .control-panel-scroll-inner > :not(.control-panel-header) {
-            display: none !important;
-        }
-
-        .control-panel.collapsed .control-panel-header {
-            grid-template-columns: auto auto;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 0;
-        }
-
-        .control-panel.collapsed .panel-header-spacer,
-        .control-panel.collapsed .collapse-button {
-            display: none;
-        }
-
-        .control-panel.collapsed .panel-header-actions {
-            justify-self: end;
-        }
-
         .project-last-updated,
         .card-owner-name {
             min-width: 0;
@@ -832,9 +792,16 @@ body {
             }
 
             .control-panel {
-                flex: 0 0 clamp(400px, 40vw, 640px);
-                width: clamp(400px, 40vw, 640px);
-                max-width: 640px;
+                width: clamp(340px, 26vw, 440px);
+                max-width: 440px;
+            }
+
+            .container {
+                padding-right: clamp(calc(340px + 32px), calc(26vw + 32px), calc(440px + 32px));
+            }
+
+            .panel-edge-toggle {
+                right: clamp(340px, 26vw, 440px);
             }
 
             .project-grid {
@@ -1716,9 +1683,16 @@ body {
         /* Responsive */
         @media (max-width: 1366px) {
             .control-panel {
-                flex-basis: clamp(380px, 42vw, 560px);
-                width: clamp(380px, 42vw, 560px);
-                max-width: 560px;
+                width: clamp(320px, 32vw, 420px);
+                max-width: 420px;
+            }
+
+            .container {
+                padding-right: clamp(calc(320px + 32px), calc(32vw + 32px), calc(420px + 32px));
+            }
+
+            .panel-edge-toggle {
+                right: clamp(320px, 32vw, 420px);
             }
         }
 
@@ -2920,11 +2894,11 @@ body[data-color-mode="dark"] .menu-dropdown-separator {
 
 
 .side-panel-section {
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 16px;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
     margin-bottom: 24px;
-    box-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.32), inset -4px -4px 8px rgba(255, 255, 255, 0.82);
+    box-shadow: none;
 }
 
 .side-panel-section-header {
@@ -2932,13 +2906,16 @@ body[data-color-mode="dark"] .menu-dropdown-separator {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    padding: 0 4px;
 }
 
 .side-panel-section-header h3 {
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
     margin: 0;
 }
 
@@ -3521,22 +3498,16 @@ body[data-color-mode="dark"] .view-toolbar-select {
     }
 
     .control-panel {
-        flex: 1 1 100%;
-        width: 100%;
-        max-width: none;
+        width: min(92vw, 420px);
+        max-width: 420px;
     }
 
-    .control-panel.collapsed {
-        width: 100%;
-        min-width: 0;
-        max-width: none;
-        flex-basis: 100%;
+    .container {
+        padding-right: clamp(18px, 2vw, 28px);
     }
 
-    .control-panel-scroll-inner {
-        position: relative;
-        top: 0;
-        max-height: none;
+    .panel-edge-toggle {
+        right: min(92vw, 420px);
     }
 }
 
@@ -3598,12 +3569,23 @@ body[data-color-mode="dark"] .view-toolbar-select {
         justify-self: center;
     }
 
-    .viewport,
-    .control-panel {
+    .viewport {
         flex: 1 1 100%;
         width: 100%;
         min-width: 0;
         max-width: none;
+    }
+
+    .control-panel {
+        width: 100vw;
+        max-width: 100vw;
+        padding: 12px;
+    }
+
+    /* At mobile widths the panel covers the whole screen when open.
+       Hide the edge toggle during open state; the in-header collapse button is still reachable. */
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle {
+        display: none;
     }
 
     .project-grid {

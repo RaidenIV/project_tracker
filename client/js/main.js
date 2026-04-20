@@ -87,7 +87,7 @@ const THEME_FAMILY_OPTIONS = {
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'industrial-light',
+    default: 'glass-light',
     glass: 'glass-light',
     midnight: 'industrial-dark',
     blueprint: 'blueprint-light'
@@ -118,7 +118,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'industrial-light',
+    theme: 'glass-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -142,7 +142,7 @@ function escapeHtml(value) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'industrial-light';
+    return THEME_OPTIONS[resolved] ? resolved : 'glass-light';
 }
 
 function getThemeMeta(themeName) {
@@ -154,10 +154,10 @@ function getThemeLabel(themeName) {
 }
 
 function buildThemeName(themeFamily, colorMode) {
-    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'industrial';
+    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'glass';
     const mode = colorMode === 'dark' ? 'dark' : 'light';
     const candidate = `${family}-${mode}`;
-    return THEME_OPTIONS[candidate] ? candidate : 'industrial-light';
+    return THEME_OPTIONS[candidate] ? candidate : 'glass-light';
 }
 
 function getColorModeLabel(colorMode) {
@@ -165,7 +165,7 @@ function getColorModeLabel(colorMode) {
 }
 
 function getThemeFamilyLabel(themeFamily) {
-    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Industrial';
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Glassmorphic';
 }
 
 function syncColorModeToggle() {
@@ -205,7 +205,7 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'industrial-light');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'glass-light');
     applyTheme(uiState.theme, false);
 }
 
@@ -2740,7 +2740,8 @@ async function openNotificationProject(notificationId, projectId) {
 async function markAllNotificationsRead() {
     try {
         await markAllNotificationsReadOnServer();
-        notificationState.items = notificationState.items.map(item => ({ ...item, read: true }));
+        // Clear the list entirely — "mark all read" now also dismisses the items
+        notificationState.items = [];
         notificationState.unreadCount = 0;
         renderNotificationsPanel();
     } catch (err) {
@@ -2861,6 +2862,9 @@ function initializeEventHandlers() {
         expandButton?.classList.toggle('hidden', !isCollapsed);
         collapseButton?.setAttribute('aria-expanded', String(!isCollapsed));
         expandButton?.setAttribute('aria-expanded', String(isCollapsed));
+        const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+        panelEdgeToggle?.setAttribute('aria-expanded', String(!isCollapsed));
+        panelEdgeToggle?.setAttribute('aria-label', isCollapsed ? 'Open control panel' : 'Close control panel');
     };
 
     const collapseControlPanel = () => {
@@ -2881,6 +2885,17 @@ function initializeEventHandlers() {
 
     collapseButton?.addEventListener('click', collapseControlPanel);
     expandButton?.addEventListener('click', expandControlPanel);
+
+    // Always-visible edge toggle — toggles between expand/collapse based on current state
+    const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+    panelEdgeToggle?.addEventListener('click', () => {
+        if (controlPanel?.classList.contains('collapsed')) {
+            expandControlPanel();
+        } else {
+            collapseControlPanel();
+        }
+    });
+
     syncControlPanelState();
 
     // Add project button

@@ -102,11 +102,9 @@ body[data-theme="glass-dark"] {
    ----------------------------- */
 body[data-theme^="glass"] {
     font-family: 'Rajdhani', 'Inter', 'Segoe UI', sans-serif;
-    background:
-        radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.28), transparent 36%),
-        radial-gradient(ellipse at bottom right, rgba(72, 132, 255, 0.26), transparent 32%),
-        radial-gradient(ellipse at 60% 20%, rgba(180, 120, 255, 0.12), transparent 40%),
-        linear-gradient(135deg, var(--bg-2), var(--bg), var(--bg-3));
+    /* Solid background (no gradient, no dot pattern) — glass panels provide all visual interest */
+    background: var(--bg);
+    background-size: auto;
     background-attachment: fixed;
     color: var(--text);
 }
@@ -150,7 +148,6 @@ body[data-theme^="glass"] .shortcuts-panel,
 body[data-theme^="glass"] .shortcuts-toggle,
 body[data-theme^="glass"] .side-project-card,
 body[data-theme^="glass"] .notification-card,
-body[data-theme^="glass"] .side-panel-section,
 body[data-theme^="glass"] .auth-card,
 body[data-theme^="glass"] .modal-content,
 body[data-theme^="glass"] .confirm-dialog,

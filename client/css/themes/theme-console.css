@@ -562,12 +562,13 @@ body[data-theme^="console"] .undo-button:hover {
     transform: none;
 }
 
-/* Side panel sections */
+/* Side panel sections — flat wrapper with just a heading label */
 body[data-theme^="console"] .side-panel-section {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
 body[data-theme^="console"] .section-count-pill {
