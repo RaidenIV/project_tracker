@@ -74,13 +74,16 @@ const THEME_OPTIONS = {
     'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
     'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
     'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
-    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' }
+    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' },
+    'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
+    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
 };
 
 const THEME_FAMILY_OPTIONS = {
     industrial: { label: 'Industrial' },
     glass: { label: 'Glassmorphic' },
-    blueprint: { label: 'Blueprint' }
+    blueprint: { label: 'Blueprint' },
+    console: { label: 'Console' }
 };
 
 const LEGACY_THEME_MAP = {
