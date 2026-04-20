@@ -328,35 +328,18 @@ body[data-theme="console-light"] .view-toolbar-select {
    6. COLOR MODE TOGGLE
    ----------------------------- */
 body[data-theme^="console"] .color-mode-toggle {
-    background: var(--inset);
+    background: var(--surface-2);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: none;
-    transition: all 0.2s ease;
 }
 
 body[data-theme^="console"] .color-mode-toggle:hover {
-    transform: none;
     border-color: var(--accent);
-}
-
-body[data-theme^="console"] .color-mode-toggle-option {
-    color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
 }
 
 body[data-theme^="console"] .color-mode-toggle-thumb {
     background: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 0 12px var(--accent-glow);
-    border-radius: 8px;
-}
-
-body[data-theme^="console"] .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light,
-body[data-theme^="console"] .color-mode-toggle.is-dark .color-mode-toggle-option--dark {
-    color: #ffffff;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
 }
 
 /* -----------------------------

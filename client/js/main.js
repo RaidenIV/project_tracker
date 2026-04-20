@@ -69,8 +69,8 @@ const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea
 const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'industrial-light': { label: 'Industrial Light', family: 'industrial', mode: 'light' },
-    'industrial-dark': { label: 'Industrial Dark', family: 'industrial', mode: 'dark' },
+    'industrial-light': { label: 'Neumorphic Light', family: 'industrial', mode: 'light' },
+    'industrial-dark': { label: 'Neumorphic Dark', family: 'industrial', mode: 'dark' },
     'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
     'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
     'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
@@ -80,14 +80,14 @@ const THEME_OPTIONS = {
 };
 
 const THEME_FAMILY_OPTIONS = {
-    industrial: { label: 'Industrial' },
+    industrial: { label: 'Neumorphic (default)' },
     glass: { label: 'Glassmorphic' },
     blueprint: { label: 'Blueprint' },
     console: { label: 'Console' }
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'glass-light',
+    default: 'industrial-light',
     glass: 'glass-light',
     midnight: 'industrial-dark',
     blueprint: 'blueprint-light'
@@ -118,7 +118,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'glass-light',
+    theme: 'industrial-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -142,7 +142,7 @@ function escapeHtml(value) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'glass-light';
+    return THEME_OPTIONS[resolved] ? resolved : 'industrial-light';
 }
 
 function getThemeMeta(themeName) {
@@ -154,10 +154,10 @@ function getThemeLabel(themeName) {
 }
 
 function buildThemeName(themeFamily, colorMode) {
-    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'glass';
+    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'industrial';
     const mode = colorMode === 'dark' ? 'dark' : 'light';
     const candidate = `${family}-${mode}`;
-    return THEME_OPTIONS[candidate] ? candidate : 'glass-light';
+    return THEME_OPTIONS[candidate] ? candidate : 'industrial-light';
 }
 
 function getColorModeLabel(colorMode) {
@@ -165,7 +165,7 @@ function getColorModeLabel(colorMode) {
 }
 
 function getThemeFamilyLabel(themeFamily) {
-    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Glassmorphic';
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Neumorphic (default)';
 }
 
 function syncColorModeToggle() {
@@ -205,7 +205,7 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'glass-light');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'industrial-light');
     applyTheme(uiState.theme, false);
 }
 
