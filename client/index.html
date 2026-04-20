@@ -164,13 +164,6 @@
                     <option value="progress">Highest Completion</option>
                 </select>
                 <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
-                <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
-                    <span class="color-mode-toggle-track">
-                        <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                        <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
-                        <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
-                    </span>
-                </button>
             </div>
         </div>
         <!-- Viewport -->
@@ -227,6 +220,18 @@
                 </div>
 
                 <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
+
+                <!-- Display Mode toggle (moved from top bar) -->
+                <div class="panel-display-row">
+                    <span class="panel-display-label">Display Mode</span>
+                    <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                        <span class="color-mode-toggle-track">
+                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                        </span>
+                    </button>
+                </div>
 
                 <!-- Stats -->
                 <div class="stats">
@@ -427,6 +432,10 @@
                     <button class="theme-card" type="button" data-theme-family-option="blueprint">
                         <span class="theme-card-title">Blueprint</span>
                         <span class="theme-card-copy">Steel-blue surfaces with higher contrast and the blueprint-inspired palette.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-family-option="console">
+                        <span class="theme-card-title">Console</span>
+                        <span class="theme-card-copy">Terminal-inspired admin aesthetic: near-black surfaces, blue accent, monospace accents.</span>
                     </button>
                 </div>
 
