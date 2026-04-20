@@ -1,44 +1,1123 @@
-:root,
-body[data-theme="industrial-light"] {
-    /* Industrial Grey Palette */
-    --bg: #c5c7c9;
-    --bg-2: #d6d8da;
-    --bg-3: #b6b8bb;
+/* ============================================================================
+   CONSOLE THEME — terminal-inspired admin/dev tool aesthetic
+   See: console-ui-design.md
 
-    --panel: #e1e3e5;
-    --surface: #c9cbcd;
-    --surface-2: #bfc1c3;
+   - Near-black canvas with a four-step surface ramp
+   - Single blue accent for all primary actions + focus
+   - Rajdhani for UI, monospace for console surfaces
+   - Status pills + dots + colored log lines
+   - 14px card radii, 10px control radii, accent-halo focus ring
+   ============================================================================ */
 
-    --text: #252a2f;
-    --heading: #1f2428;
-    --muted: #3c4043;
-    --muted-2: #4b4f52;
-    --text-invert: #f4f7fb;
+/* -----------------------------
+   1. THEME TOKENS
+   ----------------------------- */
+body[data-theme="console-dark"] {
+    /* Surfaces (bg → surface → panel → inset) */
+    --bg: #0b0b0c;
+    --bg-2: #111113;
+    --bg-3: #060607;
+    --surface: #0d0d0e;      /* main wrapper card */
+    --panel: #131316;        /* secondary cards */
+    --surface-2: #1b1b20;    /* button neutral bg */
+    --inset: #0f0f12;        /* inputs / graph tiles */
 
-    --accent: #3278eb;
-    --accent-2: #2563c7;
-    --progress: #3278eb;
+    /* Ink */
+    --text: #f2f2f4;
+    --heading: #ffffff;
+    --muted: #a7a7ad;
+    --muted-2: #8b8b92;
+    --text-invert: #0b0b0c;
 
-    --card-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.7);
-    --inset-shadow: inset 4px 4px 8px rgba(120, 120, 130, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.28);
+    /* Borders */
+    --line: #2a2a2f;
+    --line-soft: #1f1f23;
+
+    /* Action */
+    --accent: #0099ff;
+    --accent-2: #0088ee;
+    --accent-3: #0077dd;
+    --accent-glow: rgba(0, 153, 255, 0.18);
+    --accent-ring: rgba(0, 153, 255, 0.35);
+    --progress: #0099ff;
+
+    /* Destructive */
+    --danger: #dc2626;
+    --danger-2: #b91c1c;
+    --danger-muted: #7f1d1d;
+
+    /* Semantic status (from console output) */
+    --success: #9fe6b8;
+    --warning: #ffd38a;
+    --info:    #7dd3fc;
+    --error:   #fca5a5;
+
+    /* Shadow tokens — Console stays flat; only hover/modals get shadow */
+    --card-shadow: 0 1px 0 rgba(255,255,255,0.02);
+    --inset-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    --glass-border: var(--line);
+
+    /* Selection */
+    --selection-bg: rgba(0, 153, 255, 0.28);
+    --focus-ring: 0 0 0 3px var(--accent-ring);
 }
 
-body[data-theme="industrial-dark"] {
-    --bg: #161b21;
-    --bg-2: #202733;
-    --bg-3: #0f141b;
-    --panel: #252d37;
-    --surface: #1b232d;
-    --surface-2: #2d3743;
-    --text: #dfe7f0;
-    --heading: #f6fbff;
-    --muted: #9caaba;
-    --muted-2: #8291a2;
-    --accent: #5d9dff;
-    --accent-2: #3576dc;
-    --progress: #5d9dff;
-    --card-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
-    --inset-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 12px 24px rgba(255,255,255,0.02);
+/* Console-Light — inverted but keeps the "tooling" feel.
+   Surfaces stay subtle and low-contrast; accent stays the same. */
+body[data-theme="console-light"] {
+    --bg: #eeeef2;
+    --bg-2: #f4f4f7;
+    --bg-3: #e2e2e7;
+    --surface: #ffffff;
+    --panel: #ffffff;
+    --surface-2: #e8e8ed;
+    --inset: #f7f7fa;
+
+    --text: #1a1a1d;
+    --heading: #0b0b0c;
+    --muted: #5d5d66;
+    --muted-2: #7a7a82;
+    --text-invert: #ffffff;
+
+    --line: #d4d4d9;
+    --line-soft: #e4e4e9;
+
+    --accent: #0077d4;
+    --accent-2: #0066bb;
+    --accent-3: #0055a3;
+    --accent-glow: rgba(0, 119, 212, 0.18);
+    --accent-ring: rgba(0, 119, 212, 0.30);
+    --progress: #0077d4;
+
+    --danger: #dc2626;
+    --danger-2: #b91c1c;
+    --danger-muted: #fca5a5;
+
+    --success: #0f7a3f;
+    --warning: #b37500;
+    --info:    #0369a1;
+    --error:   #b91c1c;
+
+    --card-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    --inset-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+    --glass-border: var(--line);
+
+    --selection-bg: rgba(0, 119, 212, 0.22);
+    --focus-ring: 0 0 0 3px var(--accent-ring);
 }
 
+/* -----------------------------
+   2. BODY, TYPOGRAPHY, A11Y
+   ----------------------------- */
+body[data-theme^="console"] {
+    font-family: 'Rajdhani', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.01em;
+    background:
+        linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
+    background-size: 100% 100%;
+    color: var(--text);
+}
+
+body[data-theme^="console"] ::selection {
+    background: var(--selection-bg);
+    color: var(--heading);
+}
+
+body[data-theme^="console"] button,
+body[data-theme^="console"] input,
+body[data-theme^="console"] select,
+body[data-theme^="console"] textarea {
+    font-family: inherit;
+    letter-spacing: 0.02em;
+}
+
+/* Signature focus ring — the thing that makes the whole system feel "console". */
+body[data-theme^="console"] button:focus-visible,
+body[data-theme^="console"] input:focus-visible,
+body[data-theme^="console"] select:focus-visible,
+body[data-theme^="console"] textarea:focus-visible,
+body[data-theme^="console"] [role="button"]:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+
+body[data-theme^="console"] input::placeholder,
+body[data-theme^="console"] textarea::placeholder {
+    color: var(--muted-2);
+    opacity: 0.9;
+}
+
+/* Monospace for anything that should read as "log output" */
+body[data-theme^="console"] kbd,
+body[data-theme^="console"] code,
+body[data-theme^="console"] .mini-console,
+body[data-theme^="console"] .project-last-updated {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                 "Liberation Mono", "Courier New", monospace;
+    letter-spacing: 0;
+}
+
+/* -----------------------------
+   3. TOP APP BAR
+   ----------------------------- */
+body[data-theme^="console"] .top-app-bar {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+body[data-theme^="console"] .top-app-bar-title {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--heading);
+}
+
+/* -----------------------------
+   4. NAV BUTTON + DROPDOWN
+   ----------------------------- */
+body[data-theme^="console"] .menu-button {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: none;
+    color: var(--text);
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .menu-button:hover {
+    background: var(--panel);
+    border-color: var(--accent);
+    transform: none;
+}
+
+body[data-theme^="console"] .menu-button.active {
+    background: var(--panel);
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+body[data-theme^="console"] .menu-icon {
+    color: var(--heading);
+}
+
+body[data-theme^="console"] .menu-dropdown {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    padding: 8px;
+    min-width: 220px;
+}
+
+body[data-theme="console-light"] .menu-dropdown {
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+body[data-theme^="console"] .menu-dropdown-item,
+body[data-theme^="console"] .menu-dropdown a {
+    margin: 2px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--text);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: all 0.15s ease;
+}
+
+body[data-theme^="console"] .menu-dropdown-item:hover,
+body[data-theme^="console"] .menu-dropdown a:hover {
+    background: var(--surface-2);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--line);
+}
+
+body[data-theme="console-light"] .menu-dropdown-item:hover,
+body[data-theme="console-light"] .menu-dropdown a:hover {
+    background: var(--inset);
+}
+
+body[data-theme^="console"] .menu-dropdown-item--danger {
+    color: var(--error);
+}
+
+body[data-theme^="console"] .menu-dropdown-item--danger:hover {
+    background: rgba(220, 38, 38, 0.10);
+    color: var(--danger);
+    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.25);
+}
+
+body[data-theme^="console"] .menu-dropdown-separator {
+    background: var(--line);
+    margin: 6px 4px;
+}
+
+body[data-theme^="console"] .menu-shortcuts-panel {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin: 4px 0;
+}
+
+body[data-theme^="console"] .shortcut-line {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+body[data-theme^="console"] kbd {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    color: var(--text);
+}
+
+/* -----------------------------
+   5. VIEW TOOLBAR CONTROLS
+   ----------------------------- */
+body[data-theme^="console"] .view-toolbar-search,
+body[data-theme^="console"] .view-toolbar-select,
+body[data-theme^="console"] .view-toolbar-button {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: none;
+    color: var(--text);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .view-toolbar-search:hover,
+body[data-theme^="console"] .view-toolbar-select:hover {
+    border-color: var(--muted-2);
+}
+
+body[data-theme^="console"] .view-toolbar-button {
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 600;
+}
+
+body[data-theme^="console"] .view-toolbar-button:hover {
+    background: var(--panel);
+    border-color: var(--accent);
+    transform: none;
+}
+
+/* Select caret */
+body[data-theme="console-dark"] .view-toolbar-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a7a7ad' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body[data-theme="console-light"] .view-toolbar-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235d5d66' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* -----------------------------
+   6. COLOR MODE TOGGLE
+   ----------------------------- */
+body[data-theme^="console"] .color-mode-toggle {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .color-mode-toggle:hover {
+    transform: none;
+    border-color: var(--accent);
+}
+
+body[data-theme^="console"] .color-mode-toggle-option {
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="console"] .color-mode-toggle-thumb {
+    background: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 12px var(--accent-glow);
+    border-radius: 8px;
+}
+
+body[data-theme^="console"] .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light,
+body[data-theme^="console"] .color-mode-toggle.is-dark .color-mode-toggle-option--dark {
+    color: #ffffff;
+}
+
+/* -----------------------------
+   7. CONTROL PANEL
+   ----------------------------- */
+body[data-theme^="console"] .control-panel-scroll-inner {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+}
+
+body[data-theme^="console"] .control-panel-header h2 {
+    color: var(--heading);
+    letter-spacing: 0.02em;
+}
+
+body[data-theme^="console"] .collapse-button,
+body[data-theme^="console"] .expand-button {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 6px;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .collapse-button:hover,
+body[data-theme^="console"] .expand-button:hover {
+    background: var(--panel);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .panel-user-pill {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: none;
+    color: var(--text);
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .panel-user-pill:hover {
+    border-color: var(--accent);
+    transform: none;
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+body[data-theme^="console"] .panel-avatar,
+body[data-theme^="console"] .account-avatar {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    box-shadow: none;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+body[data-theme^="console"] .panel-username {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* Display (mode toggle) row inside panel */
+body[data-theme^="console"] .panel-display-row {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+body[data-theme^="console"] .panel-display-label {
+    color: var(--muted);
+}
+
+/* Save status — framed as a "status pill" */
+body[data-theme^="console"] .save-status {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .save-status--idle { color: var(--success); }
+body[data-theme^="console"] .save-status--saving { color: var(--warning); }
+body[data-theme^="console"] .save-status--error { color: var(--error); }
+
+body[data-theme^="console"] .save-status::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    margin-right: 8px;
+    vertical-align: 1px;
+    background: currentColor;
+    box-shadow: 0 0 6px currentColor;
+}
+
+/* Stat cards */
+body[data-theme^="console"] .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+body[data-theme^="console"] .stat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .stat-card.active {
+    background: var(--panel);
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent), 0 0 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .stat-card.active .stat-value,
+body[data-theme^="console"] .stat-card.active .stat-label {
+    color: var(--accent) !important;
+}
+
+body[data-theme^="console"] .stat-value {
+    color: var(--heading);
+    font-weight: 700;
+}
+
+body[data-theme^="console"] .stat-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Total completion */
+body[data-theme^="console"] .total-completion-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+body[data-theme^="console"] .total-completion-section h3,
+body[data-theme^="console"] .side-panel-section h3 {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body[data-theme^="console"] .total-percentage {
+    color: var(--accent);
+    font-weight: 700;
+    text-shadow: 0 0 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .total-percentage-label {
+    color: var(--muted);
+}
+
+/* Add Project button */
+body[data-theme^="console"] .add-project-button {
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .add-project-button:hover {
+    background: var(--accent-2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .undo-button {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    transition: all 0.2s ease;
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .undo-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: none;
+}
+
+/* Side panel sections */
+body[data-theme^="console"] .side-panel-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+body[data-theme^="console"] .section-count-pill {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .section-action-button {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+body[data-theme^="console"] .section-action-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .side-panel-empty {
+    color: var(--muted-2);
+    font-size: 12px;
+    text-align: center;
+    padding: 16px 8px;
+}
+
+/* Mini sidebar cards */
+body[data-theme^="console"] .saved-view-main,
+body[data-theme^="console"] .side-project-card,
+body[data-theme^="console"] .archived-project-card,
+body[data-theme^="console"] .notification-card {
+    background: var(--inset);
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .saved-view-main:hover,
+body[data-theme^="console"] .side-project-card:hover,
+body[data-theme^="console"] .archived-project-card:hover,
+body[data-theme^="console"] .notification-card:hover {
+    border-color: var(--accent);
+    background: var(--surface-2);
+}
+
+/* -----------------------------
+   8. PROJECT CARDS (viewport)
+   ----------------------------- */
+body[data-theme^="console"] .project-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: none;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+body[data-theme^="console"] .project-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .project-title,
+body[data-theme^="console"] .project-title-input {
+    color: var(--heading);
+    font-weight: 700;
+}
+
+body[data-theme^="console"] .project-title-input {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+
+body[data-theme^="console"] .project-stats,
+body[data-theme^="console"] .project-last-updated,
+body[data-theme^="console"] .card-owner-name,
+body[data-theme^="console"] .progress-text {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+body[data-theme^="console"] .project-last-updated {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+}
+
+body[data-theme^="console"] .progress-text-large {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+body[data-theme^="console"] .progress-bar-container {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+body[data-theme^="console"] .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Tasks */
+body[data-theme^="console"] .task-item {
+    background: var(--inset);
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .task-item:hover {
+    border-color: var(--line);
+}
+
+body[data-theme^="console"] .task-input {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: none;
+    color: var(--text);
+}
+
+body[data-theme^="console"] .task-text {
+    color: var(--text);
+}
+
+body[data-theme^="console"] .task-text.completed {
+    color: var(--muted-2);
+    text-decoration-color: var(--muted-2);
+}
+
+body[data-theme^="console"] .task-checkbox {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    box-shadow: none;
+    border-radius: 6px;
+}
+
+body[data-theme^="console"] .task-checkbox.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* Card action buttons */
+body[data-theme^="console"] .edit-button,
+body[data-theme^="console"] .copy-button,
+body[data-theme^="console"] .card-delete-button,
+body[data-theme^="console"] .drag-handle,
+body[data-theme^="console"] .task-drag-handle {
+    color: var(--muted);
+    transition: color 0.15s ease;
+}
+
+body[data-theme^="console"] .edit-button:hover,
+body[data-theme^="console"] .copy-button:hover,
+body[data-theme^="console"] .drag-handle:hover,
+body[data-theme^="console"] .task-drag-handle:hover {
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .card-delete-button:hover {
+    color: var(--danger);
+}
+
+/* -----------------------------
+   9. EMPTY STATE
+   ----------------------------- */
+body[data-theme^="console"] .empty-state {
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+body[data-theme^="console"] .empty-state .title {
+    color: var(--muted);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+body[data-theme^="console"] .empty-state .subtitle {
+    color: var(--muted-2);
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* -----------------------------
+   10. FILTER CHIPS
+   ----------------------------- */
+body[data-theme^="console"] .filter-chip {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--text);
+    box-shadow: none;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+body[data-theme^="console"] .filter-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* -----------------------------
+   11. MODALS + DIALOGS
+   ----------------------------- */
+body[data-theme^="console"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+body[data-theme="console-light"] .modal-overlay {
+    background: rgba(10, 10, 20, 0.55);
+}
+
+body[data-theme^="console"] .modal-content,
+body[data-theme^="console"] .account-modal-content,
+body[data-theme^="console"] .ui-options-modal-content,
+body[data-theme^="console"] .command-palette-content,
+body[data-theme^="console"] .confirm-dialog {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme^="console"] .modal-close {
+    background: var(--danger);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .modal-close:hover {
+    background: var(--danger-2);
+    transform: scale(1.05);
+}
+
+body[data-theme^="console"] .account-modal-title {
+    color: var(--heading);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+body[data-theme^="console"] .account-modal-subtitle {
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+}
+
+body[data-theme^="console"] .account-input,
+body[data-theme^="console"] .account-form-input,
+body[data-theme^="console"] .modal-title-input,
+body[data-theme^="console"] .notes-textarea,
+body[data-theme^="console"] .project-select,
+body[data-theme^="console"] .invite-email-input,
+body[data-theme^="console"] .invite-role-select,
+body[data-theme^="console"] .member-role-select,
+body[data-theme^="console"] .paste-box {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .account-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="console"] .account-stat-card {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .account-action-btn,
+body[data-theme^="console"] .modal-done-btn,
+body[data-theme^="console"] .modal-add-task,
+body[data-theme^="console"] .modal-add-task-top,
+body[data-theme^="console"] .paste-button,
+body[data-theme^="console"] .invite-submit-btn,
+body[data-theme^="console"] .activate-button {
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+body[data-theme^="console"] .account-action-btn:hover,
+body[data-theme^="console"] .modal-done-btn:hover,
+body[data-theme^="console"] .paste-button:hover,
+body[data-theme^="console"] .invite-submit-btn:hover,
+body[data-theme^="console"] .activate-button:hover {
+    background: var(--accent-2);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+body[data-theme^="console"] .account-action-btn--secondary {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+}
+
+body[data-theme^="console"] .account-action-btn--secondary:hover {
+    background: var(--panel);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .modal-tab {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--muted);
+}
+
+body[data-theme^="console"] .modal-tab.active,
+body[data-theme^="console"] .modal-tab[aria-selected="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+/* Confirm dialog */
+body[data-theme^="console"] .confirm-dialog h3 {
+    color: var(--heading);
+    letter-spacing: 0.02em;
+}
+
+body[data-theme^="console"] .confirm-dialog p {
+    color: var(--muted);
+}
+
+body[data-theme^="console"] .confirm-cancel {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+}
+
+body[data-theme^="console"] .confirm-cancel:hover {
+    background: var(--panel);
+    border-color: var(--muted-2);
+}
+
+body[data-theme^="console"] .confirm-delete {
+    background: var(--danger);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+body[data-theme^="console"] .confirm-delete:hover {
+    background: var(--danger-2);
+}
+
+/* Theme cards */
+body[data-theme^="console"] .theme-card {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    color: var(--text);
+}
+
+body[data-theme^="console"] .theme-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .theme-card.is-active {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent), 0 0 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .theme-card-title {
+    color: var(--heading);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+body[data-theme^="console"] .theme-card-copy {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* Command palette */
+body[data-theme^="console"] .command-palette-input {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body[data-theme^="console"] .command-palette-item {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--text);
+}
+
+body[data-theme^="console"] .command-palette-item:hover,
+body[data-theme^="console"] .command-palette-item.is-active {
+    background: var(--surface-2);
+    border-color: var(--line);
+    color: var(--accent);
+}
+
+/* -----------------------------
+   12. AUTH OVERLAY
+   ----------------------------- */
+body[data-theme^="console"] .auth-overlay {
+    background: linear-gradient(to bottom right, var(--bg-2), var(--bg), var(--bg-3));
+}
+
+body[data-theme^="console"] .auth-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme^="console"] .auth-tab {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    border-radius: 10px;
+}
+
+body[data-theme^="console"] .auth-tab-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+body[data-theme^="console"] .auth-input {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .auth-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="console"] .auth-submit {
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    transition: all 0.2s ease;
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .auth-submit:hover {
+    background: var(--accent-2);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+body[data-theme^="console"] .auth-error {
+    color: var(--danger);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+}
+
+body[data-theme^="console"] .remember-me-label {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+body[data-theme^="console"] .remember-me-checkbox {
+    accent-color: var(--accent);
+}
+
+body[data-theme^="console"] .show-pw-btn {
+    color: var(--muted);
+    background: transparent;
+    border: none;
+}
+
+body[data-theme^="console"] .show-pw-btn:hover {
+    color: var(--accent);
+}
+
+/* -----------------------------
+   13. SCROLLBARS
+   ----------------------------- */
+body[data-theme^="console"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+body[data-theme^="console"] ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body[data-theme^="console"] ::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+}
+
+body[data-theme^="console"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-2);
+    background-clip: padding-box;
+}
