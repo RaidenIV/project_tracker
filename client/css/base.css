@@ -104,8 +104,9 @@ body {
 
         .menu-dropdown {
             position: absolute;
-            top: calc(100% + 10px);
-            left: 0;
+            /* Align with app bar's outer edge (app bar has 8px 10px padding) */
+            top: calc(100% + 16px);
+            left: -10px;
             background: var(--panel);
             border-radius: 12px;
             box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7);
@@ -575,9 +576,9 @@ body {
 
         /* Control Panel */
         .control-panel {
-            flex: 0 0 clamp(320px, 24vw, 430px);
-            width: clamp(320px, 24vw, 430px);
-            max-width: 430px;
+            flex: 0 0 clamp(420px, 44vw, 720px);
+            width: clamp(420px, 44vw, 720px);
+            max-width: 720px;
             transition: all 0.5s ease;
         }
 
@@ -831,9 +832,9 @@ body {
             }
 
             .control-panel {
-                flex: 0 0 clamp(296px, 20vw, 368px);
-                width: clamp(296px, 20vw, 368px);
-                max-width: 368px;
+                flex: 0 0 clamp(400px, 40vw, 640px);
+                width: clamp(400px, 40vw, 640px);
+                max-width: 640px;
             }
 
             .project-grid {
@@ -1715,8 +1716,9 @@ body {
         /* Responsive */
         @media (max-width: 1366px) {
             .control-panel {
-                flex-basis: clamp(300px, 28vw, 380px);
-                width: clamp(300px, 28vw, 380px);
+                flex-basis: clamp(380px, 42vw, 560px);
+                width: clamp(380px, 42vw, 560px);
+                max-width: 560px;
             }
         }
 
@@ -3115,7 +3117,7 @@ body[data-color-mode="dark"] .menu-dropdown-separator {
 
 .view-toolbar {
     display: grid;
-    grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(118px, 132px)) auto auto;
+    grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(118px, 132px)) auto;
     gap: 10px;
     margin-bottom: 0;
     align-items: center;
@@ -3789,6 +3791,31 @@ body[data-color-mode="dark"] .menu-dropdown-item--danger:hover {
     justify-content: flex-end;
     gap: 8px;
     flex: 0 0 auto;
+}
+
+/* Display-mode row inside the control panel (houses the light/dark toggle) */
+.panel-display-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    background: var(--panel);
+    border-radius: 14px;
+    box-shadow: var(--inset-shadow);
+}
+
+.panel-display-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.control-panel.collapsed .panel-display-row {
+    display: none;
 }
 
 .panel-avatar,
