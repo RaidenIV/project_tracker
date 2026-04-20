@@ -5157,3 +5157,46 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
         border-bottom: 1px solid color-mix(in srgb, var(--surface-2) 42%, transparent);
     }
 }
+
+
+/* ============================================================================
+   V13 DESKTOP SIDEBAR HEIGHT + 1920-WIDE NORMALIZATION
+   ============================================================================ */
+@media (min-width: 1101px) {
+    .control-panel-content {
+        height: calc(100vh - 18px) !important;
+        min-height: calc(100vh - 18px) !important;
+    }
+
+    .control-panel.collapsed .control-panel-content,
+    body.control-panel-is-collapsed .control-panel .control-panel-content,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-content {
+        height: calc(100vh - 18px) !important;
+        min-height: calc(100vh - 18px) !important;
+    }
+}
+
+@media (min-width: 1800px) and (max-width: 2000px) {
+    .container {
+        padding-left: clamp(18px, 2vw, 28px) !important;
+        padding-right: clamp(18px, 2vw, 28px) !important;
+        gap: clamp(18px, 1.5vw, 28px) !important;
+        grid-template-columns: minmax(0, 1fr) var(--sidebar-width-expanded) !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: minmax(0, 1fr) var(--sidebar-width-collapsed) !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: none !important;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
