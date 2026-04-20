@@ -163,7 +163,16 @@
                     <option value="remaining">Most Remaining Tasks</option>
                     <option value="progress">Highest Completion</option>
                 </select>
-                <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
+                <div class="toolbar-actions">
+                    <button class="color-mode-toggle toolbar-color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                        <span class="color-mode-toggle-track">
+                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                        </span>
+                    </button>
+                    <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
+                </div>
             </div>
         </div>
         <!-- Viewport -->
@@ -226,17 +235,6 @@
 
                 <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
 
-                <!-- Display Mode toggle (moved from top bar) -->
-                <div class="panel-display-row">
-                    <span class="panel-display-label">Display Mode</span>
-                    <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
-                        <span class="color-mode-toggle-track">
-                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
-                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
-                        </span>
-                    </button>
-                </div>
 
                 <!-- Stats -->
                 <div class="stats">
@@ -312,9 +310,14 @@
                 </div>
 
                 <!-- Notifications -->
-                <div class="side-panel-section">
+                <div class="side-panel-section side-panel-section--collapsible is-collapsed" id="notificationsSection">
                     <div class="side-panel-section-header">
-                        <h3>Notifications</h3>
+                        <button class="section-toggle-button" id="notificationsSectionToggle" type="button" aria-expanded="false" aria-controls="notificationsList">
+                            <span>Notifications</span>
+                            <svg class="section-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
                         <div class="side-panel-section-actions">
                             <span class="section-count-pill" id="notificationsUnreadCount">0</span>
                             <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
@@ -416,7 +419,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme. Use the toggle next to Save View to switch light and dark mode.</p>
+                        <p class="account-modal-subtitle">Choose a visual theme. Use the toolbar toggle next to Save View to switch light and dark mode.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,21 +429,17 @@
                 </div>
 
                 <div class="theme-grid" id="themeGrid">
-                    <button class="theme-card" type="button" data-theme-family-option="industrial">
-                        <span class="theme-card-title">Neumorphic (default)</span>
-                        <span class="theme-card-copy">Soft, tactile surfaces with embossed panels, dual-shadow depth, and muted pastel palettes.</span>
+                    <button class="theme-card" type="button" data-theme-family-option="blueprint">
+                        <span class="theme-card-title">Blueprint</span>
+                        <span class="theme-card-copy">Steel-blue surfaces, stronger hierarchy, and a crisp admin-style workspace.</span>
                     </button>
                     <button class="theme-card" type="button" data-theme-family-option="glass">
                         <span class="theme-card-title">Glassmorphic</span>
-                        <span class="theme-card-copy">Blurred translucent panels, brighter project cards, and a fully glass control panel.</span>
-                    </button>
-                    <button class="theme-card" type="button" data-theme-family-option="blueprint">
-                        <span class="theme-card-title">Blueprint</span>
-                        <span class="theme-card-copy">Steel-blue surfaces with higher contrast and the blueprint-inspired palette.</span>
+                        <span class="theme-card-copy">Blurred translucent panels, brighter project cards, and a softer premium presentation.</span>
                     </button>
                     <button class="theme-card" type="button" data-theme-family-option="console">
                         <span class="theme-card-title">Console</span>
-                        <span class="theme-card-copy">Terminal-inspired admin aesthetic: near-black surfaces, blue accent, monospace accents.</span>
+                        <span class="theme-card-copy">Terminal-inspired admin aesthetic with darker surfaces, blue accents, and monospace details.</span>
                     </button>
                 </div>
 

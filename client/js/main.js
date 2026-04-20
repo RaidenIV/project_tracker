@@ -69,28 +69,28 @@ const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea
 const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'industrial-light': { label: 'Neumorphic Light', family: 'industrial', mode: 'light' },
-    'industrial-dark': { label: 'Neumorphic Dark', family: 'industrial', mode: 'dark' },
-    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
-    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
     'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
     'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
     'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
     'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
 };
 
 const THEME_FAMILY_OPTIONS = {
-    industrial: { label: 'Neumorphic (default)' },
-    glass: { label: 'Glassmorphic' },
     blueprint: { label: 'Blueprint' },
+    glass: { label: 'Glassmorphic' },
     console: { label: 'Console' }
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'industrial-light',
+    default: 'blueprint-light',
+    blueprint: 'blueprint-light',
     glass: 'glass-light',
-    midnight: 'industrial-dark',
-    blueprint: 'blueprint-light'
+    midnight: 'console-dark',
+    industrial: 'blueprint-light',
+    'industrial-light': 'blueprint-light',
+    'industrial-dark': 'blueprint-dark'
 };
 
 const notificationState = {
@@ -118,7 +118,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'industrial-light',
+    theme: 'blueprint-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -142,7 +142,7 @@ function escapeHtml(value) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'industrial-light';
+    return THEME_OPTIONS[resolved] ? resolved : 'blueprint-light';
 }
 
 function getThemeMeta(themeName) {
@@ -154,10 +154,10 @@ function getThemeLabel(themeName) {
 }
 
 function buildThemeName(themeFamily, colorMode) {
-    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'industrial';
+    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'blueprint';
     const mode = colorMode === 'dark' ? 'dark' : 'light';
     const candidate = `${family}-${mode}`;
-    return THEME_OPTIONS[candidate] ? candidate : 'industrial-light';
+    return THEME_OPTIONS[candidate] ? candidate : 'blueprint-light';
 }
 
 function getColorModeLabel(colorMode) {
@@ -165,7 +165,7 @@ function getColorModeLabel(colorMode) {
 }
 
 function getThemeFamilyLabel(themeFamily) {
-    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Neumorphic (default)';
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Blueprint';
 }
 
 function syncColorModeToggle() {
@@ -205,7 +205,7 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'industrial-light');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
     applyTheme(uiState.theme, false);
 }
 
@@ -2908,6 +2908,19 @@ function initializeEventHandlers() {
     document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
     document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
+
+    const notificationsSection = document.getElementById('notificationsSection');
+    const notificationsSectionToggle = document.getElementById('notificationsSectionToggle');
+    const syncNotificationsSection = () => {
+        if (!notificationsSection || !notificationsSectionToggle) return;
+        const isCollapsed = notificationsSection.classList.contains('is-collapsed');
+        notificationsSectionToggle.setAttribute('aria-expanded', String(!isCollapsed));
+    };
+    notificationsSectionToggle?.addEventListener('click', () => {
+        notificationsSection?.classList.toggle('is-collapsed');
+        syncNotificationsSection();
+    });
+    syncNotificationsSection();
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');

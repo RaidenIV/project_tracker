@@ -4837,3 +4837,323 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
         grid-template-columns: 1fr;
     }
 }
+
+
+/* ============================================================================
+   V12 BLUEPRINT DEFAULT + TRADITIONAL SIDEBAR REFINEMENT
+   ============================================================================ */
+
+:root {
+    --sidebar-width-expanded: clamp(330px, 24vw, 420px);
+    --sidebar-width-collapsed: 96px;
+}
+
+.toolbar-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    min-width: max-content;
+}
+
+.toolbar-color-mode-toggle {
+    flex: 0 0 auto;
+    align-self: center;
+}
+
+.panel-edge-toggle {
+    display: none !important;
+}
+
+.side-panel-section--collapsible .section-toggle-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    color: var(--heading);
+    font: inherit;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+}
+
+.side-panel-section--collapsible .section-toggle-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.24s ease;
+}
+
+.side-panel-section--collapsible.is-collapsed .section-toggle-icon {
+    transform: rotate(0deg);
+}
+
+.side-panel-section--collapsible:not(.is-collapsed) .section-toggle-icon {
+    transform: rotate(90deg);
+}
+
+#notificationsSection.is-collapsed #notificationsList {
+    display: none;
+}
+
+#notificationsSection.is-collapsed #markAllNotificationsReadBtn {
+    display: none;
+}
+
+#notificationsSection.is-collapsed {
+    padding-bottom: 18px;
+}
+
+#notificationsSection .side-panel-section-header {
+    margin-bottom: 0;
+}
+
+#notificationsSection:not(.is-collapsed) .side-panel-section-header {
+    margin-bottom: 14px;
+}
+
+@media (min-width: 1101px) {
+    .container {
+        grid-template-columns: minmax(0, 1fr) var(--sidebar-width-expanded) !important;
+        grid-template-areas:
+            "toolbar panel"
+            "viewport panel";
+        align-items: stretch !important;
+        min-height: 100vh;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: minmax(0, 1fr) var(--sidebar-width-collapsed) !important;
+    }
+
+    .top-app-bar {
+        grid-area: toolbar;
+        position: sticky;
+        top: 18px;
+        z-index: 60;
+    }
+
+    .top-view-toolbar {
+        display: grid;
+        grid-template-columns: minmax(170px, 1fr) minmax(134px, 150px) minmax(134px, 150px) auto;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .control-panel,
+    .control-panel.collapsed {
+        grid-area: panel;
+        grid-row: 1 / span 2;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: none !important;
+        align-self: stretch !important;
+        height: auto;
+    }
+
+    .control-panel-content {
+        position: sticky;
+        top: 18px;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 36px) !important;
+        min-height: calc(100vh - 36px);
+        border-radius: 24px;
+        padding: 0;
+        overflow: hidden;
+        background: var(--panel);
+        border: 1px solid color-mix(in srgb, var(--surface-2) 55%, transparent);
+        box-shadow: var(--card-shadow);
+    }
+
+    .control-panel-scroll-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        height: 100%;
+        max-height: none !important;
+        padding: 24px 22px 24px !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .control-panel-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin: -24px -22px 4px;
+        padding: 24px 22px 18px;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, transparent), color-mix(in srgb, var(--panel) 88%, transparent));
+        border-bottom: 1px solid color-mix(in srgb, var(--surface-2) 40%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .panel-header-main {
+        min-width: 0;
+        align-items: center;
+    }
+
+    .panel-logo-img-inline {
+        height: 34px;
+        width: auto;
+        max-width: 140px;
+        object-fit: contain;
+    }
+
+    .save-status {
+        margin-top: 2px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .stat-card {
+        min-height: 110px;
+        justify-content: center;
+    }
+
+    .side-panel-section {
+        padding: 18px;
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        border: 1px solid color-mix(in srgb, var(--surface-2) 42%, transparent);
+        box-shadow: none;
+    }
+
+    .side-panel-section-header {
+        align-items: center;
+        gap: 10px;
+    }
+
+    .side-panel-section-actions {
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        width: var(--sidebar-width-collapsed) !important;
+        min-width: var(--sidebar-width-collapsed) !important;
+        max-width: var(--sidebar-width-collapsed) !important;
+        flex-basis: var(--sidebar-width-collapsed) !important;
+    }
+
+    .control-panel.collapsed .control-panel-content,
+    .control-panel.collapsed .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel .control-panel-content,
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-content,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner {
+        width: 100% !important;
+    }
+
+    .control-panel.collapsed .control-panel-content,
+    body.control-panel-is-collapsed .control-panel .control-panel-content,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-content {
+        height: calc(100vh - 36px) !important;
+        min-height: calc(100vh - 36px);
+    }
+
+    .control-panel.collapsed .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner {
+        padding: 20px 14px !important;
+        gap: 0;
+        overflow: hidden;
+    }
+
+    .control-panel.collapsed .control-panel-header,
+    body.control-panel-is-collapsed .control-panel .control-panel-header,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-header {
+        margin: -20px -14px 0;
+        padding: 20px 14px;
+        justify-content: center;
+        gap: 0 !important;
+        border-bottom: none;
+    }
+
+    .control-panel.collapsed .panel-header-main,
+    body.control-panel-is-collapsed .control-panel .panel-header-main,
+    body.control-panel-is-collapsed .control-panel.collapsed .panel-header-main {
+        display: none !important;
+    }
+
+    .control-panel.collapsed .panel-header-actions,
+    body.control-panel-is-collapsed .control-panel .panel-header-actions,
+    body.control-panel-is-collapsed .control-panel.collapsed .panel-header-actions {
+        margin: 0 !important;
+        padding: 0 !important;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .control-panel.collapsed .collapse-button,
+    body.control-panel-is-collapsed .control-panel .collapse-button,
+    body.control-panel-is-collapsed .control-panel.collapsed .collapse-button {
+        display: none !important;
+    }
+
+    .control-panel.collapsed .expand-button,
+    body.control-panel-is-collapsed .control-panel .expand-button,
+    body.control-panel-is-collapsed .control-panel.collapsed .expand-button {
+        display: inline-flex !important;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+    }
+
+    .control-panel.collapsed .control-panel-scroll-inner > :not(.control-panel-header),
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner > :not(.control-panel-header),
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner > :not(.control-panel-header) {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1100px) {
+    .toolbar-actions {
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .toolbar-actions .toolbar-color-mode-toggle,
+    .toolbar-actions .view-toolbar-button {
+        flex: 1 1 0;
+    }
+
+    .control-panel,
+    .control-panel.collapsed {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    .control-panel-content {
+        height: auto !important;
+        min-height: 0;
+        padding: 0;
+    }
+
+    .control-panel-scroll-inner {
+        max-height: none !important;
+        padding: 22px 18px 22px !important;
+    }
+
+    .control-panel-header {
+        position: static;
+        margin: -22px -18px 8px;
+        padding: 22px 18px 16px;
+        border-bottom: 1px solid color-mix(in srgb, var(--surface-2) 42%, transparent);
+    }
+}
