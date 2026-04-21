@@ -5538,3 +5538,122 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 .top-app-logo {
     width: clamp(81px, 6vw, 114px) !important;
 }
+
+/* ============================================================================
+   ROUND 2 OVERRIDES — follow-up refinements
+   ============================================================================ */
+
+/* 1) Logo pinned to the TOP-RIGHT of the page (fixed), keeping prior size.
+   Pulled out of the top-app-bar's grid flow via position: fixed so the grid
+   collapses from 3 columns to 2 (title + toolbar). */
+.top-app-logo {
+    position: fixed !important;
+    top: 14px !important;
+    right: 18px !important;
+    z-index: 70 !important;
+    justify-self: auto !important;
+    pointer-events: none; /* purely decorative — don't block controls beneath */
+}
+
+/* Top app bar no longer needs a 3rd column for the (now-fixed) logo. */
+.top-app-bar {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+}
+
+/* Reserve space on the right edge of the top-app-bar so the sticky bar's
+   own controls don't collide with the fixed logo when the window is narrow. */
+.top-app-bar {
+    padding-right: clamp(96px, 8vw, 132px) !important;
+}
+
+/* 2) Remove the minimize/maximize (collapse/expand) buttons in the sidebar
+   header. The edge-mounted .panel-edge-toggle still handles open/close. */
+.collapse-button,
+.expand-button,
+.panel-header-actions {
+    display: none !important;
+}
+
+/* 3) Modal corner decorations removed. The ::before/::after pseudo-elements
+   on .modal-content were intended as scrollbar end-caps but render as
+   visible folded-paper dog-ears on modals that don't use the scroll inner. */
+.modal-content::before,
+.modal-content::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 4) Project cards flow from the TOP-LEFT — explicit start alignment on
+   both axes so leftover grid space collects on the right / bottom, not
+   around the cards. */
+.project-grid {
+    justify-content: start !important;
+    align-content: start !important;
+    justify-items: stretch;
+    align-items: start;
+}
+
+/* Viewport header left-aligned so the page reads top-left → bottom-right
+   (was text-align: center, which made the layout feel centered). */
+.viewport-header h1 {
+    text-align: left !important;
+}
+
+.viewport {
+    align-self: flex-start;
+}
+
+/* 5) Save-status pill sits inline to the RIGHT of the user avatar pill.
+   panel-user-info becomes a horizontal flex row; the save pill takes the
+   remaining space and truncates if it ever gets long. */
+.panel-user-info {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100%;
+}
+
+.panel-user-info.hidden {
+    display: none !important;
+}
+
+.panel-user-info .panel-user-pill {
+    flex: 0 0 auto;
+    width: auto !important;
+}
+
+.save-status--inline {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* 6) UI Options modal — styling for the relocated mode toggle section. */
+.ui-options-section {
+    margin-bottom: 18px;
+}
+
+.ui-options-section-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 6px 0 10px;
+}
+
+.ui-options-mode-toggle-row {
+    margin-bottom: 0;
+}
+

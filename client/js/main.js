@@ -2408,9 +2408,7 @@ function getCommandPaletteActions() {
         { id: 'view-active', title: 'Switch to Active Projects', copy: 'Show active projects.', run: () => switchToActiveView() },
         { id: 'view-completed', title: 'Switch to Completed Projects', copy: 'Show completed projects.', run: () => switchToCompletedView() },
         { id: 'toggle-panel', title: 'Toggle control panel', copy: 'Collapse or expand the side panel.', run: () => {
-            const controlPanel = document.getElementById('controlPanel');
-            if (state.isControlPanelOpen()) document.getElementById('collapseButton')?.click();
-            else document.getElementById('expandButton')?.click();
+            document.getElementById('panelEdgeToggle')?.click();
         } },
         { id: 'open-account', title: 'Open account settings', copy: 'Edit your profile and stats.', run: () => openAccountSettingsModal() },
         { id: 'open-ui', title: 'Open UI options', copy: 'Change the current theme.', run: () => openUiOptionsModal() },
@@ -2953,7 +2951,7 @@ function initializeEventHandlers() {
     };
 
     const collapseControlPanel = () => {
-        if (!controlPanel || !expandButton) return;
+        if (!controlPanel) return;
         state.setControlPanelOpen(false);
         controlPanel.classList.add('collapsed');
         viewport?.classList.remove('full');
@@ -2961,7 +2959,7 @@ function initializeEventHandlers() {
     };
 
     const expandControlPanel = () => {
-        if (!controlPanel || !expandButton) return;
+        if (!controlPanel) return;
         state.setControlPanelOpen(true);
         controlPanel.classList.remove('collapsed');
         viewport?.classList.remove('full');
@@ -3107,11 +3105,7 @@ function initializeEventHandlers() {
                 addProject();
                 break;
             case SHORTCUTS.TOGGLE_PANEL:
-                if (state.isControlPanelOpen()) {
-                    collapseButton.click();
-                } else {
-                    expandButton.click();
-                }
+                document.getElementById('panelEdgeToggle')?.click();
                 break;
             case SHORTCUTS.TOGGLE_MENU:
                 openShortcutsModal();

@@ -168,19 +168,8 @@
                                 </div>
                                 <span class="panel-username" id="panelUsername"></span>
                             </button>
+                            <div class="save-status save-status--idle save-status--inline" id="saveStatusPill">All changes saved</div>
                         </div>
-                    </div>
-                    <div class="panel-header-actions">
-                        <button class="collapse-button" id="collapseButton" type="button" aria-label="Collapse control panel">
-                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                        <button class="expand-button hidden" id="expandButton" type="button" aria-label="Expand control panel" style="display:none">
-                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                        </button>
                     </div>
                 </div>
 
@@ -244,18 +233,6 @@
 
                 <div class="sidebar-section-label">Settings</div>
                 <div class="settings-panel-card">
-                    <div class="sidebar-mode-toggle-row">
-                        <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
-                            <span class="color-mode-toggle-track">
-                                <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                                <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
-                                <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
-                            </span>
-                        </button>
-                    </div>
-
-                    <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
-
                     <div class="settings-actions">
                         <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button">Account Settings</button>
                         <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button">UI Options</button>
@@ -348,7 +325,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme. Use the sidebar toggle to switch light and dark mode.</p>
+                        <p class="account-modal-subtitle">Choose a visual theme and toggle light/dark mode.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,6 +333,21 @@
                         </svg>
                     </button>
                 </div>
+
+                <div class="ui-options-section">
+                    <div class="ui-options-section-label">Appearance Mode</div>
+                    <div class="sidebar-mode-toggle-row ui-options-mode-toggle-row">
+                        <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                            <span class="color-mode-toggle-track">
+                                <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                                <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                                <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ui-options-section-label">Theme</div>
 
                 <div class="theme-grid" id="themeGrid">
                     <button class="theme-card" type="button" data-theme-family-option="blueprint">
