@@ -2996,6 +2996,8 @@ function initializeEventHandlers() {
     document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
     document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
     document.getElementById('sidebarSignOutBtn')?.addEventListener('click', logout);
+    document.getElementById('activeProjectsCard')?.addEventListener('click', switchToActiveView);
+    document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
     document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
     document.getElementById('archivedProjectsCard')?.addEventListener('click', openArchivedProjectsModal);
 

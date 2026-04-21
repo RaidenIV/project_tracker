@@ -5657,3 +5657,71 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     margin-bottom: 0;
 }
 
+/* ============================================================================
+   ROUND 3 OVERRIDES
+   ============================================================================ */
+
+/* 1) Modal copy and close buttons — perfectly square.
+   Explicit width/height with flex centering guarantees a true square
+   regardless of the inner SVG's aspect ratio. */
+.modal-close,
+.modal-copy-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    flex: 0 0 36px;
+}
+
+/* 2) Padding between the sidebar and the project cards now MATCHES the
+   right-side padding. Previous: padding-left: 20vw (flush to sidebar).
+   New: padding-left: 20vw + the same clamp value used on the right. */
+.container {
+    padding-left: calc(20vw + clamp(20px, 2vw, 28px)) !important;
+}
+
+/* 3) Save-status indicator moved BELOW the avatar.
+   panel-user-info is now a column: avatar-pill on top, save pill under it.
+   Override the horizontal row from round 2. */
+.panel-user-info {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+}
+
+.save-status--inline {
+    flex: 0 0 auto;
+    width: 100%;
+    padding-left: 2px;
+}
+
+/* 4) Smoother sidebar collapse/expand animation.
+   - Longer duration (450ms) for a more gentle feel
+   - Ease-out-expo curve settles naturally without overshoot
+   - Apply consistently to the panel, the container padding shift,
+     and the edge-toggle so all three move in lockstep. */
+.control-panel {
+    transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.container {
+    transition: padding-left 450ms cubic-bezier(0.16, 1, 0.3, 1),
+                padding-right 450ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.panel-edge-toggle {
+    transition: left 450ms cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.2s ease,
+                box-shadow 0.2s ease !important;
+}
+
+.panel-edge-toggle svg {
+    transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
