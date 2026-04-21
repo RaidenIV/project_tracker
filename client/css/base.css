@@ -5008,218 +5008,444 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
     }
 }
 
-
 /* ============================================================================
-   V14 LEFT SIDEBAR / AVATAR / SCROLLBAR / SIDEBAR TOGGLE CONSOLIDATION
-   - Desktop sidebar pinned to the left at 20vw
-   - Visible thin scrollbar styled like ChatGPT’s sidebar
-   - Consistent avatar rendering and sizing across 1920x1080 / 1920x1200
-   - Sidebar is the canonical location for the light/dark toggle
+   PATCH v5 — left sidebar layout, labeled mode toggle, notification modal,
+   top-right logo, and desktop consistency
    ============================================================================ */
 
 :root {
-    --desktop-sidebar-width: 20vw;
+    --sidebar-width-desktop: 20vw;
 }
 
-/* Make all static text non-editable so the I-beam cursor only appears on
-   actual interactive controls. */
-body,
-body *:not(input):not(textarea):not(select):not([contenteditable="true"]):not([contenteditable=""]) {
-    caret-color: transparent;
-}
-
-input,
-textarea,
-select,
-[contenteditable="true"],
-[contenteditable=""] {
-    caret-color: auto;
-}
-
-/* Sidebar toggle lives in the sidebar across all UI families. */
-.toolbar-color-mode-toggle {
-    display: none !important;
-}
-
-.panel-display-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.sidebar-color-mode-toggle {
-    width: 100%;
-    min-width: 0;
-}
-
-.sidebar-color-mode-toggle .color-mode-toggle-track {
-    width: 100%;
-}
-
-/* Stable avatar sizing and full circular rendering regardless of viewport height. */
-.panel-user-pill,
-.control-panel .panel-user-pill {
-    width: auto;
-    min-width: 0;
-    max-width: min(100%, 100%);
-}
-
-.panel-avatar,
-.account-avatar,
-.menu-account-avatar {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
-    max-width: 30px !important;
-    max-height: 30px !important;
-    border-radius: 999px;
-    overflow: hidden;
-    aspect-ratio: 1 / 1;
-    flex: 0 0 30px !important;
-}
-
-.account-avatar--large {
-    width: 88px !important;
-    height: 88px !important;
-    min-width: 88px !important;
-    min-height: 88px !important;
-    max-width: 88px !important;
-    max-height: 88px !important;
-    flex-basis: 88px !important;
-}
-
-.panel-avatar-img,
-.account-avatar-img,
-.menu-account-avatar-img {
-    width: 100% !important;
-    height: 100% !important;
-    min-width: 100% !important;
-    min-height: 100% !important;
+.top-app-logo {
+    width: clamp(108px, 8vw, 152px);
+    height: auto;
     display: block;
-    object-fit: cover;
-    object-position: center center;
-    transform: none !important;
+    justify-self: end;
+    align-self: center;
+    object-fit: contain;
 }
 
-/* Keep the left sidebar consistent on desktop instead of switching geometry on
-   1920x1200-class displays. */
-@media (min-width: 1101px) {
-    :root {
-        --desktop-sidebar-width: 20vw;
-    }
+.top-app-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 16px;
+}
 
+.top-view-toolbar {
+    justify-self: stretch;
+}
+
+.view-toolbar {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) repeat(2, minmax(118px, 136px)) auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.toolbar-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+}
+
+/* Desktop app shell: left sidebar at 20% width */
+@media (min-width: 1101px) {
     .container {
-        padding-left: calc(var(--desktop-sidebar-width) + clamp(18px, 2vw, 28px)) !important;
-        padding-right: clamp(18px, 2vw, 28px) !important;
+        padding-left: var(--sidebar-width-desktop);
+        padding-right: clamp(20px, 2vw, 28px);
     }
 
     body.control-panel-is-collapsed .container {
-        padding-left: calc(var(--collapsed-panel-width, 148px) + clamp(18px, 2vw, 28px)) !important;
-        padding-right: clamp(18px, 2vw, 28px) !important;
+        padding-left: clamp(20px, 2vw, 28px);
+        padding-right: clamp(20px, 2vw, 28px);
     }
 
     .control-panel {
-        left: 0 !important;
-        right: auto !important;
-        width: var(--desktop-sidebar-width) !important;
-        min-width: var(--desktop-sidebar-width) !important;
-        max-width: var(--desktop-sidebar-width) !important;
-        transform: none !important;
+        left: 0;
+        right: auto;
+        width: var(--sidebar-width-desktop);
+        min-width: var(--sidebar-width-desktop);
+        max-width: var(--sidebar-width-desktop);
+        border-right: 1px solid rgba(0, 0, 0, 0.06);
+        border-left: none;
     }
 
-    body.control-panel-is-collapsed .control-panel,
-    body.control-panel-is-collapsed .control-panel.collapsed,
     .control-panel.collapsed {
-        left: 0 !important;
-        right: auto !important;
-        transform: none !important;
-    }
-
-    .control-panel-content,
-    .control-panel-scroll-inner {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    .control-panel-scroll-inner {
-        border-left: none !important;
-        border-right: 1px solid var(--glass-border, rgba(0, 0, 0, 0.08)) !important;
-        box-shadow: 6px 0 20px rgba(0, 0, 0, 0.08) !important;
-        scrollbar-gutter: stable;
-        scrollbar-width: thin !important;
-        scrollbar-color: rgba(99, 99, 110, 0.45) transparent !important;
-        padding-right: calc(var(--modal-padding) - 4px + 8px + 10px) !important;
-        overflow-y: auto !important;
-    }
-
-    .control-panel-scroll-inner::-webkit-scrollbar {
-        display: block !important;
-        width: 8px !important;
-        height: 8px !important;
-    }
-
-    .control-panel-scroll-inner::-webkit-scrollbar-track {
-        background: transparent !important;
-    }
-
-    .control-panel-scroll-inner::-webkit-scrollbar-thumb {
-        background-color: rgba(99, 99, 110, 0.42) !important;
-        border-radius: 999px !important;
-        border: 2px solid transparent !important;
-        background-clip: padding-box !important;
-    }
-
-    .control-panel-scroll-inner::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(99, 99, 110, 0.62) !important;
-    }
-
-    .control-panel-scroll-inner::-webkit-scrollbar-button {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
+        transform: translateX(-100%);
     }
 
     .panel-edge-toggle {
-        left: var(--desktop-sidebar-width) !important;
-        right: auto !important;
-        transform: translate(-50%, -50%) !important;
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-        border-top-right-radius: 10px !important;
-        border-bottom-right-radius: 10px !important;
+        left: var(--sidebar-width-desktop);
+        right: auto;
+        transform: translate(-50%, -50%);
     }
 
     body.control-panel-is-collapsed .panel-edge-toggle {
-        left: 0 !important;
-        right: auto !important;
-        transform: translate(0, -50%) !important;
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-        border-top-right-radius: 10px !important;
-        border-bottom-right-radius: 10px !important;
+        left: 0;
+        right: auto;
+        transform: translate(0, -50%);
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
     }
 
     body.control-panel-is-collapsed .panel-edge-toggle svg {
-        transform: rotate(180deg) !important;
+        transform: rotate(0deg);
     }
 }
 
-/* Remove the old 1920x1200-specific desktop variant so the avatar/sidebar match
-   1920x1080 behavior. */
-@media (min-width: 1800px) and (max-width: 2000px) and (max-height: 1250px) {
-    .container {
-        grid-template-columns: none !important;
+.control-panel-header {
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.panel-header-main {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.panel-user-info {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.panel-user-pill {
+    width: 100%;
+    max-width: none;
+    min-height: 52px;
+    padding: 10px 14px;
+    gap: 12px;
+    justify-content: flex-start;
+}
+
+.panel-avatar,
+.account-avatar {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+}
+
+.account-avatar--large {
+    width: 88px;
+    height: 88px;
+}
+
+.panel-avatar-img,
+.account-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    aspect-ratio: 1 / 1;
+}
+
+.panel-username {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* ChatGPT-like thin scrollbar */
+.control-panel-scroll-inner {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 120, 130, 0.45) transparent;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar {
+    width: 10px;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-thumb {
+    background-color: rgba(120, 120, 130, 0.42);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.control-panel-scroll-inner::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(120, 120, 130, 0.62);
+}
+
+.sidebar-section-label {
+    margin: 20px 0 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.sidebar-nav-list {
+    display: grid;
+    gap: 10px;
+}
+
+.sidebar-nav-card {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: none;
+    border-radius: 14px;
+    background: var(--panel);
+    color: var(--heading);
+    box-shadow: var(--card-shadow);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.sidebar-nav-card:hover {
+    transform: translateY(-1px);
+}
+
+.sidebar-nav-card.active {
+    outline: 2px solid rgba(50, 120, 235, 0.18);
+}
+
+.sidebar-nav-card-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sidebar-nav-card-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(50, 120, 235, 0.10);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.sidebar-total-completion-section {
+    margin-top: 20px;
+}
+
+.sidebar-completion-stats {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.sidebar-completion-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.sidebar-completion-stat strong {
+    color: var(--heading);
+    font-size: 12px;
+}
+
+.notifications-summary-card,
+.settings-panel-card {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--card-shadow);
+}
+
+.notifications-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.notifications-summary-text {
+    font-size: 12px;
+    color: var(--heading);
+    font-weight: 600;
+}
+
+.notifications-summary-actions,
+.settings-actions {
+    display: grid;
+    gap: 8px;
+}
+
+.sidebar-action-button,
+.section-action-button {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--heading);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--inset-shadow);
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.sidebar-action-button:hover,
+.section-action-button:hover {
+    transform: translateY(-1px);
+}
+
+.sidebar-action-button--danger {
+    color: #c14a4a;
+}
+
+.sidebar-mode-toggle-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 14px;
+}
+
+/* Labeled light/dark toggle */
+.color-mode-toggle {
+    position: relative;
+    width: 102px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--heading);
+    box-shadow: var(--inset-shadow);
+}
+
+.color-mode-toggle-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 0 12px;
+    border-radius: inherit;
+}
+
+.color-mode-toggle-option {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: nowrap;
+    border: 0;
+    z-index: 2;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.color-mode-toggle-option--light {
+    text-align: left;
+}
+
+.color-mode-toggle-option--dark {
+    text-align: right;
+}
+
+.color-mode-toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 46px;
+    height: 30px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s ease;
+    z-index: 1;
+}
+
+.color-mode-toggle.is-dark .color-mode-toggle-thumb {
+    transform: translateX(50px);
+}
+
+.color-mode-toggle.is-dark .color-mode-toggle-option--dark,
+.color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light {
+    color: var(--heading);
+}
+
+.notifications-modal-content,
+.shortcuts-modal-content {
+    max-width: 680px;
+}
+
+.notifications-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shortcuts-grid--modal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 18px;
+    margin-top: 8px;
+}
+
+/* Remove the caret from non-editable text blocks */
+body :where(h1, h2, h3, h4, h5, h6, p, span, div, label, button):not(input):not(textarea) {
+    caret-color: transparent;
+}
+
+/* Mobile / narrower desktop fallback */
+@media (max-width: 1700px) {
+    .view-toolbar {
+        grid-template-columns: minmax(140px, 1fr) repeat(2, minmax(112px, 128px)) auto;
+    }
+}
+
+@media (max-width: 1100px) {
+    .top-app-bar {
+        grid-template-columns: 1fr;
+        row-gap: 12px;
+    }
+
+    .top-app-logo {
+        justify-self: start;
+    }
+
+    .view-toolbar {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .toolbar-actions {
+        justify-self: stretch;
     }
 
     .control-panel {
-        width: 20vw !important;
-        min-width: 20vw !important;
-        max-width: 20vw !important;
-    }
-
-    .control-panel .panel-user-pill {
-        max-width: 100% !important;
+        left: 0;
+        right: 0;
+        width: auto;
+        min-width: 0;
+        max-width: none;
     }
 }

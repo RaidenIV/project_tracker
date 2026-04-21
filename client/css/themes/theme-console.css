@@ -1139,10 +1139,144 @@ body[data-theme^="console"] .control-panel .control-panel-scroll-inner {
     min-height: 100%;
 }
 
+/* ============================================================================
+   PATCH v5 — console cleanup: SF Mono, flat app bar, single select caret,
+   flat role controls, and sidebar/settings polish
+   ============================================================================ */
 
-body[data-theme^="console"] .save-status--saved { color: var(--success); }
-body[data-theme^="console"] .save-status--conflict { color: var(--error); }
+body[data-theme^="console"] {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Dank Mono', ui-monospace, monospace;
+    letter-spacing: 0;
+}
 
-body[data-theme^="console"] .color-mode-toggle-option { color: var(--muted); }
+body[data-theme^="console"] .top-app-bar {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+body[data-theme^="console"] .top-app-bar-title {
+    font-family: inherit;
+}
+
+body[data-theme^="console"] .top-app-logo {
+    filter: none;
+}
+
+body[data-theme^="console"] .view-toolbar-search,
+body[data-theme^="console"] .view-toolbar-select,
+body[data-theme^="console"] .view-toolbar-button {
+    background-color: var(--inset);
+    border: 1px solid var(--line);
+    box-shadow: none;
+}
+
+body[data-theme="console-dark"] .view-toolbar-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    padding-right: 34px !important;
+    background: var(--inset) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a7a7ad' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center / 12px 12px !important;
+}
+
+body[data-theme="console-light"] .view-toolbar-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    padding-right: 34px !important;
+    background: var(--inset) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235d5d66' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center / 12px 12px !important;
+}
+
+body[data-theme^="console"] .view-toolbar-select::-ms-expand,
+body[data-theme^="console"] .member-role-select::-ms-expand,
+body[data-theme^="console"] .invite-role-select::-ms-expand {
+    display: none;
+}
+
+body[data-theme^="console"] .control-panel-scroll-inner {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .panel-user-pill,
+body[data-theme^="console"] .notifications-summary-card,
+body[data-theme^="console"] .settings-panel-card,
+body[data-theme^="console"] .sidebar-nav-card,
+body[data-theme^="console"] .total-completion-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .sidebar-nav-card.active {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent), 0 0 18px var(--accent-glow);
+}
+
+body[data-theme^="console"] .sidebar-action-button,
+body[data-theme^="console"] .section-action-button,
+body[data-theme^="console"] .undo-button,
+body[data-theme^="console"] .icon-button-small,
+body[data-theme^="console"] .member-role-select,
+body[data-theme^="console"] .invite-role-select,
+body[data-theme^="console"] .member-role-badge,
+body[data-theme^="console"] .role-badge {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    box-shadow: none !important;
+    border-radius: 10px;
+}
+
+body[data-theme^="console"] .member-role-select,
+body[data-theme^="console"] .invite-role-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 34px;
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 12px;
+}
+
+body[data-theme="console-dark"] .member-role-select,
+body[data-theme="console-dark"] .invite-role-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a7a7ad' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body[data-theme="console-light"] .member-role-select,
+body[data-theme="console-light"] .invite-role-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235d5d66' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body[data-theme^="console"] .color-mode-toggle {
+    width: 104px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .color-mode-toggle-thumb {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+body[data-theme^="console"] .color-mode-toggle-option {
+    color: var(--muted);
+}
+
 body[data-theme^="console"] .color-mode-toggle.is-dark .color-mode-toggle-option--dark,
-body[data-theme^="console"] .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light { color: var(--heading); }
+body[data-theme^="console"] .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light {
+    color: var(--text-invert);
+}
+
+body[data-theme^="console"] .save-status--saved,
+body[data-theme^="console"] .save-status--idle {
+    color: var(--success);
+}

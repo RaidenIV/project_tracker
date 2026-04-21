@@ -189,6 +189,11 @@ function syncThemeBranding() {
     if (panelLogo) {
         panelLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
     }
+
+    const topAppLogo = document.getElementById('topAppLogo');
+    if (topAppLogo) {
+        topAppLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
 }
 
 function loadSavedViewsFromStorage() {
@@ -247,21 +252,14 @@ function closeUiOptionsModal() {
     document.getElementById('uiOptionsModal')?.classList.remove('active');
 }
 
-function getDefaultSaveStatusMessage(status) {
-    if (status === 'saving') return 'Saving changes…';
-    if (status === 'error') return 'Save failed — retrying on next change';
-    if (status === 'conflict') return 'Conflict detected — refresh to sync';
-    if (status === 'saved') return 'All changes saved';
-    return 'Ready';
-}
-
-function setSaveStatus(status, message = getDefaultSaveStatusMessage(status)) {
+function setSaveStatus(status, message) {
     uiState.saveStatus = status;
     uiState.saveMessage = message;
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
-    pill.className = `save-status save-status--${status}`;
-    pill.textContent = message || getDefaultSaveStatusMessage(status);
+    const visualStatus = status === 'idle' ? 'saved' : status;
+    pill.className = `save-status save-status--${visualStatus}`;
+    pill.textContent = message;
 }
 
 function projectUpdate(updates = {}, options = {}) {
@@ -446,9 +444,9 @@ function renderSavedViewsPanel() {
 function renderArchivedProjectsPanel() {
     const list = document.getElementById('archivedProjectsList');
     const count = document.getElementById('archivedProjectsCount');
-    if (!list || !count) return;
     const archivedProjects = getArchivedProjects();
-    count.textContent = String(archivedProjects.length);
+    if (count) count.textContent = String(archivedProjects.length);
+    if (!list) return;
     if (!archivedProjects.length) {
         list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
         return;
@@ -1298,18 +1296,22 @@ function syncViewTitle() {
 // VIEW MANAGEMENT
 // ============================================================================
 
+function setSidebarProjectsNav(activeId) {
+    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard', 'archivedProjectsCard'].forEach(id => {
+        document.getElementById(id)?.classList.toggle('active', id === activeId);
+    });
+}
+
 function switchToActiveView() {
     state.setView(VIEWS.ACTIVE);
-    document.getElementById('activeProjectsCard').classList.add('active');
-    document.getElementById('completedProjectsCard').classList.remove('active');
+    setSidebarProjectsNav('activeProjectsCard');
     setViewTitle('Active Projects');
     render();
 }
 
 function switchToCompletedView() {
     state.setView(VIEWS.COMPLETED);
-    document.getElementById('completedProjectsCard').classList.add('active');
-    document.getElementById('activeProjectsCard').classList.remove('active');
+    setSidebarProjectsNav('completedProjectsCard');
     setViewTitle('Completed Projects');
     render();
 }
@@ -2613,13 +2615,13 @@ function renderProjectCard(project) {
 function renderSharedProjectsPanel() {
     const sharedProjectsList = document.getElementById('sharedProjectsList');
     const sharedProjectsCount = document.getElementById('sharedProjectsCount');
-    if (!sharedProjectsList || !sharedProjectsCount) return;
 
     const sharedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).filter(project =>
         project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
     );
 
-    sharedProjectsCount.textContent = String(sharedActiveProjects.length);
+    if (sharedProjectsCount) sharedProjectsCount.textContent = String(sharedActiveProjects.length);
+    if (!sharedProjectsList) return;
 
     if (!sharedActiveProjects.length) {
         sharedProjectsList.innerHTML = '<div class="side-panel-empty">No shared active projects</div>';
@@ -2668,38 +2670,24 @@ function timeAgo(isoString) {
     return `${Math.floor(months / 12)}y ago`;
 }
 
-function getNotificationsSummaryText() {
-    if (!notificationState.items.length) return 'No notifications yet';
-    if (notificationState.unreadCount > 0) {
-        return `${notificationState.unreadCount} unread notification${notificationState.unreadCount === 1 ? '' : 's'}`;
-    }
-    return `${notificationState.items.length} notification${notificationState.items.length === 1 ? '' : 's'} total`;
-}
-
 function renderNotificationsPanel() {
     const notificationsUnreadCount = document.getElementById('notificationsUnreadCount');
-    const notificationsSummary = document.getElementById('notificationsSummary');
-    const notificationsModalUnreadCount = document.getElementById('notificationsModalUnreadCount');
-    const notificationsModalSummaryText = document.getElementById('notificationsModalSummaryText');
-    const notificationsModalSubtitle = document.getElementById('notificationsModalSubtitle');
+    const notificationsSummaryText = document.getElementById('notificationsSummaryText');
     const notificationsModalList = document.getElementById('notificationsModalList');
-    if (!notificationsUnreadCount || !notificationsSummary || !notificationsModalUnreadCount || !notificationsModalSummaryText || !notificationsModalList) return;
 
-    const unreadCount = notificationState.unreadCount || 0;
-    const totalCount = notificationState.items.length;
-    const summaryText = getNotificationsSummaryText();
-
-    notificationsUnreadCount.textContent = String(unreadCount);
-    notificationsModalUnreadCount.textContent = String(unreadCount);
-    notificationsSummary.textContent = summaryText;
-    notificationsModalSummaryText.textContent = summaryText;
-    if (notificationsModalSubtitle) {
-        notificationsModalSubtitle.textContent = totalCount
-            ? `Review ${totalCount} recent project notification${totalCount === 1 ? '' : 's'}`
-            : 'Review recent project activity';
+    if (notificationsUnreadCount) {
+        notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
     }
 
-    if (!totalCount) {
+    if (notificationsSummaryText) {
+        notificationsSummaryText.textContent = notificationState.unreadCount
+            ? `${notificationState.unreadCount} unread notification${notificationState.unreadCount === 1 ? '' : 's'}`
+            : 'No unread notifications';
+    }
+
+    if (!notificationsModalList) return;
+
+    if (!notificationState.items.length) {
         notificationsModalList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
         return;
     }
@@ -2707,16 +2695,80 @@ function renderNotificationsPanel() {
     notificationsModalList.innerHTML = notificationState.items.map(notification => `
         <button class="notification-card ${notification.read ? '' : 'notification-card--unread'}"
                 type="button"
-                data-notification-id="${escapeHtml(notification._id || '')}"
-                data-project-id="${escapeHtml(notification.projectId || '')}"
-                onclick="openNotificationProject(this.dataset.notificationId, this.dataset.projectId)">
+                onclick="openNotificationProject('${notification._id}', '${notification.projectId}')">
             <div class="notification-card-header">
-                <span class="notification-project">${escapeHtml(notification.projectTitle || 'Project')}</span>
-                <span class="notification-time">${escapeHtml(timeAgo(notification.createdAt))}</span>
+                <span class="notification-project">${notification.projectTitle || 'Project'}</span>
+                <span class="notification-time">${timeAgo(notification.createdAt)}</span>
             </div>
-            <div class="notification-message"><strong>${escapeHtml(notification.actorName || 'Someone')}</strong> ${escapeHtml(notification.message || 'updated a project')}</div>
+            <div class="notification-message"><strong>${notification.actorName || 'Someone'}</strong> ${notification.message}</div>
         </button>
     `).join('');
+}
+
+function openNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.add('active');
+}
+
+function closeNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.remove('active');
+}
+
+function openShortcutsModal() {
+    document.getElementById('shortcutsModal')?.classList.add('active');
+}
+
+function closeShortcutsModal() {
+    document.getElementById('shortcutsModal')?.classList.remove('active');
+}
+
+function switchToSharedView() {
+    uiState.ownerFilter = 'shared';
+    uiState.activeSavedViewId = '';
+    const ownerFilter = document.getElementById('projectOwnerFilter');
+    if (ownerFilter) ownerFilter.value = 'shared';
+    state.setView(VIEWS.ACTIVE);
+    setSidebarProjectsNav('sharedProjectsCard');
+    setViewTitle('Shared Projects');
+    render();
+}
+
+function renderArchivedProjectsModalList() {
+    const list = document.getElementById('archivedProjectsModalList');
+    if (!list) return;
+    const archivedProjects = getArchivedProjects();
+    if (!archivedProjects.length) {
+        list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
+        return;
+    }
+    list.innerHTML = archivedProjects.map(project => `
+        <div class="archived-project-card">
+            <div>
+                <div class="archived-project-title">${escapeHtml(project.title)}</div>
+                <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
+            </div>
+            <div class="archived-project-actions">
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openArchivedProjectsModal() {
+    setSidebarProjectsNav('archivedProjectsCard');
+    renderArchivedProjectsModalList();
+    document.getElementById('archivedProjectsModal')?.classList.add('active');
+}
+
+function closeArchivedProjectsModal() {
+    document.getElementById('archivedProjectsModal')?.classList.remove('active');
+    if (uiState.ownerFilter === 'shared' && state.getView() === VIEWS.ACTIVE) {
+        setSidebarProjectsNav('sharedProjectsCard');
+    } else if (state.getView() === VIEWS.COMPLETED) {
+        setSidebarProjectsNav('completedProjectsCard');
+    } else {
+        setSidebarProjectsNav('activeProjectsCard');
+    }
 }
 
 async function refreshNotifications() {
@@ -2731,14 +2783,6 @@ async function refreshNotifications() {
     }
     notificationState.hasLoadedOnce = true;
     renderNotificationsPanel();
-}
-
-function openNotificationsModal() {
-    document.getElementById('notificationsModal')?.classList.add('active');
-}
-
-function closeNotificationsModal() {
-    document.getElementById('notificationsModal')?.classList.remove('active');
 }
 
 function startNotificationPolling() {
@@ -2767,7 +2811,6 @@ async function openNotificationProject(notificationId, projectId) {
     if (targetNotification) targetNotification.read = true;
     notificationState.unreadCount = notificationState.items.filter(item => !item.read).length;
     renderNotificationsPanel();
-    closeNotificationsModal();
 
     const project = state.findProject(projectId);
     if (project) {
@@ -2950,8 +2993,13 @@ function initializeEventHandlers() {
     document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
     document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
-    document.getElementById('notificationsModalMarkAllReadBtn')?.addEventListener('click', markAllNotificationsRead);
-    document.getElementById('viewAllNotificationsBtn')?.addEventListener('click', openNotificationsModal);
+    document.getElementById('viewNotificationsBtn')?.addEventListener('click', openNotificationsModal);
+    document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
+    document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
+    document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
+    document.getElementById('sidebarSignOutBtn')?.addEventListener('click', logout);
+    document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
+    document.getElementById('archivedProjectsCard')?.addEventListener('click', openArchivedProjectsModal);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -2982,6 +3030,17 @@ function initializeEventHandlers() {
     document.getElementById('notificationsModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'notificationsModal') closeNotificationsModal();
     });
+    document.getElementById('closeNotificationsModalBtn')?.addEventListener('click', closeNotificationsModal);
+
+    document.getElementById('shortcutsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'shortcutsModal') closeShortcutsModal();
+    });
+    document.getElementById('closeShortcutsModalBtn')?.addEventListener('click', closeShortcutsModal);
+
+    document.getElementById('archivedProjectsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'archivedProjectsModal') closeArchivedProjectsModal();
+    });
+    document.getElementById('closeArchivedProjectsModalBtn')?.addEventListener('click', closeArchivedProjectsModal);
 
     document.getElementById('commandPaletteModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'commandPaletteModal') closeCommandPalette();
@@ -3055,7 +3114,7 @@ function initializeEventHandlers() {
                 }
                 break;
             case SHORTCUTS.TOGGLE_MENU:
-                menuButton.click();
+                openShortcutsModal();
                 break;
             case SHORTCUTS.VIEW_ACTIVE:
                 switchToActiveView();
@@ -3076,7 +3135,7 @@ function initializeEventHandlers() {
 
 N - New Project
 C - Toggle Control Panel
-M - Toggle Menu
+M - Keyboard Shortcuts
 A - View Active Projects
 D - View Completed Projects
 Z - Undo (last deletion)
@@ -3217,7 +3276,14 @@ window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.openNotificationProject = openNotificationProject;
 window.markAllNotificationsRead = markAllNotificationsRead;
+window.openNotificationsModal = openNotificationsModal;
 window.closeNotificationsModal = closeNotificationsModal;
+window.openShortcutsModal = openShortcutsModal;
+window.closeShortcutsModal = closeShortcutsModal;
+window.switchToSharedView = switchToSharedView;
+window.openArchivedProjectsModal = openArchivedProjectsModal;
+window.closeArchivedProjectsModal = closeArchivedProjectsModal;
+
 window.applySavedView = applySavedView;
 window.deleteSavedView = deleteSavedView;
 window.restoreArchivedProject = restoreArchivedProject;
@@ -3369,18 +3435,6 @@ function initAuthScreen() {
         if (rememberEl) rememberEl.checked = true;
     }
 
-    // Shortcuts toggle
-    document.getElementById('shortcutsToggle')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const panel = document.getElementById('shortcutsPanel');
-        const wrapper = document.getElementById('shortcutsWrapper');
-        const toggle = document.getElementById('shortcutsToggle');
-        if (!panel || !wrapper || !toggle) return;
-        const isHidden = panel.classList.contains('hidden');
-        panel.classList.toggle('hidden', !isHidden);
-        wrapper.classList.toggle('menu-shortcuts-wrapper--open', isHidden);
-        toggle.setAttribute('aria-expanded', String(isHidden));
-    });
 }
 
 function onAuthSuccess(user) {
