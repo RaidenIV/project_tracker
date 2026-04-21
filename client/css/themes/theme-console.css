@@ -403,11 +403,11 @@ body[data-theme^="console"] .panel-username {
     font-weight: 600;
 }
 
-/* Display (mode toggle) row inside panel */
+/* Display (mode toggle) row inside panel — flat, no background */
 body[data-theme^="console"] .panel-display-row {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
 }
 
 body[data-theme^="console"] .panel-display-label {

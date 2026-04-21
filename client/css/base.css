@@ -576,13 +576,16 @@ body {
 
         /* Control Panel — fixed right-side sidebar (collapsible via slide-off).
            Reaches edge-to-edge like a traditional sidebar (no outer padding, no rounded corners).
-           Uses flexbox so the scrollable inner area reliably fills from top to bottom. */
+           Uses flexbox so the scrollable inner area reliably fills from top to bottom.
+           Uses 100dvh so the panel reaches the actual bottom on mobile browsers (where the
+           browser chrome collapses 100vh otherwise). Falls back to 100vh for older browsers. */
         .control-panel {
             position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
             height: 100vh;
+            height: 100dvh;
             width: clamp(360px, 30vw, 480px);
             max-width: 480px;
             z-index: 55;
@@ -2936,17 +2939,29 @@ body[data-color-mode="dark"] .menu-dropdown-separator {
 
 .section-action-button {
     border: none;
-    background: transparent;
-    color: var(--accent);
-    font-size: 11px;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 10px;
     font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     font-family: inherit;
     cursor: pointer;
-    padding: 0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    box-shadow: var(--card-shadow);
+    transition: all 0.18s ease;
 }
 
 .section-action-button:hover {
-    color: var(--accent-2);
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.12), -2px -2px 6px rgba(255,255,255,0.6);
+}
+
+.section-action-button:active {
+    transform: translateY(0);
+    box-shadow: var(--inset-shadow);
 }
 
 .shared-projects-list,
@@ -3765,17 +3780,18 @@ body[data-color-mode="dark"] .menu-dropdown-item--danger:hover {
     flex: 0 0 auto;
 }
 
-/* Display-mode row inside the control panel (houses the light/dark toggle) */
+/* Display-mode row inside the control panel (houses the light/dark toggle).
+   Flat row — no card background — sits directly on the sidebar surface. */
 .panel-display-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 14px;
+    padding: 6px 4px;
     margin-bottom: 16px;
-    background: var(--panel);
-    border-radius: 14px;
-    box-shadow: var(--inset-shadow);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .panel-display-label {
