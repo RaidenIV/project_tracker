@@ -5010,96 +5010,110 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
 
 
 /* ============================================================================
-   FINAL SIDEBAR / LOGO / CARD SIZE LOCK
-   - Sidebar always pinned left
-   - Sidebar width locked to 20% of viewport width
-   - Project cards kept uniform size
-   - Logo pinned to top-right and reduced in size
+   V12 LAYOUT CORRECTION
+   - Keep the sidebar fixed on the left
+   - Lock desktop sidebar width to 20% of the viewport
+   - Keep project cards uniform in size
+   - Move the logo to the true top-right corner and reduce it by 25%
    ============================================================================ */
 
-:root {
-    --locked-sidebar-width: 20vw;
-    --uniform-project-card-height: 260px;
+.app-corner-logo {
+    position: fixed;
+    top: clamp(16px, 1.4vw, 24px);
+    right: clamp(18px, 1.8vw, 28px);
+    height: 24px;
+    width: auto;
+    z-index: 95;
+    object-fit: contain;
+    pointer-events: none;
 }
 
-.container,
-body.control-panel-is-collapsed .container {
-    padding-left: calc(var(--locked-sidebar-width) + clamp(18px, 2vw, 28px)) !important;
-    padding-right: clamp(18px, 2vw, 28px) !important;
-}
-
-.control-panel,
-.control-panel.collapsed,
-body.control-panel-is-collapsed .control-panel,
-body.control-panel-is-collapsed .control-panel.collapsed {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: auto !important;
-    bottom: 0 !important;
-    width: var(--locked-sidebar-width) !important;
-    min-width: var(--locked-sidebar-width) !important;
-    max-width: var(--locked-sidebar-width) !important;
-    flex-basis: var(--locked-sidebar-width) !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    transform: none !important;
-}
-
-.control-panel-content,
-.control-panel-scroll-inner,
-.control-panel.collapsed .control-panel-content,
-.control-panel.collapsed .control-panel-scroll-inner,
-body.control-panel-is-collapsed .control-panel .control-panel-content,
-body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
-body.control-panel-is-collapsed .control-panel.collapsed .control-panel-content,
-body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner {
-    width: 100% !important;
-    height: 100% !important;
-    max-height: none !important;
-}
-
-.panel-edge-toggle,
-.collapse-button,
-.expand-button {
+/* Hide the old in-sidebar logo so the header layout doesn't duplicate it. */
+.control-panel .panel-logo-img-inline {
     display: none !important;
 }
 
+/* Keep the user pill aligned naturally once the sidebar logo is removed. */
+.control-panel .panel-header-main {
+    gap: 0 !important;
+    align-items: center !important;
+}
+
+/* Uniform card sizing in the main grid. */
 .project-grid {
-    grid-auto-rows: var(--uniform-project-card-height) !important;
-    align-items: stretch !important;
+    align-items: stretch;
 }
 
 .project-card {
-    height: 100% !important;
-    min-height: var(--uniform-project-card-height) !important;
-    max-height: var(--uniform-project-card-height) !important;
-    display: flex !important;
-    flex-direction: column !important;
+    height: 260px;
+    min-height: 260px;
+    max-height: 260px;
+}
+
+.project-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden !important;
 }
 
-.panel-logo-img-inline {
-    position: fixed !important;
-    top: 18px !important;
-    right: 24px !important;
-    left: auto !important;
-    height: 22px !important;
-    width: auto !important;
-    margin: 0 !important;
-    z-index: 70 !important;
+.project-stats {
+    min-height: 32px;
 }
 
-@media (max-width: 1100px) {
-    .container,
-    body.control-panel-is-collapsed .container {
-        padding-left: calc(var(--locked-sidebar-width) + 16px) !important;
-        padding-right: 16px !important;
+@media (min-width: 1101px) {
+    :root {
+        --desktop-sidebar-width: 20vw;
     }
 
-    .panel-logo-img-inline {
-        top: 16px !important;
-        right: 16px !important;
-        height: 20px !important;
+    .container,
+    body.control-panel-is-collapsed .container {
+        width: 100%;
+        max-width: none;
+        padding-left: calc(var(--desktop-sidebar-width) + clamp(18px, 2vw, 28px)) !important;
+        padding-right: clamp(18px, 2vw, 28px) !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        bottom: 0 !important;
+        width: var(--desktop-sidebar-width) !important;
+        min-width: var(--desktop-sidebar-width) !important;
+        max-width: var(--desktop-sidebar-width) !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        transform: none !important;
+        pointer-events: auto !important;
+        z-index: 55 !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner,
+    .control-panel.collapsed .control-panel-content,
+    .control-panel.collapsed .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel .control-panel-content,
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-content,
+    body.control-panel-is-collapsed .control-panel.collapsed .control-panel-scroll-inner {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+    }
+
+    .panel-edge-toggle,
+    .collapse-button,
+    .expand-button {
+        display: none !important;
+    }
+
+    .top-app-bar {
+        padding-right: clamp(60px, 5vw, 88px);
     }
 }

@@ -13,6 +13,11 @@
 </head>
 <body>
     <div class="bg-gradient"></div>
+    <img
+        src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+        alt="Logo"
+        class="app-corner-logo"
+    >
 
     <!-- ─── Auth Overlay ────────────────────────────────────────────────────── -->
     <div class="auth-overlay hidden" id="authOverlay">
@@ -100,6 +105,50 @@
     <!-- ─── Main Container ───────────────────────────────────────────────────── -->
     <div class="container">
         <div class="top-app-bar">
+            <div class="menu-container" id="menuContainer">
+                <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation menu">
+                    <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="menu-dropdown hidden" id="menuDropdown">
+                    <button class="menu-dropdown-item menu-dropdown-item--account" id="menuAccountSettingsBtn" type="button">
+                        <span class="menu-account-label">Account Settings</span>
+                        <span class="menu-account-avatar" aria-hidden="true">
+                            <img class="menu-account-avatar-img hidden" id="menuAccountAvatarImg" alt="Profile picture">
+                            <span class="menu-account-avatar-fallback" id="menuAccountAvatarFallback">U</span>
+                        </span>
+                    </button>
+                    <button class="menu-dropdown-item" id="menuUiOptionsBtn" type="button">UI Options</button>
+                    <div class="menu-dropdown-separator"></div>
+                    <div class="menu-shortcuts-wrapper" id="shortcutsWrapper">
+                        <button class="menu-dropdown-item menu-dropdown-item--toggle" id="shortcutsToggle" type="button" aria-expanded="false">
+                            Keyboard Shortcuts
+                        </button>
+                        <div class="menu-shortcuts-panel hidden" id="shortcutsPanel">
+                            <div class="shortcuts-grid">
+                                <div class="shortcut-line"><kbd>N</kbd> New Project</div>
+                                <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
+                                <div class="shortcut-line"><kbd>M</kbd> Toggle Menu</div>
+                                <div class="shortcut-line"><kbd>A</kbd> View Active</div>
+                                <div class="shortcut-line"><kbd>D</kbd> Completed</div>
+                                <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
+                                <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
+                                <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-dropdown-separator menu-dropdown-separator--footer"></div>
+                    <button class="menu-dropdown-item menu-dropdown-item--danger" id="menuSignOutBtn" type="button">
+                        <svg class="menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H9"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 20H6a2 2 0 01-2-2V6a2 2 0 012-2h7"></path>
+                        </svg>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="top-app-bar-title" id="topAppBarTitle">Active Projects</div>
 
             <div class="view-toolbar top-view-toolbar">
@@ -120,16 +169,16 @@
                     <option value="progress">Highest Completion</option>
                 </select>
                 <div class="toolbar-actions">
+                    <button class="color-mode-toggle toolbar-color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                        <span class="color-mode-toggle-track">
+                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                        </span>
+                    </button>
                     <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
                 </div>
             </div>
-
-            <img
-                src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
-                alt="Logo"
-                class="top-app-logo"
-                id="topAppLogo"
-            >
         </div>
         <!-- Viewport -->
         <div class="viewport" id="viewport">
@@ -160,6 +209,11 @@
 
                 <div class="control-panel-header">
                     <div class="panel-header-main">
+                        <img
+                            src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                            alt="Logo"
+                            class="panel-logo-img-inline"
+                        >
                         <div class="panel-user-info hidden" id="panelUserInfo">
                             <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
                                 <div class="panel-avatar" id="panelAvatar">
@@ -184,8 +238,39 @@
                     </div>
                 </div>
 
-                <div class="sidebar-section-label">Projects</div>
+                <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
 
+
+                <!-- Stats -->
+                <div class="stats">
+                    <div class="stat-card active" id="activeProjectsCard" onclick="switchToActiveView()">
+                        <div class="stat-value" id="activeProjectsCount">0</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="completedTasksCount">0</div>
+                        <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="incompleteTasksCount">0</div>
+                        <div class="stat-label">Tasks Remaining</div>
+                    </div>
+                    <div class="stat-card" id="completedProjectsCard" onclick="switchToCompletedView()">
+                        <div class="stat-value" id="completedProjectsCount">0</div>
+                        <div class="stat-label">Projects Completed</div>
+                    </div>
+                </div>
+
+                <!-- Total Completion Percentage -->
+                <div class="total-completion-section">
+                    <h3>Total Completion</h3>
+                    <div class="total-completion-display">
+                        <div class="total-percentage" id="totalPercentage">0%</div>
+                        <div class="total-percentage-label">across all projects</div>
+                    </div>
+                </div>
+
+                <!-- Add Project Button -->
                 <button class="add-project-button" id="addProjectButton">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -193,77 +278,68 @@
                     Add Project
                 </button>
 
-                <div class="sidebar-nav-list">
-                    <button class="sidebar-nav-card active" id="activeProjectsCard" type="button" onclick="switchToActiveView()">
-                        <span class="sidebar-nav-card-label">Active</span>
-                        <span class="sidebar-nav-card-count" id="activeProjectsCount">0</span>
-                    </button>
-                    <button class="sidebar-nav-card" id="sharedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Shared</span>
-                        <span class="sidebar-nav-card-count" id="sharedProjectsCount">0</span>
-                    </button>
-                    <button class="sidebar-nav-card" id="completedProjectsCard" type="button" onclick="switchToCompletedView()">
-                        <span class="sidebar-nav-card-label">Completed</span>
-                        <span class="sidebar-nav-card-count" id="completedProjectsCount">0</span>
-                    </button>
-                    <button class="sidebar-nav-card" id="archivedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Archived</span>
-                        <span class="sidebar-nav-card-count" id="archivedProjectsCount">0</span>
-                    </button>
-                </div>
-
-                <div class="total-completion-section sidebar-total-completion-section">
-                    <h3>Total Completion</h3>
-                    <div class="total-completion-display">
-                        <div class="total-percentage" id="totalPercentage">0%</div>
-                        <div class="total-percentage-label">across all projects</div>
-                    </div>
-                    <div class="sidebar-completion-stats">
-                        <div class="sidebar-completion-stat">
-                            <span>Completed Tasks</span>
-                            <strong id="completedTasksCount">0</strong>
-                        </div>
-                        <div class="sidebar-completion-stat">
-                            <span>Remaining Tasks</span>
-                            <strong id="incompleteTasksCount">0</strong>
+                <!-- Saved Views -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Saved Views</h3>
+                        <div class="side-panel-section-actions">
+                            <span class="section-count-pill" id="savedViewsCount">0</span>
+                            <button class="section-action-button" id="clearSavedViewsBtn" type="button">Clear</button>
                         </div>
                     </div>
-                </div>
-
-                <div class="sidebar-section-label">Notifications</div>
-                <div class="notifications-summary-card">
-                    <div class="notifications-summary-row">
-                        <span class="notifications-summary-text" id="notificationsSummaryText">No unread notifications</span>
-                        <span class="section-count-pill" id="notificationsUnreadCount">0</span>
-                    </div>
-                    <div class="notifications-summary-actions">
-                        <button class="section-action-button" id="viewNotificationsBtn" type="button">View All</button>
-                        <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
+                    <div class="saved-views-list" id="savedViewsList">
+                        <div class="side-panel-empty">No saved views yet</div>
                     </div>
                 </div>
 
-                <div class="sidebar-section-label">Settings</div>
-                <div class="settings-panel-card">
-                    <div class="sidebar-mode-toggle-row">
-                        <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
-                            <span class="color-mode-toggle-track">
-                                <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                                <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
-                                <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
-                            </span>
+                <!-- Shared Active Projects -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Shared Active Projects</h3>
+                        <span class="section-count-pill" id="sharedProjectsCount">0</span>
+                    </div>
+                    <div class="shared-projects-list" id="sharedProjectsList">
+                        <div class="side-panel-empty">No shared active projects</div>
+                    </div>
+                </div>
+
+                <!-- Archived Projects -->
+                <div class="side-panel-section">
+                    <div class="side-panel-section-header">
+                        <h3>Archived Projects</h3>
+                        <span class="section-count-pill" id="archivedProjectsCount">0</span>
+                    </div>
+                    <div class="archived-projects-list" id="archivedProjectsList">
+                        <div class="side-panel-empty">No archived projects</div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="side-panel-section side-panel-section--collapsible is-collapsed" id="notificationsSection">
+                    <div class="side-panel-section-header">
+                        <button class="section-toggle-button" id="notificationsSectionToggle" type="button" aria-expanded="false" aria-controls="notificationsList">
+                            <span>Notifications</span>
+                            <svg class="section-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
                         </button>
+                        <div class="side-panel-section-actions">
+                            <span class="section-count-pill" id="notificationsUnreadCount">0</span>
+                            <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
+                        </div>
                     </div>
-
-                    <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
-
-                    <div class="settings-actions">
-                        <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button">Account Settings</button>
-                        <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button">UI Options</button>
-                        <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">Keyboard Shortcuts</button>
-                        <button class="sidebar-action-button" id="undoButton" type="button">Undo</button>
-                        <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button">Sign Out</button>
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="side-panel-empty">No notifications yet</div>
                     </div>
                 </div>
+
+                <!-- Undo Button -->
+                <button class="undo-button hidden" id="undoButton">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                    Undo
+                </button>
             </div>
         </div>
     </div>
@@ -348,7 +424,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme. Use the sidebar toggle to switch light and dark mode.</p>
+                        <p class="account-modal-subtitle">Choose a visual theme. Use the toolbar toggle next to Save View to switch light and dark mode.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,79 +451,6 @@
                 <div class="account-modal-actions">
                     <div class="account-modal-status" id="uiOptionsStatus"></div>
                     <button class="modal-done-btn" type="button" onclick="closeUiOptionsModal()">Done</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notifications Modal -->
-    <div class="modal-overlay" id="notificationsModal">
-        <div class="modal-content notifications-modal-content">
-            <div class="account-modal-scroll">
-                <div class="account-modal-header">
-                    <div>
-                        <h2 class="account-modal-title">Notifications</h2>
-                        <p class="account-modal-subtitle">Project activity across your workspace.</p>
-                    </div>
-                    <button class="modal-close" type="button" id="closeNotificationsModalBtn">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="project-activity-list notifications-modal-list" id="notificationsModalList">
-                    <div class="side-panel-empty">No notifications yet</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Archived Projects Modal -->
-    <div class="modal-overlay" id="archivedProjectsModal">
-        <div class="modal-content notifications-modal-content">
-            <div class="account-modal-scroll">
-                <div class="account-modal-header">
-                    <div>
-                        <h2 class="account-modal-title">Archived Projects</h2>
-                        <p class="account-modal-subtitle">Restore older projects or review archived work.</p>
-                    </div>
-                    <button class="modal-close" type="button" id="closeArchivedProjectsModalBtn">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="project-activity-list notifications-modal-list" id="archivedProjectsModalList">
-                    <div class="side-panel-empty">No archived projects</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Keyboard Shortcuts Modal -->
-    <div class="modal-overlay" id="shortcutsModal">
-        <div class="modal-content shortcuts-modal-content">
-            <div class="account-modal-scroll">
-                <div class="account-modal-header">
-                    <div>
-                        <h2 class="account-modal-title">Keyboard Shortcuts</h2>
-                        <p class="account-modal-subtitle">Fast access to the main workspace actions.</p>
-                    </div>
-                    <button class="modal-close" type="button" id="closeShortcutsModalBtn">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="shortcuts-grid shortcuts-grid--modal">
-                    <div class="shortcut-line"><kbd>N</kbd> New Project</div>
-                    <div class="shortcut-line"><kbd>C</kbd> Toggle Panel</div>
-                    <div class="shortcut-line"><kbd>A</kbd> View Active</div>
-                    <div class="shortcut-line"><kbd>S</kbd> View Shared</div>
-                    <div class="shortcut-line"><kbd>D</kbd> Completed</div>
-                    <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
-                    <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
-                    <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
                 </div>
             </div>
         </div>
