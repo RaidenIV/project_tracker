@@ -226,18 +226,17 @@
                     </div>
                 </div>
 
-                <div class="panel-display-row">
-                    <span class="panel-display-label">Display</span>
-                    <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                <div class="save-status save-status--saved" id="saveStatusPill">All changes saved</div>
+
+                <div class="panel-display-row panel-display-row--toggle-only">
+                    <button class="color-mode-toggle sidebar-color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
                         <span class="color-mode-toggle-track">
-                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--light" aria-hidden="true">☀ Light</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--dark" aria-hidden="true">Dark ☾</span>
                             <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
                         </span>
                     </button>
                 </div>
-
-                <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
 
 
                 <!-- Stats -->
@@ -314,22 +313,16 @@
                 </div>
 
                 <!-- Notifications -->
-                <div class="side-panel-section side-panel-section--collapsible is-collapsed" id="notificationsSection">
+                <div class="side-panel-section" id="notificationsSection">
                     <div class="side-panel-section-header">
-                        <button class="section-toggle-button" id="notificationsSectionToggle" type="button" aria-expanded="false" aria-controls="notificationsList">
-                            <span>Notifications</span>
-                            <svg class="section-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
+                        <h3>Notifications</h3>
                         <div class="side-panel-section-actions">
                             <span class="section-count-pill" id="notificationsUnreadCount">0</span>
+                            <button class="section-action-button" id="viewAllNotificationsBtn" type="button">View All</button>
                             <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
                         </div>
                     </div>
-                    <div class="notifications-list" id="notificationsList">
-                        <div class="side-panel-empty">No notifications yet</div>
-                    </div>
+                    <div class="notifications-summary" id="notificationsSummary">No notifications yet</div>
                 </div>
 
                 <!-- Undo Button -->
@@ -423,7 +416,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme. Use the Display toggle in the sidebar to switch light and dark mode.</p>
+                        <p class="account-modal-subtitle">Choose a visual theme. Use the sidebar light/dark toggle to switch color modes.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -450,6 +443,37 @@
                 <div class="account-modal-actions">
                     <div class="account-modal-status" id="uiOptionsStatus"></div>
                     <button class="modal-done-btn" type="button" onclick="closeUiOptionsModal()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal-overlay" id="notificationsModal">
+        <div class="modal-content notifications-modal-content">
+            <div class="account-modal-scroll notifications-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title">Notifications</h2>
+                        <p class="account-modal-subtitle" id="notificationsModalSubtitle">Review recent project activity</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeNotificationsModal()">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="notifications-modal-toolbar">
+                    <div class="notifications-modal-meta">
+                        <span class="section-count-pill" id="notificationsModalUnreadCount">0</span>
+                        <span class="notifications-modal-summary-text" id="notificationsModalSummaryText">No notifications yet</span>
+                    </div>
+                    <button class="section-action-button" id="notificationsModalMarkAllReadBtn" type="button">Mark all read</button>
+                </div>
+
+                <div class="notifications-modal-list" id="notificationsModalList">
+                    <div class="side-panel-empty">No notifications yet</div>
                 </div>
             </div>
         </div>
