@@ -1105,3 +1105,36 @@ body[data-theme^="console"] ::-webkit-scrollbar-thumb:hover {
     background: var(--muted-2);
     background-clip: padding-box;
 }
+
+
+/* ============================================================================
+   CONSOLE THEME: SIDEBAR / TOGGLE / NOTIFICATION POLISH
+   ============================================================================ */
+
+body[data-theme^="console"] .control-panel .panel-display-row {
+    padding: 8px 0 2px;
+    margin-bottom: 18px;
+}
+
+body[data-theme^="console"] .control-panel .panel-header-actions > button:not(.collapse-button):not(.expand-button),
+body[data-theme^="console"] .control-panel .panel-header-actions > .icon-button-small,
+body[data-theme^="console"] .control-panel .icon-button-small {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: none;
+    color: var(--text);
+}
+
+body[data-theme^="console"] .control-panel .panel-header-actions > button:not(.collapse-button):not(.expand-button):hover,
+body[data-theme^="console"] .control-panel .panel-header-actions > .icon-button-small:hover,
+body[data-theme^="console"] .control-panel .icon-button-small:hover {
+    background: var(--panel);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 4px 20px var(--accent-glow);
+}
+
+body[data-theme^="console"] .control-panel .control-panel-scroll-inner {
+    min-height: 100%;
+}
