@@ -65,32 +65,37 @@ const DEFAULT_PROFILE_ICON_SVG = `
     </g>
 </svg>`;
 
-const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w';
-const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
-
-const THEME_OPTIONS = {
-    'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
-    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' },
-    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
-    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
-    'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
-    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
+const LOGO_SET = {
+    aigox: {
+        light: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w',
+        dark: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w'
+    },
+    xodia: {
+        light: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/7803d573-dd87-40ed-9570-0bc7c5ed8915/xodia_logo_black.png?format=750w',
+        dark: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/c311da3d-6fbf-446a-858c-227fa011e7e3/Xodia+MEDIA+Group+%28TRANS%29+%281%29+%281%29.png?format=750w'
+    }
 };
 
-const THEME_FAMILY_OPTIONS = {
-    blueprint: { label: 'Blueprint' },
-    glass: { label: 'Glassmorphic' },
-    console: { label: 'Console' }
+const THEME_OPTIONS = {
+    'console-light': { label: 'Console Light', family: 'console', mode: 'light', logoSet: 'xodia' },
+    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark', logoSet: 'xodia' },
+    'nebula-light': { label: 'Nebula Light', family: 'nebula', mode: 'light', logoSet: 'aigox' },
+    'nebula-dark': { label: 'Nebula Dark', family: 'nebula', mode: 'dark', logoSet: 'aigox' },
+    'duplex-light': { label: 'Duplex Light', family: 'duplex', mode: 'light', logoSet: 'xodia' },
+    'duplex-dark': { label: 'Duplex Dark', family: 'duplex', mode: 'dark', logoSet: 'xodia' }
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'blueprint-light',
-    blueprint: 'blueprint-light',
-    glass: 'glass-light',
+    default: 'console-dark',
+    glass: 'nebula-dark',
     midnight: 'console-dark',
-    industrial: 'blueprint-light',
-    'industrial-light': 'blueprint-light',
-    'industrial-dark': 'blueprint-dark'
+    blueprint: 'duplex-light',
+    'industrial-light': 'console-light',
+    'industrial-dark': 'console-dark',
+    'glass-light': 'nebula-light',
+    'glass-dark': 'nebula-dark',
+    'blueprint-light': 'duplex-light',
+    'blueprint-dark': 'duplex-dark'
 };
 
 const notificationState = {
@@ -118,7 +123,7 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'blueprint-light',
+    theme: 'console-dark',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -142,7 +147,7 @@ function escapeHtml(value) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'blueprint-light';
+    return THEME_OPTIONS[resolved] ? resolved : 'console-dark';
 }
 
 function getThemeMeta(themeName) {
@@ -153,42 +158,18 @@ function getThemeLabel(themeName) {
     return getThemeMeta(themeName).label;
 }
 
-function buildThemeName(themeFamily, colorMode) {
-    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'blueprint';
-    const mode = colorMode === 'dark' ? 'dark' : 'light';
-    const candidate = `${family}-${mode}`;
-    return THEME_OPTIONS[candidate] ? candidate : 'blueprint-light';
-}
-
-function getColorModeLabel(colorMode) {
-    return colorMode === 'dark' ? 'Dark Mode' : 'Light Mode';
-}
-
-function getThemeFamilyLabel(themeFamily) {
-    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Blueprint';
-}
-
-function syncColorModeToggle() {
-    const toggle = document.getElementById('colorModeToggleBtn');
-    if (!toggle) return;
-    const meta = getThemeMeta(uiState.theme);
-    const isDark = meta.mode === 'dark';
-    toggle.classList.toggle('is-dark', isDark);
-    toggle.setAttribute('aria-pressed', String(isDark));
-    toggle.setAttribute('title', `Switch to ${isDark ? 'light' : 'dark'} mode`);
-    toggle.setAttribute('aria-label', `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
-}
-
 function syncThemeBranding() {
     const meta = getThemeMeta(uiState.theme);
     document.body.setAttribute('data-theme', uiState.theme);
     document.body.setAttribute('data-theme-family', meta.family);
     document.body.setAttribute('data-color-mode', meta.mode);
 
-    const panelLogo = document.querySelector('.panel-logo-img-inline');
-    if (panelLogo) {
-        panelLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
-    }
+    const logoSet = LOGO_SET[meta.logoSet] || LOGO_SET.xodia;
+    const nextLogo = meta.mode === 'dark' ? logoSet.dark : logoSet.light;
+
+    document.querySelectorAll('.panel-logo-img-inline, .auth-logo-img').forEach(logo => {
+        logo.src = nextLogo;
+    });
 }
 
 function loadSavedViewsFromStorage() {
@@ -205,41 +186,30 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
     applyTheme(uiState.theme, false);
 }
 
 function applyTheme(themeName, persist = true) {
     uiState.theme = normalizeThemeName(themeName);
     syncThemeBranding();
-    syncColorModeToggle();
     if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
     const status = document.getElementById('uiOptionsStatus');
-    if (status) {
-        const meta = getThemeMeta(uiState.theme);
-        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
-    }
+    if (status) status.textContent = `Current style: ${getThemeLabel(uiState.theme)}`;
     renderThemeOptions();
 }
 
-function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
-    const currentMeta = getThemeMeta(uiState.theme);
-    const nextMode = preferredMode || currentMeta.mode || 'light';
-    applyTheme(buildThemeName(themeFamily, nextMode), persist);
-}
 
 function renderThemeOptions() {
-    const activeFamily = getThemeMeta(uiState.theme).family;
-    document.querySelectorAll('[data-theme-family-option]').forEach(card => {
-        const isActive = card.getAttribute('data-theme-family-option') === activeFamily;
+    document.querySelectorAll('[data-theme-option]').forEach(card => {
+        const isActive = card.getAttribute('data-theme-option') === uiState.theme;
         card.classList.toggle('is-active', isActive);
     });
 }
 
 function openUiOptionsModal() {
     renderThemeOptions();
-    const meta = getThemeMeta(uiState.theme);
-    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    document.getElementById('uiOptionsStatus').textContent = `Current style: ${getThemeLabel(uiState.theme)}`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -247,21 +217,13 @@ function closeUiOptionsModal() {
     document.getElementById('uiOptionsModal')?.classList.remove('active');
 }
 
-function getDefaultSaveStatusMessage(status) {
-    if (status === 'saving') return 'Saving changes…';
-    if (status === 'error') return 'Save failed — retrying on next change';
-    if (status === 'conflict') return 'Conflict detected — refresh to sync';
-    if (status === 'saved') return 'All changes saved';
-    return 'Ready';
-}
-
-function setSaveStatus(status, message = getDefaultSaveStatusMessage(status)) {
+function setSaveStatus(status, message) {
     uiState.saveStatus = status;
     uiState.saveMessage = message;
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
     pill.className = `save-status save-status--${status}`;
-    pill.textContent = message || getDefaultSaveStatusMessage(status);
+    pill.textContent = message;
 }
 
 function projectUpdate(updates = {}, options = {}) {
@@ -2668,53 +2630,27 @@ function timeAgo(isoString) {
     return `${Math.floor(months / 12)}y ago`;
 }
 
-function getNotificationsSummaryText() {
-    if (!notificationState.items.length) return 'No notifications yet';
-    if (notificationState.unreadCount > 0) {
-        return `${notificationState.unreadCount} unread notification${notificationState.unreadCount === 1 ? '' : 's'}`;
-    }
-    return `${notificationState.items.length} notification${notificationState.items.length === 1 ? '' : 's'} total`;
-}
-
 function renderNotificationsPanel() {
+    const notificationsList = document.getElementById('notificationsList');
     const notificationsUnreadCount = document.getElementById('notificationsUnreadCount');
-    const notificationsSummary = document.getElementById('notificationsSummary');
-    const notificationsModalUnreadCount = document.getElementById('notificationsModalUnreadCount');
-    const notificationsModalSummaryText = document.getElementById('notificationsModalSummaryText');
-    const notificationsModalSubtitle = document.getElementById('notificationsModalSubtitle');
-    const notificationsModalList = document.getElementById('notificationsModalList');
-    if (!notificationsUnreadCount || !notificationsSummary || !notificationsModalUnreadCount || !notificationsModalSummaryText || !notificationsModalList) return;
+    if (!notificationsList || !notificationsUnreadCount) return;
 
-    const unreadCount = notificationState.unreadCount || 0;
-    const totalCount = notificationState.items.length;
-    const summaryText = getNotificationsSummaryText();
+    notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
 
-    notificationsUnreadCount.textContent = String(unreadCount);
-    notificationsModalUnreadCount.textContent = String(unreadCount);
-    notificationsSummary.textContent = summaryText;
-    notificationsModalSummaryText.textContent = summaryText;
-    if (notificationsModalSubtitle) {
-        notificationsModalSubtitle.textContent = totalCount
-            ? `Review ${totalCount} recent project notification${totalCount === 1 ? '' : 's'}`
-            : 'Review recent project activity';
-    }
-
-    if (!totalCount) {
-        notificationsModalList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
+    if (!notificationState.items.length) {
+        notificationsList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
         return;
     }
 
-    notificationsModalList.innerHTML = notificationState.items.map(notification => `
+    notificationsList.innerHTML = notificationState.items.map(notification => `
         <button class="notification-card ${notification.read ? '' : 'notification-card--unread'}"
                 type="button"
-                data-notification-id="${escapeHtml(notification._id || '')}"
-                data-project-id="${escapeHtml(notification.projectId || '')}"
-                onclick="openNotificationProject(this.dataset.notificationId, this.dataset.projectId)">
+                onclick="openNotificationProject('${notification._id}', '${notification.projectId}')">
             <div class="notification-card-header">
-                <span class="notification-project">${escapeHtml(notification.projectTitle || 'Project')}</span>
-                <span class="notification-time">${escapeHtml(timeAgo(notification.createdAt))}</span>
+                <span class="notification-project">${notification.projectTitle || 'Project'}</span>
+                <span class="notification-time">${timeAgo(notification.createdAt)}</span>
             </div>
-            <div class="notification-message"><strong>${escapeHtml(notification.actorName || 'Someone')}</strong> ${escapeHtml(notification.message || 'updated a project')}</div>
+            <div class="notification-message"><strong>${notification.actorName || 'Someone'}</strong> ${notification.message}</div>
         </button>
     `).join('');
 }
@@ -2731,14 +2667,6 @@ async function refreshNotifications() {
     }
     notificationState.hasLoadedOnce = true;
     renderNotificationsPanel();
-}
-
-function openNotificationsModal() {
-    document.getElementById('notificationsModal')?.classList.add('active');
-}
-
-function closeNotificationsModal() {
-    document.getElementById('notificationsModal')?.classList.remove('active');
 }
 
 function startNotificationPolling() {
@@ -2767,7 +2695,6 @@ async function openNotificationProject(notificationId, projectId) {
     if (targetNotification) targetNotification.read = true;
     notificationState.unreadCount = notificationState.items.filter(item => !item.read).length;
     renderNotificationsPanel();
-    closeNotificationsModal();
 
     const project = state.findProject(projectId);
     if (project) {
@@ -2904,9 +2831,6 @@ function initializeEventHandlers() {
         expandButton?.classList.toggle('hidden', !isCollapsed);
         collapseButton?.setAttribute('aria-expanded', String(!isCollapsed));
         expandButton?.setAttribute('aria-expanded', String(isCollapsed));
-        const panelEdgeToggle = document.getElementById('panelEdgeToggle');
-        panelEdgeToggle?.setAttribute('aria-expanded', String(!isCollapsed));
-        panelEdgeToggle?.setAttribute('aria-label', isCollapsed ? 'Open control panel' : 'Close control panel');
     };
 
     const collapseControlPanel = () => {
@@ -2927,17 +2851,6 @@ function initializeEventHandlers() {
 
     collapseButton?.addEventListener('click', collapseControlPanel);
     expandButton?.addEventListener('click', expandControlPanel);
-
-    // Always-visible edge toggle — toggles between expand/collapse based on current state
-    const panelEdgeToggle = document.getElementById('panelEdgeToggle');
-    panelEdgeToggle?.addEventListener('click', () => {
-        if (controlPanel?.classList.contains('collapsed')) {
-            expandControlPanel();
-        } else {
-            collapseControlPanel();
-        }
-    });
-
     syncControlPanelState();
 
     // Add project button
@@ -2950,8 +2863,6 @@ function initializeEventHandlers() {
     document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
     document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
-    document.getElementById('notificationsModalMarkAllReadBtn')?.addEventListener('click', markAllNotificationsRead);
-    document.getElementById('viewAllNotificationsBtn')?.addEventListener('click', openNotificationsModal);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -2979,10 +2890,6 @@ function initializeEventHandlers() {
         if (e.target.id === 'uiOptionsModal') closeUiOptionsModal();
     });
 
-    document.getElementById('notificationsModal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'notificationsModal') closeNotificationsModal();
-    });
-
     document.getElementById('commandPaletteModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'commandPaletteModal') closeCommandPalette();
     });
@@ -3004,13 +2911,8 @@ function initializeEventHandlers() {
     });
     document.getElementById('saveCurrentViewBtn')?.addEventListener('click', saveCurrentView);
     document.getElementById('clearSavedViewsBtn')?.addEventListener('click', clearSavedViews);
-    document.querySelectorAll('[data-theme-family-option]').forEach(button => {
-        button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
-    });
-    document.getElementById('colorModeToggleBtn')?.addEventListener('click', () => {
-        const meta = getThemeMeta(uiState.theme);
-        const nextMode = meta.mode === 'dark' ? 'light' : 'dark';
-        applyTheme(buildThemeName(meta.family, nextMode));
+    document.querySelectorAll('[data-theme-option]').forEach(button => {
+        button.addEventListener('click', () => applyTheme(button.getAttribute('data-theme-option')));
     });
     document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
         uiState.commandQuery = e.target.value || '';
@@ -3217,7 +3119,6 @@ window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.openNotificationProject = openNotificationProject;
 window.markAllNotificationsRead = markAllNotificationsRead;
-window.closeNotificationsModal = closeNotificationsModal;
 window.applySavedView = applySavedView;
 window.deleteSavedView = deleteSavedView;
 window.restoreArchivedProject = restoreArchivedProject;
