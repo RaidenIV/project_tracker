@@ -164,13 +164,6 @@
                     <option value="progress">Highest Completion</option>
                 </select>
                 <div class="toolbar-actions">
-                    <button class="color-mode-toggle toolbar-color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
-                        <span class="color-mode-toggle-track">
-                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
-                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
-                        </span>
-                    </button>
                     <button class="view-toolbar-button" id="saveCurrentViewBtn" type="button">Save View</button>
                 </div>
             </div>
@@ -231,6 +224,17 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+
+                <div class="panel-display-row">
+                    <span class="panel-display-label">Display</span>
+                    <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
+                        <span class="color-mode-toggle-track">
+                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                        </span>
+                    </button>
                 </div>
 
                 <div class="save-status save-status--idle" id="saveStatusPill">All changes saved</div>
@@ -419,7 +423,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme. Use the toolbar toggle next to Save View to switch light and dark mode.</p>
+                        <p class="account-modal-subtitle">Choose a visual theme. Use the Display toggle in the sidebar to switch light and dark mode.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
