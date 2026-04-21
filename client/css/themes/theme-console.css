@@ -1138,3 +1138,11 @@ body[data-theme^="console"] .control-panel .icon-button-small:hover {
 body[data-theme^="console"] .control-panel .control-panel-scroll-inner {
     min-height: 100%;
 }
+
+
+body[data-theme^="console"] .save-status--saved { color: var(--success); }
+body[data-theme^="console"] .save-status--conflict { color: var(--error); }
+
+body[data-theme^="console"] .color-mode-toggle-option { color: var(--muted); }
+body[data-theme^="console"] .color-mode-toggle.is-dark .color-mode-toggle-option--dark,
+body[data-theme^="console"] .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light { color: var(--heading); }

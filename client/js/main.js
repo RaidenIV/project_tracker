@@ -247,13 +247,21 @@ function closeUiOptionsModal() {
     document.getElementById('uiOptionsModal')?.classList.remove('active');
 }
 
-function setSaveStatus(status, message) {
+function getDefaultSaveStatusMessage(status) {
+    if (status === 'saving') return 'Saving changes…';
+    if (status === 'error') return 'Save failed — retrying on next change';
+    if (status === 'conflict') return 'Conflict detected — refresh to sync';
+    if (status === 'saved') return 'All changes saved';
+    return 'Ready';
+}
+
+function setSaveStatus(status, message = getDefaultSaveStatusMessage(status)) {
     uiState.saveStatus = status;
     uiState.saveMessage = message;
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
     pill.className = `save-status save-status--${status}`;
-    pill.textContent = message;
+    pill.textContent = message || getDefaultSaveStatusMessage(status);
 }
 
 function projectUpdate(updates = {}, options = {}) {
@@ -2660,27 +2668,53 @@ function timeAgo(isoString) {
     return `${Math.floor(months / 12)}y ago`;
 }
 
+function getNotificationsSummaryText() {
+    if (!notificationState.items.length) return 'No notifications yet';
+    if (notificationState.unreadCount > 0) {
+        return `${notificationState.unreadCount} unread notification${notificationState.unreadCount === 1 ? '' : 's'}`;
+    }
+    return `${notificationState.items.length} notification${notificationState.items.length === 1 ? '' : 's'} total`;
+}
+
 function renderNotificationsPanel() {
-    const notificationsList = document.getElementById('notificationsList');
     const notificationsUnreadCount = document.getElementById('notificationsUnreadCount');
-    if (!notificationsList || !notificationsUnreadCount) return;
+    const notificationsSummary = document.getElementById('notificationsSummary');
+    const notificationsModalUnreadCount = document.getElementById('notificationsModalUnreadCount');
+    const notificationsModalSummaryText = document.getElementById('notificationsModalSummaryText');
+    const notificationsModalSubtitle = document.getElementById('notificationsModalSubtitle');
+    const notificationsModalList = document.getElementById('notificationsModalList');
+    if (!notificationsUnreadCount || !notificationsSummary || !notificationsModalUnreadCount || !notificationsModalSummaryText || !notificationsModalList) return;
 
-    notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
+    const unreadCount = notificationState.unreadCount || 0;
+    const totalCount = notificationState.items.length;
+    const summaryText = getNotificationsSummaryText();
 
-    if (!notificationState.items.length) {
-        notificationsList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
+    notificationsUnreadCount.textContent = String(unreadCount);
+    notificationsModalUnreadCount.textContent = String(unreadCount);
+    notificationsSummary.textContent = summaryText;
+    notificationsModalSummaryText.textContent = summaryText;
+    if (notificationsModalSubtitle) {
+        notificationsModalSubtitle.textContent = totalCount
+            ? `Review ${totalCount} recent project notification${totalCount === 1 ? '' : 's'}`
+            : 'Review recent project activity';
+    }
+
+    if (!totalCount) {
+        notificationsModalList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
         return;
     }
 
-    notificationsList.innerHTML = notificationState.items.map(notification => `
+    notificationsModalList.innerHTML = notificationState.items.map(notification => `
         <button class="notification-card ${notification.read ? '' : 'notification-card--unread'}"
                 type="button"
-                onclick="openNotificationProject('${notification._id}', '${notification.projectId}')">
+                data-notification-id="${escapeHtml(notification._id || '')}"
+                data-project-id="${escapeHtml(notification.projectId || '')}"
+                onclick="openNotificationProject(this.dataset.notificationId, this.dataset.projectId)">
             <div class="notification-card-header">
-                <span class="notification-project">${notification.projectTitle || 'Project'}</span>
-                <span class="notification-time">${timeAgo(notification.createdAt)}</span>
+                <span class="notification-project">${escapeHtml(notification.projectTitle || 'Project')}</span>
+                <span class="notification-time">${escapeHtml(timeAgo(notification.createdAt))}</span>
             </div>
-            <div class="notification-message"><strong>${notification.actorName || 'Someone'}</strong> ${notification.message}</div>
+            <div class="notification-message"><strong>${escapeHtml(notification.actorName || 'Someone')}</strong> ${escapeHtml(notification.message || 'updated a project')}</div>
         </button>
     `).join('');
 }
@@ -2697,6 +2731,14 @@ async function refreshNotifications() {
     }
     notificationState.hasLoadedOnce = true;
     renderNotificationsPanel();
+}
+
+function openNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.add('active');
+}
+
+function closeNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.remove('active');
 }
 
 function startNotificationPolling() {
@@ -2725,6 +2767,7 @@ async function openNotificationProject(notificationId, projectId) {
     if (targetNotification) targetNotification.read = true;
     notificationState.unreadCount = notificationState.items.filter(item => !item.read).length;
     renderNotificationsPanel();
+    closeNotificationsModal();
 
     const project = state.findProject(projectId);
     if (project) {
@@ -2740,8 +2783,7 @@ async function openNotificationProject(notificationId, projectId) {
 async function markAllNotificationsRead() {
     try {
         await markAllNotificationsReadOnServer();
-        // Clear the list entirely — "mark all read" now also dismisses the items
-        notificationState.items = [];
+        notificationState.items = notificationState.items.map(item => ({ ...item, read: true }));
         notificationState.unreadCount = 0;
         renderNotificationsPanel();
     } catch (err) {
@@ -2908,19 +2950,8 @@ function initializeEventHandlers() {
     document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
     document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
-
-    const notificationsSection = document.getElementById('notificationsSection');
-    const notificationsSectionToggle = document.getElementById('notificationsSectionToggle');
-    const syncNotificationsSection = () => {
-        if (!notificationsSection || !notificationsSectionToggle) return;
-        const isCollapsed = notificationsSection.classList.contains('is-collapsed');
-        notificationsSectionToggle.setAttribute('aria-expanded', String(!isCollapsed));
-    };
-    notificationsSectionToggle?.addEventListener('click', () => {
-        notificationsSection?.classList.toggle('is-collapsed');
-        syncNotificationsSection();
-    });
-    syncNotificationsSection();
+    document.getElementById('notificationsModalMarkAllReadBtn')?.addEventListener('click', markAllNotificationsRead);
+    document.getElementById('viewAllNotificationsBtn')?.addEventListener('click', openNotificationsModal);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -2946,6 +2977,10 @@ function initializeEventHandlers() {
 
     document.getElementById('uiOptionsModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'uiOptionsModal') closeUiOptionsModal();
+    });
+
+    document.getElementById('notificationsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'notificationsModal') closeNotificationsModal();
     });
 
     document.getElementById('commandPaletteModal')?.addEventListener('click', (e) => {
@@ -3182,6 +3217,7 @@ window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.openNotificationProject = openNotificationProject;
 window.markAllNotificationsRead = markAllNotificationsRead;
+window.closeNotificationsModal = closeNotificationsModal;
 window.applySavedView = applySavedView;
 window.deleteSavedView = deleteSavedView;
 window.restoreArchivedProject = restoreArchivedProject;
