@@ -5449,3 +5449,92 @@ body :where(h1, h2, h3, h4, h5, h6, p, span, div, label, button):not(input):not(
         max-width: none;
     }
 }
+
+/* ============================================================================
+   LAYOUT OVERRIDES — final cascade wins over earlier media-query rules
+   - Sidebar always on the LEFT, always 20% of viewport width
+   - Container reserves 20% on the left (no right reservation)
+   - Edge toggle anchored to the sidebar's right edge
+   - Project cards all the same size (fixed height, uniform grid columns)
+   - Logo 25% smaller, anchored to top-right of the content area
+   ============================================================================ */
+
+.control-panel {
+    left: 0 !important;
+    right: auto !important;
+    width: 20vw !important;
+    min-width: 20vw !important;
+    max-width: 20vw !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    border-left: none;
+}
+
+.control-panel.collapsed {
+    transform: translateX(-100%) !important;
+}
+
+.container {
+    padding-left: 20vw !important;
+    padding-right: clamp(20px, 2vw, 28px) !important;
+}
+
+body.control-panel-is-collapsed .container {
+    padding-left: clamp(20px, 2vw, 28px) !important;
+    padding-right: clamp(20px, 2vw, 28px) !important;
+}
+
+.panel-edge-toggle {
+    left: 20vw !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+body.control-panel-is-collapsed .panel-edge-toggle {
+    left: 0 !important;
+    right: auto !important;
+    transform: translate(0, -50%) !important;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* Edge-toggle chevron flips correctly for the left-side sidebar.
+   Panel open  → chevron points left (◀) to close
+   Panel closed → chevron points right (▶) to open */
+.panel-edge-toggle svg {
+    transform: rotate(180deg);
+}
+
+body.control-panel-is-collapsed .panel-edge-toggle svg {
+    transform: rotate(0deg);
+}
+
+/* All project cards the same size — uniform columns (auto-fill + 1fr already
+   equalizes width) plus a fixed height locks them to identical dimensions.
+   overflow: hidden prevents taller content from breaking the uniform size;
+   individual cards can still scroll internally if needed. */
+.project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+    gap: 20px !important;
+    align-items: start;
+}
+
+.project-card {
+    height: 260px !important;
+    min-height: 260px !important;
+    max-height: 260px !important;
+    overflow: hidden !important;
+}
+
+/* Logo: 25% smaller than the original clamp(108px, 8vw, 152px).
+   The logo already lives in the top-app-bar's right column with
+   justify-self: end, so it naturally sits in the top-right corner
+   of the main content area (to the right of the left sidebar). */
+.top-app-logo {
+    width: clamp(81px, 6vw, 114px) !important;
+}
