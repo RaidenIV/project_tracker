@@ -5849,3 +5849,81 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     object-position: center center !important;
     display: block !important;
 }
+
+/* ============================================================================
+   ROUND 6 OVERRIDES
+   - Avatar image reliably fills the full circle on 1920x1200
+   - Sidebar account block stays pinned top-left
+   - Top toolbar spacing/padding is tighter and consistent
+   ============================================================================ */
+
+/* Keep the profile block anchored to the top-left corner of the sidebar. */
+.control-panel-header {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+}
+
+.panel-header-main,
+#panelUserInfo {
+    width: 100% !important;
+}
+
+.panel-user-info,
+.panel-user-pill {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    align-self: flex-start !important;
+}
+
+/* The avatar wrapper should behave like a clipped circle, not an inline flex row.
+   Position children on top of each other so only the active layer is visible. */
+.panel-avatar,
+.account-avatar {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden !important;
+}
+
+.panel-avatar-img,
+.account-avatar-img,
+.panel-avatar-fallback,
+.account-avatar-fallback {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.panel-avatar-fallback,
+.account-avatar-fallback {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* The JS toggles `.hidden` on the avatar image/fallback, so hide it explicitly here. */
+.panel-avatar > .hidden,
+.account-avatar > .hidden {
+    display: none !important;
+}
+
+/* Tighter, even spacing across the top menu bar controls. */
+.top-app-bar {
+    gap: 8px !important;
+}
+
+.view-toolbar {
+    gap: 8px !important;
+}
+
+.view-toolbar-search,
+.view-toolbar-button {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+.view-toolbar-select {
+    padding-left: 12px !important;
+    padding-right: 30px !important;
+    background-position: right 10px center !important;
+}
