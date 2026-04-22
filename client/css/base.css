@@ -5800,3 +5800,52 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     max-width: clamp(189px, 19.5vw, 297px) !important;
 }
 
+/* ============================================================================
+   ROUND 5 OVERRIDE — avatar image fills circle at all viewport heights
+   ============================================================================ */
+
+/* Symptom: at 1920×1200, the uploaded profile photo only filled half the
+   avatar circle; at 1920×1080 it was fine. Root cause: the image rule at
+   line 5144 sets `aspect-ratio: 1 / 1` on .panel-avatar-img. If the parent
+   container ever stretches to be wider than tall (flex layouts can shift
+   subtly at different viewport heights), `width: 100%` gives the image the
+   full parent width, but `aspect-ratio: 1/1` then shrinks the height to
+   match that width — or vice versa — leaving the rest of the circle empty.
+   Fix: hard-lock the container to exactly 34×34 so it CAN'T stretch, and
+   drop the aspect-ratio constraint on the image so it just fills whatever
+   the container provides. */
+
+.panel-avatar,
+.account-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    aspect-ratio: 1 / 1 !important;
+}
+
+/* Preserve the larger variant used in the account-settings modal. */
+.account-avatar--large {
+    width: 88px !important;
+    height: 88px !important;
+    min-width: 88px !important;
+    min-height: 88px !important;
+    max-width: 88px !important;
+    max-height: 88px !important;
+    flex: 0 0 88px !important;
+}
+
+/* Image fills the (now guaranteed square) container completely.
+   object-fit: cover handles any non-square source photos by cropping. */
+.panel-avatar-img,
+.account-avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    display: block !important;
+}
