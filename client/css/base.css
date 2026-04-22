@@ -5775,26 +5775,28 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
    `max-width: 220px` on the user-pill, meaning browser-chrome height
    differences (viewport lands on either side of 1250px) caused two
    identical-width displays to render slightly differently. Lock these
-   values across all desktop heights. */
+   values across all desktop heights. The user-pill keeps its natural
+   content-sized width (from round 2) — we only neutralize the max-width
+   cap here. */
 .container {
     gap: clamp(18px, 1.5vw, 28px) !important;
 }
 
 .control-panel .panel-user-pill {
     max-width: none !important;
-    width: 100% !important;
 }
 
-/* 4) Search box 50% wider. Both the toolbar grid column AND the
-   wrapper's own width/max-width scale together so the input actually
-   gets the wider cell to fill. Previous: 252–396px. New: 378–594px
-   (1.5×). */
+/* 4) Search box width — halved from the round-4 oversize.
+   Round 4 bumped it 1.5× (252–396px → 378–594px). This turn reduces
+   that by 50%, landing at 189–297px (75% of the original baseline).
+   Both the toolbar grid column AND the wrapper scale together so the
+   input actually gets the narrower cell it needs to fit. */
 .view-toolbar {
-    grid-template-columns: minmax(378px, 594px) minmax(118px, 146px) minmax(118px, 146px) auto !important;
+    grid-template-columns: minmax(189px, 297px) minmax(118px, 146px) minmax(118px, 146px) auto !important;
 }
 
 .view-toolbar-search-wrap {
-    width: min(100%, clamp(378px, 39vw, 594px)) !important;
-    max-width: clamp(378px, 39vw, 594px) !important;
+    width: min(100%, clamp(189px, 19.5vw, 297px)) !important;
+    max-width: clamp(189px, 19.5vw, 297px) !important;
 }
 
