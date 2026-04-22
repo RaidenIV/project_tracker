@@ -1303,6 +1303,11 @@ function setSidebarProjectsNav(activeId) {
 }
 
 function switchToActiveView() {
+    // Reset owner filter so that clicking "Active" after "Shared" shows
+    // all active projects, not just the shared subset.
+    uiState.ownerFilter = 'all';
+    const ownerFilterEl = document.getElementById('projectOwnerFilter');
+    if (ownerFilterEl) ownerFilterEl.value = 'all';
     state.setView(VIEWS.ACTIVE);
     setSidebarProjectsNav('activeProjectsCard');
     setViewTitle('Active Projects');
@@ -1310,6 +1315,9 @@ function switchToActiveView() {
 }
 
 function switchToCompletedView() {
+    uiState.ownerFilter = 'all';
+    const ownerFilterEl = document.getElementById('projectOwnerFilter');
+    if (ownerFilterEl) ownerFilterEl.value = 'all';
     state.setView(VIEWS.COMPLETED);
     setSidebarProjectsNav('completedProjectsCard');
     setViewTitle('Completed Projects');

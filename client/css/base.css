@@ -5725,3 +5725,76 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* ============================================================================
+   ROUND 4 OVERRIDES
+   ============================================================================ */
+
+/* 1) Avatar left-aligned — the base sheet sets .control-panel-header to
+   display: grid with 1fr auto 1fr columns, intended for a three-part
+   header [user-info | logo | actions]. Now that the logo and actions
+   are gone, .panel-header-main (the only remaining child) was sitting
+   in just the first 1fr column, which is ~50% of the sidebar width,
+   so the avatar appeared pushed toward the center. Switch to flex
+   (single row, stretched child) so the avatar sits flush-left. */
+.control-panel-header {
+    display: flex !important;
+    grid-template-columns: none !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: 100%;
+}
+
+.panel-header-main {
+    width: 100%;
+    flex: 1 1 auto;
+}
+
+/* 2) Role badge pinned to the TOP-RIGHT corner of every project card.
+   The card is already position: relative, so absolute anchors to card
+   bounds. z-index sits above card content so the badge stays readable
+   even when hover-reveal action buttons appear nearby. */
+.project-card .role-badge {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 3;
+    margin: 0 !important;
+}
+
+/* Keep the project-actions row from colliding with the corner-pinned
+   badge. When a role badge is present, the header leaves room on the
+   right so edit/copy/delete buttons wrap below or sit to the left of
+   the badge instead of directly under it. */
+.project-card:has(.role-badge) .project-header {
+    padding-top: 4px;
+    padding-right: 56px;
+}
+
+/* 3) 1920×1200 and 1920×1080 parity — two earlier media-query blocks
+   gated on max-height: 1250px leaked `gap: 20px` on the container and
+   `max-width: 220px` on the user-pill, meaning browser-chrome height
+   differences (viewport lands on either side of 1250px) caused two
+   identical-width displays to render slightly differently. Lock these
+   values across all desktop heights. */
+.container {
+    gap: clamp(18px, 1.5vw, 28px) !important;
+}
+
+.control-panel .panel-user-pill {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+/* 4) Search box 50% wider. Both the toolbar grid column AND the
+   wrapper's own width/max-width scale together so the input actually
+   gets the wider cell to fill. Previous: 252–396px. New: 378–594px
+   (1.5×). */
+.view-toolbar {
+    grid-template-columns: minmax(378px, 594px) minmax(118px, 146px) minmax(118px, 146px) auto !important;
+}
+
+.view-toolbar-search-wrap {
+    width: min(100%, clamp(378px, 39vw, 594px)) !important;
+    max-width: clamp(378px, 39vw, 594px) !important;
+}
+
