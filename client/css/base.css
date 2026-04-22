@@ -6005,3 +6005,97 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     align-content: start !important;
     place-content: start !important;
 }
+
+
+/* ============================================================================
+   ROUND 9 OVERRIDES
+   - sidebar theme toggle moved to the header top-right
+   - project modal hide-completed toggle restored to left alignment
+   - menu bar spacing normalized
+   - project cards pulled slightly closer to the menu bar
+   - collaborator badge flattened across UIs
+   ============================================================================ */
+
+.control-panel .control-panel-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+}
+
+.control-panel .panel-header-main {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.sidebar-header-theme-toggle {
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    margin-left: auto;
+    min-width: 0;
+}
+
+.control-panel .sidebar-header-theme-toggle .color-mode-toggle {
+    margin: 0 !important;
+}
+
+.ui-options-mode-toggle-row--relocated {
+    display: none !important;
+}
+
+.top-app-bar {
+    gap: 8px !important;
+}
+
+.view-toolbar {
+    gap: 8px !important;
+}
+
+.toolbar-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+}
+
+/* Keep the cards a touch closer to the toolbar without introducing overlap. */
+.viewport {
+    margin-top: -6px !important;
+}
+
+.view-filter-chips:not(:empty) {
+    margin-bottom: 5px !important;
+}
+
+/* Restore the hide-completed toggle to its original left-aligned position
+   directly beneath the Add Task button in all themes. */
+.hide-completed-toggle {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 0 16px 0 !important;
+    padding-inline: 0 !important;
+}
+
+.hide-completed-toggle .toggle-label {
+    width: auto !important;
+    text-align: left !important;
+}
+
+/* Flatten the collaborator badge so it no longer reads as neumorphic. */
+.shared-badge {
+    box-shadow: none !important;
+    border: 1px solid rgba(50, 120, 235, 0.18);
+}
+
+@media (max-width: 1100px) {
+    .viewport {
+        margin-top: 0 !important;
+    }
+}

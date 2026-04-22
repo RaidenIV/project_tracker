@@ -1280,3 +1280,49 @@ body[data-theme^="console"] .save-status--saved,
 body[data-theme^="console"] .save-status--idle {
     color: var(--success);
 }
+
+
+/* -----------------------------
+   ROUND 9 CONSOLE REFINEMENTS
+   ----------------------------- */
+body[data-theme^="console"] .shared-badge {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-slider {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-slider:before {
+    background: var(--heading);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-switch input:checked + .toggle-slider {
+    background: var(--surface-2);
+    border-color: var(--accent);
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-switch input:checked + .toggle-slider:before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: none !important;
+}
+
+body[data-theme="console-dark"] .paste-box,
+body[data-theme="console-dark"] .notes-textarea,
+body[data-theme="console-dark"] .task-input,
+body[data-theme="console-dark"] textarea {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border-color: var(--line) !important;
+}

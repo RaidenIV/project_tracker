@@ -522,3 +522,42 @@ body[data-theme^="glass"] .modal-tab {
 body[data-theme^="glass"] .hide-completed-toggle {
     padding-inline: 10px;
 }
+
+
+/* -----------------------------
+   ROUND 9 GLASSMORPHIC CONTRAST BOOST
+   ----------------------------- */
+body[data-theme^="glass"] .notifications-summary-card,
+body[data-theme^="glass"] .settings-panel-card {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.09)),
+        rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        0 18px 36px rgba(23, 41, 73, 0.22);
+}
+
+body[data-theme^="glass"] .sidebar-action-button,
+body[data-theme^="glass"] .section-action-button {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.11)),
+        rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    color: var(--heading);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.24),
+        0 12px 24px rgba(23, 41, 73, 0.18);
+}
+
+body[data-theme^="glass"] .sidebar-action-button:hover,
+body[data-theme^="glass"] .section-action-button:hover {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.15)),
+        rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.34);
+}
+
+body[data-theme^="glass"] .hide-completed-toggle {
+    padding-inline: 0 !important;
+}

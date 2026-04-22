@@ -168,6 +168,30 @@ function getThemeFamilyLabel(themeFamily) {
     return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Blueprint';
 }
 
+
+function moveColorModeToggleToSidebarHeader() {
+    const toggle = document.getElementById('colorModeToggleBtn');
+    const header = document.querySelector('.control-panel .control-panel-header');
+    const panelMain = header?.querySelector('.panel-header-main');
+    if (!toggle || !header || !panelMain) return;
+
+    let wrapper = header.querySelector('.sidebar-header-theme-toggle');
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.className = 'sidebar-header-theme-toggle';
+        header.appendChild(wrapper);
+    }
+
+    if (toggle.parentElement !== wrapper) {
+        wrapper.appendChild(toggle);
+    }
+
+    const oldRow = document.querySelector('.ui-options-mode-toggle-row');
+    if (oldRow && oldRow !== wrapper) {
+        oldRow.classList.add('ui-options-mode-toggle-row--relocated');
+    }
+}
+
 function syncColorModeToggle() {
     const toggle = document.getElementById('colorModeToggleBtn');
     if (!toggle) return;
@@ -3485,6 +3509,7 @@ function onAuthSuccess(user) {
 document.addEventListener('DOMContentLoaded', () => {
     loadSavedViewsFromStorage();
     loadThemePreference();
+    moveColorModeToggleToSidebarHeader();
     initAuthScreen();
 
     if (isLoggedIn()) {
