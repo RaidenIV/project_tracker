@@ -5962,3 +5962,46 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     font-size: 14px;
     font-weight: 700;
 }
+
+/* ============================================================================
+   ROUND 8 OVERRIDES
+   - first project row starts immediately beneath the menu bar
+   - grid continues left-to-right from the top-left corner
+   ============================================================================ */
+
+/* The container's generic `gap` was creating a full row gap between the
+   top app bar and the viewport. Split the axes so horizontal spacing stays
+   intact while the project area begins directly under the menu bar. */
+.container {
+    column-gap: clamp(18px, 1.5vw, 28px) !important;
+    row-gap: 0 !important;
+}
+
+/* Remove any phantom spacing when no active filter chips are being shown. */
+.view-filter-chips:empty {
+    display: none !important;
+    margin: 0 !important;
+}
+
+/* Keep a small gap only when filter chips actually exist. */
+.view-filter-chips:not(:empty) {
+    margin-bottom: 10px !important;
+}
+
+/* Ensure the project grid starts flush at the top-left of the content area. */
+.viewport,
+#projectGrid,
+.project-grid {
+    margin-top: 0 !important;
+}
+
+.viewport {
+    align-self: flex-start !important;
+}
+
+.project-grid {
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    place-content: start !important;
+}
