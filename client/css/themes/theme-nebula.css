@@ -475,3 +475,50 @@ body[data-theme^="glass"] ::-webkit-scrollbar-thumb:hover {
     background: var(--panel-strong);
     background-clip: padding-box;
 }
+
+
+/* -----------------------------
+   13. GLASSMORPHIC SIDEBAR + MODAL REFINEMENTS
+   ----------------------------- */
+body[data-theme^="glass"] .notifications-summary-card,
+body[data-theme^="glass"] .settings-panel-card {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
+        var(--panel-strong);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.24),
+        0 18px 36px rgba(23, 41, 73, 0.18);
+}
+
+body[data-theme^="glass"] .sidebar-action-button,
+body[data-theme^="glass"] .section-action-button {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05)),
+        var(--surface-2);
+    border: 1px solid var(--glass-border);
+    color: var(--heading);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 10px 20px rgba(23, 41, 73, 0.12);
+}
+
+body[data-theme^="glass"] .sidebar-action-button:hover,
+body[data-theme^="glass"] .section-action-button:hover {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)),
+        var(--surface-2);
+    border-color: var(--glass-border);
+}
+
+body[data-theme^="glass"] .modal-tabs {
+    border-bottom: none;
+}
+
+body[data-theme^="glass"] .modal-tab {
+    margin-bottom: 0;
+}
+
+body[data-theme^="glass"] .hide-completed-toggle {
+    padding-inline: 10px;
+}

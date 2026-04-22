@@ -1998,15 +1998,15 @@ function openProjectModal(projectId, options = {}) {
                 </div>
                 
                 <!-- Paste Tasks Section in Modal -->
-                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(47, 39, 206, 0.1);">
-                    <h4 style="font-size: 14px; font-weight: bold; color: #2d3748; margin-bottom: 12px;">Tasks List</h4>
+                <div class="modal-paste-section">
+                    <h4 class="modal-paste-title">Tasks List</h4>
                     <textarea 
+                        class="paste-box"
                         id="modal-paste-box-${project.id}"
-                        placeholder="Enter tasks here"
-                        style="width: 100%; min-height: 80px; background: #e8ecf1; border: 1px solid rgba(47, 39, 206, 0.2); border-radius: 8px; padding: 12px; color: #2d3748; font-size: 12px; font-family: inherit; resize: vertical; box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9); outline: none;"></textarea>
+                        placeholder="Enter tasks here"></textarea>
                     <button 
-                        onclick="pasteTasksInModal('${project.id}')"
-                        style="width: 100%; margin-top: 8px; padding: 8px; background: rgba(47, 39, 206, 0.2); border: none; border-radius: 8px; color: #2f27ce; font-size: 12px; cursor: pointer; font-family: inherit;">
+                        class="paste-button"
+                        onclick="pasteTasksInModal('${project.id}')">
                         Add Pasted Tasks
                     </button>
                 </div>

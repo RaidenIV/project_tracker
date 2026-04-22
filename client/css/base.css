@@ -5850,80 +5850,115 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     display: block !important;
 }
 
+
 /* ============================================================================
-   ROUND 6 OVERRIDES
-   - Avatar image reliably fills the full circle on 1920x1200
-   - Sidebar account block stays pinned top-left
-   - Top toolbar spacing/padding is tighter and consistent
+   ROUND 7 OVERRIDES
    ============================================================================ */
 
-/* Keep the profile block anchored to the top-left corner of the sidebar. */
-.control-panel-header {
+/* Sidebar account identity should read as a simple avatar + name row,
+   not a card, across every UI. The save-status indicator should also stay
+   text-only. */
+.control-panel .panel-user-info {
+    display: flex !important;
+    flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
-}
-
-.panel-header-main,
-#panelUserInfo {
+    gap: 6px !important;
     width: 100% !important;
 }
 
-.panel-user-info,
-.panel-user-pill {
-    align-items: flex-start !important;
+.control-panel .panel-user-pill {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
     justify-content: flex-start !important;
     align-self: flex-start !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    gap: 10px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    overflow: visible !important;
 }
 
-/* The avatar wrapper should behave like a clipped circle, not an inline flex row.
-   Position children on top of each other so only the active layer is visible. */
-.panel-avatar,
-.account-avatar {
-    position: relative !important;
-    display: block !important;
-    overflow: hidden !important;
+.control-panel .panel-user-pill:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border: none !important;
 }
 
-.panel-avatar-img,
-.account-avatar-img,
-.panel-avatar-fallback,
-.account-avatar-fallback {
-    position: absolute !important;
-    inset: 0 !important;
+.control-panel .panel-username {
+    display: inline-flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    min-height: 34px !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+}
+
+.control-panel .save-status,
+.control-panel .save-status--inline,
+.save-status--inline {
+    display: inline-flex !important;
+    align-items: center !important;
+    align-self: flex-start !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure project cards always fill from the top-left in normal row-major order. */
+.project-grid {
     width: 100% !important;
-    height: 100% !important;
+    grid-auto-flow: row !important;
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    place-content: start !important;
 }
 
-.panel-avatar-fallback,
-.account-avatar-fallback {
+/* Center the modal toggle cleanly and keep it away from the edge. */
+.hide-completed-toggle {
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin: 0 auto 16px !important;
+    padding-inline: 6px !important;
 }
 
-/* The JS toggles `.hidden` on the avatar image/fallback, so hide it explicitly here. */
-.panel-avatar > .hidden,
-.account-avatar > .hidden {
-    display: none !important;
+.hide-completed-toggle .toggle-label {
+    width: 100%;
+    text-align: center;
 }
 
-/* Tighter, even spacing across the top menu bar controls. */
-.top-app-bar {
-    gap: 8px !important;
+/* Theme-aware paste-task block inside the project modal. */
+.modal-paste-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(120, 120, 130, 0.22);
 }
 
-.view-toolbar {
-    gap: 8px !important;
-}
-
-.view-toolbar-search,
-.view-toolbar-button {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-}
-
-.view-toolbar-select {
-    padding-left: 12px !important;
-    padding-right: 30px !important;
-    background-position: right 10px center !important;
+.modal-paste-title {
+    margin-bottom: 12px;
+    color: var(--heading);
+    font-size: 14px;
+    font-weight: 700;
 }
