@@ -2035,13 +2035,6 @@ body {
     font-family: inherit;
 }
 
-.shared-badge svg {
-    display: block;
-    width: 12px;
-    height: 12px;
-    flex: 0 0 12px;
-}
-
 .card-owner-name {
     color: var(--accent);
     font-weight: 600;
@@ -6316,5 +6309,56 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     align-items: center !important;
     justify-content: flex-start !important;
     justify-self: start !important;
+    padding: 0 !important;
+}
+
+/* ============================================================================
+   ROUND 14 OVERRIDES
+   - reduce menu bar spacing further
+   - enforce one consistent horizontal gap across all menu bar items
+   - remove wrapper-introduced spacing drift
+   ============================================================================ */
+
+:root {
+    --menu-bar-control-gap: 4px;
+}
+
+.top-app-bar {
+    column-gap: var(--menu-bar-control-gap) !important;
+    row-gap: var(--menu-bar-control-gap) !important;
+    align-items: center !important;
+}
+
+.menu-container,
+.top-app-bar-title,
+.top-app-logo,
+.top-view-toolbar,
+.view-toolbar-search-wrap,
+.view-toolbar > *,
+.toolbar-actions,
+.toolbar-actions > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.top-view-toolbar,
+.view-toolbar {
+    gap: var(--menu-bar-control-gap) !important;
+    column-gap: var(--menu-bar-control-gap) !important;
+    row-gap: var(--menu-bar-control-gap) !important;
+}
+
+.view-toolbar {
+    justify-content: start !important;
+    justify-items: start !important;
+    align-items: center !important;
+}
+
+.toolbar-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    justify-self: start !important;
+    gap: var(--menu-bar-control-gap) !important;
     padding: 0 !important;
 }
