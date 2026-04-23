@@ -2035,6 +2035,13 @@ body {
     font-family: inherit;
 }
 
+.shared-badge svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+}
+
 .card-owner-name {
     color: var(--accent);
     font-weight: 600;
