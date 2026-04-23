@@ -6100,86 +6100,94 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     }
 }
 
+
 /* ============================================================================
    ROUND 10 OVERRIDES
-   - project cards start at the true top-left of the main content area
-   - menu bar to first-row spacing reduced and normalized
-   - grid remains left-aligned and responsive at 1920x1080 and 1920x1200
+   - normalize toolbar spacing
+   - fit sidebar theme toggle cleanly in header
+   - use uploaded collaborator SVG cleanly across themes
    ============================================================================ */
 
-/* Tighten the vertical relationship between the toolbar row and the project
-   content row without affecting the horizontal gap to the sidebar. */
-@media (min-width: 1101px) {
-    .container {
-        row-gap: clamp(8px, 0.8vw, 12px) !important;
-    }
+.control-panel .control-panel-header {
+    align-items: center !important;
 }
 
-/* Make the main content stack from the absolute top-left with no phantom
-   header/filter spacing above the card grid. */
-.viewport {
+.sidebar-header-theme-toggle {
+    align-items: center !important;
+}
+
+/* Equal horizontal spacing between all toolbar controls. */
+.view-toolbar {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+}
+
+.view-toolbar > * {
+    margin: 0 !important;
+}
+
+.view-toolbar-search-wrap {
+    flex: 0 1 clamp(189px, 19.5vw, 297px) !important;
+    width: clamp(189px, 19.5vw, 297px) !important;
+    max-width: clamp(189px, 19.5vw, 297px) !important;
+}
+
+.view-toolbar-select {
+    flex: 0 0 clamp(118px, 8.4vw, 146px) !important;
+    width: clamp(118px, 8.4vw, 146px) !important;
+}
+
+.toolbar-actions {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
     justify-content: flex-start !important;
-    gap: 0 !important;
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-.viewport-header,
-.viewport-header h1 {
-    display: none !important;
     margin: 0 !important;
-    padding: 0 !important;
 }
 
-.view-filter-chips,
-.view-filter-chips:not(:empty) {
-    margin-top: 0 !important;
+/* Uploaded collaborator SVG asset. */
+.shared-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    box-shadow: none !important;
 }
 
-.view-filter-chips:empty {
-    display: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
+.shared-badge-icon {
+    display: block;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    object-fit: contain;
 }
 
-#projectGrid,
-.project-grid {
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    justify-content: start !important;
-    justify-items: stretch !important;
-    align-content: start !important;
-    align-items: start !important;
-    place-content: start !important;
-    grid-auto-flow: row !important;
-}
+@media (max-width: 1100px) {
+    .view-toolbar {
+        justify-content: stretch !important;
+    }
 
-/* Remove the last small pull-down that was still leaving extra space above the
-   first row, while keeping a modest and consistent toolbar-to-grid gap. */
-.top-app-bar {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* Preserve the intended desktop card flow explicitly. */
-@media (min-width: 1681px) {
-    .project-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    .view-toolbar-search-wrap,
+    .view-toolbar-select,
+    .toolbar-actions {
+        flex: 1 1 calc(50% - 4px) !important;
+        width: auto !important;
+        max-width: none !important;
     }
 }
 
-@media (min-width: 1101px) and (max-width: 1680px) {
-    .project-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    }
-}
-
-@media (max-width: 1100px) and (min-width: 741px) {
-    .project-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+@media (max-width: 700px) {
+    .view-toolbar-search-wrap,
+    .view-toolbar-select,
+    .toolbar-actions {
+        flex: 1 1 100% !important;
     }
 }
