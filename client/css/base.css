@@ -6186,134 +6186,128 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 
 /* ============================================================================
    ROUND 11 OVERRIDES
-   - lock the main project area to the true top-left across Active / Shared /
-     Completed and Archived entry points
-   - prevent the desktop grid container from stretching rows vertically on taller
-     displays like 1920x1200
-   - keep card flow in normal left-to-right reading order with consistent gaps
+   - avatar image reliably fills the full circle on 1920x1200 and 1920x1080
+   - sidebar account area is anchored to the true top-left of the sidebar
+   - menu bar spacing is reduced and normalized with one consistent gap value
    ============================================================================ */
 
-/* The desktop app shell switches to CSS grid. Because the container also has a
-   min-height of 100vh, the grid's default content distribution can stretch the
-   rows vertically on taller screens and visually push the project area down.
-   Pin every track to the top-left so the first card row always starts directly
-   beneath the menu bar. */
-@media (min-width: 1101px) {
-    .container {
-        align-content: start !important;
-        align-items: start !important;
-        justify-content: start !important;
-        justify-items: stretch !important;
-        grid-template-rows: auto auto !important;
-        row-gap: clamp(6px, 0.55vw, 10px) !important;
-    }
-
-    .top-app-bar,
-    .viewport,
-    .control-panel {
-        align-self: start !important;
-    }
+:root {
+    --menu-bar-control-gap: 6px;
 }
 
-/* Keep the viewport stack flush with the toolbar and remove any leftover
-   phantom spacing from hidden headings, empty chip rows, or spacer behavior. */
-.viewport {
+/* Avatar rendering: stack the image and fallback in the same cell instead of
+   letting them participate in flex layout side-by-side. This prevents the
+   uploaded image from appearing to occupy only half the circle if the fallback
+   node is still present. */
+.panel-avatar,
+.account-avatar {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden !important;
+    border-radius: 999px !important;
+}
+
+.panel-avatar-img,
+.account-avatar-img,
+.panel-avatar-fallback,
+.account-avatar-fallback {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.panel-avatar-img,
+.account-avatar-img {
+    display: block !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    transform: none !important;
+}
+
+.panel-avatar-fallback,
+.account-avatar-fallback {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.panel-avatar > .hidden,
+.account-avatar > .hidden {
+    display: none !important;
+}
+
+/* Sidebar account/avatar block pinned to the top-left of the sidebar header. */
+.control-panel .control-panel-scroll-inner {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    justify-content: flex-start !important;
-    align-content: flex-start !important;
-    gap: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
-.viewport-header,
-.viewport-header h1 {
-    display: none !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-}
-
-.view-filter-chips {
+.control-panel .control-panel-header {
     display: flex !important;
-    flex-wrap: wrap !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
-    gap: 8px !important;
-    width: 100% !important;
-    margin: 0 0 8px 0 !important;
+    margin: 0 0 18px !important;
     padding: 0 !important;
 }
 
-.view-filter-chips:empty {
-    display: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.empty-state {
-    margin: 0 !important;
-}
-
-/* Force the live card grid to behave like a normal reading-order grid with no
-   horizontal centering or vertical distribution. */
-#projectGrid,
-.project-grid {
-    width: 100% !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    justify-content: start !important;
-    justify-items: stretch !important;
-    align-content: start !important;
-    align-items: start !important;
-    place-content: start !important;
-    grid-auto-flow: row !important;
-    grid-auto-rows: 1fr;
-}
-
-.project-grid > .project-card {
-    align-self: start !important;
-}
-
-/* Archived projects are surfaced through the archived modal list. Keep that
-   list pinned to the top in the same top-down reading order. */
-#archivedProjectsModalList,
-.notifications-modal-list,
-.project-activity-list {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    align-items: stretch !important;
+.control-panel .panel-header-main {
+    display: flex !important;
+    align-items: flex-start !important;
     justify-content: flex-start !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-/* Preserve the established responsive card counts while keeping the first card
-   anchored to the top-left in every project view. */
-@media (min-width: 1681px) {
-    .project-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    }
+.control-panel .panel-user-info {
+    align-self: flex-start !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
 }
 
-@media (min-width: 1101px) and (max-width: 1680px) {
-    .project-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    }
+.control-panel .panel-user-pill {
+    align-self: flex-start !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
 }
 
-@media (max-width: 1100px) and (min-width: 741px) {
-    .project-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
+/* Menu bar spacing: one consistent value across every control with no extra
+   spacing injected by wrapper elements. */
+.top-app-bar,
+.view-toolbar {
+    gap: var(--menu-bar-control-gap) !important;
 }
 
-@media (max-width: 740px) {
-    .project-grid {
-        grid-template-columns: 1fr !important;
-    }
+.top-view-toolbar,
+.view-toolbar-search-wrap,
+.view-toolbar > *,
+.toolbar-actions,
+.toolbar-actions > * {
+    margin: 0 !important;
+}
+
+.top-view-toolbar {
+    margin-left: 0 !important;
+}
+
+.view-toolbar {
+    column-gap: var(--menu-bar-control-gap) !important;
+    row-gap: var(--menu-bar-control-gap) !important;
+    justify-content: start !important;
+}
+
+.toolbar-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    justify-self: start !important;
+    padding: 0 !important;
 }
