@@ -6100,45 +6100,56 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     }
 }
 
-
 /* ============================================================================
    ROUND 10 OVERRIDES
    - project cards start at the true top-left of the main content area
-   - grid flows left-to-right with no phantom spacer above the first row
+   - menu bar to first-row spacing reduced and normalized
+   - grid remains left-aligned and responsive at 1920x1080 and 1920x1200
    ============================================================================ */
 
-.container {
-    row-gap: clamp(8px, 0.75vw, 12px) !important;
+/* Tighten the vertical relationship between the toolbar row and the project
+   content row without affecting the horizontal gap to the sidebar. */
+@media (min-width: 1101px) {
+    .container {
+        row-gap: clamp(8px, 0.8vw, 12px) !important;
+    }
 }
 
-.top-app-bar,
-.top-view-toolbar,
+/* Make the main content stack from the absolute top-left with no phantom
+   header/filter spacing above the card grid. */
 .viewport {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
     margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}
-
-.viewport {
     padding-top: 0 !important;
-    align-self: start !important;
 }
 
 .viewport-header,
+.viewport-header h1 {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.view-filter-chips,
+.view-filter-chips:not(:empty) {
+    margin-top: 0 !important;
+}
+
 .view-filter-chips:empty {
     display: none !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-.view-filter-chips:not(:empty) {
-    margin: 0 0 clamp(8px, 0.7vw, 10px) 0 !important;
-}
-
 #projectGrid,
 .project-grid {
+    width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
     justify-content: start !important;
     justify-items: stretch !important;
     align-content: start !important;
@@ -6147,8 +6158,28 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     grid-auto-flow: row !important;
 }
 
-@media (max-width: 1100px) {
-    .container {
-        row-gap: 10px !important;
+/* Remove the last small pull-down that was still leaving extra space above the
+   first row, while keeping a modest and consistent toolbar-to-grid gap. */
+.top-app-bar {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Preserve the intended desktop card flow explicitly. */
+@media (min-width: 1681px) {
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1101px) and (max-width: 1680px) {
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1100px) and (min-width: 741px) {
+    .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }

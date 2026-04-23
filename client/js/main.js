@@ -2594,7 +2594,9 @@ function renderProjectCard(project) {
                 <div class="project-actions">
                     ${(isViewer || isEditor) ? `<span class="role-badge role-badge--${project.userRole}">${project.userRole}</span>` : ''}
                     ${isShared && !isViewer && !isEditor ? `<span class="shared-badge" title="${collaborators.length} collaborator(s)">
-                        <img class="shared-badge-icon" src="assets/handshake-svgrepo-com.svg" alt="" aria-hidden="true">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                        </svg>
                         ${collaborators.length}
                     </span>` : ''}
                     ${canEditProject ? `<button class="edit-button" type="button" title="Edit project name" onclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')">
