@@ -6103,91 +6103,52 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 
 /* ============================================================================
    ROUND 10 OVERRIDES
-   - normalize toolbar spacing
-   - fit sidebar theme toggle cleanly in header
-   - use uploaded collaborator SVG cleanly across themes
+   - project cards start at the true top-left of the main content area
+   - grid flows left-to-right with no phantom spacer above the first row
    ============================================================================ */
 
-.control-panel .control-panel-header {
-    align-items: center !important;
+.container {
+    row-gap: clamp(8px, 0.75vw, 12px) !important;
 }
 
-.sidebar-header-theme-toggle {
-    align-items: center !important;
+.top-app-bar,
+.top-view-toolbar,
+.viewport {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
-/* Equal horizontal spacing between all toolbar controls. */
-.view-toolbar {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 8px !important;
-    column-gap: 8px !important;
-    row-gap: 8px !important;
+.viewport {
+    padding-top: 0 !important;
+    align-self: start !important;
 }
 
-.view-toolbar > * {
+.viewport-header,
+.view-filter-chips:empty {
+    display: none !important;
     margin: 0 !important;
+    padding: 0 !important;
 }
 
-.view-toolbar-search-wrap {
-    flex: 0 1 clamp(189px, 19.5vw, 297px) !important;
-    width: clamp(189px, 19.5vw, 297px) !important;
-    max-width: clamp(189px, 19.5vw, 297px) !important;
+.view-filter-chips:not(:empty) {
+    margin: 0 0 clamp(8px, 0.7vw, 10px) 0 !important;
 }
 
-.view-toolbar-select {
-    flex: 0 0 clamp(118px, 8.4vw, 146px) !important;
-    width: clamp(118px, 8.4vw, 146px) !important;
-}
-
-.toolbar-actions {
-    flex: 0 0 auto !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
+#projectGrid,
+.project-grid {
     margin: 0 !important;
-}
-
-/* Uploaded collaborator SVG asset. */
-.shared-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 24px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    box-shadow: none !important;
-}
-
-.shared-badge-icon {
-    display: block;
-    width: 12px;
-    height: 12px;
-    flex: 0 0 12px;
-    object-fit: contain;
+    padding: 0 !important;
+    width: 100% !important;
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    align-items: start !important;
+    place-content: start !important;
+    grid-auto-flow: row !important;
 }
 
 @media (max-width: 1100px) {
-    .view-toolbar {
-        justify-content: stretch !important;
-    }
-
-    .view-toolbar-search-wrap,
-    .view-toolbar-select,
-    .toolbar-actions {
-        flex: 1 1 calc(50% - 4px) !important;
-        width: auto !important;
-        max-width: none !important;
-    }
-}
-
-@media (max-width: 700px) {
-    .view-toolbar-search-wrap,
-    .view-toolbar-select,
-    .toolbar-actions {
-        flex: 1 1 100% !important;
+    .container {
+        row-gap: 10px !important;
     }
 }
