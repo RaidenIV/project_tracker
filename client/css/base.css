@@ -6183,3 +6183,137 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
+
+/* ============================================================================
+   ROUND 11 OVERRIDES
+   - lock the main project area to the true top-left across Active / Shared /
+     Completed and Archived entry points
+   - prevent the desktop grid container from stretching rows vertically on taller
+     displays like 1920x1200
+   - keep card flow in normal left-to-right reading order with consistent gaps
+   ============================================================================ */
+
+/* The desktop app shell switches to CSS grid. Because the container also has a
+   min-height of 100vh, the grid's default content distribution can stretch the
+   rows vertically on taller screens and visually push the project area down.
+   Pin every track to the top-left so the first card row always starts directly
+   beneath the menu bar. */
+@media (min-width: 1101px) {
+    .container {
+        align-content: start !important;
+        align-items: start !important;
+        justify-content: start !important;
+        justify-items: stretch !important;
+        grid-template-rows: auto auto !important;
+        row-gap: clamp(6px, 0.55vw, 10px) !important;
+    }
+
+    .top-app-bar,
+    .viewport,
+    .control-panel {
+        align-self: start !important;
+    }
+}
+
+/* Keep the viewport stack flush with the toolbar and remove any leftover
+   phantom spacing from hidden headings, empty chip rows, or spacer behavior. */
+.viewport {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    align-content: flex-start !important;
+    gap: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.viewport-header,
+.viewport-header h1 {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.view-filter-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 0 8px 0 !important;
+    padding: 0 !important;
+}
+
+.view-filter-chips:empty {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.empty-state {
+    margin: 0 !important;
+}
+
+/* Force the live card grid to behave like a normal reading-order grid with no
+   horizontal centering or vertical distribution. */
+#projectGrid,
+.project-grid {
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    align-items: start !important;
+    place-content: start !important;
+    grid-auto-flow: row !important;
+    grid-auto-rows: 1fr;
+}
+
+.project-grid > .project-card {
+    align-self: start !important;
+}
+
+/* Archived projects are surfaced through the archived modal list. Keep that
+   list pinned to the top in the same top-down reading order. */
+#archivedProjectsModalList,
+.notifications-modal-list,
+.project-activity-list {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+}
+
+/* Preserve the established responsive card counts while keeping the first card
+   anchored to the top-left in every project view. */
+@media (min-width: 1681px) {
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1101px) and (max-width: 1680px) {
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1100px) and (min-width: 741px) {
+    .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 740px) {
+    .project-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
