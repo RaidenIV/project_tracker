@@ -6362,3 +6362,45 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     gap: var(--menu-bar-control-gap) !important;
     padding: 0 !important;
 }
+
+/* ============================================================================
+   ROUND 10 OVERRIDES
+   - fix hide-completed toggle knob alignment/containment across themes
+   ============================================================================ */
+
+.hide-completed-toggle {
+    gap: 10px !important;
+}
+
+.hide-completed-toggle .toggle-switch {
+    position: relative !important;
+    display: inline-block !important;
+    width: 58px !important;
+    height: 30px !important;
+    flex: 0 0 auto !important;
+}
+
+.hide-completed-toggle .toggle-switch .toggle-slider {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    border-radius: 999px !important;
+}
+
+.hide-completed-toggle .toggle-switch .toggle-slider::before {
+    content: "";
+    position: absolute !important;
+    top: 50% !important;
+    bottom: auto !important;
+    left: 2px !important;
+    width: 24px !important;
+    height: 24px !important;
+    transform: translate3d(0, -50%, 0) !important;
+    box-sizing: border-box !important;
+}
+
+.hide-completed-toggle .toggle-switch input:checked + .toggle-slider::before {
+    transform: translate3d(30px, -50%, 0) !important;
+}

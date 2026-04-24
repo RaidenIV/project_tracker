@@ -1326,3 +1326,28 @@ body[data-theme="console-dark"] textarea {
     color: var(--text) !important;
     border-color: var(--line) !important;
 }
+
+/* ROUND 10 — keep the console hide-completed toggle fully contained in-track */
+body[data-theme^="console"] .hide-completed-toggle .toggle-switch {
+    width: 58px !important;
+    height: 30px !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-slider {
+    border-radius: 999px !important;
+    overflow: hidden !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-slider:before {
+    top: 50% !important;
+    bottom: auto !important;
+    left: 2px !important;
+    width: 24px !important;
+    height: 24px !important;
+    transform: translate3d(0, -50%, 0) !important;
+    border-radius: 8px !important;
+}
+
+body[data-theme^="console"] .hide-completed-toggle .toggle-switch input:checked + .toggle-slider:before {
+    transform: translate3d(30px, -50%, 0) !important;
+}
