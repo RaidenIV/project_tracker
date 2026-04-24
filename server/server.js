@@ -650,7 +650,7 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
 
 app.get('/api/account', authenticateToken, async (req, res) => {
     try {
-        const [account, stats, ownedProjects, sharedProjects, activeProjects] = await Promise.all([
+        const [account, stats, ownedProjects, sharedProjects, activeProjects, leaderboardPayload] = await Promise.all([
             Account.findById(req.user.id, 'email username profilePic createdAt'),
             getOrCreateStats(req.user.id),
             Project.countDocuments({ owner: req.user.id }),
@@ -659,7 +659,8 @@ app.get('/api/account', authenticateToken, async (req, res) => {
                 $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }],
                 completed: false,
                 archived: false
-            })
+            }),
+            buildLeaderboardData(req.user.id)
         ]);
 
         if (!account) return res.status(404).json({ error: 'Account not found' });
@@ -678,7 +679,10 @@ app.get('/api/account', authenticateToken, async (req, res) => {
                 ownedProjects,
                 sharedProjects,
                 activeProjects
-            }
+            },
+            leaderboard: leaderboardPayload.leaderboard,
+            currentLeaderboardRank: leaderboardPayload.currentLeaderboardRank,
+            currentLeaderboardEntry: leaderboardPayload.currentLeaderboardEntry
         });
     } catch (err) {
         console.error('Error fetching account:', err);
@@ -786,6 +790,65 @@ async function getOrCreateStats(userId) {
     return s;
 }
 
+async function buildLeaderboardData(currentUserId) {
+    const [accounts, projects] = await Promise.all([
+        Account.find({}, 'username').lean(),
+        Project.find({ archived: false }, 'owner completed tasks').lean()
+    ]);
+
+    const rows = new Map();
+    accounts.forEach(account => {
+        const userId = account?._id ? String(account._id) : '';
+        if (!userId) return;
+        rows.set(userId, {
+            userId,
+            username: account.username || 'User',
+            completedProjects: 0,
+            completedTasks: 0,
+            totalTasks: 0,
+            totalCompletionPercentage: 0,
+            rank: null
+        });
+    });
+
+    projects.forEach(project => {
+        const ownerId = String(project.owner || '');
+        const row = rows.get(ownerId);
+        if (!row) return;
+        const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+        row.totalTasks += tasks.length;
+        row.completedTasks += tasks.filter(task => task && task.completed).length;
+        if (project.completed) row.completedProjects += 1;
+    });
+
+    const leaderboard = Array.from(rows.values()).map(row => ({
+        ...row,
+        totalCompletionPercentage: row.totalTasks > 0
+            ? Math.round((row.completedTasks / row.totalTasks) * 100)
+            : 0
+    })).sort((a, b) => {
+        return (b.totalCompletionPercentage - a.totalCompletionPercentage)
+            || (b.completedProjects - a.completedProjects)
+            || (b.completedTasks - a.completedTasks)
+            || String(a.username || '').localeCompare(String(b.username || ''));
+    }).map((row, index) => ({
+        userId: row.userId,
+        username: row.username,
+        completedProjects: row.completedProjects,
+        completedTasks: row.completedTasks,
+        totalCompletionPercentage: row.totalCompletionPercentage,
+        rank: index + 1
+    }));
+
+    const currentUserKey = String(currentUserId || '');
+    const currentUserEntry = leaderboard.find(row => row.userId === currentUserKey) || null;
+    return {
+        leaderboard: leaderboard.slice(0, 10),
+        currentLeaderboardRank: currentUserEntry?.rank || null,
+        currentLeaderboardEntry: currentUserEntry
+    };
+}
+
 app.get('/api/stats', authenticateToken, async (req, res) => {
     try {
         const s = await getOrCreateStats(req.user.id);
@@ -806,95 +869,6 @@ app.put('/api/stats', authenticateToken, async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to update stats', details: err?.message });
-    }
-});
-
-app.get('/api/leaderboard', authenticateToken, async (req, res) => {
-    try {
-        const [accounts, projects] = await Promise.all([
-            Account.find({}, '_id username profilePic').lean(),
-            Project.find({}, 'owner tasks completed archived').lean()
-        ]);
-
-        const liveStatsByUserId = new Map();
-        for (const account of accounts) {
-            liveStatsByUserId.set(String(account._id), {
-                completedTasks: 0,
-                completedProjects: 0,
-                totalProjects: 0,
-                activeProjects: 0
-            });
-        }
-
-        for (const project of projects) {
-            const ownerId = String(project.owner || '');
-            if (!ownerId) continue;
-            if (!liveStatsByUserId.has(ownerId)) {
-                liveStatsByUserId.set(ownerId, {
-                    completedTasks: 0,
-                    completedProjects: 0,
-                    totalProjects: 0,
-                    activeProjects: 0
-                });
-            }
-            const bucket = liveStatsByUserId.get(ownerId);
-            bucket.totalProjects += 1;
-            if (!project.archived && !project.completed) bucket.activeProjects += 1;
-            if (project.completed) bucket.completedProjects += 1;
-            const tasks = Array.isArray(project.tasks) ? project.tasks : [];
-            bucket.completedTasks += tasks.filter(task => task && task.completed).length;
-        }
-
-        const rows = accounts.map(account => {
-            const userId = String(account._id);
-            const stats = liveStatsByUserId.get(userId) || {
-                completedTasks: 0,
-                completedProjects: 0,
-                totalProjects: 0,
-                activeProjects: 0
-            };
-            return {
-                userId,
-                username: account.username || 'User',
-                profilePic: account.profilePic || '',
-                completedTasks: Number(stats.completedTasks || 0),
-                completedProjects: Number(stats.completedProjects || 0),
-                totalProjects: Number(stats.totalProjects || 0),
-                activeProjects: Number(stats.activeProjects || 0),
-                score: (Number(stats.completedProjects || 0) * 1000) + Number(stats.completedTasks || 0)
-            };
-        }).sort((a, b) => {
-            if (b.completedProjects !== a.completedProjects) return b.completedProjects - a.completedProjects;
-            if (b.completedTasks !== a.completedTasks) return b.completedTasks - a.completedTasks;
-            if (b.activeProjects !== a.activeProjects) return b.activeProjects - a.activeProjects;
-            return a.username.localeCompare(b.username);
-        }).map((row, index) => ({ ...row, rank: index + 1 }));
-
-        let currentUser = rows.find(row => row.userId === String(req.user.id)) || null;
-        if (!currentUser) {
-            const account = await Account.findById(req.user.id, '_id username profilePic').lean();
-            if (account) {
-                currentUser = {
-                    userId: String(account._id),
-                    username: account.username || 'User',
-                    profilePic: account.profilePic || '',
-                    completedTasks: 0,
-                    completedProjects: 0,
-                    totalProjects: 0,
-                    activeProjects: 0,
-                    score: 0,
-                    rank: rows.length + 1
-                };
-            }
-        }
-
-        res.json({
-            currentUser,
-            leaders: rows.slice(0, 5)
-        });
-    } catch (err) {
-        console.error('Error fetching leaderboard:', err);
-        res.status(500).json({ error: 'Failed to fetch leaderboard', details: err?.message });
     }
 });
 

@@ -219,40 +219,64 @@
                     </div>
                 </div>
 
-                <div class="sidebar-section-label">Leaderboard</div>
-                <div class="leaderboard-summary-card" id="leaderboardSummaryCard">
-                    <div class="leaderboard-summary-row">
-                        <div>
-                            <div class="leaderboard-summary-title">Your Rank</div>
-                            <div class="leaderboard-summary-copy" id="leaderboardSummaryCopy">Loading leaderboard…</div>
+                <div class="sidebar-collapsible" data-sidebar-section="leaderboard">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="leaderboard" type="button" aria-expanded="false">
+                        <span class="sidebar-section-toggle-label">Leaderboard</span>
+                        <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div class="sidebar-section-body" id="leaderboardSectionBody" hidden>
+                        <div class="leaderboard-panel-card">
+                            <div class="leaderboard-summary-row">
+                                <span class="leaderboard-summary-text" id="leaderboardSummaryText">No leaderboard data yet</span>
+                                <span class="section-count-pill" id="leaderboardRankPill">—</span>
+                            </div>
+                            <div class="leaderboard-list" id="leaderboardList">
+                                <div class="side-panel-empty">No rankings yet</div>
+                            </div>
                         </div>
-                        <div class="leaderboard-rank-pill" id="leaderboardRankPill">--</div>
-                    </div>
-                    <div class="leaderboard-list" id="leaderboardList">
-                        <div class="leaderboard-empty">Loading leaderboard…</div>
                     </div>
                 </div>
 
-                <div class="sidebar-section-label">Notifications</div>
-                <div class="notifications-summary-card">
-                    <div class="notifications-summary-row">
-                        <span class="notifications-summary-text" id="notificationsSummaryText">No unread notifications</span>
-                        <span class="section-count-pill" id="notificationsUnreadCount">0</span>
-                    </div>
-                    <div class="notifications-summary-actions">
-                        <button class="section-action-button" id="viewNotificationsBtn" type="button">View All</button>
-                        <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
+                <div class="sidebar-collapsible" data-sidebar-section="notifications">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="notifications" type="button" aria-expanded="false">
+                        <span class="sidebar-section-toggle-label">Notifications</span>
+                        <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div class="sidebar-section-body" id="notificationsSectionBody" hidden>
+                        <div class="notifications-summary-card">
+                            <div class="notifications-summary-row">
+                                <span class="notifications-summary-text" id="notificationsSummaryText">No unread notifications</span>
+                                <span class="section-count-pill" id="notificationsUnreadCount">0</span>
+                            </div>
+                            <div class="notifications-summary-actions">
+                                <button class="section-action-button" id="viewNotificationsBtn" type="button">View All</button>
+                                <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="sidebar-section-label">Settings</div>
-                <div class="settings-panel-card">
-                    <div class="settings-actions">
-                        <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button">Account Settings</button>
-                        <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button">UI Options</button>
-                        <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">Keyboard Shortcuts</button>
-                        <button class="sidebar-action-button" id="undoButton" type="button">Undo</button>
-                        <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button">Sign Out</button>
+                <div class="sidebar-collapsible" data-sidebar-section="settings">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="settings" type="button" aria-expanded="false">
+                        <span class="sidebar-section-toggle-label">Settings</span>
+                        <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div class="sidebar-section-body" id="settingsSectionBody" hidden>
+                        <div class="settings-panel-card">
+                            <div class="settings-actions">
+                                <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button">Account Settings</button>
+                                <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button">UI Options</button>
+                                <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">Keyboard Shortcuts</button>
+                                <button class="sidebar-action-button" id="undoButton" type="button">Undo</button>
+                                <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button">Sign Out</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -5259,124 +5259,11 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
 }
 
 .notifications-summary-card,
-.settings-panel-card,
-.leaderboard-summary-card {
+.settings-panel-card {
     background: var(--panel);
     border-radius: 14px;
     padding: 14px;
     box-shadow: var(--card-shadow);
-}
-
-.leaderboard-summary-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.leaderboard-summary-title {
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--heading);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.leaderboard-summary-copy {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.35;
-}
-
-.leaderboard-rank-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 48px;
-    height: 30px;
-    padding: 0 10px;
-    border-radius: 999px;
-    background: rgba(50, 120, 235, 0.12);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.leaderboard-list {
-    display: grid;
-    gap: 8px;
-}
-
-.leaderboard-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: var(--surface);
-    box-shadow: var(--inset-shadow);
-}
-
-.leaderboard-item.is-current-user {
-    outline: 1px solid rgba(50, 120, 235, 0.2);
-}
-
-.leaderboard-item-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
-
-.leaderboard-position {
-    min-width: 30px;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--accent);
-}
-
-.leaderboard-user-meta {
-    min-width: 0;
-}
-
-.leaderboard-user-name {
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--heading);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.leaderboard-user-stats {
-    margin-top: 2px;
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.3;
-}
-
-.leaderboard-you-tag {
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.leaderboard-score {
-    flex: 0 0 auto;
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--muted);
-}
-
-.leaderboard-empty {
-    font-size: 12px;
-    color: var(--muted);
 }
 
 .notifications-summary-row {
@@ -6180,7 +6067,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 }
 
 .view-filter-chips:not(:empty) {
-    margin-bottom: 4px !important;
+    margin-bottom: 5px !important;
 }
 
 /* Restore the hide-completed toggle to its original left-aligned position
@@ -6224,7 +6111,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
    content row without affecting the horizontal gap to the sidebar. */
 @media (min-width: 1101px) {
     .container {
-        row-gap: clamp(4px, 0.45vw, 8px) !important;
+        row-gap: clamp(8px, 0.8vw, 12px) !important;
     }
 }
 
@@ -6433,7 +6320,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
    ============================================================================ */
 
 :root {
-    --menu-bar-control-gap: 8px;
+    --menu-bar-control-gap: 4px;
 }
 
 .top-app-bar {
@@ -6512,9 +6399,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     height: 24px !important;
     transform: translate3d(0, -50%, 0) !important;
     box-sizing: border-box !important;
-    border-radius: 999px !important;
 }
-
 
 .hide-completed-toggle .toggle-switch input:checked + .toggle-slider::before {
     transform: translate3d(30px, -50%, 0) !important;
@@ -6523,216 +6408,196 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 
 /* ============================================================================
    ROUND 15 OVERRIDES
-   - true text caret only where text input is expected
-   - leaderboard section styling
-   - consistent toolbar-to-grid spacing and top-left card flow across views
+   - default-collapsed leaderboard / notifications / settings sections
+   - leaderboard styles and rank display cleanup
+   - modal tasks list Enter support companion styles
+   - force top-left project flow across active / shared / completed views
    ============================================================================ */
 
-body {
-    caret-color: transparent;
+.sidebar-collapsible {
+    margin-bottom: 16px;
 }
 
-input,
-textarea,
-[contenteditable="true"],
-.project-title-input,
-.modal-title-input,
-.task-input,
-.notes-textarea,
-.invite-email-input,
-.account-form-input,
-.view-toolbar-search,
-.view-toolbar-select {
-    caret-color: auto;
+.sidebar-section-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--heading);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    margin-bottom: 10px;
 }
 
-button,
-.project-card,
-.sidebar-nav-card,
-.modal-tab,
-.section-action-button,
-.sidebar-action-button,
-.top-app-bar-title,
-.project-title,
-.task-text,
-.card-owner-name,
-.project-stats span,
-.project-last-updated {
-    caret-color: transparent !important;
+.sidebar-section-toggle-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+.sidebar-section-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+}
+
+.sidebar-collapsible.is-expanded .sidebar-section-chevron {
+    transform: rotate(180deg);
+}
+
+.sidebar-section-body[hidden] {
+    display: none !important;
+}
+
+.leaderboard-panel-card {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--card-shadow);
+}
+
+.leaderboard-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.leaderboard-summary-text {
+    font-size: 12px;
+    color: var(--heading);
+    font-weight: 600;
+}
+
+.leaderboard-list {
+    display: grid;
+    gap: 8px;
+}
+
+.leaderboard-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--inset-shadow);
+}
+
+.leaderboard-row-rank {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--heading);
+}
+
+.leaderboard-row-copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.leaderboard-row-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--heading);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.leaderboard-row-name.is-current {
+    color: var(--accent);
+}
+
+.leaderboard-row-stats {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.leaderboard-row.is-current {
+    outline: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Make the main content a strict top-to-bottom stack so the card grid always
+   begins directly beneath the toolbar, including sparse shared/completed views. */
+.container {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-content: start !important;
+    row-gap: 10px !important;
+}
+
+.top-app-bar {
+    align-self: start !important;
+    margin: 0 !important;
+}
+
+.viewport {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    align-self: start !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .view-filter-chips,
 .view-filter-chips:not(:empty) {
-    padding: 0 !important;
-    margin-bottom: 4px !important;
-}
-
-.viewport {
-    padding-top: 0 !important;
-}
-
-.project-grid {
-    justify-content: start !important;
-    justify-items: stretch !important;
-    align-content: start !important;
-    align-items: start !important;
-    place-content: start !important;
-}
-
-@media (min-width: 1681px) {
-    .project-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    }
-}
-
-@media (min-width: 1101px) and (max-width: 1680px) {
-    .project-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    }
-}
-
-
-/* ============================================================================
-   ROUND 16 OVERRIDES
-   - true equal menu-bar spacing using a single flex row
-   - project cards start immediately beneath the toolbar in every view
-   - current user's leaderboard name is blue instead of a separate 'You' tag
-   ============================================================================ */
-
-:root {
-    --menu-bar-control-gap: 8px;
-}
-
-.top-view-toolbar,
-.view-toolbar {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: var(--menu-bar-control-gap) !important;
-    column-gap: var(--menu-bar-control-gap) !important;
-    row-gap: var(--menu-bar-control-gap) !important;
-    width: auto !important;
-}
-
-.view-toolbar-search-wrap {
-    flex: 0 0 clamp(252px, 26vw, 396px) !important;
-    width: clamp(252px, 26vw, 396px) !important;
-    max-width: clamp(252px, 26vw, 396px) !important;
-}
-
-.view-toolbar-select,
-.view-toolbar-button,
-.toolbar-actions {
-    flex: 0 0 auto !important;
-}
-
-.toolbar-actions {
-    display: contents !important;
-    margin: 0 !important;
+    margin: 0 0 8px 0 !important;
     padding: 0 !important;
 }
 
-.top-app-bar {
-    align-items: start !important;
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-.container {
-    row-gap: 4px !important;
-}
-
-.viewport,
-#viewport {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
-    align-items: stretch !important;
-    gap: 0 !important;
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-.view-filter-chips,
-.view-filter-chips:not(:empty),
 .view-filter-chips:empty {
     display: none !important;
-    height: 0 !important;
-    min-height: 0 !important;
     margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
+}
+
+#emptyState {
+    margin: 0 !important;
 }
 
 #projectGrid,
 .project-grid {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    align-self: start !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     justify-content: start !important;
     justify-items: stretch !important;
-    align-content: start !important;
     align-items: start !important;
+    align-content: start !important;
     place-content: start !important;
     grid-auto-flow: row !important;
 }
 
-.leaderboard-you-tag {
-    display: none !important;
+/* Keep the toolbar controls evenly spaced while preserving the compact Save View button. */
+.view-toolbar {
+    grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(118px, 132px)) auto !important;
+    column-gap: 10px !important;
+    row-gap: 10px !important;
 }
 
-.leaderboard-item.is-current-user .leaderboard-user-name,
-.leaderboard-user-name.is-current-user-name {
-    color: var(--accent) !important;
-}
-
-@media (max-width: 900px) {
-    .top-view-toolbar,
-    .view-toolbar {
-        width: 100% !important;
-    }
-
-    .view-toolbar-search-wrap {
-        flex: 1 1 100% !important;
-        width: 100% !important;
-        max-width: none !important;
-    }
-}
-
-
-/* ============================================================================
-   ROUND 17 OVERRIDES
-   - restore Save View to compact original sizing/placement
-   - remove modal tab divider line
-   - simplify leaderboard list to projects/tasks only
-   ============================================================================ */
-
-.toolbar-actions {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    flex: 0 0 auto !important;
-    gap: 0 !important;
-}
-
-#saveCurrentViewBtn.view-toolbar-button,
-.view-toolbar-button#saveCurrentViewBtn {
+.view-toolbar-button {
     width: auto !important;
     min-width: 0 !important;
-    flex: 0 0 auto !important;
     justify-self: start !important;
-    padding-inline: 16px !important;
 }
 
-.modal-tabs {
-    border-bottom: none !important;
-}
-
-.modal-tab {
-    margin-bottom: 0 !important;
-}
-
-.leaderboard-score {
-    display: none !important;
+.toolbar-actions {
+    width: auto !important;
+    justify-self: start !important;
 }
