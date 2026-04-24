@@ -809,6 +809,63 @@ app.put('/api/stats', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/leaderboard', authenticateToken, async (req, res) => {
+    try {
+        const [accounts, statsDocs] = await Promise.all([
+            Account.find({}, '_id username profilePic').lean(),
+            Stats.find({}, 'userId completedTasks completedProjects').lean()
+        ]);
+
+        const statsByUserId = new Map(
+            statsDocs.map(doc => [String(doc.userId), {
+                completedTasks: Number(doc.completedTasks || 0),
+                completedProjects: Number(doc.completedProjects || 0)
+            }])
+        );
+
+        const rows = accounts.map(account => {
+            const userId = String(account._id);
+            const stats = statsByUserId.get(userId) || { completedTasks: 0, completedProjects: 0 };
+            return {
+                userId,
+                username: account.username || 'User',
+                profilePic: account.profilePic || '',
+                completedTasks: stats.completedTasks,
+                completedProjects: stats.completedProjects,
+                score: (stats.completedProjects * 1000) + stats.completedTasks
+            };
+        }).sort((a, b) => {
+            if (b.completedProjects !== a.completedProjects) return b.completedProjects - a.completedProjects;
+            if (b.completedTasks !== a.completedTasks) return b.completedTasks - a.completedTasks;
+            return a.username.localeCompare(b.username);
+        }).map((row, index) => ({ ...row, rank: index + 1 }));
+
+        let currentUser = rows.find(row => row.userId === String(req.user.id)) || null;
+        if (!currentUser) {
+            const account = await Account.findById(req.user.id, '_id username profilePic').lean();
+            if (account) {
+                currentUser = {
+                    userId: String(account._id),
+                    username: account.username || 'User',
+                    profilePic: account.profilePic || '',
+                    completedTasks: 0,
+                    completedProjects: 0,
+                    score: 0,
+                    rank: rows.length + 1
+                };
+            }
+        }
+
+        res.json({
+            currentUser,
+            leaders: rows.slice(0, 5)
+        });
+    } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+        res.status(500).json({ error: 'Failed to fetch leaderboard', details: err?.message });
+    }
+});
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 
 app.get('/api/health', (req, res) => {

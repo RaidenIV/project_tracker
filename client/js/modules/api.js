@@ -173,6 +173,15 @@ export async function saveStatsToServer(stats) {
     }
 }
 
+export async function loadLeaderboardFromServer() {
+    try {
+        return await request('GET', API_ENDPOINTS.LEADERBOARD) || { currentUser: null, leaders: [] };
+    } catch (err) {
+        console.error('Error loading leaderboard:', err);
+        return { currentUser: null, leaders: [] };
+    }
+}
+
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 export async function checkServerHealth() {

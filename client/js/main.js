@@ -21,6 +21,7 @@ const markNotificationReadOnServer = api.markNotificationReadOnServer || (async 
 const markAllNotificationsReadOnServer = api.markAllNotificationsReadOnServer || (async () => ({ success: true }));
 const loadAccountProfileFromServer = api.loadAccountProfileFromServer || (async () => ({ user: auth.getCurrentUser?.() || null, stats: {} }));
 const updateAccountProfileOnServer = api.updateAccountProfileOnServer || (async (payload = {}) => ({ user: { ...(auth.getCurrentUser?.() || {}), ...payload } }));
+const loadLeaderboardFromServer = api.loadLeaderboardFromServer || (async () => ({ currentUser: null, leaders: [] }));
 const archiveProjectOnServer = api.archiveProjectOnServer || (async () => ({ success: false }));
 const restoreProjectOnServer = api.restoreProjectOnServer || (async () => ({ success: false }));
 
@@ -109,6 +110,10 @@ const accountState = {
         sharedProjects: 0,
         activeProjects: 0
     },
+    leaderboard: {
+        currentUser: null,
+        leaders: []
+    },
     pendingProfilePic: null
 };
 
@@ -128,7 +133,8 @@ const uiState = {
 
 const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
-    THEME: 'tracker_ui_theme_v1'
+    THEME: 'tracker_ui_theme_v1',
+    DEFAULT_THEME: 'tracker_default_ui_theme_v1'
 };
 
 function escapeHtml(value) {
@@ -234,7 +240,10 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
+    const persistedTheme = localStorage.getItem(LOCAL_STORAGE_KEYS.DEFAULT_THEME)
+        || localStorage.getItem(LOCAL_STORAGE_KEYS.THEME)
+        || 'blueprint-light';
+    uiState.theme = normalizeThemeName(persistedTheme);
     applyTheme(uiState.theme, false);
 }
 
@@ -242,11 +251,14 @@ function applyTheme(themeName, persist = true) {
     uiState.theme = normalizeThemeName(themeName);
     syncThemeBranding();
     syncColorModeToggle();
-    if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
+    if (persist) {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
+        localStorage.setItem(LOCAL_STORAGE_KEYS.DEFAULT_THEME, uiState.theme);
+    }
     const status = document.getElementById('uiOptionsStatus');
     if (status) {
         const meta = getThemeMeta(uiState.theme);
-        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)} • saved as default`;
     }
     renderThemeOptions();
 }
@@ -268,7 +280,7 @@ function renderThemeOptions() {
 function openUiOptionsModal() {
     renderThemeOptions();
     const meta = getThemeMeta(uiState.theme);
-    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)} • saved as default`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -579,6 +591,77 @@ function syncAccountStatsToModal() {
     });
 }
 
+function renderLeaderboardPanel() {
+    const leaderboardCard = document.getElementById('leaderboardSummaryCard');
+    const summaryCopy = document.getElementById('leaderboardSummaryCopy');
+    const rankPill = document.getElementById('leaderboardRankPill');
+    const list = document.getElementById('leaderboardList');
+    if (!leaderboardCard || !summaryCopy || !rankPill || !list) return;
+
+    const currentUser = accountState.leaderboard?.currentUser || null;
+    const leaders = Array.isArray(accountState.leaderboard?.leaders) ? accountState.leaderboard.leaders : [];
+
+    if (!currentUser && leaders.length === 0) {
+        summaryCopy.textContent = 'Leaderboard unavailable right now';
+        rankPill.textContent = '--';
+        list.innerHTML = '<div class="leaderboard-empty">Leaderboard unavailable right now</div>';
+        return;
+    }
+
+    if (currentUser) {
+        summaryCopy.textContent = `${currentUser.completedProjects || 0} completed projects • ${currentUser.completedTasks || 0} completed tasks`;
+        rankPill.textContent = `#${currentUser.rank || '--'}`;
+    } else {
+        summaryCopy.textContent = 'Leaderboard loaded';
+        rankPill.textContent = '--';
+    }
+
+    const entries = [...leaders];
+    if (currentUser && !entries.some(entry => entry.userId === currentUser.userId)) {
+        entries.push(currentUser);
+    }
+
+    const deduped = [];
+    const seen = new Set();
+    for (const entry of entries) {
+        if (!entry || seen.has(entry.userId)) continue;
+        seen.add(entry.userId);
+        deduped.push(entry);
+    }
+
+    deduped.sort((a, b) => (a.rank || Number.MAX_SAFE_INTEGER) - (b.rank || Number.MAX_SAFE_INTEGER));
+
+    list.innerHTML = deduped.slice(0, 6).map(entry => {
+        const isCurrentUser = currentUser && entry.userId === currentUser.userId;
+        return `
+            <div class="leaderboard-item ${isCurrentUser ? 'is-current-user' : ''}">
+                <div class="leaderboard-item-main">
+                    <span class="leaderboard-position">#${entry.rank || '--'}</span>
+                    <div class="leaderboard-user-meta">
+                        <div class="leaderboard-user-name">${escapeHtml(entry.username || 'User')}${isCurrentUser ? ' <span class="leaderboard-you-tag">You</span>' : ''}</div>
+                        <div class="leaderboard-user-stats">${escapeHtml(String(entry.completedProjects || 0))} projects • ${escapeHtml(String(entry.completedTasks || 0))} tasks</div>
+                    </div>
+                </div>
+                <div class="leaderboard-score">${escapeHtml(String(entry.score || 0))}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function refreshLeaderboard() {
+    try {
+        const leaderboard = await loadLeaderboardFromServer();
+        accountState.leaderboard = {
+            currentUser: leaderboard?.currentUser || null,
+            leaders: Array.isArray(leaderboard?.leaders) ? leaderboard.leaders : []
+        };
+    } catch (err) {
+        console.error('Failed to load leaderboard:', err);
+        accountState.leaderboard = { currentUser: null, leaders: [] };
+    }
+    renderLeaderboardPanel();
+}
+
 function setAccountStatus(message = '', type = '') {
     const el = document.getElementById('accountSettingsStatus');
     if (!el) return;
@@ -664,6 +747,7 @@ async function refreshAccountProfile() {
         accountState.pendingProfilePic = null;
         applyAccountUI(accountState.user);
         syncAccountStatsToModal();
+        renderLeaderboardPanel();
     } catch (err) {
         console.error('Failed to load account profile:', err);
         const fallbackUser = getCurrentUser?.() || accountState.user;
@@ -671,6 +755,7 @@ async function refreshAccountProfile() {
             accountState.user = fallbackUser;
             applyAccountUI(accountState.user);
             syncAccountStatsToModal();
+            renderLeaderboardPanel();
         }
     }
 }
@@ -801,15 +886,20 @@ export async function loadData() {
         state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
         render();
         try {
-            await refreshNotifications();
+            await Promise.all([
+                refreshNotifications(),
+                refreshLeaderboard()
+            ]);
         } catch (err) {
-            console.error('Failed to refresh notifications after load:', err);
+            console.error('Failed to refresh post-load panels:', err);
         }
     } catch (err) {
         console.error('Failed to load project data:', err);
         state.setProjects([]);
         state.setStats({ completedTasks: 0, completedProjects: 0 });
+        accountState.leaderboard = { currentUser: null, leaders: [] };
         render();
+        renderLeaderboardPanel();
         setSaveStatus('error', 'Could not load projects');
     }
 }
@@ -850,6 +940,7 @@ async function saveData() {
             }
             setSaveStatus('saved', __saveQueued ? 'Saving queued changes…' : 'All changes saved');
         } while (__saveQueued);
+        await refreshLeaderboard();
     } finally {
         __saveInFlight = false;
     }
@@ -859,6 +950,7 @@ async function saveData() {
 async function saveStatsOnly() {
     const { saveStatsToServer } = await import('./modules/api.js');
     await saveStatsToServer(state.getStats());
+    await refreshLeaderboard();
 }
 
 // ============================================================================
@@ -2290,16 +2382,44 @@ function finishEditModalTask(projectId, taskId) {
 }
 
 function addTaskToModal(projectId) {
-    
-    
     const newTaskId = addTaskToProject(projectId);
     render();
-    
+
     // Re-open modal to show new task
     openProjectModal(projectId);
-    
+
     // Auto-focus
     setTimeout(() => editModalTask(newTaskId), 50);
+}
+
+function getOpenModalProjectId() {
+    const activeSection = document.querySelector('#modalContent .modal-section:not(.hidden)');
+    const sectionId = activeSection?.id || '';
+    const match = sectionId.match(/^(?:tasks|notes|members|history)-section-(.+)$/);
+    return match ? match[1] : '';
+}
+
+function handleProjectModalEnterKey(event) {
+    if (event.key !== 'Enter' || event.defaultPrevented) return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+
+    const projectModal = document.getElementById('projectModal');
+    if (!projectModal?.classList.contains('active')) return;
+
+    const activeSection = document.querySelector('#modalContent .modal-section:not(.hidden)');
+    if (!activeSection || !String(activeSection.id || '').startsWith('tasks-section-')) return;
+
+    const target = event.target;
+    const tagName = String(target?.tagName || '').toUpperCase();
+
+    if (target?.isContentEditable) return;
+    if (['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(tagName)) return;
+
+    const projectId = getOpenModalProjectId();
+    if (!projectId) return;
+
+    event.preventDefault();
+    addTaskToModal(projectId);
 }
 
 function deleteTaskFromModal(projectId, taskId) {
@@ -2531,6 +2651,7 @@ function render() {
     runRenderStep('shared projects panel', renderSharedProjectsPanel);
     runRenderStep('archived projects panel', renderArchivedProjectsPanel);
     runRenderStep('notifications panel', renderNotificationsPanel);
+    runRenderStep('leaderboard panel', renderLeaderboardPanel);
     runRenderStep('saved views panel', renderSavedViewsPanel);
     runRenderStep('active filter chips', renderActiveFilterChips);
     runRenderStep('account stats', syncAccountStatsToModal);
@@ -2913,6 +3034,8 @@ function updateProjectSelect() {
 // ============================================================================
 
 function initializeEventHandlers() {
+    document.addEventListener('keydown', handleProjectModalEnterKey);
+
     // Menu button
     const menuButton = document.getElementById('menuButton');
     const menuDropdown = document.getElementById('menuDropdown');

@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
     SHARE:        (id)         => `/api/projects/${id}/share`,
     COLLABORATOR: (id, userId) => `/api/projects/${id}/collaborators/${userId}`,
     STATS:        '/api/stats',
+    LEADERBOARD:  '/api/leaderboard',
     AUTH_REGISTER: '/api/auth/register',
     AUTH_LOGIN:    '/api/auth/login',
     AUTH_ME:       '/api/auth/me',

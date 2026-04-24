@@ -5259,11 +5259,124 @@ body.control-panel-is-collapsed .control-panel.collapsed .panel-logo-img-inline 
 }
 
 .notifications-summary-card,
-.settings-panel-card {
+.settings-panel-card,
+.leaderboard-summary-card {
     background: var(--panel);
     border-radius: 14px;
     padding: 14px;
     box-shadow: var(--card-shadow);
+}
+
+.leaderboard-summary-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.leaderboard-summary-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--heading);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.leaderboard-summary-copy {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.35;
+}
+
+.leaderboard-rank-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(50, 120, 235, 0.12);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.leaderboard-list {
+    display: grid;
+    gap: 8px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--inset-shadow);
+}
+
+.leaderboard-item.is-current-user {
+    outline: 1px solid rgba(50, 120, 235, 0.2);
+}
+
+.leaderboard-item-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.leaderboard-position {
+    min-width: 30px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.leaderboard-user-meta {
+    min-width: 0;
+}
+
+.leaderboard-user-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leaderboard-user-stats {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+}
+
+.leaderboard-you-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.leaderboard-score {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+.leaderboard-empty {
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .notifications-summary-row {
@@ -6067,7 +6180,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 }
 
 .view-filter-chips:not(:empty) {
-    margin-bottom: 5px !important;
+    margin-bottom: 4px !important;
 }
 
 /* Restore the hide-completed toggle to its original left-aligned position
@@ -6111,7 +6224,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
    content row without affecting the horizontal gap to the sidebar. */
 @media (min-width: 1101px) {
     .container {
-        row-gap: clamp(8px, 0.8vw, 12px) !important;
+        row-gap: clamp(4px, 0.45vw, 8px) !important;
     }
 }
 
@@ -6320,7 +6433,7 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
    ============================================================================ */
 
 :root {
-    --menu-bar-control-gap: 4px;
+    --menu-bar-control-gap: 8px;
 }
 
 .top-app-bar {
@@ -6399,8 +6512,81 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     height: 24px !important;
     transform: translate3d(0, -50%, 0) !important;
     box-sizing: border-box !important;
+    border-radius: 999px !important;
 }
+
 
 .hide-completed-toggle .toggle-switch input:checked + .toggle-slider::before {
     transform: translate3d(30px, -50%, 0) !important;
+}
+
+
+/* ============================================================================
+   ROUND 15 OVERRIDES
+   - true text caret only where text input is expected
+   - leaderboard section styling
+   - consistent toolbar-to-grid spacing and top-left card flow across views
+   ============================================================================ */
+
+body {
+    caret-color: transparent;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+.project-title-input,
+.modal-title-input,
+.task-input,
+.notes-textarea,
+.invite-email-input,
+.account-form-input,
+.view-toolbar-search,
+.view-toolbar-select {
+    caret-color: auto;
+}
+
+button,
+.project-card,
+.sidebar-nav-card,
+.modal-tab,
+.section-action-button,
+.sidebar-action-button,
+.top-app-bar-title,
+.project-title,
+.task-text,
+.card-owner-name,
+.project-stats span,
+.project-last-updated {
+    caret-color: transparent !important;
+}
+
+.view-filter-chips,
+.view-filter-chips:not(:empty) {
+    padding: 0 !important;
+    margin-bottom: 4px !important;
+}
+
+.viewport {
+    padding-top: 0 !important;
+}
+
+.project-grid {
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    align-items: start !important;
+    place-content: start !important;
+}
+
+@media (min-width: 1681px) {
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1101px) and (max-width: 1680px) {
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
 }

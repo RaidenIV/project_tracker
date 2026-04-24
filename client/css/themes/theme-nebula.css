@@ -157,7 +157,8 @@ body[data-theme^="glass"] .command-palette-item,
 body[data-theme^="glass"] .theme-card,
 body[data-theme^="glass"] .save-status,
 body[data-theme^="glass"] .stat-card,
-body[data-theme^="glass"] .panel-user-pill {
+body[data-theme^="glass"] .panel-user-pill,
+body[data-theme^="glass"] .leaderboard-summary-card {
     background: var(--panel);
     box-shadow: var(--card-shadow);
     border: 1px solid var(--glass-border);
@@ -193,6 +194,7 @@ body[data-theme^="glass"] .account-stat-card,
 body[data-theme^="glass"] .panel-avatar,
 body[data-theme^="glass"] .account-avatar,
 body[data-theme^="glass"] .progress-bar-container,
+body[data-theme^="glass"] .leaderboard-item,
 body[data-theme^="glass"] .modal-tab,
 body[data-theme^="glass"] .modal-add-task,
 body[data-theme^="glass"] .modal-add-task-top,
