@@ -642,7 +642,6 @@ function renderLeaderboardPanel() {
                         <div class="leaderboard-user-stats">${escapeHtml(String(entry.completedProjects || 0))} projects • ${escapeHtml(String(entry.completedTasks || 0))} tasks</div>
                     </div>
                 </div>
-                <div class="leaderboard-score">${escapeHtml(String(entry.score || 0))}</div>
             </div>
         `;
     }).join('');

@@ -6699,3 +6699,40 @@ button,
         max-width: none !important;
     }
 }
+
+
+/* ============================================================================
+   ROUND 17 OVERRIDES
+   - restore Save View to compact original sizing/placement
+   - remove modal tab divider line
+   - simplify leaderboard list to projects/tasks only
+   ============================================================================ */
+
+.toolbar-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 0 0 auto !important;
+    gap: 0 !important;
+}
+
+#saveCurrentViewBtn.view-toolbar-button,
+.view-toolbar-button#saveCurrentViewBtn {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    justify-self: start !important;
+    padding-inline: 16px !important;
+}
+
+.modal-tabs {
+    border-bottom: none !important;
+}
+
+.modal-tab {
+    margin-bottom: 0 !important;
+}
+
+.leaderboard-score {
+    display: none !important;
+}
