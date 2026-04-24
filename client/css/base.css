@@ -6590,3 +6590,112 @@ button,
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
+
+
+/* ============================================================================
+   ROUND 16 OVERRIDES
+   - true equal menu-bar spacing using a single flex row
+   - project cards start immediately beneath the toolbar in every view
+   - current user's leaderboard name is blue instead of a separate 'You' tag
+   ============================================================================ */
+
+:root {
+    --menu-bar-control-gap: 8px;
+}
+
+.top-view-toolbar,
+.view-toolbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: var(--menu-bar-control-gap) !important;
+    column-gap: var(--menu-bar-control-gap) !important;
+    row-gap: var(--menu-bar-control-gap) !important;
+    width: auto !important;
+}
+
+.view-toolbar-search-wrap {
+    flex: 0 0 clamp(252px, 26vw, 396px) !important;
+    width: clamp(252px, 26vw, 396px) !important;
+    max-width: clamp(252px, 26vw, 396px) !important;
+}
+
+.view-toolbar-select,
+.view-toolbar-button,
+.toolbar-actions {
+    flex: 0 0 auto !important;
+}
+
+.toolbar-actions {
+    display: contents !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.top-app-bar {
+    align-items: start !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.container {
+    row-gap: 4px !important;
+}
+
+.viewport,
+#viewport {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.view-filter-chips,
+.view-filter-chips:not(:empty),
+.view-filter-chips:empty {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+#projectGrid,
+.project-grid {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    align-self: start !important;
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    align-items: start !important;
+    place-content: start !important;
+    grid-auto-flow: row !important;
+}
+
+.leaderboard-you-tag {
+    display: none !important;
+}
+
+.leaderboard-item.is-current-user .leaderboard-user-name,
+.leaderboard-user-name.is-current-user-name {
+    color: var(--accent) !important;
+}
+
+@media (max-width: 900px) {
+    .top-view-toolbar,
+    .view-toolbar {
+        width: 100% !important;
+    }
+
+    .view-toolbar-search-wrap {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+}

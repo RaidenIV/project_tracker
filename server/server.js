@@ -811,32 +811,62 @@ app.put('/api/stats', authenticateToken, async (req, res) => {
 
 app.get('/api/leaderboard', authenticateToken, async (req, res) => {
     try {
-        const [accounts, statsDocs] = await Promise.all([
+        const [accounts, projects] = await Promise.all([
             Account.find({}, '_id username profilePic').lean(),
-            Stats.find({}, 'userId completedTasks completedProjects').lean()
+            Project.find({}, 'owner tasks completed archived').lean()
         ]);
 
-        const statsByUserId = new Map(
-            statsDocs.map(doc => [String(doc.userId), {
-                completedTasks: Number(doc.completedTasks || 0),
-                completedProjects: Number(doc.completedProjects || 0)
-            }])
-        );
+        const liveStatsByUserId = new Map();
+        for (const account of accounts) {
+            liveStatsByUserId.set(String(account._id), {
+                completedTasks: 0,
+                completedProjects: 0,
+                totalProjects: 0,
+                activeProjects: 0
+            });
+        }
+
+        for (const project of projects) {
+            const ownerId = String(project.owner || '');
+            if (!ownerId) continue;
+            if (!liveStatsByUserId.has(ownerId)) {
+                liveStatsByUserId.set(ownerId, {
+                    completedTasks: 0,
+                    completedProjects: 0,
+                    totalProjects: 0,
+                    activeProjects: 0
+                });
+            }
+            const bucket = liveStatsByUserId.get(ownerId);
+            bucket.totalProjects += 1;
+            if (!project.archived && !project.completed) bucket.activeProjects += 1;
+            if (project.completed) bucket.completedProjects += 1;
+            const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+            bucket.completedTasks += tasks.filter(task => task && task.completed).length;
+        }
 
         const rows = accounts.map(account => {
             const userId = String(account._id);
-            const stats = statsByUserId.get(userId) || { completedTasks: 0, completedProjects: 0 };
+            const stats = liveStatsByUserId.get(userId) || {
+                completedTasks: 0,
+                completedProjects: 0,
+                totalProjects: 0,
+                activeProjects: 0
+            };
             return {
                 userId,
                 username: account.username || 'User',
                 profilePic: account.profilePic || '',
-                completedTasks: stats.completedTasks,
-                completedProjects: stats.completedProjects,
-                score: (stats.completedProjects * 1000) + stats.completedTasks
+                completedTasks: Number(stats.completedTasks || 0),
+                completedProjects: Number(stats.completedProjects || 0),
+                totalProjects: Number(stats.totalProjects || 0),
+                activeProjects: Number(stats.activeProjects || 0),
+                score: (Number(stats.completedProjects || 0) * 1000) + Number(stats.completedTasks || 0)
             };
         }).sort((a, b) => {
             if (b.completedProjects !== a.completedProjects) return b.completedProjects - a.completedProjects;
             if (b.completedTasks !== a.completedTasks) return b.completedTasks - a.completedTasks;
+            if (b.activeProjects !== a.activeProjects) return b.activeProjects - a.activeProjects;
             return a.username.localeCompare(b.username);
         }).map((row, index) => ({ ...row, rank: index + 1 }));
 
@@ -850,6 +880,8 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
                     profilePic: account.profilePic || '',
                     completedTasks: 0,
                     completedProjects: 0,
+                    totalProjects: 0,
+                    activeProjects: 0,
                     score: 0,
                     rank: rows.length + 1
                 };

@@ -638,7 +638,7 @@ function renderLeaderboardPanel() {
                 <div class="leaderboard-item-main">
                     <span class="leaderboard-position">#${entry.rank || '--'}</span>
                     <div class="leaderboard-user-meta">
-                        <div class="leaderboard-user-name">${escapeHtml(entry.username || 'User')}${isCurrentUser ? ' <span class="leaderboard-you-tag">You</span>' : ''}</div>
+                        <div class="leaderboard-user-name ${isCurrentUser ? 'is-current-user-name' : ''}">${escapeHtml(entry.username || 'User')}</div>
                         <div class="leaderboard-user-stats">${escapeHtml(String(entry.completedProjects || 0))} projects • ${escapeHtml(String(entry.completedTasks || 0))} tasks</div>
                     </div>
                 </div>
@@ -2119,7 +2119,8 @@ function openProjectModal(projectId, options = {}) {
                     <textarea 
                         class="paste-box"
                         id="modal-paste-box-${project.id}"
-                        placeholder="Enter tasks here"></textarea>
+                        placeholder="Enter tasks here"
+                        onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); pasteTasksInModal('${project.id}'); }"></textarea>
                     <button 
                         class="paste-button"
                         onclick="pasteTasksInModal('${project.id}')">
