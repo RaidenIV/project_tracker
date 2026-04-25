@@ -1775,3 +1775,123 @@ body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls 
     color: var(--danger) !important;
     stroke: currentColor !important;
 }
+
+/* ============================================================================
+   ROUND 35 DUPLEX-ONLY CORRECTIONS
+   Scope: avatar edge cleanup, remove shared project-modal content card, dark icon states.
+   ============================================================================ */
+
+/* Remove the white edge around the sidebar avatar in Duplex dark mode without changing the avatar/name size. */
+body[data-theme="blueprint-dark"] .control-panel .panel-avatar,
+body[data-theme="blueprint-dark"] .control-panel .panel-avatar img,
+body[data-theme="blueprint-dark"] .control-panel .avatar,
+body[data-theme="blueprint-dark"] .control-panel .avatar img,
+body[data-theme="blueprint-dark"] .control-panel .user-avatar,
+body[data-theme="blueprint-dark"] .control-panel .user-avatar img {
+    background: transparent !important;
+    border-color: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .panel-avatar,
+body[data-theme="blueprint-dark"] .control-panel .avatar,
+body[data-theme="blueprint-dark"] .control-panel .user-avatar {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .panel-avatar img,
+body[data-theme="blueprint-dark"] .control-panel .avatar img,
+body[data-theme="blueprint-dark"] .control-panel .user-avatar img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+/* Remove the shared-card treatment from every project-modal content section below the main tabs. */
+body[data-theme^="blueprint"] #projectModal .modal-section,
+body[data-theme^="blueprint"] #projectModal .members-panel,
+body[data-theme^="blueprint"] #projectModal .members-list,
+body[data-theme^="blueprint"] #projectModal .modal-notes,
+body[data-theme^="blueprint"] #projectModal .project-activity-list,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card-body,
+body[data-theme^="blueprint"] #projectModal .modal-tasks,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section,
+body[data-theme^="blueprint"] #projectModal .modal-actions {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-section,
+body[data-theme^="blueprint"] #projectModal .members-panel,
+body[data-theme^="blueprint"] #projectModal .members-list,
+body[data-theme^="blueprint"] #projectModal .modal-notes,
+body[data-theme^="blueprint"] #projectModal .project-activity-list,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card-body,
+body[data-theme^="blueprint"] #projectModal .modal-tasks,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* In Duplex dark mode, task note/delete icons are white at rest and only colorize on hover. */
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button.has-note,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button svg * {
+    color: #ffffff !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:hover,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:focus-visible,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button.has-note:hover,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button.has-note:focus-visible,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:hover .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:focus-visible .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:hover svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:focus-visible svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:hover svg *,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button:focus-visible svg * {
+    color: var(--primary) !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button svg *,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button svg * {
+    color: #ffffff !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:hover,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:focus-visible,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:hover,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:focus-visible,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:hover .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:focus-visible .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:hover .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:focus-visible .icon,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:hover svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:focus-visible svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:hover svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:focus-visible svg,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:hover svg *,
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button:focus-visible svg *,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:hover svg *,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:focus-visible svg * {
+    color: var(--danger) !important;
+    stroke: currentColor !important;
+}
