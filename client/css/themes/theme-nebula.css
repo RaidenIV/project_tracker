@@ -1,117 +1,194 @@
 /* ============================================================
-   NEBULA GLASS THEME — Polished Edition
-   Key improvements:
-   • Muted text now passes WCAG AA on its background
-   • Layered shadows: soft outer + inset top-edge highlight
-     (this is what makes glass look like glass, not a flat pane)
-   • backdrop-filter now uses saturate() for richer frost
-   • Smooth transitions + subtle lift on hover
-   • Proper :focus-visible rings for accessibility
-   • Refined accent with colored glow shadow
-   • Deduplicated redundant selector blocks
-   • Bonus: ::selection, placeholder, scrollbar polish
+   NEBULA GLASS THEME — Refined Edition
+   ------------------------------------------------------------
+   Improvements over previous polish pass:
+   • Ambient nebula backdrop (radial gradients) — gives the
+     glass something real to refract instead of a flat color
+   • Two-tone accent: blue primary + violet companion, used
+     in glow halos so the "Nebula" name is earned
+   • Multi-layer specular on primary buttons (top sheen +
+     diagonal fresnel + colored halo), not a single overlay
+   • Radius hierarchy (sm / md / lg) instead of one-size-fits-all
+   • Cubic-bezier motion + transform-origin discipline; full
+     prefers-reduced-motion support
+   • @supports fallback for browsers without backdrop-filter
+   • Round-9 duplicate override block folded into the source
+   • Semantic state colors (success / warning / danger) added
+   • Selection contrast fixed (was using --heading on a tinted bg)
+   • Scrollbar thumb transitions on hover
+   • Subtle grain layer to break up large flat panels
    ============================================================ */
 
 /* -----------------------------
-   1. THEME TOKENS
+   1. THEME TOKENS — LIGHT
    ----------------------------- */
 body[data-theme="glass-light"] {
-    --bg: #b7caf0;
-    --bg-2: #e4efff;
-    --bg-3: #8aa3d4;
+    /* Backdrop palette: warmer mid + cool deep for nebula gradient */
+    --bg:        #b7caf0;
+    --bg-2:      #e4efff;
+    --bg-3:      #8aa3d4;
+    --bg-tint-a: rgba(140, 180, 255, 0.55);   /* upper-left bloom  */
+    --bg-tint-b: rgba(190, 160, 240, 0.45);   /* lower-right bloom */
+    --bg-tint-c: rgba(120, 200, 230, 0.35);   /* mid accent bloom  */
 
-    --panel: rgba(255, 255, 255, 0.42);
-    --panel-strong: rgba(255, 255, 255, 0.62);
-    --surface: rgba(255, 255, 255, 0.28);
-    --surface-2: rgba(255, 255, 255, 0.48);
+    --panel:          rgba(255, 255, 255, 0.42);
+    --panel-strong:   rgba(255, 255, 255, 0.62);
+    --surface:        rgba(255, 255, 255, 0.28);
+    --surface-2:      rgba(255, 255, 255, 0.48);
 
-    --text: #0f2744;          /* was #17304d — deeper for punch */
-    --heading: #071a32;       /* was #0d2037 */
-    --muted: #304c6c;         /* was #46627d — now ~6.7:1 on bg */
+    --text:    #0f2744;
+    --heading: #071a32;
+    --muted:   #304c6c;          /* ~6.7:1 on bg */
     --muted-2: #4a6685;
 
-    --accent: #2570ee;
-    --accent-2: #1548b8;
-    --accent-glow: rgba(37, 112, 238, 0.40);
-    --progress: #2570ee;
+    /* Two-tone accent for nebula character */
+    --accent:        #2570ee;
+    --accent-2:      #1548b8;
+    --accent-alt:    #8b5cf6;     /* violet companion */
+    --accent-glow:   rgba(37, 112, 238, 0.40);
+    --accent-glow-2: rgba(139, 92, 246, 0.32);
+    --progress:      #2570ee;
+
+    /* Semantic states */
+    --success: #2f9e6c;
+    --warning: #c97a14;
+    --danger:  #d23a4d;
+
+    /* Radius scale */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
 
     --card-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.55),   /* top-edge highlight */
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
         0 20px 48px rgba(30, 54, 96, 0.14),
         0 4px 12px rgba(30, 54, 96, 0.08);
     --inset-shadow: none;
 
-    --glass-border: rgba(255, 255, 255, 0.55);
-    --glass-border-soft: rgba(255, 255, 255, 0.32);
-    --glass-divider: rgba(15, 39, 68, 0.08);
+    --glass-border:        rgba(255, 255, 255, 0.55);
+    --glass-border-soft:   rgba(255, 255, 255, 0.32);
+    --glass-divider:       rgba(15, 39, 68, 0.08);
 
-    --glass-project-card-bg: rgba(255, 255, 255, 0.58);
-    --glass-project-surface: rgba(255, 255, 255, 0.82);
-    --glass-control-surface: rgba(255, 255, 255, 0.32);
-    --glass-card-text: #06131f;
-    --glass-card-muted: rgba(10, 22, 38, 0.72);
+    --glass-project-card-bg:   rgba(255, 255, 255, 0.58);
+    --glass-project-surface:   rgba(255, 255, 255, 0.82);
+    --glass-control-surface:   rgba(255, 255, 255, 0.32);
+    --glass-card-text:         #06131f;
+    --glass-card-muted:        rgba(10, 22, 38, 0.72);
 
-    --selection-bg: rgba(37, 112, 238, 0.25);
-    --focus-ring: 0 0 0 3px rgba(37, 112, 238, 0.35);
+    --selection-bg:   rgba(37, 112, 238, 0.28);
+    --selection-text: #ffffff;
+    --focus-ring:     0 0 0 3px rgba(37, 112, 238, 0.35);
+
+    /* Motion */
+    --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-fast:    140ms;
+    --dur-base:    240ms;
+    --dur-slow:    400ms;
 }
 
+/* -----------------------------
+   1b. THEME TOKENS — DARK
+   ----------------------------- */
 body[data-theme="glass-dark"] {
-    --bg: #0b1322;
-    --bg-2: #1a2b4a;
-    --bg-3: #060d19;
+    --bg:        #0b1322;
+    --bg-2:      #1a2b4a;
+    --bg-3:      #060d19;
+    --bg-tint-a: rgba(60, 100, 200, 0.42);   /* deep blue bloom    */
+    --bg-tint-b: rgba(120, 70, 200, 0.38);   /* violet bloom       */
+    --bg-tint-c: rgba(40, 140, 180, 0.28);   /* cyan accent bloom  */
 
-    --panel: rgba(22, 36, 62, 0.58);
-    --panel-strong: rgba(28, 44, 74, 0.72);
-    --surface: rgba(28, 45, 73, 0.48);
-    --surface-2: rgba(38, 58, 92, 0.58);
+    --panel:          rgba(22, 36, 62, 0.58);
+    --panel-strong:   rgba(28, 44, 74, 0.72);
+    --surface:        rgba(28, 45, 73, 0.48);
+    --surface-2:      rgba(38, 58, 92, 0.58);
 
-    --text: #eaf1fc;           /* was #dce9fb — brighter */
-    --heading: #ffffff;        /* was #f4f8ff */
-    --muted: #b8cbe8;          /* was #a6b8d4 — more contrast */
+    --text:    #eaf1fc;
+    --heading: #ffffff;
+    --muted:   #b8cbe8;
     --muted-2: #9fb4d4;
 
-    --accent: #6faaff;
-    --accent-2: #3f7fde;
-    --accent-glow: rgba(111, 170, 255, 0.42);
-    --progress: #6faaff;
+    --accent:        #6faaff;
+    --accent-2:      #3f7fde;
+    --accent-alt:    #b18cff;
+    --accent-glow:   rgba(111, 170, 255, 0.42);
+    --accent-glow-2: rgba(177, 140, 255, 0.34);
+    --progress:      #6faaff;
+
+    --success: #5dd6a0;
+    --warning: #f0b056;
+    --danger:  #ff6b7e;
+
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
 
     --card-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.10),   /* subtle top highlight */
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
         0 24px 56px rgba(0, 0, 0, 0.45),
         0 6px 16px rgba(0, 0, 0, 0.28);
     --inset-shadow: none;
 
-    --glass-border: rgba(181, 212, 255, 0.24);
-    --glass-border-soft: rgba(181, 212, 255, 0.14);
-    --glass-divider: rgba(255, 255, 255, 0.08);
+    --glass-border:        rgba(181, 212, 255, 0.24);
+    --glass-border-soft:   rgba(181, 212, 255, 0.14);
+    --glass-divider:       rgba(255, 255, 255, 0.08);
 
-    /* Project cards intentionally stay light-surface in dark mode
-       for readability of black body text — matches original intent */
-    --glass-project-card-bg: rgba(255, 255, 255, 0.62);
-    --glass-project-surface: rgba(255, 255, 255, 0.80);
-    --glass-control-surface: rgba(34, 54, 86, 0.42);
-    --glass-card-text: #06131f;
-    --glass-card-muted: rgba(10, 22, 38, 0.72);
+    /* Project cards stay light-surface in dark mode for body-text
+       legibility — matches the original design intent */
+    --glass-project-card-bg:   rgba(255, 255, 255, 0.62);
+    --glass-project-surface:   rgba(255, 255, 255, 0.80);
+    --glass-control-surface:   rgba(34, 54, 86, 0.42);
+    --glass-card-text:         #06131f;
+    --glass-card-muted:        rgba(10, 22, 38, 0.72);
 
-    --selection-bg: rgba(111, 170, 255, 0.32);
-    --focus-ring: 0 0 0 3px rgba(111, 170, 255, 0.45);
+    --selection-bg:   rgba(111, 170, 255, 0.38);
+    --selection-text: #07111f;
+    --focus-ring:     0 0 0 3px rgba(111, 170, 255, 0.45);
+
+    --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-fast:    140ms;
+    --dur-base:    240ms;
+    --dur-slow:    400ms;
 }
 
 /* -----------------------------
-   2. BODY, TYPOGRAPHY, A11Y
+   2. BODY — ambient nebula backdrop
+   This is the biggest visible change. Three soft radial blooms
+   sit beneath everything; the glass panels actually have color
+   variation to refract through their blur, instead of a single
+   flat hue. The blooms are fixed-attached so they don't scroll.
    ----------------------------- */
 body[data-theme^="glass"] {
     font-family: 'Rajdhani', 'Inter', 'Segoe UI', sans-serif;
-    /* Solid background (no gradient, no dot pattern) — glass panels provide all visual interest */
-    background: var(--bg);
-    background-size: auto;
-    background-attachment: fixed;
     color: var(--text);
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(ellipse 60% 50% at 18% 12%, var(--bg-tint-a), transparent 60%),
+        radial-gradient(ellipse 55% 45% at 88% 88%, var(--bg-tint-b), transparent 65%),
+        radial-gradient(ellipse 40% 30% at 50% 55%, var(--bg-tint-c), transparent 70%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* Subtle film grain — combats the over-polished plastic feel of pure glass.
+   Inline SVG noise so no extra HTTP request. Pointer-events off so it
+   never intercepts clicks. */
+body[data-theme^="glass"]::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
 body[data-theme^="glass"] ::selection {
     background: var(--selection-bg);
-    color: var(--heading);
+    color: var(--selection-text);
 }
 
 body[data-theme^="glass"] button,
@@ -164,7 +241,25 @@ body[data-theme^="glass"] .leaderboard-summary-card {
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    transition:
+        box-shadow var(--dur-base) var(--ease-out),
+        transform  var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out);
+    position: relative;
+    z-index: 1; /* sit above the grain layer */
+}
+
+/* Backdrop-filter fallback — older browsers get a more opaque panel
+   so contrast isn't ruined when the blur silently no-ops. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    body[data-theme^="glass"] .control-panel-content,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .menu-dropdown,
+    body[data-theme^="glass"] .modal-content,
+    body[data-theme^="glass"] .auth-card,
+    body[data-theme^="glass"] .confirm-dialog {
+        background: var(--panel-strong);
+    }
 }
 
 /* -----------------------------
@@ -204,7 +299,10 @@ body[data-theme^="glass"] .toggle-slider:before {
     background: var(--surface);
     box-shadow: none;
     border: 1px solid var(--glass-border-soft);
-    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        background    var(--dur-fast) var(--ease-out),
+        border-color  var(--dur-fast) var(--ease-out),
+        box-shadow    var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] .view-toolbar-search:hover,
@@ -242,7 +340,9 @@ body[data-theme^="glass"] .command-palette-item.is-active {
 
 /* -----------------------------
    6. PRIMARY ACCENT BUTTONS
-   (2-stop gradient + specular overlay + colored glow)
+   Multi-layer specular for real glass character:
+   ① top sheen   ② diagonal fresnel edge   ③ accent gradient base
+   Plus a two-tone glow (blue + violet) for nebula identity.
    ----------------------------- */
 body[data-theme^="glass"] .task-checkbox.checked,
 body[data-theme^="glass"] .add-project-button,
@@ -253,15 +353,21 @@ body[data-theme^="glass"] .auth-submit,
 body[data-theme^="glass"] .invite-submit-btn,
 body[data-theme^="glass"] .activate-button {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.20), transparent 45%),
-        linear-gradient(135deg, var(--accent), var(--accent-2));
-    border: 1px solid rgba(255, 255, 255, 0.22);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 42%),
+        linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.10) 48%, transparent 52%),
+        linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.24);
     color: #ffffff;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.35),
-        0 14px 30px var(--accent-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.40),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+        0 12px 28px var(--accent-glow),
+        0 6px 18px var(--accent-glow-2),
         0 4px 10px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    transition:
+        transform  var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out),
+        filter     var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] .add-project-button:hover,
@@ -274,9 +380,22 @@ body[data-theme^="glass"] .activate-button:hover {
     transform: translateY(-1px);
     filter: brightness(1.06);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.06),
         0 18px 38px var(--accent-glow),
+        0 10px 24px var(--accent-glow-2),
         0 6px 14px rgba(0, 0, 0, 0.10);
+}
+
+body[data-theme^="glass"] .add-project-button:active,
+body[data-theme^="glass"] .paste-button:active,
+body[data-theme^="glass"] .modal-done-btn:active,
+body[data-theme^="glass"] .modal-add-task-top:active,
+body[data-theme^="glass"] .auth-submit:active,
+body[data-theme^="glass"] .invite-submit-btn:active,
+body[data-theme^="glass"] .activate-button:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
 }
 
 body[data-theme^="glass"] .task-checkbox.checked {
@@ -284,8 +403,14 @@ body[data-theme^="glass"] .task-checkbox.checked {
 }
 
 /* -----------------------------
-   7. BORDER RADII
+   7. BORDER RADII — hierarchical
+   Small for inline controls, medium for pills/inputs, large for cards.
    ----------------------------- */
+body[data-theme^="glass"] .task-checkbox,
+body[data-theme^="glass"] .toggle-slider:before {
+    border-radius: var(--radius-sm);
+}
+
 body[data-theme^="glass"] .panel-avatar,
 body[data-theme^="glass"] .account-avatar,
 body[data-theme^="glass"] .panel-user-pill,
@@ -293,16 +418,23 @@ body[data-theme^="glass"] .view-toolbar-search,
 body[data-theme^="glass"] .view-toolbar-select,
 body[data-theme^="glass"] .view-toolbar-button,
 body[data-theme^="glass"] .task-item,
+body[data-theme^="glass"] .menu-dropdown-item,
+body[data-theme^="glass"] .modal-tab,
+body[data-theme^="glass"] .account-form-input,
+body[data-theme^="glass"] .account-stat-card {
+    border-radius: var(--radius-md);
+}
+
 body[data-theme^="glass"] .theme-card,
 body[data-theme^="glass"] .saved-view-main,
 body[data-theme^="glass"] .notification-card,
 body[data-theme^="glass"] .side-project-card,
 body[data-theme^="glass"] .archived-project-card,
-body[data-theme^="glass"] .menu-dropdown-item,
-body[data-theme^="glass"] .modal-tab,
-body[data-theme^="glass"] .account-form-input,
-body[data-theme^="glass"] .account-stat-card {
-    border-radius: 18px;
+body[data-theme^="glass"] .project-card,
+body[data-theme^="glass"] .auth-card,
+body[data-theme^="glass"] .modal-content,
+body[data-theme^="glass"] .confirm-dialog {
+    border-radius: var(--radius-lg);
 }
 
 body[data-theme^="glass"] .panel-avatar-fallback,
@@ -322,6 +454,7 @@ body[data-theme^="glass"] .color-mode-toggle {
 body[data-theme^="glass"] .color-mode-toggle-thumb {
     background: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: transform var(--dur-base) var(--ease-out);
 }
 
 /* -----------------------------
@@ -403,11 +536,13 @@ body[data-theme^="glass"] .control-panel .section-count-pill {
 }
 
 body[data-theme^="glass"] .control-panel .stat-card.active {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.22));
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.22));
     border-color: var(--accent);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.45),
-        0 16px 32px var(--accent-glow);
+        0 16px 32px var(--accent-glow),
+        0 8px 20px var(--accent-glow-2);
 }
 
 body[data-theme^="glass"] .control-panel .stat-card.active .stat-value,
@@ -454,8 +589,20 @@ body[data-theme^="glass"] .account-modal-scroll::-webkit-scrollbar {
     display: none;
 }
 
+body[data-theme^="glass"] .modal-tabs {
+    border-bottom: none;
+}
+
+body[data-theme^="glass"] .modal-tab {
+    margin-bottom: 0;
+}
+
+body[data-theme^="glass"] .hide-completed-toggle {
+    padding-inline: 0 !important;
+}
+
 /* -----------------------------
-   12. GLOBAL SCROLLBAR (subtle glass)
+   12. GLOBAL SCROLLBAR
    ----------------------------- */
 body[data-theme^="glass"] ::-webkit-scrollbar {
     width: 10px;
@@ -471,6 +618,7 @@ body[data-theme^="glass"] ::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
     background-clip: padding-box;
     border-radius: 10px;
+    transition: background var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] ::-webkit-scrollbar-thumb:hover {
@@ -478,56 +626,10 @@ body[data-theme^="glass"] ::-webkit-scrollbar-thumb:hover {
     background-clip: padding-box;
 }
 
-
 /* -----------------------------
-   13. GLASSMORPHIC SIDEBAR + MODAL REFINEMENTS
-   ----------------------------- */
-body[data-theme^="glass"] .notifications-summary-card,
-body[data-theme^="glass"] .settings-panel-card {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
-        var(--panel-strong);
-    border: 1px solid var(--glass-border);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.24),
-        0 18px 36px rgba(23, 41, 73, 0.18);
-}
-
-body[data-theme^="glass"] .sidebar-action-button,
-body[data-theme^="glass"] .section-action-button {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05)),
-        var(--surface-2);
-    border: 1px solid var(--glass-border);
-    color: var(--heading);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 10px 20px rgba(23, 41, 73, 0.12);
-}
-
-body[data-theme^="glass"] .sidebar-action-button:hover,
-body[data-theme^="glass"] .section-action-button:hover {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)),
-        var(--surface-2);
-    border-color: var(--glass-border);
-}
-
-body[data-theme^="glass"] .modal-tabs {
-    border-bottom: none;
-}
-
-body[data-theme^="glass"] .modal-tab {
-    margin-bottom: 0;
-}
-
-body[data-theme^="glass"] .hide-completed-toggle {
-    padding-inline: 10px;
-}
-
-
-/* -----------------------------
-   ROUND 9 GLASSMORPHIC CONTRAST BOOST
+   13. SIDEBAR + SETTINGS PANELS
+   (Folded the duplicate "Round 9" override block back into the
+    source — keeps the higher-contrast values, removes the dupe.)
    ----------------------------- */
 body[data-theme^="glass"] .notifications-summary-card,
 body[data-theme^="glass"] .settings-panel-card {
@@ -543,23 +645,44 @@ body[data-theme^="glass"] .settings-panel-card {
 body[data-theme^="glass"] .sidebar-action-button,
 body[data-theme^="glass"] .section-action-button {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.11)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.11)),
         rgba(255, 255, 255, 0.18);
     border: 1px solid rgba(255, 255, 255, 0.30);
     color: var(--heading);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.24),
         0 12px 24px rgba(23, 41, 73, 0.18);
+    transition:
+        background   var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out),
+        transform    var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] .sidebar-action-button:hover,
 body[data-theme^="glass"] .section-action-button:hover {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.15)),
-        rgba(255, 255, 255, 0.2);
+        rgba(255, 255, 255, 0.20);
     border-color: rgba(255, 255, 255, 0.34);
+    transform: translateY(-1px);
 }
 
-body[data-theme^="glass"] .hide-completed-toggle {
-    padding-inline: 0 !important;
+/* -----------------------------
+   14. REDUCED MOTION
+   Respect users who've asked the OS to dial things back.
+   ----------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    body[data-theme^="glass"] *,
+    body[data-theme^="glass"] *::before,
+    body[data-theme^="glass"] *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+    body[data-theme^="glass"] .project-card:hover,
+    body[data-theme^="glass"] .add-project-button:hover,
+    body[data-theme^="glass"] .sidebar-action-button:hover,
+    body[data-theme^="glass"] .section-action-button:hover {
+        transform: none;
+    }
 }
