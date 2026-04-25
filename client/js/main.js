@@ -229,12 +229,11 @@ function syncThemeBranding() {
 }
 
 function loadSavedViewsFromStorage() {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
     try {
-        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
-        uiState.savedViews = raw ? JSON.parse(raw) : [];
-    } catch {
-        uiState.savedViews = [];
-    }
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function persistSavedViews() {
@@ -391,86 +390,39 @@ function renderActiveFilterChips() {
     if (uiState.projectSearch.trim()) chips.push(`Search: ${uiState.projectSearch.trim()}`);
     if (uiState.ownerFilter !== 'all') chips.push(`Filter: ${uiState.ownerFilter}`);
     if (uiState.sortMode !== 'manual') chips.push(`Sort: ${uiState.sortMode}`);
-    if (uiState.activeSavedViewId) {
-        const view = uiState.savedViews.find(item => item.id === uiState.activeSavedViewId);
-        if (view) chips.push(`Saved View: ${view.name}`);
-    }
     container.innerHTML = chips.map(chip => `<span class="filter-chip">${escapeHtml(chip)}</span>`).join('');
 }
 
 function saveCurrentView() {
-    const name = window.prompt('Name this saved view:');
-    if (!name) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const view = {
-        id: `view_${Date.now()}`,
-        name: trimmed,
-        projectSearch: uiState.projectSearch,
-        ownerFilter: uiState.ownerFilter,
-        sortMode: uiState.sortMode,
-        savedAt: new Date().toISOString()
-    };
-    uiState.savedViews.unshift(view);
-    uiState.activeSavedViewId = view.id;
-    persistSavedViews();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function applySavedView(viewId) {
-    const view = uiState.savedViews.find(item => item.id === viewId);
-    if (!view) return;
-    uiState.projectSearch = view.projectSearch || '';
-    uiState.ownerFilter = view.ownerFilter || 'all';
-    uiState.sortMode = view.sortMode || 'manual';
-    uiState.activeSavedViewId = view.id;
-    const search = document.getElementById('projectSearchInput');
-    const filter = document.getElementById('projectOwnerFilter');
-    const sort = document.getElementById('projectSortSelect');
-    if (search) search.value = uiState.projectSearch;
-    if (filter) filter.value = uiState.ownerFilter;
-    if (sort) sort.value = uiState.sortMode;
-    render();
+    uiState.activeSavedViewId = '';
 }
 
 function deleteSavedView(viewId) {
-    uiState.savedViews = uiState.savedViews.filter(item => item.id !== viewId);
-    if (uiState.activeSavedViewId === viewId) uiState.activeSavedViewId = '';
-    persistSavedViews();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function clearSavedViews() {
     uiState.savedViews = [];
     uiState.activeSavedViewId = '';
-    persistSavedViews();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function renderSavedViewsPanel() {
-    const list = document.getElementById('savedViewsList');
-    const count = document.getElementById('savedViewsCount');
-    if (!list || !count) return;
-    count.textContent = String(uiState.savedViews.length);
-    if (!uiState.savedViews.length) {
-        list.innerHTML = '<div class="side-panel-empty">No saved views yet</div>';
-        return;
-    }
-    list.innerHTML = uiState.savedViews.map(view => `
-        <div class="saved-view-card">
-            <button class="saved-view-main" type="button" onclick="applySavedView('${view.id}')">
-                <div class="saved-view-name">${escapeHtml(view.name)}</div>
-                <div class="saved-view-meta">${escapeHtml((view.projectSearch && `search “${view.projectSearch}”`) || 'no search')} • ${escapeHtml(view.ownerFilter)} • ${escapeHtml(view.sortMode)}</div>
-            </button>
-            <div class="saved-view-actions">
-                <button class="icon-button-small" type="button" onclick="applySavedView('${view.id}')">Open</button>
-                <button class="icon-button-small" type="button" onclick="deleteSavedView('${view.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
+    uiState.savedViews = Array.isArray(uiState.savedViews) ? uiState.savedViews : [];
 }
 
 function renderArchivedProjectsPanel() {
@@ -611,7 +563,7 @@ function renderLeaderboardPanel() {
         const liveCompletedProjects = ownProjects.filter(project => project.completed && !project.archived).length;
         currentEntry = {
             userId: currentUserId,
-            username: accountState.user?.username || 'You',
+            username: accountState.user?.username || 'User',
             completedProjects: liveCompletedProjects,
             completedTasks: liveCompletedTasks,
             totalCompletionPercentage: ownProjects.length ? calculateTotalCompletion() : 0,
@@ -620,9 +572,9 @@ function renderLeaderboardPanel() {
     }
 
     summaryText.textContent = currentEntry
-        ? `${currentEntry.completedProjects || 0} completed projects • ${currentEntry.completedTasks || 0} completed tasks`
+        ? `${Math.round(Number(currentEntry.totalCompletionPercentage || 0))}% • ${currentEntry.completedProjects || 0} projects • ${currentEntry.completedTasks || 0} tasks`
         : 'No leaderboard data yet';
-    rankPill.textContent = accountState.currentLeaderboardRank ? `#${accountState.currentLeaderboardRank}` : '—';
+    rankPill.textContent = currentEntry?.rank ? `#${currentEntry.rank}` : '—';
 
     const visibleEntries = rankedEntries.slice(0, 10);
     if (currentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
@@ -636,13 +588,14 @@ function renderLeaderboardPanel() {
 
     list.innerHTML = visibleEntries.map(entry => {
         const isCurrent = currentUserId && String(entry.userId) === currentUserId;
+        const username = String(entry.username || 'User').split('@')[0];
         return `
             <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
-                <span class="leaderboard-row-rank">#${entry.rank || '—'}</span>
-                <div class="leaderboard-row-copy">
-                    <span class="leaderboard-row-name ${isCurrent ? 'is-current' : ''}">${escapeHtml(entry.username || 'User')}</span>
-                    <span class="leaderboard-row-stats">${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks</span>
+                <div class="leaderboard-row-title">
+                    <span class="leaderboard-row-rank">#${entry.rank || '—'}</span>
+                    <span class="leaderboard-row-name ${isCurrent ? 'is-current' : ''}">${escapeHtml(username)}</span>
                 </div>
+                <span class="leaderboard-row-stats">${Math.round(Number(entry.totalCompletionPercentage || 0))}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks</span>
             </div>
         `;
     }).join('');
@@ -3200,8 +3153,6 @@ function initializeEventHandlers() {
         uiState.activeSavedViewId = '';
         render();
     });
-    document.getElementById('saveCurrentViewBtn')?.addEventListener('click', saveCurrentView);
-    document.getElementById('clearSavedViewsBtn')?.addEventListener('click', clearSavedViews);
     document.querySelectorAll('[data-theme-family-option]').forEach(button => {
         button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
     });

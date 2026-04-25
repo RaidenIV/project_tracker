@@ -6601,3 +6601,71 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     width: auto !important;
     justify-self: start !important;
 }
+
+
+/* Round 15 targeted fixes */
+.modal-tabs {
+    border-bottom: none !important;
+}
+
+/* Only true text inputs should show a caret. */
+body *:not(input):not(textarea):not([contenteditable="true"]):not([contenteditable="plaintext-only"]) {
+    caret-color: transparent !important;
+}
+
+body input,
+body textarea,
+body [contenteditable="true"],
+body [contenteditable="plaintext-only"] {
+    caret-color: auto !important;
+}
+
+/* Remove the Save View slot and size dropdowns to fit full labels. */
+.view-toolbar {
+    grid-template-columns: minmax(220px, 1.6fr) max-content max-content !important;
+    column-gap: 10px !important;
+    row-gap: 10px !important;
+}
+
+.view-toolbar-search-wrap {
+    min-width: 0 !important;
+}
+
+.view-toolbar-select {
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    padding-right: 44px !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+    justify-self: start !important;
+    flex: 0 0 auto !important;
+}
+
+/* Leaderboard row format: #1 Dante / 79% • 6 projects • 174 tasks */
+.leaderboard-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+}
+
+.leaderboard-row-title {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.leaderboard-row-rank {
+    min-width: 0 !important;
+    font-size: 13px !important;
+}
+
+.leaderboard-row-name {
+    font-size: 13px !important;
+}
+
+.leaderboard-row-stats {
+    padding-left: 0 !important;
+}
