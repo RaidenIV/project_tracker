@@ -7901,3 +7901,123 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
         text-align: left !important;
     }
 }
+
+/* ============================================================================
+   ROUND 28 TASK NOTES + CATEGORY TAB EDGE CLEANUP
+   ============================================================================ */
+
+.task-note-button {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: var(--muted) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: color 160ms ease, background 160ms ease, transform 160ms ease !important;
+}
+
+.task-note-button:hover,
+.task-note-button:focus-visible {
+    color: var(--accent) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    outline: none !important;
+}
+
+.task-note-button:active {
+    transform: translateY(1px);
+}
+
+.task-note-button.has-note {
+    color: var(--muted) !important;
+}
+
+.task-note-button.has-note:hover,
+.task-note-button.has-note:focus-visible {
+    color: var(--accent) !important;
+}
+
+.task-note-modal-overlay {
+    z-index: 10100 !important;
+}
+
+.task-note-modal-content {
+    width: min(520px, calc(100vw - 32px)) !important;
+    max-width: 520px !important;
+    padding: 22px !important;
+    border-radius: 22px !important;
+    overflow: visible !important;
+}
+
+.task-note-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.task-note-modal-title {
+    margin: 0 0 4px;
+    color: var(--heading);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.task-note-modal-subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+    max-width: 390px;
+}
+
+.task-note-textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    padding: 14px;
+    border: 1px solid var(--line, rgba(127, 127, 127, 0.22));
+    border-radius: 14px;
+    background: var(--panel, var(--surface));
+    color: var(--heading);
+    font: inherit;
+    line-height: 1.5;
+    outline: none;
+    box-shadow: none;
+}
+
+.task-note-textarea:focus {
+    border-color: color-mix(in srgb, var(--accent) 68%, var(--line, rgba(127, 127, 127, 0.22)));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.task-note-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* Remove the tab-row baseline/top border segment that visually runs past the rounded card edge. */
+.task-category-tabs {
+    border-bottom: 0 !important;
+}
+
+.modal-tasks-card-body {
+    border-top: 0 !important;
+    border-radius: 0 18px 18px 18px !important;
+}
+
+.task-category-tab-shell.is-active::after,
+.task-category-tab-wrap.is-active .task-category-tab-shell::after {
+    height: 2px !important;
+    bottom: -2px !important;
+}

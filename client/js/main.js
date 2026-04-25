@@ -100,6 +100,7 @@ function normalizeTask(task = {}, index = 0) {
         ...task,
         id: Number.isFinite(numericId) ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
+        note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         tag,
@@ -1781,8 +1782,12 @@ function bindProjectEditModeExitHandlers() {
     if (__projectEditListenersBound) return;
     __projectEditListenersBound = true;
 
-    // Escape exits edit mode
+    // Escape closes task-note modal first, then exits edit mode.
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('taskNoteModal')?.classList.contains('active')) {
+            closeTaskNoteModal();
+            return;
+        }
         if (e.key === 'Escape' && __projectEditMode) setProjectEditMode(false);
     });
 
@@ -2434,6 +2439,7 @@ function renderTaskCategoryControls(projectId) {
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
+    const hasTaskNote = normalizedTask.note.trim().length > 0;
 
     return `
         <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
@@ -2467,6 +2473,16 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); }">
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <button class="task-note-button ${hasTaskNote ? 'has-note' : ''}"
+                        type="button"
+                        aria-label="${hasTaskNote ? 'Edit task note' : 'Add task note'}"
+                        title="${hasTaskNote ? 'Edit task note' : 'Add task note'}"
+                        onclick="openTaskNoteModal('${projectId}', ${normalizedTask.id}, event)">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                    </svg>
+                </button>
                 <div class="task-priority-control ${priorityMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
                     <button class="task-priority-button task-priority-button--${normalizedTask.tag}"
                             type="button"
@@ -2495,6 +2511,106 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
             </div>
         </div>
     `;
+}
+
+function ensureTaskNoteModal() {
+    let modal = document.getElementById('taskNoteModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay task-note-modal-overlay" id="taskNoteModal" aria-hidden="true">
+            <div class="modal-content task-note-modal-content" role="dialog" aria-modal="true" aria-labelledby="taskNoteModalTitle">
+                <div class="task-note-modal-header">
+                    <div>
+                        <h3 class="task-note-modal-title" id="taskNoteModalTitle">Task Note</h3>
+                        <p class="task-note-modal-subtitle" id="taskNoteModalSubtitle">Add details for this task.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeTaskNoteModal()" aria-label="Close task note">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <textarea class="task-note-textarea" id="taskNoteTextarea" placeholder="Write a note for this task..."></textarea>
+                <div class="task-note-modal-actions">
+                    <button class="confirm-cancel" type="button" onclick="closeTaskNoteModal()">Cancel</button>
+                    <button class="modal-done-btn" type="button" onclick="saveTaskNoteFromModal()">Save Note</button>
+                </div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('taskNoteModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeTaskNoteModal();
+    });
+    return modal;
+}
+
+function openTaskNoteModal(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const task = (project.tasks || [])
+        .map((item, index) => normalizeTask(item, index))
+        .find(item => item.id === taskId);
+    if (!task) return;
+
+    const modal = ensureTaskNoteModal();
+    modal.dataset.projectId = projectId;
+    modal.dataset.taskId = String(taskId);
+
+    const subtitle = modal.querySelector('#taskNoteModalSubtitle');
+    if (subtitle) subtitle.textContent = task.text ? `Note for: ${task.text}` : 'Add details for this task.';
+
+    const textarea = modal.querySelector('#taskNoteTextarea');
+    if (textarea) textarea.value = task.note || '';
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => textarea?.focus({ preventScroll: true }));
+}
+
+function closeTaskNoteModal() {
+    const modal = document.getElementById('taskNoteModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
+    delete modal.dataset.taskId;
+}
+
+function saveTaskNoteFromModal() {
+    const modal = document.getElementById('taskNoteModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    const taskId = Number(modal.dataset.taskId);
+    const textarea = modal.querySelector('#taskNoteTextarea');
+    if (!projectId || !Number.isFinite(taskId) || !textarea) return;
+    updateTaskNote(projectId, taskId, textarea.value);
+    closeTaskNoteModal();
+}
+
+function updateTaskNote(projectId, taskId, noteValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            note: String(noteValue ?? '').trim()
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
 }
 
 function renderModalTaskList(projectId) {
@@ -4104,6 +4220,10 @@ window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
 window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
 window.selectTaskPriority = selectTaskPriority;
+window.openTaskNoteModal = openTaskNoteModal;
+window.closeTaskNoteModal = closeTaskNoteModal;
+window.saveTaskNoteFromModal = saveTaskNoteFromModal;
+window.updateTaskNote = updateTaskNote;
 window.toggleTaskCategoryMenu = toggleTaskCategoryMenu;
 window.renameTaskCategoryPrompt = renameTaskCategoryPrompt;
 window.deleteTaskCategory = deleteTaskCategory;
