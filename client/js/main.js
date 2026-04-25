@@ -78,6 +78,16 @@ function sanitizeTaskCategoryName(value) {
         .join(' ');
 }
 
+function isDefaultTaskCategoryName(value) {
+    return String(value ?? '').trim().toLowerCase() === DEFAULT_TASK_CATEGORY.toLowerCase();
+}
+
+function getTaskCategoryListWith(valueList = []) {
+    return [...new Set((Array.isArray(valueList) ? valueList : [])
+        .map(sanitizeTaskCategoryName)
+        .filter(category => category && !isDefaultTaskCategoryName(category)))];
+}
+
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
@@ -116,10 +126,10 @@ function getTaskCategoryTabPositionClass(index, total) {
 function getProjectTaskCategories(project) {
     const explicit = Array.isArray(project?.taskCategories) ? project.taskCategories : [];
     const fromTasks = Array.isArray(project?.tasks) ? project.tasks.map(task => normalizeTask(task).category) : [];
-    const combined = [DEFAULT_TASK_CATEGORY, ...explicit, ...fromTasks]
-        .map(sanitizeTaskCategoryName)
-        .filter(Boolean);
-    return [...new Set(combined)];
+    // General is the internal fallback category for uncategorized tasks. It should
+    // not create a visible custom tab by default; only user-created categories
+    // should appear next to All.
+    return getTaskCategoryListWith([...explicit, ...fromTasks]);
 }
 
 function serializeInlineJsString(value) {
@@ -605,7 +615,9 @@ function getFilteredProjects() {
     let projects = [...getVisibleBaseProjects()].map(normalizeProject).filter(Boolean);
 
     if (uiState.ownerFilter === 'owned') projects = projects.filter(project => project.userRole === 'owner');
-    if (uiState.ownerFilter === 'shared') projects = projects.filter(project => project.userRole !== 'owner');
+    if (uiState.ownerFilter === 'shared') projects = projects.filter(project =>
+        project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
+    );
     if (uiState.ownerFilter === 'collab') projects = projects.filter(project => (project.collaborators || []).length > 0);
 
     if (uiState.projectSearch.trim()) {
@@ -643,7 +655,6 @@ function renderActiveFilterChips() {
     if (!container) return;
     const chips = [];
     if (uiState.projectSearch.trim()) chips.push(`Search: ${uiState.projectSearch.trim()}`);
-    if (uiState.ownerFilter !== 'all') chips.push(`Filter: ${uiState.ownerFilter}`);
     if (uiState.sortMode !== 'manual') chips.push(`Sort: ${uiState.sortMode}`);
     container.innerHTML = chips.map(chip => `<span class="filter-chip">${escapeHtml(chip)}</span>`).join('');
 }
@@ -837,13 +848,16 @@ function renderLeaderboardPanel() {
     list.innerHTML = visibleEntries.map(entry => {
         const isCurrent = currentUserId && String(entry.userId) === currentUserId;
         const username = getLeaderboardUsername(entry);
+        const completionPercentage = isCurrent
+            ? calculateTotalCompletion()
+            : Math.round(Number(entry.totalCompletionPercentage || 0));
         return `
             <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
                 <div class="leaderboard-row-title">
                     <span class="leaderboard-row-rank">#${entry.rank || '—'}</span>
                     <span class="leaderboard-row-name ${isCurrent ? 'is-current' : ''}">${escapeHtml(username)}</span>
                 </div>
-                <span class="leaderboard-row-stats">${Math.round(Number(entry.totalCompletionPercentage || 0))}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks completed</span>
+                <span class="leaderboard-row-stats">${completionPercentage}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks completed</span>
             </div>
         `;
     }).join('');
@@ -1172,7 +1186,7 @@ async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
-        taskCategories: [DEFAULT_TASK_CATEGORY],
+        taskCategories: [],
         userRole: 'owner',
         collaborators: []
     };
@@ -1431,7 +1445,7 @@ function addTaskToProject(projectId) {
     if (!project) return;
     const activeCategory = getProjectTaskCategoryFilter(projectId);
     const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
-    const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
     const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, category });
     // Add new tasks at the beginning (they'll appear first after sorting)
     const updatedTasks = sortTasks([newTask, ...project.tasks]);
@@ -2405,7 +2419,7 @@ function renderTaskCategoryControls(projectId) {
     let activeCategory = getProjectTaskCategoryFilter(projectId);
     const categories = getProjectTaskCategories(project);
     if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
-        activeCategory = DEFAULT_TASK_CATEGORY;
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
         setStoredProjectTaskCategoryFilter(projectId, activeCategory);
     }
     container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
@@ -2494,7 +2508,7 @@ function renderModalTaskList(projectId) {
     let activeCategory = getProjectTaskCategoryFilter(projectId);
     const categories = getProjectTaskCategories(project);
     if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
-        activeCategory = DEFAULT_TASK_CATEGORY;
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
         setStoredProjectTaskCategoryFilter(projectId, activeCategory);
     }
     const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory });
@@ -2520,7 +2534,7 @@ function setProjectTaskCategoryFilter(projectId, categoryValue) {
     const categories = getProjectTaskCategories(project);
     const nextCategory = categoryValue === DEFAULT_TASK_CATEGORY_FILTER
         ? DEFAULT_TASK_CATEGORY_FILTER
-        : (categories.includes(categoryValue) ? categoryValue : DEFAULT_TASK_CATEGORY);
+        : (categories.includes(categoryValue) ? categoryValue : DEFAULT_TASK_CATEGORY_FILTER);
     setStoredProjectTaskCategoryFilter(projectId, nextCategory);
     renderModalTaskList(projectId);
 }
@@ -2568,7 +2582,7 @@ function renameTaskCategoryPrompt(projectId, currentCategory) {
         if (normalizedTask.category !== currentCategory) return normalizedTask;
         return { ...normalizedTask, category: nextCategory };
     });
-    const nextCategories = [...new Set(getProjectTaskCategories(project).map(category => category === currentCategory ? nextCategory : category))];
+    const nextCategories = getTaskCategoryListWith(getProjectTaskCategories(project).map(category => category === currentCategory ? nextCategory : category));
 
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
@@ -2585,7 +2599,7 @@ function deleteTaskCategory(projectId, currentCategory) {
     if (!state.canEdit(projectId) || currentCategory === DEFAULT_TASK_CATEGORY) return;
     const project = state.findProject(projectId);
     if (!project) return;
-    if (!window.confirm(`Delete "${currentCategory}"? Tasks in this category will move to ${DEFAULT_TASK_CATEGORY}.`)) return;
+    if (!window.confirm(`Delete "${currentCategory}"? Tasks in this category will move back to All.`)) return;
 
     const updatedTasks = (project.tasks || []).map((task, index) => {
         const normalizedTask = normalizeTask(task, index);
@@ -2639,7 +2653,7 @@ function updateTaskCategory(projectId, taskId, categoryValue) {
             category: nextCategory
         };
     });
-    const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), nextCategory]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
     renderModalTaskList(projectId);
@@ -2674,7 +2688,11 @@ function commitInlineTaskCategoryCreate(projectId, rawValue) {
     }
 
     const nextCategory = sanitizeTaskCategoryName(rawText);
-    const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    if (isDefaultTaskCategoryName(nextCategory)) {
+        cancelInlineTaskCategoryCreate(projectId);
+        return;
+    }
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), nextCategory]);
     uiState.creatingTaskCategoryProjectId = null;
     state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
     saveData();
@@ -3132,7 +3150,7 @@ function pasteTasks() {
         tag: DEFAULT_TASK_TAG,
         category: DEFAULT_TASK_CATEGORY
     }));
-    const nextCategories = [...new Set([...getProjectTaskCategories(project), DEFAULT_TASK_CATEGORY])];
+    const nextCategories = getProjectTaskCategories(project);
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
@@ -3172,7 +3190,7 @@ function pasteTasksInModal(projectId) {
         tag: DEFAULT_TASK_TAG,
         category
     }));
-    const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
 
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
