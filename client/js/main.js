@@ -136,7 +136,8 @@ const uiState = {
 
 const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
-    THEME: 'tracker_ui_theme_v1'
+    THEME: 'tracker_ui_theme_v1',
+    PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1'
 };
 
 function escapeHtml(value) {
@@ -146,6 +147,51 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+
+function loadProjectHideCompletedPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_HIDE_COMPLETED);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project hide-completed preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectHideCompletedPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_HIDE_COMPLETED, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project hide-completed preferences:', err);
+    }
+}
+
+function getProjectHideCompletedPreference(projectId) {
+    const preferences = loadProjectHideCompletedPreferences();
+    const key = String(projectId || '');
+    if (!key) return true;
+    if (Object.prototype.hasOwnProperty.call(preferences, key)) {
+        return preferences[key] !== false;
+    }
+    return true;
+}
+
+function setProjectHideCompletedPreference(projectId, hideCompleted) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectHideCompletedPreferences();
+    preferences[key] = !!hideCompleted;
+    saveProjectHideCompletedPreferences(preferences);
+}
+
+function getLeaderboardUsername(entry) {
+    const rawUsername = String(entry?.username || entry?.name || entry?.displayName || 'User').trim();
+    if (!rawUsername) return 'User';
+    return rawUsername.includes('@') ? rawUsername.split('@')[0] : rawUsername;
 }
 
 function normalizeThemeName(themeName) {
@@ -548,10 +594,8 @@ function setAccountStatus(message = '', type = '') {
 }
 
 function renderLeaderboardPanel() {
-    const summaryText = document.getElementById('leaderboardSummaryText');
-    const rankPill = document.getElementById('leaderboardRankPill');
     const list = document.getElementById('leaderboardList');
-    if (!summaryText || !rankPill || !list) return;
+    if (!list) return;
 
     const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
     const rankedEntries = Array.isArray(accountState.leaderboard) ? [...accountState.leaderboard] : [];
@@ -571,11 +615,6 @@ function renderLeaderboardPanel() {
         };
     }
 
-    summaryText.textContent = currentEntry
-        ? `${Math.round(Number(currentEntry.totalCompletionPercentage || 0))}% • ${currentEntry.completedProjects || 0} projects • ${currentEntry.completedTasks || 0} tasks`
-        : 'No leaderboard data yet';
-    rankPill.textContent = currentEntry?.rank ? `#${currentEntry.rank}` : '—';
-
     const visibleEntries = rankedEntries.slice(0, 10);
     if (currentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
         visibleEntries.push(currentEntry);
@@ -588,14 +627,14 @@ function renderLeaderboardPanel() {
 
     list.innerHTML = visibleEntries.map(entry => {
         const isCurrent = currentUserId && String(entry.userId) === currentUserId;
-        const username = String(entry.username || 'User').split('@')[0];
+        const username = getLeaderboardUsername(entry);
         return `
             <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
                 <div class="leaderboard-row-title">
                     <span class="leaderboard-row-rank">#${entry.rank || '—'}</span>
                     <span class="leaderboard-row-name ${isCurrent ? 'is-current' : ''}">${escapeHtml(username)}</span>
                 </div>
-                <span class="leaderboard-row-stats">${Math.round(Number(entry.totalCompletionPercentage || 0))}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks</span>
+                <span class="leaderboard-row-stats">${Math.round(Number(entry.totalCompletionPercentage || 0))}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks completed</span>
             </div>
         `;
     }).join('');
@@ -1944,7 +1983,8 @@ function openProjectModal(projectId, options = {}) {
 
     const tasks = Array.isArray(project.tasks) ? project.tasks : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-    const hideCompleted = state.shouldHideCompletedTasks();
+    const hideCompleted = getProjectHideCompletedPreference(project.id);
+    state.setHideCompletedTasks(hideCompleted);
     const displayTasks = hideCompleted ? tasks.filter(t => !t.completed) : tasks;
 
     const completedTasks = tasks.filter(t => t.completed).length;
@@ -2221,13 +2261,15 @@ function saveProjectNotes(projectId) {
 
 function toggleHideCompleted() {
     const checkbox = document.getElementById('hide-completed-checkbox');
+    if (!checkbox) return;
     state.setHideCompletedTasks(checkbox.checked);
     
     // Find the currently open modal project
     const modalContent = document.getElementById('modalContent');
-    const progressBar = modalContent.querySelector('[data-progress-bar]');
+    const progressBar = modalContent?.querySelector('[data-progress-bar]');
     const projectId = progressBar?.getAttribute('data-progress-bar');
     if (projectId) {
+        setProjectHideCompletedPreference(projectId, checkbox.checked);
         const project = state.findProject(projectId);
         if (!project) return;
 
