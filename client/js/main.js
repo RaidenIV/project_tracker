@@ -48,11 +48,72 @@ function toTitleCase(text) {
         .join(' ');
 }
 
-// Sort tasks: incomplete first (newest first), then completed last (oldest first)
+const TASK_TAG_OPTIONS = [
+    { value: 'critical', label: 'Critical' },
+    { value: 'high', label: 'High' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'low', label: 'Low' },
+    { value: 'custom', label: 'Custom' }
+];
+
+const DEFAULT_TASK_TAG = 'medium';
+const DEFAULT_TASK_SORT_MODE = 'default';
+const TASK_TAG_PRIORITY = {
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+    custom: 4
+};
+
+function normalizeTask(task = {}, index = 0) {
+    const numericId = Number(task?.id);
+    const fallbackId = Date.now() + index + Math.random();
+    const tagValue = String(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG).trim().toLowerCase();
+    const tag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+    const customTag = typeof task?.customTag === 'string' ? task.customTag.trim() : '';
+
+    return {
+        ...task,
+        id: Number.isFinite(numericId) ? numericId : fallbackId,
+        text: typeof task?.text === 'string' ? task.text : '',
+        completed: !!task?.completed,
+        completedDate: task?.completedDate ? String(task.completedDate) : null,
+        tag,
+        customTag: tag === 'custom' ? customTag : ''
+    };
+}
+
+function getTaskTagLabel(task) {
+    const normalized = normalizeTask(task);
+    if (normalized.tag === 'custom') {
+        return normalized.customTag || 'Custom';
+    }
+    return TASK_TAG_OPTIONS.find(option => option.value === normalized.tag)?.label || 'Medium';
+}
+
+function getTaskTagPriority(task) {
+    const normalized = normalizeTask(task);
+    return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG];
+}
+
 function sortTasks(tasks) {
-    const incomplete = tasks.filter(t => !t.completed).sort((a, b) => b.id - a.id);
-    const completed = tasks.filter(t => t.completed).sort((a, b) => a.id - b.id);
+    const normalizedTasks = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
+    const incomplete = normalizedTasks.filter(t => !t.completed).sort((a, b) => Number(b.id) - Number(a.id));
+    const completed = normalizedTasks.filter(t => t.completed).sort((a, b) => Number(a.id) - Number(b.id));
     return [...incomplete, ...completed];
+}
+
+function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
+    const baseOrder = sortTasks(tasks);
+    if (mode !== 'tag-priority') return baseOrder;
+
+    return [...baseOrder].sort((a, b) => {
+        const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
+        if (priorityDiff !== 0) return priorityDiff;
+        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+        return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
+    });
 }
 
 
@@ -137,7 +198,8 @@ const uiState = {
 const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
     THEME: 'tracker_ui_theme_v1',
-    PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1'
+    PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
+    PROJECT_TASK_SORT: 'tracker_project_task_sort_v1'
 };
 
 function escapeHtml(value) {
@@ -186,6 +248,42 @@ function setProjectHideCompletedPreference(projectId, hideCompleted) {
     const preferences = loadProjectHideCompletedPreferences();
     preferences[key] = !!hideCompleted;
     saveProjectHideCompletedPreferences(preferences);
+}
+
+function loadProjectTaskSortPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_SORT);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project task sort preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectTaskSortPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_SORT, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project task sort preferences:', err);
+    }
+}
+
+function getProjectTaskSortPreference(projectId) {
+    const preferences = loadProjectTaskSortPreferences();
+    const key = String(projectId || '');
+    if (!key) return DEFAULT_TASK_SORT_MODE;
+    const value = preferences[key];
+    return value === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+}
+
+function setProjectTaskSortPreference(projectId, sortMode) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectTaskSortPreferences();
+    preferences[key] = sortMode === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+    saveProjectTaskSortPreferences(preferences);
 }
 
 function getLeaderboardUsername(entry) {
@@ -355,7 +453,7 @@ function normalizeProject(project) {
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
         notes: typeof project.notes === 'string' ? project.notes : '',
-        tasks: Array.isArray(project.tasks) ? project.tasks : [],
+        tasks: Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [],
         collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
         activities: Array.isArray(project.activities) ? project.activities : [],
         archived: Boolean(project.archived),
@@ -1220,7 +1318,7 @@ function addTaskToProject(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const newTask = { id: Date.now(), text: '', completed: false };
+    const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, customTag: '' });
     // Add new tasks at the beginning (they'll appear first after sorting)
     const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
@@ -1809,6 +1907,7 @@ function cleanupProjectDrag() {
 
 
 function setupTaskDragAndDrop(projectId) {
+    if (getProjectTaskSortPreference(projectId) !== DEFAULT_TASK_SORT_MODE) return;
     const taskList = document.getElementById(`modal-task-list-${projectId}`);
     if (!taskList) return;
 
@@ -1977,6 +2076,164 @@ function setupTaskDragAndDrop(projectId) {
 // MODAL MANAGEMENT
 // ============================================================================
 
+
+function getDisplayTasksForProject(project, options = {}) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const sortMode = options.sortMode || getProjectTaskSortPreference(project?.id);
+    const hideCompleted = options.hideCompleted !== undefined
+        ? !!options.hideCompleted
+        : getProjectHideCompletedPreference(project?.id);
+    const orderedTasks = sortTasksForDisplay(tasks, sortMode);
+    return hideCompleted ? orderedTasks.filter(task => !task.completed) : orderedTasks;
+}
+
+function renderTaskTagOptions(selectedValue) {
+    return TASK_TAG_OPTIONS.map(option => `
+        <option value="${option.value}" ${selectedValue === option.value ? 'selected' : ''}>${option.label}</option>
+    `).join('');
+}
+
+function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
+    const normalizedTask = normalizeTask(task);
+    const tagLabel = escapeHtml(getTaskTagLabel(normalizedTask));
+    const isCustom = normalizedTask.tag === 'custom';
+    const customValue = escapeHtml(normalizedTask.customTag || '');
+
+    return `
+        <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
+             data-task-item
+             data-task-id="${normalizedTask.id}"
+             onclick="handleTaskClick('${projectId}', ${normalizedTask.id}, event)">
+            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+            </svg>
+            <div class="task-checkbox ${normalizedTask.completed ? 'checked' : ''}"
+                 data-task-checkbox="${normalizedTask.id}"
+                 onclick="event.stopPropagation(); toggleTask('${projectId}', ${normalizedTask.id})">
+                ${normalizedTask.completed ? `
+                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                ` : ''}
+            </div>
+            <div class="task-main-content">
+                <span class="task-text ${normalizedTask.completed ? 'completed' : ''}"
+                      data-task-text="${normalizedTask.id}"
+                      id="modal-task-text-${normalizedTask.id}"
+                      onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${escapeHtml(normalizedTask.text)}</span>
+                <input type="text"
+                       class="task-input"
+                       id="modal-task-input-${normalizedTask.id}"
+                       value="${escapeHtml(normalizedTask.text)}"
+                       placeholder="New task"
+                       style="display: none;"
+                       onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
+                       onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${normalizedTask.id})">
+            </div>
+            <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <label class="task-tag-select-wrap" title="${tagLabel}">
+                    <span class="task-tag-pill task-tag-pill--${normalizedTask.tag}">${tagLabel}</span>
+                    <select class="task-tag-select task-tag-select--${normalizedTask.tag}"
+                            id="modal-task-tag-${normalizedTask.id}"
+                            aria-label="Task tag"
+                            onchange="updateTaskTag('${projectId}', ${normalizedTask.id}, this.value)">
+                        ${renderTaskTagOptions(normalizedTask.tag)}
+                    </select>
+                </label>
+                <input type="text"
+                       class="task-custom-tag-input ${isCustom ? 'is-visible' : ''}"
+                       id="modal-task-custom-tag-${normalizedTask.id}"
+                       value="${customValue}"
+                       placeholder="Custom tag"
+                       ${isCustom ? '' : 'style="display:none;"'}
+                       onblur="updateTaskCustomTag('${projectId}', ${normalizedTask.id}, this.value)"
+                       onkeydown="handleTaskCustomTagKeydown(event, '${projectId}', ${normalizedTask.id})">
+                <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${normalizedTask.id})" style="opacity: 1;">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function renderModalTaskList(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const taskList = document.getElementById(`modal-task-list-${projectId}`);
+    if (!taskList) return;
+
+    const hideCompleted = getProjectHideCompletedPreference(projectId);
+    const sortMode = getProjectTaskSortPreference(projectId);
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode });
+    const selectedTasks = state.getSelectedTasks(projectId);
+
+    taskList.dataset.sortMode = sortMode;
+    taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+
+    if (sortMode === DEFAULT_TASK_SORT_MODE) {
+        setTimeout(() => setupTaskDragAndDrop(projectId), 100);
+    }
+}
+
+function setProjectTaskSortMode(projectId, sortMode) {
+    setProjectTaskSortPreference(projectId, sortMode);
+    renderModalTaskList(projectId);
+}
+
+function updateTaskTag(projectId, taskId, tagValue) {
+    if (!state.canEdit(projectId)) return;
+    const nextTag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            tag: nextTag,
+            customTag: nextTag === 'custom' ? (normalizedTask.customTag || 'Custom') : ''
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function updateTaskCustomTag(projectId, taskId, value) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const trimmedValue = String(value || '').trim();
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        if (normalizedTask.tag !== 'custom') return normalizedTask;
+        return {
+            ...normalizedTask,
+            customTag: trimmedValue || 'Custom'
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function handleTaskCustomTagKeydown(event, projectId, taskId) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        event.target.blur();
+        updateTaskCustomTag(projectId, taskId, event.target.value);
+    }
+}
+
 function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
     if (!project) return;
@@ -1984,8 +2241,9 @@ function openProjectModal(projectId, options = {}) {
     const tasks = Array.isArray(project.tasks) ? project.tasks : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
     const hideCompleted = getProjectHideCompletedPreference(project.id);
+    const taskSortMode = getProjectTaskSortPreference(project.id);
     state.setHideCompletedTasks(hideCompleted);
-    const displayTasks = hideCompleted ? tasks.filter(t => !t.completed) : tasks;
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode });
 
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
@@ -2058,54 +2316,27 @@ function openProjectModal(projectId, options = {}) {
                 Add Task
             </button>
             
-            <!-- Hide Completed Toggle with Block Slider -->
-            <div class="hide-completed-toggle">
-                <div class="toggle-label">Hide completed tasks</div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
-                           onchange="toggleHideCompleted()">
-                    <span class="toggle-slider"></span>
-                </label>
+            <div class="modal-task-controls-row">
+                <div class="hide-completed-toggle">
+                    <div class="toggle-label">Hide completed tasks</div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
+                               onchange="toggleHideCompleted()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="task-sort-control">
+                    <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
+                    <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
+                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                        <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                    </select>
+                </div>
             </div>
             
             <div class="modal-tasks">
                 <div class="task-list" id="modal-task-list-${project.id}">
-                    ${displayTasks.map(task => `
-                        <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
-                             data-task-item 
-                             data-task-id="${task.id}"
-                             onclick="handleTaskClick('${project.id}', ${task.id}, event)">
-                            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                            </svg>
-                            <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                                 data-task-checkbox="${task.id}"
-                                 onclick="event.stopPropagation(); toggleTask('${project.id}', ${task.id})">
-                                ${task.completed ? `
-                                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                ` : ''}
-                            </div>
-                            <span class="task-text ${task.completed ? 'completed' : ''}" 
-                                  data-task-text="${task.id}"
-                                  id="modal-task-text-${task.id}"
-                                  onclick="event.stopPropagation(); editModalTask(${task.id})">${task.text}</span>
-                            <input type="text" 
-                                   class="task-input"
-                                   id="modal-task-input-${task.id}"
-                                   value="${task.text}"
-                                   placeholder="New task"
-                                   style="display: none;"
-                                   onblur="finishEditModalTask('${project.id}', ${task.id})"
-                                   onkeydown="if(event.key==='Enter') finishEditModalTask('${project.id}', ${task.id})">
-                            <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${project.id}', ${task.id})" style="opacity: 1;">
-                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    `).join('')}
+                    ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
                 </div>
                 
                 <!-- Paste Tasks Section in Modal -->
@@ -2237,8 +2468,10 @@ function openProjectModal(projectId, options = {}) {
         restoreProjectModalState(project.id, options.restoreState);
     }
     
-    // Setup drag and drop for tasks
-    setTimeout(() => setupTaskDragAndDrop(project.id), 100);
+    // Setup drag and drop for tasks when using the default task order.
+    if (taskSortMode === DEFAULT_TASK_SORT_MODE) {
+        setTimeout(() => setupTaskDragAndDrop(project.id), 100);
+    }
 }
 
 
@@ -2263,62 +2496,14 @@ function toggleHideCompleted() {
     const checkbox = document.getElementById('hide-completed-checkbox');
     if (!checkbox) return;
     state.setHideCompletedTasks(checkbox.checked);
-    
-    // Find the currently open modal project
+
     const modalContent = document.getElementById('modalContent');
     const progressBar = modalContent?.querySelector('[data-progress-bar]');
     const projectId = progressBar?.getAttribute('data-progress-bar');
-    if (projectId) {
-        setProjectHideCompletedPreference(projectId, checkbox.checked);
-        const project = state.findProject(projectId);
-        if (!project) return;
+    if (!projectId) return;
 
-        const hideCompleted = checkbox.checked;
-        const displayTasks = hideCompleted ? project.tasks.filter(t => !t.completed) : project.tasks;
-        const selectedTasks = state.getSelectedTasks(projectId);
-
-        const taskList = document.getElementById(`modal-task-list-${projectId}`);
-        if (taskList) {
-            taskList.innerHTML = displayTasks.map(task => `
-                <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
-                     data-task-item 
-                     data-task-id="${task.id}"
-                     onclick="handleTaskClick('${projectId}', ${task.id}, event)">
-                    <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                    </svg>
-                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                         data-task-checkbox="${task.id}"
-                         onclick="event.stopPropagation(); toggleTask('${projectId}', ${task.id})">
-                        ${task.completed ? `
-                            <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        ` : ''}
-                    </div>
-                    <span class="task-text ${task.completed ? 'completed' : ''}" 
-                          data-task-text="${task.id}"
-                          id="modal-task-text-${task.id}"
-                          onclick="event.stopPropagation(); editModalTask(${task.id})">${task.text}</span>
-                    <input type="text" 
-                           class="task-input"
-                           id="modal-task-input-${task.id}"
-                           value="${task.text}"
-                           placeholder="New task"
-                           style="display: none;"
-                           onblur="finishEditModalTask('${projectId}', ${task.id})"
-                           onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${task.id})">
-                    <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${task.id})" style="opacity: 1;">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            `).join('');
-            // Re-attach drag-and-drop to the new task elements
-            setTimeout(() => setupTaskDragAndDrop(projectId), 100);
-        }
-    }
+    setProjectHideCompletedPreference(projectId, checkbox.checked);
+    renderModalTaskList(projectId);
 }
 
 function closeProjectModal() {
@@ -2459,10 +2644,12 @@ function pasteTasks() {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const newTasks = taskLines.map(text => ({
+    const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
         text: capitalizeFirstLetter(text),
-        completed: false
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        customTag: ''
     }));
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
@@ -2493,10 +2680,12 @@ function pasteTasksInModal(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const newTasks = taskLines.map(text => ({
+    const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
         text: capitalizeFirstLetter(text),
-        completed: false
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        customTag: ''
     }));
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
@@ -3395,6 +3584,10 @@ window.handleTaskClick = handleTaskClick;
 window.switchModalTab = switchModalTab;
 window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
+window.setProjectTaskSortMode = setProjectTaskSortMode;
+window.updateTaskTag = updateTaskTag;
+window.updateTaskCustomTag = updateTaskCustomTag;
+window.handleTaskCustomTagKeydown = handleTaskCustomTagKeydown;
 window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
 window.changeCollaboratorRole = changeCollaboratorRole;

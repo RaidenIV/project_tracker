@@ -1351,3 +1351,17 @@ body[data-theme^="console"] .hide-completed-toggle .toggle-slider:before {
 body[data-theme^="console"] .hide-completed-toggle .toggle-switch input:checked + .toggle-slider:before {
     transform: translate3d(30px, -50%, 0) !important;
 }
+
+/* Task tag controls */
+body[data-theme^="console"] .task-sort-select,
+body[data-theme^="console"] .task-custom-tag-input {
+    background: rgba(4, 10, 18, 0.92);
+    color: var(--heading);
+    border: 1px solid rgba(90, 173, 255, 0.22);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .task-tag-pill {
+    border: 1px solid rgba(90, 173, 255, 0.22);
+    box-shadow: none;
+}

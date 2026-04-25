@@ -43,7 +43,9 @@ const taskSchema = new mongoose.Schema({
     id:            Number,
     text:          String,
     completed:     Boolean,
-    completedDate: String
+    completedDate: String,
+    tag:           { type: String, enum: ['critical', 'high', 'medium', 'low', 'custom'], default: 'medium' },
+    customTag:     { type: String, default: '' }
 });
 
 const collaboratorSchema = new mongoose.Schema({
@@ -250,11 +252,17 @@ function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
     const hasValidId = Number.isFinite(numericId);
+    const rawTag = String(task?.tag || task?.priorityTag || 'medium').trim().toLowerCase();
+    const allowedTags = new Set(['critical', 'high', 'medium', 'low', 'custom']);
+    const tag = allowedTags.has(rawTag) ? rawTag : 'medium';
+    const customTag = typeof task?.customTag === 'string' ? task.customTag.trim() : '';
     return {
         id: hasValidId ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
         completed: !!task?.completed,
-        completedDate: task?.completedDate ? String(task.completedDate) : null
+        completedDate: task?.completedDate ? String(task.completedDate) : null,
+        tag,
+        customTag: tag === 'custom' ? (customTag || 'Custom') : ''
     };
 }
 
@@ -433,7 +441,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
         const { title, tasks, dateCreated, priority, completed, completedDate, notes } = req.body;
         const project = await new Project({
             title:         title        || 'New Project',
-            tasks:         tasks        || [],
+            tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
             dateCreated:   dateCreated  || new Date().toISOString(),
             priority:      priority     ?? 0,
             completed:     completed    || false,
