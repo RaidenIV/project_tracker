@@ -87,28 +87,31 @@ body[data-theme="glass-light"] {
 }
 
 /* -----------------------------
-   1b. THEME TOKENS — DARK
+   1b. THEME TOKENS — DARK (black palette)
+   Structural neutrals are now genuine blacks/grays. Accents
+   stay blue + violet — on true black they read more cosmic,
+   not less, which is what the "nebula" name promises.
    ----------------------------- */
 body[data-theme="glass-dark"] {
-    --bg:        #0b1322;
-    --bg-2:      #1a2b4a;
-    --bg-3:      #060d19;
+    --bg:        #0a0a0c;   /* near-black, hair of cool to avoid the dead "TV-off" feel */
+    --bg-2:      #141416;
+    --bg-3:      #050506;
 
-    --panel:        rgba(22, 36, 62, 0.58);
-    --panel-strong: rgba(28, 44, 74, 0.72);
-    --surface:      rgba(28, 45, 73, 0.48);
-    --surface-2:    rgba(38, 58, 92, 0.58);
+    --panel:        rgba(24, 24, 26, 0.62);
+    --panel-strong: rgba(32, 32, 34, 0.76);
+    --surface:      rgba(36, 36, 38, 0.50);
+    --surface-2:    rgba(52, 52, 54, 0.58);
 
-    --text:    #eaf1fc;
+    --text:    #eaeaec;
     --heading: #ffffff;
-    --muted:   #b8cbe8;
-    --muted-2: #9fb4d4;
+    --muted:   #b6b6b9;
+    --muted-2: #909094;
 
     --accent:        #6faaff;
     --accent-2:      #3f7fde;
     --accent-alt:    #b18cff;
-    --accent-glow:   rgba(111, 170, 255, 0.42);
-    --accent-glow-2: rgba(177, 140, 255, 0.34);
+    --accent-glow:   rgba(111, 170, 255, 0.45);   /* nudged up — reads stronger on true black */
+    --accent-glow-2: rgba(177, 140, 255, 0.36);
     --progress:      #6faaff;
 
     --success: #5dd6a0;
@@ -120,29 +123,29 @@ body[data-theme="glass-dark"] {
     --radius-lg: 22px;
 
     --card-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.10),
-        0 24px 56px rgba(0, 0, 0, 0.45),
-        0 6px 16px rgba(0, 0, 0, 0.28);
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 24px 56px rgba(0, 0, 0, 0.55),
+        0 6px 16px rgba(0, 0, 0, 0.34);
 
-    --glass-border:      rgba(181, 212, 255, 0.24);
-    --glass-border-soft: rgba(181, 212, 255, 0.14);
-    --glass-divider:     rgba(255, 255, 255, 0.08);
+    --glass-border:      rgba(255, 255, 255, 0.14);
+    --glass-border-soft: rgba(255, 255, 255, 0.08);
+    --glass-divider:     rgba(255, 255, 255, 0.06);
 
-    --glass-project-card-bg: rgba(22, 36, 62, 0.62);
-    --glass-project-surface: rgba(38, 58, 92, 0.50);
-    --glass-card-text:       #eaf1fc;
-    --glass-card-muted:      rgba(184, 203, 232, 0.78);
-    --glass-card-border:     rgba(181, 212, 255, 0.22);
-    --glass-card-edge:       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --glass-project-card-bg: rgba(26, 26, 28, 0.68);
+    --glass-project-surface: rgba(48, 48, 50, 0.50);
+    --glass-card-text:       #eaeaec;
+    --glass-card-muted:      rgba(190, 190, 194, 0.78);
+    --glass-card-border:     rgba(255, 255, 255, 0.12);
+    --glass-card-edge:       inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-    --glass-control-surface: rgba(34, 54, 86, 0.42);
+    --glass-control-surface: rgba(40, 40, 42, 0.46);
 
-    --scrollbar-thumb:       rgba(234, 241, 252, 0.22);
-    --scrollbar-thumb-hover: rgba(234, 241, 252, 0.38);
+    --scrollbar-thumb:       rgba(255, 255, 255, 0.18);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
 
-    --selection-bg:   rgba(111, 170, 255, 0.38);
-    --selection-text: #07111f;
-    --focus-ring:     0 0 0 3px rgba(111, 170, 255, 0.45);
+    --selection-bg:   rgba(111, 170, 255, 0.42);
+    --selection-text: #06080d;
+    --focus-ring:     0 0 0 3px rgba(111, 170, 255, 0.50);
 
     --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
