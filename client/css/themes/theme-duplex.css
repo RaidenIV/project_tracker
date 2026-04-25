@@ -1,138 +1,525 @@
-body[data-theme="blueprint-light"] {
-    --bg: #bfcfe0;
-    --bg-2: #d6e3ef;
-    --bg-3: #a8bfd3;
-    --panel: #dce8f4;
-    --surface: #c4d5e4;
-    --surface-2: #b1c5d8;
-    --text: #233447;
-    --heading: #17293b;
-    --muted: #486176;
-    --muted-2: #5a7286;
-    --accent: #2d78d4;
-    --accent-2: #1d5eac;
-    --progress: #2d78d4;
-    --card-shadow: 6px 6px 16px rgba(64, 91, 117, 0.18), -4px -4px 10px rgba(255,255,255,0.72);
-    --inset-shadow: inset 4px 4px 8px rgba(98, 124, 148, 0.28), inset -4px -4px 8px rgba(255,255,255,0.84);
+/* ============================================================================
+   Duplex Theme — Neumorphism redesign
+   Based on the supplied Neumorphism Design System.
+   Theme hooks retained: body[data-theme="blueprint-light"] / blueprint-dark
+   ============================================================================ */
+
+body[data-theme="blueprint-light"],
+body[data-theme="blueprint-dark"] {
+    /* Core neumorphic tokens */
+    --primary: #0099ff;
+    --primary-glow: rgba(0, 153, 255, 0.3);
+    --accent: var(--primary);
+    --accent-2: #0077cc;
+    --progress: var(--primary);
+    --danger: #ef4444;
+
+    /* Radius scale */
+    --radius-xs: 8px;
+    --radius-sm: 10px;
+    --radius-md: 12px;
+    --radius-lg: 14px;
+    --radius-xl: 15px;
+    --radius-2xl: 18px;
+    --radius-full: 999px;
+
+    /* Shared component sizing */
+    --duplex-control-height: 40px;
+    --duplex-icon-size: 42px;
+
+    /* Shadow levels from the design system */
+    --shadow-level-1: 3px 3px 6px var(--dark-shadow), -1px -1px 4px var(--light-shadow);
+    --shadow-level-2: 6px 6px 12px var(--dark-shadow), -3px -3px 10px var(--light-shadow);
+    --shadow-level-3: 8px 8px 18px var(--dark-shadow), -4px -4px 12px var(--light-shadow), 0 0 10px var(--primary-glow);
+    --shadow-pressed: 2px 2px 6px var(--dark-shadow), -1px -1px 4px var(--light-shadow);
+    --shadow-inset: inset 2px 2px 5px var(--dark-shadow), inset -1px -1px 4px var(--light-shadow);
+    --shadow-menu: 10px 10px 25px rgba(0, 0, 0, 0.45);
+
+    --card-shadow: var(--shadow-level-2);
+    --inset-shadow: var(--shadow-inset);
+    --focus-ring: 0 0 0 2px var(--primary), 0 0 12px var(--primary-glow);
+
+    font-family: 'Rajdhani', sans-serif;
 }
 
 body[data-theme="blueprint-dark"] {
-    --bg: #0f1724;
-    --bg-2: #16283d;
-    --bg-3: #0a1018;
-    --panel: #182638;
-    --surface: #101d2c;
-    --surface-2: #23344b;
-    --text: #dae7f4;
-    --heading: #f2f8ff;
-    --muted: #99b0c8;
-    --muted-2: #8198ae;
-    --accent: #5b9df2;
-    --accent-2: #3279d2;
-    --progress: #5b9df2;
-    --card-shadow: 0 18px 36px rgba(0,0,0,0.3);
-    --inset-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 10px 20px rgba(255,255,255,0.02);
+    --bg: #1a1a1a;
+    --bg-2: #1f1f1f;
+    --bg-3: #141414;
+    --panel: #1a1a1a;
+    --panel-strong: #1c1c1c;
+    --surface: #1a1a1a;
+    --surface-2: #202020;
+    --surface-3: #252525;
+    --light-shadow: rgba(255, 255, 255, 0.05);
+    --dark-shadow: rgba(0, 0, 0, 0.6);
+    --line: rgba(255, 255, 255, 0.05);
+    --line-strong: rgba(255, 255, 255, 0.1);
+    --text: rgba(255, 255, 255, 0.78);
+    --heading: #ffffff;
+    --muted: rgba(255, 255, 255, 0.6);
+    --muted-2: rgba(255, 255, 255, 0.5);
+    --muted-3: rgba(255, 255, 255, 0.34);
+    --glass-border: rgba(255, 255, 255, 0.06);
 }
 
-/* Browser-style tabs + task sorting controls */
-body[data-theme^="blueprint"] .modal-tabs,
-body[data-theme^="blueprint"] .auth-tabs,
-body[data-theme^="blueprint"] .task-category-tabs {
-    --browser-tab-baseline: rgba(70, 94, 118, 0.22);
-    --browser-tab-border: rgba(70, 94, 118, 0.22);
-    --browser-tab-active-bg: var(--panel);
-    --browser-tab-inactive-bg: color-mix(in srgb, var(--surface) 82%, transparent);
-    --browser-tab-hover-bg: var(--surface-2);
+body[data-theme="blueprint-light"] {
+    --bg: #e8eaed;
+    --bg-2: #f0f2f5;
+    --bg-3: #dfe3e8;
+    --panel: #e8eaed;
+    --panel-strong: #edf0f4;
+    --surface: #e8eaed;
+    --surface-2: #dde2e8;
+    --surface-3: #d5dce5;
+    --light-shadow: rgba(255, 255, 255, 0.85);
+    --dark-shadow: rgba(163, 177, 198, 0.7);
+    --line: rgba(99, 114, 130, 0.1);
+    --line-strong: rgba(99, 114, 130, 0.18);
+    --text: rgba(26, 26, 26, 0.78);
+    --heading: #1a1a1a;
+    --muted: rgba(26, 26, 26, 0.62);
+    --muted-2: rgba(26, 26, 26, 0.5);
+    --muted-3: rgba(26, 26, 26, 0.36);
+    --glass-border: rgba(99, 114, 130, 0.12);
+    --shadow-menu: 10px 10px 25px rgba(116, 132, 151, 0.28), -4px -4px 16px rgba(255, 255, 255, 0.9);
 }
 
-body[data-theme="blueprint-dark"] .modal-tabs,
-body[data-theme="blueprint-dark"] .auth-tabs,
-body[data-theme="blueprint-dark"] .task-category-tabs {
-    --browser-tab-baseline: rgba(255, 255, 255, 0.12);
-    --browser-tab-border: rgba(255, 255, 255, 0.12);
-    --browser-tab-inactive-bg: rgba(16, 29, 44, 0.72);
-    --browser-tab-hover-bg: rgba(35, 52, 75, 0.88);
+/* Base surface + typography -------------------------------------------------- */
+body[data-theme^="blueprint"] {
+    background:
+        radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--primary) 6%, transparent) 0 18%, transparent 30%),
+        radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--primary) 5%, transparent) 0 15%, transparent 28%),
+        linear-gradient(135deg, var(--bg-2), var(--bg), var(--bg-3));
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif !important;
+    letter-spacing: 0.01em;
 }
 
-body[data-theme^="blueprint"] .modal-tab,
-body[data-theme^="blueprint"] .auth-tab,
-body[data-theme^="blueprint"] .task-category-tab-shell {
-    border-radius: 12px 12px 0 0 !important;
+body[data-theme^="blueprint"] * {
+    font-family: inherit;
 }
 
-body[data-theme^="blueprint"] .modal-tab.active,
-body[data-theme^="blueprint"] .modal-tab[aria-selected="true"],
-body[data-theme^="blueprint"] .auth-tab.auth-tab-active,
-body[data-theme^="blueprint"] .task-category-tab-shell.is-active {
-    border-color: color-mix(in srgb, var(--accent) 58%, var(--browser-tab-border)) !important;
-    border-bottom-color: transparent !important;
-}
-
-body[data-theme^="blueprint"] .task-sort-control {
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1px solid rgba(70, 94, 118, 0.16);
-    box-shadow: var(--inset-shadow);
-}
-
-body[data-theme^="blueprint"] .task-sort-select {
-    background-color: var(--panel);
+body[data-theme^="blueprint"] .viewport-header h1,
+body[data-theme^="blueprint"] .page-title,
+body[data-theme^="blueprint"] .modal-title,
+body[data-theme^="blueprint"] .project-title,
+body[data-theme^="blueprint"] .card-title,
+body[data-theme^="blueprint"] h1,
+body[data-theme^="blueprint"] h2,
+body[data-theme^="blueprint"] h3 {
     color: var(--heading);
-    border: 1px solid rgba(70, 94, 118, 0.18);
-    box-shadow: var(--card-shadow);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px var(--dark-shadow);
 }
 
-body[data-theme="blueprint-dark"] .task-sort-control {
-    border-color: rgba(255, 255, 255, 0.08);
+body[data-theme^="blueprint"] .subtitle,
+body[data-theme^="blueprint"] .empty-state .subtitle,
+body[data-theme^="blueprint"] .project-description,
+body[data-theme^="blueprint"] .project-card p,
+body[data-theme^="blueprint"] .muted,
+body[data-theme^="blueprint"] small {
+    color: var(--muted-2);
 }
 
-body[data-theme="blueprint-dark"] .task-sort-select {
-    border-color: rgba(255, 255, 255, 0.10);
+/* Reusable neumorphic surfaces --------------------------------------------- */
+body[data-theme^="blueprint"] .top-app-bar,
+body[data-theme^="blueprint"] .control-panel,
+body[data-theme^="blueprint"] .sidebar,
+body[data-theme^="blueprint"] .project-card,
+body[data-theme^="blueprint"] .side-project-card,
+body[data-theme^="blueprint"] .archived-project-card,
+body[data-theme^="blueprint"] .modal-content,
+body[data-theme^="blueprint"] .account-modal,
+body[data-theme^="blueprint"] .auth-card,
+body[data-theme^="blueprint"] .dashboard-card,
+body[data-theme^="blueprint"] .stats-card,
+body[data-theme^="blueprint"] .analytics-card,
+body[data-theme^="blueprint"] .panel,
+body[data-theme^="blueprint"] .card {
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-level-2) !important;
+    color: var(--text) !important;
 }
 
-/* Round 25: keep project modal section buttons, category tab fixes, and no-card sort control. */
+body[data-theme^="blueprint"] .project-card,
+body[data-theme^="blueprint"] .side-project-card,
+body[data-theme^="blueprint"] .archived-project-card,
+body[data-theme^="blueprint"] .dashboard-card,
+body[data-theme^="blueprint"] .stats-card,
+body[data-theme^="blueprint"] .analytics-card,
+body[data-theme^="blueprint"] .card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+}
+
+body[data-theme^="blueprint"] .project-card:hover,
+body[data-theme^="blueprint"] .side-project-card:hover,
+body[data-theme^="blueprint"] .archived-project-card:hover,
+body[data-theme^="blueprint"] .dashboard-card:hover,
+body[data-theme^="blueprint"] .stats-card:hover,
+body[data-theme^="blueprint"] .analytics-card:hover,
+body[data-theme^="blueprint"] .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-level-3) !important;
+}
+
+body[data-theme^="blueprint"] .project-card.dragging,
+body[data-theme^="blueprint"] .task-item.dragging {
+    box-shadow: var(--shadow-level-3) !important;
+    border-color: var(--primary) !important;
+}
+
+/* Buttons ------------------------------------------------------------------- */
+body[data-theme^="blueprint"] button,
+body[data-theme^="blueprint"] .button,
+body[data-theme^="blueprint"] .btn,
+body[data-theme^="blueprint"] .menu-button,
+body[data-theme^="blueprint"] .icon-button,
+body[data-theme^="blueprint"] .add-project-btn,
+body[data-theme^="blueprint"] .activate-button,
+body[data-theme^="blueprint"] .modal-add-task,
+body[data-theme^="blueprint"] .modal-add-task-top,
+body[data-theme^="blueprint"] .save-view-button,
+body[data-theme^="blueprint"] .copy-button,
+body[data-theme^="blueprint"] .edit-button,
+body[data-theme^="blueprint"] .card-delete-button {
+    border-radius: var(--radius-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+body[data-theme^="blueprint"] .menu-button,
+body[data-theme^="blueprint"] .icon-button,
+body[data-theme^="blueprint"] .add-project-btn,
+body[data-theme^="blueprint"] .save-view-button,
+body[data-theme^="blueprint"] .modal-add-task,
+body[data-theme^="blueprint"] .modal-add-task-top,
+body[data-theme^="blueprint"] .activate-button {
+    background: var(--panel) !important;
+    color: var(--heading) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: var(--shadow-level-2) !important;
+}
+
+body[data-theme^="blueprint"] .menu-button:hover,
+body[data-theme^="blueprint"] .icon-button:hover,
+body[data-theme^="blueprint"] .add-project-btn:hover,
+body[data-theme^="blueprint"] .save-view-button:hover,
+body[data-theme^="blueprint"] .modal-add-task:hover,
+body[data-theme^="blueprint"] .modal-add-task-top:hover,
+body[data-theme^="blueprint"] .activate-button:hover {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-level-3) !important;
+    transform: translateY(-2px);
+}
+
+body[data-theme^="blueprint"] .menu-button:active,
+body[data-theme^="blueprint"] .icon-button:active,
+body[data-theme^="blueprint"] .add-project-btn:active,
+body[data-theme^="blueprint"] .save-view-button:active,
+body[data-theme^="blueprint"] .modal-add-task:active,
+body[data-theme^="blueprint"] .modal-add-task-top:active,
+body[data-theme^="blueprint"] .activate-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-pressed) !important;
+}
+
+body[data-theme^="blueprint"] .copy-button,
+body[data-theme^="blueprint"] .edit-button,
+body[data-theme^="blueprint"] .task-note-button,
+body[data-theme^="blueprint"] .task-priority-button,
+body[data-theme^="blueprint"] .task-delete-button,
+body[data-theme^="blueprint"] .delete-button,
+body[data-theme^="blueprint"] .member-remove-btn {
+    background: var(--panel) !important;
+    color: var(--muted) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .copy-button:hover,
+body[data-theme^="blueprint"] .edit-button:hover,
+body[data-theme^="blueprint"] .task-note-button:hover,
+body[data-theme^="blueprint"] .task-priority-button:hover {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-level-3) !important;
+}
+
+body[data-theme^="blueprint"] .task-delete-button:hover,
+body[data-theme^="blueprint"] .delete-button:hover,
+body[data-theme^="blueprint"] .member-remove-btn:hover,
+body[data-theme^="blueprint"] .card-delete-button:hover {
+    color: var(--danger) !important;
+    border-color: color-mix(in srgb, var(--danger) 58%, transparent) !important;
+    box-shadow: 6px 6px 12px var(--dark-shadow), -3px -3px 10px var(--light-shadow), 0 0 10px color-mix(in srgb, var(--danger) 24%, transparent) !important;
+}
+
+/* Inputs, selects, search ---------------------------------------------------- */
+body[data-theme^="blueprint"] input,
+body[data-theme^="blueprint"] textarea,
+body[data-theme^="blueprint"] select,
+body[data-theme^="blueprint"] .notes-textarea,
+body[data-theme^="blueprint"] .task-input,
+body[data-theme^="blueprint"] .task-sort-select,
+body[data-theme^="blueprint"] .task-custom-tag-input,
+body[data-theme^="blueprint"] .task-category-create-input,
+body[data-theme^="blueprint"] .member-role-select,
+body[data-theme^="blueprint"] .view-toolbar-search-input,
+body[data-theme^="blueprint"] .auth-input {
+    background-color: var(--panel) !important;
+    color: var(--heading) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: var(--shadow-inset) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] input::placeholder,
+body[data-theme^="blueprint"] textarea::placeholder {
+    color: var(--muted-3) !important;
+}
+
+body[data-theme^="blueprint"] input:focus,
+body[data-theme^="blueprint"] textarea:focus,
+body[data-theme^="blueprint"] select:focus,
+body[data-theme^="blueprint"] .notes-textarea:focus,
+body[data-theme^="blueprint"] .task-input:focus,
+body[data-theme^="blueprint"] .task-sort-select:focus,
+body[data-theme^="blueprint"] .task-custom-tag-input:focus,
+body[data-theme^="blueprint"] .task-category-create-input:focus,
+body[data-theme^="blueprint"] .member-role-select:focus,
+body[data-theme^="blueprint"] .view-toolbar-search-input:focus,
+body[data-theme^="blueprint"] .auth-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--primary-glow) !important;
+}
+
+body[data-theme^="blueprint"] .task-sort-select,
+body[data-theme^="blueprint"] .task-tag-select,
+body[data-theme^="blueprint"] .task-category-select,
+body[data-theme^="blueprint"] .member-role-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 12px 12px !important;
+}
+
+body[data-theme="blueprint-light"] .task-sort-select,
+body[data-theme="blueprint-light"] .task-tag-select,
+body[data-theme="blueprint-light"] .task-category-select,
+body[data-theme="blueprint-light"] .member-role-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231a1a1a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+}
+
+body[data-theme="blueprint-dark"] .task-sort-select,
+body[data-theme="blueprint-dark"] .task-tag-select,
+body[data-theme="blueprint-dark"] .task-category-select,
+body[data-theme="blueprint-dark"] .member-role-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+}
+
+/* Menus and popovers --------------------------------------------------------- */
+body[data-theme^="blueprint"] .menu-dropdown,
+body[data-theme^="blueprint"] .task-category-menu-popover,
+body[data-theme^="blueprint"] .task-priority-popover,
+body[data-theme^="blueprint"] .dropdown-menu,
+body[data-theme^="blueprint"] .popover {
+    background: var(--panel-strong) !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-menu) !important;
+    animation: duplexFadeInUp 0.2s ease;
+    color: var(--heading) !important;
+    z-index: 500 !important;
+}
+
+body[data-theme^="blueprint"] .menu-dropdown a,
+body[data-theme^="blueprint"] .menu-dropdown-item,
+body[data-theme^="blueprint"] .task-category-menu-option,
+body[data-theme^="blueprint"] .task-priority-option {
+    border-radius: var(--radius-xs) !important;
+    color: var(--muted) !important;
+    font-weight: 700 !important;
+}
+
+body[data-theme^="blueprint"] .menu-dropdown a:hover,
+body[data-theme^="blueprint"] .menu-dropdown-item:hover,
+body[data-theme^="blueprint"] .task-category-menu-option:hover,
+body[data-theme^="blueprint"] .task-priority-option:hover,
+body[data-theme^="blueprint"] .task-priority-option.is-active {
+    background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+    color: var(--primary) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .task-category-menu-option--danger:hover {
+    color: var(--danger) !important;
+    background: color-mix(in srgb, var(--danger) 12%, transparent) !important;
+}
+
+@keyframes duplexFadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toggle switches ----------------------------------------------------------- */
+body[data-theme^="blueprint"] .toggle-switch {
+    width: 56px !important;
+    height: 28px !important;
+}
+
+body[data-theme^="blueprint"] .toggle-slider {
+    border-radius: var(--radius-lg) !important;
+    background: var(--panel) !important;
+    border: none !important;
+    box-shadow: 4px 4px 10px var(--dark-shadow), -2px -2px 8px var(--light-shadow) !important;
+}
+
+body[data-theme^="blueprint"] .toggle-slider::before {
+    left: 5px !important;
+    top: 5px !important;
+    bottom: auto !important;
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    background: var(--panel) !important;
+    box-shadow: var(--shadow-level-1) !important;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+body[data-theme^="blueprint"] .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(28px) !important;
+    background: var(--primary) !important;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4), 0 0 8px var(--primary-glow) !important;
+}
+
+body[data-theme^="blueprint"] .toggle-label {
+    color: var(--muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+}
+
+/* Main project cards -------------------------------------------------------- */
+body[data-theme^="blueprint"] .project-card {
+    min-height: 180px;
+    padding: 18px !important;
+}
+
+body[data-theme^="blueprint"] .project-header,
+body[data-theme^="blueprint"] .project-card-footer {
+    color: var(--muted);
+}
+
+body[data-theme^="blueprint"] .project-title,
+body[data-theme^="blueprint"] .project-card-title {
+    color: var(--heading) !important;
+    font-size: 1.25rem;
+    line-height: 1.05;
+}
+
+body[data-theme^="blueprint"] .project-icon,
+body[data-theme^="blueprint"] .icon,
+body[data-theme^="blueprint"] .avatar,
+body[data-theme^="blueprint"] .member-avatar {
+    background: var(--panel) !important;
+    color: var(--primary) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .progress-bar,
+body[data-theme^="blueprint"] .completion-bar,
+body[data-theme^="blueprint"] .project-progress-bar {
+    background: var(--panel) !important;
+    border-radius: var(--radius-full) !important;
+    box-shadow: var(--shadow-inset) !important;
+    overflow: hidden;
+}
+
+body[data-theme^="blueprint"] .progress-fill,
+body[data-theme^="blueprint"] .completion-fill,
+body[data-theme^="blueprint"] .project-progress-fill {
+    background: linear-gradient(90deg, var(--primary), #66c2ff) !important;
+    box-shadow: 0 0 10px var(--primary-glow) !important;
+}
+
+/* Modal and form sections --------------------------------------------------- */
+body[data-theme^="blueprint"] .modal-content,
+body[data-theme^="blueprint"] .account-modal,
+body[data-theme^="blueprint"] .auth-card {
+    border-radius: var(--radius-2xl) !important;
+}
+
+body[data-theme^="blueprint"] .modal-section,
+body[data-theme^="blueprint"] .modal-notes,
+body[data-theme^="blueprint"] .members-panel,
+body[data-theme^="blueprint"] .viewer-banner,
+body[data-theme^="blueprint"] .account-stat,
+body[data-theme^="blueprint"] .task-note-modal,
+body[data-theme^="blueprint"] .invite-form,
+body[data-theme^="blueprint"] .account-section {
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-level-2) !important;
+}
+
+body[data-theme^="blueprint"] .viewer-banner,
+body[data-theme^="blueprint"] .account-stat {
+    box-shadow: var(--shadow-inset) !important;
+}
+
+/* Project modal section buttons: keep them as buttons, not browser tabs ------ */
 body[data-theme^="blueprint"] .modal-tabs {
     display: flex !important;
-    gap: 8px !important;
+    gap: 10px !important;
     align-items: stretch !important;
     margin: 0 0 24px !important;
-    padding: 0 !important;
-    border-bottom: 2px solid var(--surface) !important;
-    background: transparent !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    padding: 8px !important;
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-inset) !important;
 }
 
 body[data-theme^="blueprint"] .modal-tab {
     position: relative !important;
-    bottom: auto !important;
     flex: 1 1 0 !important;
-    min-height: 0 !important;
-    margin: 0 0 -2px !important;
-    padding: 12px !important;
-    border: none !important;
-    border-bottom: 3px solid transparent !important;
-    border-radius: 0 !important;
-    background: transparent !important;
+    min-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--panel) !important;
     color: var(--muted) !important;
-    box-shadow: none !important;
-    font-family: inherit !important;
+    box-shadow: var(--shadow-level-1) !important;
     font-size: 14px !important;
     font-weight: 700 !important;
-    letter-spacing: normal !important;
+    letter-spacing: 0.02em !important;
     text-transform: none !important;
 }
 
 body[data-theme^="blueprint"] .modal-tab:hover {
-    color: var(--heading) !important;
-    background: transparent !important;
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-level-3) !important;
+    background: var(--panel) !important;
 }
 
 body[data-theme^="blueprint"] .modal-tab.active,
 body[data-theme^="blueprint"] .modal-tab[aria-selected="true"] {
-    color: var(--heading) !important;
-    border-bottom-color: var(--accent) !important;
-    background: transparent !important;
+    color: var(--primary) !important;
+    border-color: color-mix(in srgb, var(--primary) 58%, transparent) !important;
+    background: var(--panel) !important;
+    box-shadow: var(--shadow-inset), 0 0 10px var(--primary-glow) !important;
 }
 
 body[data-theme^="blueprint"] .modal-tab::after,
@@ -141,53 +528,75 @@ body[data-theme^="blueprint"] .modal-tab[aria-selected="true"]::after {
     display: none !important;
 }
 
-body[data-theme^="blueprint"] .task-category-tabs {
-    padding: 0 !important;
-    overflow: visible !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-    flex-wrap: wrap !important;
+/* Auth tabs use the same neumorphic button treatment ------------------------ */
+body[data-theme^="blueprint"] .auth-tabs {
+    display: flex !important;
+    gap: 10px !important;
+    padding: 8px !important;
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-inset) !important;
 }
 
-body[data-theme^="blueprint"] .task-category-tab-wrap--all {
-    margin-left: 0 !important;
+body[data-theme^="blueprint"] .auth-tab {
+    border-radius: var(--radius-md) !important;
+    background: var(--panel) !important;
+    border: 1px solid transparent !important;
+    color: var(--muted) !important;
+    box-shadow: var(--shadow-level-1) !important;
 }
 
-body[data-theme^="blueprint"] .task-category-tab-shell--create {
-    padding: 0 !important;
+body[data-theme^="blueprint"] .auth-tab:hover,
+body[data-theme^="blueprint"] .auth-tab.auth-tab-active {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-level-3) !important;
 }
 
-body[data-theme^="blueprint"] .task-category-tab-shell--create .task-category-tab {
-    width: 100% !important;
-    min-width: 44px !important;
-    min-height: 38px !important;
-    padding: 0 16px !important;
+body[data-theme^="blueprint"] .auth-tab.auth-tab-active {
+    box-shadow: var(--shadow-inset), 0 0 10px var(--primary-glow) !important;
 }
 
-body[data-theme^="blueprint"] .task-category-tab-wrap.is-drop-target .task-category-tab-shell {
-    border-color: color-mix(in srgb, var(--accent) 72%, var(--browser-tab-border)) !important;
-    box-shadow: inset 0 2px 0 var(--accent), 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
-}
-
-body[data-theme^="blueprint"] .task-sort-control {
-    margin-left: auto !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-/* Round 26 task modal polish */
+/* Task category browser-style tabs ----------------------------------------- */
 body[data-theme^="blueprint"] .modal-tasks-card {
+    position: relative;
+    overflow: visible !important;
     background: transparent !important;
     border: 0 !important;
     box-shadow: none !important;
 }
 
-body[data-theme^="blueprint"] .task-category-tabs {
+body[data-theme^="blueprint"] .modal-tasks-card-body {
+    position: relative;
+    margin-top: -1px !important;
+    padding: 16px !important;
+    border-radius: 0 var(--radius-2xl) var(--radius-2xl) var(--radius-2xl) !important;
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: var(--shadow-level-2) !important;
     overflow: visible !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
+}
+
+body[data-theme^="blueprint"] .task-category-controls {
+    position: relative;
+    z-index: 3;
+    margin: 0 0 12px !important;
+}
+
+body[data-theme^="blueprint"] .task-category-tabs {
+    --browser-tab-baseline: var(--line-strong);
+    --browser-tab-border: var(--line-strong);
+    --browser-tab-active-bg: var(--panel);
+    --browser-tab-inactive-bg: var(--panel);
+    --browser-tab-hover-bg: var(--surface-2);
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-end !important;
+    gap: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
     scrollbar-width: none !important;
 }
 
@@ -197,31 +606,372 @@ body[data-theme^="blueprint"] .task-category-tabs::-webkit-scrollbar {
     height: 0 !important;
 }
 
+body[data-theme^="blueprint"] .task-category-tab-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    margin: 0 4px -1px 0 !important;
+}
+
+body[data-theme^="blueprint"] .task-category-tab-wrap--all {
+    margin-left: 0 !important;
+}
+
 body[data-theme^="blueprint"] .task-category-tab-shell {
+    position: relative;
+    display: inline-flex !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    min-height: 40px !important;
     padding: 0 !important;
+    border: 1px solid var(--browser-tab-border) !important;
+    border-bottom-color: var(--browser-tab-border) !important;
+    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+    background: var(--browser-tab-inactive-bg) !important;
+    color: var(--muted) !important;
+    box-shadow: var(--shadow-level-1) !important;
     cursor: pointer;
+    z-index: 1;
+    -webkit-mask: none !important;
+    mask: none !important;
+}
+
+body[data-theme^="blueprint"] .task-category-tab-shell:hover,
+body[data-theme^="blueprint"] .task-category-tab-wrap.is-drop-target .task-category-tab-shell {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    background: var(--browser-tab-hover-bg) !important;
+    box-shadow: var(--shadow-level-3) !important;
+}
+
+body[data-theme^="blueprint"] .task-category-tab-shell.is-active {
+    color: var(--primary) !important;
+    background: var(--browser-tab-active-bg) !important;
+    border-color: var(--primary) !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 -1px 0 var(--primary), -3px -3px 10px var(--light-shadow), 3px 0 8px var(--dark-shadow) !important;
+    z-index: 4;
 }
 
 body[data-theme^="blueprint"] .task-category-tab {
     align-self: stretch !important;
-    min-height: 38px !important;
+    min-height: 40px !important;
     padding: 0 12px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
     cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+    white-space: nowrap !important;
 }
 
 body[data-theme^="blueprint"] .task-category-menu-button {
     align-self: stretch !important;
     min-width: 34px !important;
-    min-height: 38px !important;
+    min-height: 40px !important;
     padding: 0 12px 0 4px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
     cursor: pointer !important;
 }
 
+body[data-theme^="blueprint"] .task-category-tab-shell--create .task-category-tab {
+    min-width: 44px !important;
+    padding: 0 16px !important;
+}
+
+body[data-theme^="blueprint"] .task-category-create-input {
+    height: 32px !important;
+    min-width: 120px !important;
+    margin: 3px 8px !important;
+}
+
+/* Task controls and task rows ---------------------------------------------- */
 body[data-theme^="blueprint"] .modal-task-controls-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
     align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px 16px !important;
+    margin-bottom: 16px !important;
 }
 
 body[data-theme^="blueprint"] .task-sort-control {
+    margin-left: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
     align-items: flex-end !important;
     justify-content: flex-start !important;
+    gap: 8px !important;
+    min-width: 160px !important;
+}
+
+body[data-theme^="blueprint"] .task-sort-control label,
+body[data-theme^="blueprint"] .task-sort-label {
+    color: var(--muted) !important;
+    font-weight: 700 !important;
+}
+
+body[data-theme^="blueprint"] .task-sort-select {
+    min-width: 156px !important;
+    height: 38px !important;
+    padding: 0 36px 0 12px !important;
+}
+
+body[data-theme^="blueprint"] .task-list,
+body[data-theme^="blueprint"] .modal-tasks {
+    overflow: visible !important;
+}
+
+body[data-theme^="blueprint"] .task-item {
+    position: relative;
+    overflow: visible !important;
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-level-1) !important;
+    color: var(--text) !important;
+}
+
+body[data-theme^="blueprint"] .task-item:hover,
+body[data-theme^="blueprint"] .task-item.selected {
+    border-color: color-mix(in srgb, var(--primary) 55%, transparent) !important;
+    box-shadow: var(--shadow-level-2), 0 0 8px color-mix(in srgb, var(--primary) 18%, transparent) !important;
+}
+
+body[data-theme^="blueprint"] .task-checkbox {
+    background: var(--panel) !important;
+    border: 1px solid var(--line-strong) !important;
+    box-shadow: var(--shadow-inset) !important;
+}
+
+body[data-theme^="blueprint"] .task-checkbox.checked {
+    background: var(--primary) !important;
+    box-shadow: 2px 2px 6px var(--dark-shadow), 0 0 8px var(--primary-glow) !important;
+}
+
+body[data-theme^="blueprint"] .task-text {
+    color: var(--heading) !important;
+}
+
+body[data-theme^="blueprint"] .task-text.completed {
+    color: var(--muted-2) !important;
+}
+
+body[data-theme^="blueprint"] .task-tag-pill,
+body[data-theme^="blueprint"] .task-category-pill,
+body[data-theme^="blueprint"] .role-badge,
+body[data-theme^="blueprint"] .shared-badge,
+body[data-theme^="blueprint"] .member-role-badge,
+body[data-theme^="blueprint"] .members-count {
+    border-radius: var(--radius-full) !important;
+    box-shadow: var(--shadow-level-1) !important;
+    border: 1px solid var(--line) !important;
+}
+
+body[data-theme^="blueprint"] .task-tag-pill,
+body[data-theme^="blueprint"] .task-category-pill {
+    background: var(--panel) !important;
+    color: var(--heading) !important;
+}
+
+body[data-theme^="blueprint"] .task-priority-popover {
+    right: calc(100% + 8px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    min-width: 168px !important;
+}
+
+/* Preserve priority colors while using neumorphic pills */
+body[data-theme^="blueprint"] .task-priority-button--none,
+body[data-theme^="blueprint"] .task-tag-flag--none { color: var(--muted-3) !important; }
+body[data-theme^="blueprint"] .task-priority-button--critical,
+body[data-theme^="blueprint"] .task-tag-flag--critical { color: #ef4444 !important; }
+body[data-theme^="blueprint"] .task-priority-button--high,
+body[data-theme^="blueprint"] .task-tag-flag--high { color: #ff5a5f !important; }
+body[data-theme^="blueprint"] .task-priority-button--medium,
+body[data-theme^="blueprint"] .task-tag-flag--medium { color: #f97316 !important; }
+body[data-theme^="blueprint"] .task-priority-button--low,
+body[data-theme^="blueprint"] .task-tag-flag--low { color: #22c55e !important; }
+
+body[data-theme^="blueprint"] .task-tag-pill--critical { color: #ef4444 !important; background: color-mix(in srgb, #ef4444 14%, var(--panel)) !important; }
+body[data-theme^="blueprint"] .task-tag-pill--high { color: #ff5a5f !important; background: color-mix(in srgb, #ff5a5f 14%, var(--panel)) !important; }
+body[data-theme^="blueprint"] .task-tag-pill--medium { color: #f97316 !important; background: color-mix(in srgb, #f97316 14%, var(--panel)) !important; }
+body[data-theme^="blueprint"] .task-tag-pill--low { color: #22c55e !important; background: color-mix(in srgb, #22c55e 14%, var(--panel)) !important; }
+body[data-theme^="blueprint"] .task-tag-pill--custom { color: var(--heading) !important; background: var(--panel) !important; }
+
+/* Members section: full neumorphic cleanup ---------------------------------- */
+body[data-theme^="blueprint"] .members-panel {
+    padding: 16px !important;
+    gap: 16px !important;
+}
+
+body[data-theme^="blueprint"] .members-list {
+    gap: 10px !important;
+}
+
+body[data-theme^="blueprint"] .member-row {
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .member-row--owner {
+    box-shadow: var(--shadow-level-2) !important;
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--line)) !important;
+}
+
+body[data-theme^="blueprint"] .member-name {
+    color: var(--heading) !important;
+    font-weight: 700 !important;
+}
+
+body[data-theme^="blueprint"] .member-email,
+body[data-theme^="blueprint"] .viewer-note {
+    color: var(--muted-2) !important;
+}
+
+body[data-theme^="blueprint"] .member-role-badge--owner,
+body[data-theme^="blueprint"] .member-role-badge--editor,
+body[data-theme^="blueprint"] .role-badge--editor,
+body[data-theme^="blueprint"] .shared-badge,
+body[data-theme^="blueprint"] .members-count {
+    background: color-mix(in srgb, var(--primary) 12%, var(--panel)) !important;
+    color: var(--primary) !important;
+}
+
+body[data-theme^="blueprint"] .member-role-badge--viewer,
+body[data-theme^="blueprint"] .role-badge--viewer {
+    background: var(--panel) !important;
+    color: var(--muted) !important;
+}
+
+/* Sidebar and toolbar details ---------------------------------------------- */
+body[data-theme^="blueprint"] .sidebar,
+body[data-theme^="blueprint"] .control-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body[data-theme^="blueprint"] .sidebar-label,
+body[data-theme^="blueprint"] .section-label,
+body[data-theme^="blueprint"] .control-panel-label,
+body[data-theme^="blueprint"] .nav-section-title {
+    color: var(--muted) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="blueprint"] .sidebar button,
+body[data-theme^="blueprint"] .sidebar .nav-item,
+body[data-theme^="blueprint"] .filter-button,
+body[data-theme^="blueprint"] .view-filter-button,
+body[data-theme^="blueprint"] .control-panel button {
+    background: var(--panel) !important;
+    color: var(--muted) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .sidebar button:hover,
+body[data-theme^="blueprint"] .sidebar .nav-item:hover,
+body[data-theme^="blueprint"] .filter-button:hover,
+body[data-theme^="blueprint"] .view-filter-button:hover,
+body[data-theme^="blueprint"] .control-panel button:hover,
+body[data-theme^="blueprint"] .sidebar button.active,
+body[data-theme^="blueprint"] .sidebar .nav-item.active,
+body[data-theme^="blueprint"] .filter-button.active,
+body[data-theme^="blueprint"] .view-filter-button.active {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-level-3) !important;
+}
+
+body[data-theme^="blueprint"] .sidebar button:active,
+body[data-theme^="blueprint"] .filter-button:active,
+body[data-theme^="blueprint"] .view-filter-button:active,
+body[data-theme^="blueprint"] .control-panel button:active {
+    box-shadow: var(--shadow-pressed) !important;
+}
+
+/* Scrollbars ---------------------------------------------------------------- */
+body[data-theme^="blueprint"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+body[data-theme^="blueprint"] ::-webkit-scrollbar-track {
+    background: var(--panel);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-inset);
+}
+
+body[data-theme^="blueprint"] ::-webkit-scrollbar-thumb {
+    background: var(--panel);
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: var(--shadow-level-1);
+}
+
+body[data-theme^="blueprint"] ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--primary) 28%, var(--panel));
+    background-clip: padding-box;
+}
+
+/* Accessibility ------------------------------------------------------------- */
+body[data-theme^="blueprint"] :focus-visible {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 2px !important;
+    box-shadow: var(--focus-ring) !important;
+}
+
+/* Responsive task controls -------------------------------------------------- */
+@media (max-width: 900px) {
+    body[data-theme^="blueprint"] .modal-tabs,
+    body[data-theme^="blueprint"] .auth-tabs {
+        gap: 8px !important;
+        padding: 6px !important;
+    }
+
+    body[data-theme^="blueprint"] .modal-tab {
+        min-height: 38px !important;
+        padding-inline: 8px !important;
+        font-size: 13px !important;
+    }
+
+    body[data-theme^="blueprint"] .modal-task-controls-row {
+        align-items: stretch !important;
+    }
+
+    body[data-theme^="blueprint"] .task-sort-control,
+    body[data-theme^="blueprint"] .hide-completed-toggle {
+        width: 100% !important;
+        align-items: flex-start !important;
+    }
+
+    body[data-theme^="blueprint"] .task-sort-select {
+        width: 100% !important;
+    }
+
+    body[data-theme^="blueprint"] .task-priority-popover {
+        right: auto !important;
+        left: 0 !important;
+        top: calc(100% + 8px) !important;
+        transform: none !important;
+    }
 }
