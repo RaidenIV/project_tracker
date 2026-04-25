@@ -1,60 +1,61 @@
 /* ============================================================
-   NEBULA GLASS THEME — Refined Edition
+   NEBULA GLASS THEME — De-neumorphized Edition
    ------------------------------------------------------------
-   Improvements over previous polish pass:
-   • Ambient nebula backdrop (radial gradients) — gives the
-     glass something real to refract instead of a flat color
-   • Two-tone accent: blue primary + violet companion, used
-     in glow halos so the "Nebula" name is earned
-   • Multi-layer specular on primary buttons (top sheen +
-     diagonal fresnel + colored halo), not a single overlay
-   • Radius hierarchy (sm / md / lg) instead of one-size-fits-all
-   • Cubic-bezier motion + transform-origin discipline; full
-     prefers-reduced-motion support
-   • @supports fallback for browsers without backdrop-filter
-   • Round-9 duplicate override block folded into the source
-   • Semantic state colors (success / warning / danger) added
-   • Selection contrast fixed (was using --heading on a tinted bg)
-   • Scrollbar thumb transitions on hover
-   • Subtle grain layer to break up large flat panels
+   Fixes from previous version:
+   • Dark-mode project cards are now actually dark glass (text
+     inverts to bright), not light cards on a dark background.
+   • Project-card internal elements (task rows, inputs, progress
+     bar, title input) are flat tinted surfaces instead of having
+     their own inset highlights — that combo was reading as
+     neumorphic "pressed button" inside the card.
+   • Sidebar notifications-summary-card / settings-panel-card now
+     use the same primary glass treatment as the leaderboard
+     (--panel-strong + --card-shadow + theme border) instead of
+     hardcoded white overlays that broke in dark mode.
+   • Sidebar action buttons match the secondary-surface treatment
+     used elsewhere — no inset highlight + outer shadow combo
+     that was creating pillowy neumorphism.
+   • Role badges / pills inside project cards explicitly flat-
+     tinted (targets .card-role, .role-badge, .role-pill,
+     .role-notification, .member-badge — tell me the actual class
+     if yours differs).
+   • Control-panel cards in dark mode no longer pillow — the
+     colored drop shadow was invisible on dark, leaving only the
+     inset top highlight, which is the textbook neumorphic look.
    ============================================================ */
 
 /* -----------------------------
    1. THEME TOKENS — LIGHT
    ----------------------------- */
 body[data-theme="glass-light"] {
-    /* Backdrop palette: warmer mid + cool deep for nebula gradient */
     --bg:        #b7caf0;
     --bg-2:      #e4efff;
     --bg-3:      #8aa3d4;
-    --bg-tint-a: rgba(140, 180, 255, 0.55);   /* upper-left bloom  */
-    --bg-tint-b: rgba(190, 160, 240, 0.45);   /* lower-right bloom */
-    --bg-tint-c: rgba(120, 200, 230, 0.35);   /* mid accent bloom  */
+    --bg-tint-a: rgba(140, 180, 255, 0.55);
+    --bg-tint-b: rgba(190, 160, 240, 0.45);
+    --bg-tint-c: rgba(120, 200, 230, 0.35);
 
-    --panel:          rgba(255, 255, 255, 0.42);
-    --panel-strong:   rgba(255, 255, 255, 0.62);
-    --surface:        rgba(255, 255, 255, 0.28);
-    --surface-2:      rgba(255, 255, 255, 0.48);
+    --panel:        rgba(255, 255, 255, 0.42);
+    --panel-strong: rgba(255, 255, 255, 0.62);
+    --surface:      rgba(255, 255, 255, 0.28);
+    --surface-2:    rgba(255, 255, 255, 0.48);
 
     --text:    #0f2744;
     --heading: #071a32;
-    --muted:   #304c6c;          /* ~6.7:1 on bg */
+    --muted:   #304c6c;
     --muted-2: #4a6685;
 
-    /* Two-tone accent for nebula character */
     --accent:        #2570ee;
     --accent-2:      #1548b8;
-    --accent-alt:    #8b5cf6;     /* violet companion */
+    --accent-alt:    #8b5cf6;
     --accent-glow:   rgba(37, 112, 238, 0.40);
     --accent-glow-2: rgba(139, 92, 246, 0.32);
     --progress:      #2570ee;
 
-    /* Semantic states */
     --success: #2f9e6c;
     --warning: #c97a14;
     --danger:  #d23a4d;
 
-    /* Radius scale */
     --radius-sm: 10px;
     --radius-md: 14px;
     --radius-lg: 22px;
@@ -63,23 +64,25 @@ body[data-theme="glass-light"] {
         inset 0 1px 0 rgba(255, 255, 255, 0.55),
         0 20px 48px rgba(30, 54, 96, 0.14),
         0 4px 12px rgba(30, 54, 96, 0.08);
-    --inset-shadow: none;
 
-    --glass-border:        rgba(255, 255, 255, 0.55);
-    --glass-border-soft:   rgba(255, 255, 255, 0.32);
-    --glass-divider:       rgba(15, 39, 68, 0.08);
+    --glass-border:      rgba(255, 255, 255, 0.55);
+    --glass-border-soft: rgba(255, 255, 255, 0.32);
+    --glass-divider:     rgba(15, 39, 68, 0.08);
 
-    --glass-project-card-bg:   rgba(255, 255, 255, 0.58);
-    --glass-project-surface:   rgba(255, 255, 255, 0.82);
-    --glass-control-surface:   rgba(255, 255, 255, 0.32);
-    --glass-card-text:         #06131f;
-    --glass-card-muted:        rgba(10, 22, 38, 0.72);
+    /* Project cards (light mode = light glass, bright top edge OK) */
+    --glass-project-card-bg: rgba(255, 255, 255, 0.58);
+    --glass-project-surface: rgba(255, 255, 255, 0.78);
+    --glass-card-text:       #06131f;
+    --glass-card-muted:      rgba(10, 22, 38, 0.72);
+    --glass-card-border:     rgba(255, 255, 255, 0.50);
+    --glass-card-edge:       inset 0 1px 0 rgba(255, 255, 255, 0.65);
+
+    --glass-control-surface: rgba(255, 255, 255, 0.32);
 
     --selection-bg:   rgba(37, 112, 238, 0.28);
     --selection-text: #ffffff;
     --focus-ring:     0 0 0 3px rgba(37, 112, 238, 0.35);
 
-    /* Motion */
     --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
     --dur-fast:    140ms;
@@ -94,14 +97,14 @@ body[data-theme="glass-dark"] {
     --bg:        #0b1322;
     --bg-2:      #1a2b4a;
     --bg-3:      #060d19;
-    --bg-tint-a: rgba(60, 100, 200, 0.42);   /* deep blue bloom    */
-    --bg-tint-b: rgba(120, 70, 200, 0.38);   /* violet bloom       */
-    --bg-tint-c: rgba(40, 140, 180, 0.28);   /* cyan accent bloom  */
+    --bg-tint-a: rgba(60, 100, 200, 0.42);
+    --bg-tint-b: rgba(120, 70, 200, 0.38);
+    --bg-tint-c: rgba(40, 140, 180, 0.28);
 
-    --panel:          rgba(22, 36, 62, 0.58);
-    --panel-strong:   rgba(28, 44, 74, 0.72);
-    --surface:        rgba(28, 45, 73, 0.48);
-    --surface-2:      rgba(38, 58, 92, 0.58);
+    --panel:        rgba(22, 36, 62, 0.58);
+    --panel-strong: rgba(28, 44, 74, 0.72);
+    --surface:      rgba(28, 45, 73, 0.48);
+    --surface-2:    rgba(38, 58, 92, 0.58);
 
     --text:    #eaf1fc;
     --heading: #ffffff;
@@ -127,19 +130,21 @@ body[data-theme="glass-dark"] {
         inset 0 1px 0 rgba(255, 255, 255, 0.10),
         0 24px 56px rgba(0, 0, 0, 0.45),
         0 6px 16px rgba(0, 0, 0, 0.28);
-    --inset-shadow: none;
 
-    --glass-border:        rgba(181, 212, 255, 0.24);
-    --glass-border-soft:   rgba(181, 212, 255, 0.14);
-    --glass-divider:       rgba(255, 255, 255, 0.08);
+    --glass-border:      rgba(181, 212, 255, 0.24);
+    --glass-border-soft: rgba(181, 212, 255, 0.14);
+    --glass-divider:     rgba(255, 255, 255, 0.08);
 
-    /* Project cards stay light-surface in dark mode for body-text
-       legibility — matches the original design intent */
-    --glass-project-card-bg:   rgba(255, 255, 255, 0.62);
-    --glass-project-surface:   rgba(255, 255, 255, 0.80);
-    --glass-control-surface:   rgba(34, 54, 86, 0.42);
-    --glass-card-text:         #06131f;
-    --glass-card-muted:        rgba(10, 22, 38, 0.72);
+    /* Project cards now actually dark — were intentionally light
+       in the previous version; that broke dark-mode cohesion. */
+    --glass-project-card-bg: rgba(22, 36, 62, 0.62);
+    --glass-project-surface: rgba(38, 58, 92, 0.50);
+    --glass-card-text:       #eaf1fc;
+    --glass-card-muted:      rgba(184, 203, 232, 0.78);
+    --glass-card-border:     rgba(181, 212, 255, 0.22);
+    --glass-card-edge:       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    --glass-control-surface: rgba(34, 54, 86, 0.42);
 
     --selection-bg:   rgba(111, 170, 255, 0.38);
     --selection-text: #07111f;
@@ -154,10 +159,6 @@ body[data-theme="glass-dark"] {
 
 /* -----------------------------
    2. BODY — ambient nebula backdrop
-   This is the biggest visible change. Three soft radial blooms
-   sit beneath everything; the glass panels actually have color
-   variation to refract through their blur, instead of a single
-   flat hue. The blooms are fixed-attached so they don't scroll.
    ----------------------------- */
 body[data-theme^="glass"] {
     font-family: 'Rajdhani', 'Inter', 'Segoe UI', sans-serif;
@@ -172,9 +173,6 @@ body[data-theme^="glass"] {
     min-height: 100vh;
 }
 
-/* Subtle film grain — combats the over-polished plastic feel of pure glass.
-   Inline SVG noise so no extra HTTP request. Pointer-events off so it
-   never intercepts clicks. */
 body[data-theme^="glass"]::before {
     content: "";
     position: fixed;
@@ -246,11 +244,9 @@ body[data-theme^="glass"] .leaderboard-summary-card {
         transform  var(--dur-base) var(--ease-out),
         border-color var(--dur-base) var(--ease-out);
     position: relative;
-    z-index: 1; /* sit above the grain layer */
+    z-index: 1;
 }
 
-/* Backdrop-filter fallback — older browsers get a more opaque panel
-   so contrast isn't ruined when the blur silently no-ops. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     body[data-theme^="glass"] .control-panel-content,
     body[data-theme^="glass"] .project-card,
@@ -264,6 +260,7 @@ body[data-theme^="glass"] .leaderboard-summary-card {
 
 /* -----------------------------
    4. SECONDARY SURFACES (inputs, rows, pills)
+   FLAT — no shadow combos that pillow into neumorphism.
    ----------------------------- */
 body[data-theme^="glass"] .view-toolbar-search,
 body[data-theme^="glass"] .view-toolbar-select,
@@ -333,16 +330,13 @@ body[data-theme^="glass"] .theme-card.is-active,
 body[data-theme^="glass"] .command-palette-item.is-active {
     transform: translateY(-2px);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.60),
+        var(--glass-card-edge),
         0 28px 56px rgba(23, 41, 73, 0.22),
         0 8px 18px rgba(23, 41, 73, 0.10);
 }
 
 /* -----------------------------
    6. PRIMARY ACCENT BUTTONS
-   Multi-layer specular for real glass character:
-   ① top sheen   ② diagonal fresnel edge   ③ accent gradient base
-   Plus a two-tone glow (blue + violet) for nebula identity.
    ----------------------------- */
 body[data-theme^="glass"] .task-checkbox.checked,
 body[data-theme^="glass"] .add-project-button,
@@ -360,7 +354,6 @@ body[data-theme^="glass"] .activate-button {
     color: #ffffff;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.40),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.06),
         0 12px 28px var(--accent-glow),
         0 6px 18px var(--accent-glow-2),
         0 4px 10px rgba(0, 0, 0, 0.08);
@@ -381,7 +374,6 @@ body[data-theme^="glass"] .activate-button:hover {
     filter: brightness(1.06);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.50),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.06),
         0 18px 38px var(--accent-glow),
         0 10px 24px var(--accent-glow-2),
         0 6px 14px rgba(0, 0, 0, 0.10);
@@ -404,7 +396,6 @@ body[data-theme^="glass"] .task-checkbox.checked {
 
 /* -----------------------------
    7. BORDER RADII — hierarchical
-   Small for inline controls, medium for pills/inputs, large for cards.
    ----------------------------- */
 body[data-theme^="glass"] .task-checkbox,
 body[data-theme^="glass"] .toggle-slider:before {
@@ -459,12 +450,15 @@ body[data-theme^="glass"] .color-mode-toggle-thumb {
 
 /* -----------------------------
    9. PROJECT CARDS (the hero surface)
+   Now uses theme tokens so it's actually dark in dark mode.
+   Internal elements are flat tinted — no per-element inset
+   highlights that read as neumorphic "extruded buttons".
    ----------------------------- */
 body[data-theme^="glass"] .project-card {
     background: var(--glass-project-card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.48);
+    border: 1px solid var(--glass-card-border);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.65),
+        var(--glass-card-edge),
         0 18px 42px rgba(23, 41, 73, 0.16),
         0 4px 10px rgba(23, 41, 73, 0.06);
     overflow: hidden;
@@ -476,8 +470,8 @@ body[data-theme^="glass"] .project-card .task-input,
 body[data-theme^="glass"] .project-card .progress-bar-container,
 body[data-theme^="glass"] .project-card .project-title-input {
     background: var(--glass-project-surface);
-    border: 1px solid rgba(255, 255, 255, 0.42);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.50);
+    border: 1px solid var(--glass-card-border);
+    box-shadow: none;  /* was: inset 0 1px 0 white — neumorphic */
 }
 
 body[data-theme^="glass"] .project-card .project-title,
@@ -504,8 +498,29 @@ body[data-theme^="glass"] .project-card .task-text.completed {
     text-decoration-color: var(--glass-card-muted);
 }
 
+/* Role badges / pills inside project cards — explicitly flat.
+   Targeting the most likely class names; tell me yours if it's
+   different and I'll add it. */
+body[data-theme^="glass"] .project-card .card-role,
+body[data-theme^="glass"] .project-card .role-badge,
+body[data-theme^="glass"] .project-card .role-pill,
+body[data-theme^="glass"] .project-card .role-notification,
+body[data-theme^="glass"] .project-card .member-badge,
+body[data-theme^="glass"] .project-card .card-owner-pill {
+    background: var(--glass-project-surface);
+    border: 1px solid var(--glass-card-border);
+    box-shadow: none;
+    color: var(--glass-card-muted);
+    border-radius: var(--radius-sm);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 /* -----------------------------
    10. CONTROL PANEL
+   Removed the inset-highlight + colored-shadow combo for dark
+   mode — the shadow was invisible on dark, which left only the
+   highlight, producing a textbook neumorphic pillow.
    ----------------------------- */
 body[data-theme^="glass"] .control-panel .stat-card,
 body[data-theme^="glass"] .control-panel .undo-button,
@@ -520,9 +535,18 @@ body[data-theme^="glass"] .control-panel .panel-user-pill,
 body[data-theme^="glass"] .control-panel .panel-avatar {
     background: var(--glass-control-surface);
     border: 1px solid var(--glass-border-soft);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 12px 28px rgba(23, 41, 73, 0.14);
+    box-shadow: none;
+}
+
+body[data-theme="glass-light"] .control-panel .stat-card,
+body[data-theme="glass-light"] .control-panel .undo-button,
+body[data-theme="glass-light"] .control-panel .collapse-button,
+body[data-theme="glass-light"] .control-panel .expand-button,
+body[data-theme="glass-light"] .control-panel .save-status,
+body[data-theme="glass-light"] .control-panel .section-count-pill {
+    /* Light mode keeps a very subtle drop shadow — it actually
+       reads against the lighter background. */
+    box-shadow: 0 8px 20px rgba(23, 41, 73, 0.10);
 }
 
 body[data-theme^="glass"] .control-panel .stat-card,
@@ -537,10 +561,9 @@ body[data-theme^="glass"] .control-panel .section-count-pill {
 
 body[data-theme^="glass"] .control-panel .stat-card.active {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.22));
+        linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.06));
     border-color: var(--accent);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.45),
         0 16px 32px var(--accent-glow),
         0 8px 20px var(--accent-glow-2);
 }
@@ -627,49 +650,45 @@ body[data-theme^="glass"] ::-webkit-scrollbar-thumb:hover {
 }
 
 /* -----------------------------
-   13. SIDEBAR + SETTINGS PANELS
-   (Folded the duplicate "Round 9" override block back into the
-    source — keeps the higher-contrast values, removes the dupe.)
+   13. SIDEBAR — notifications + settings
+   Now uses the same primary-glass treatment as the leaderboard
+   summary card. Theme tokens, so it adapts cleanly to dark mode
+   instead of being a hardcoded white overlay.
    ----------------------------- */
 body[data-theme^="glass"] .notifications-summary-card,
 body[data-theme^="glass"] .settings-panel-card {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.09)),
-        rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.28),
-        0 18px 36px rgba(23, 41, 73, 0.22);
+    background: var(--panel-strong);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: var(--radius-lg);
 }
 
+/* Sidebar action buttons match secondary-surface treatment used
+   by leaderboard items — flat tinted, no inset/outset combo. */
 body[data-theme^="glass"] .sidebar-action-button,
 body[data-theme^="glass"] .section-action-button {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.11)),
-        rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.30);
+    background: var(--surface);
+    border: 1px solid var(--glass-border-soft);
     color: var(--heading);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.24),
-        0 12px 24px rgba(23, 41, 73, 0.18);
+    box-shadow: none;
+    border-radius: var(--radius-md);
     transition:
-        background   var(--dur-fast) var(--ease-out),
-        border-color var(--dur-fast) var(--ease-out),
-        transform    var(--dur-fast) var(--ease-out);
+        background    var(--dur-fast) var(--ease-out),
+        border-color  var(--dur-fast) var(--ease-out),
+        transform     var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] .sidebar-action-button:hover,
 body[data-theme^="glass"] .section-action-button:hover {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.15)),
-        rgba(255, 255, 255, 0.20);
-    border-color: rgba(255, 255, 255, 0.34);
+    background: var(--surface-2);
+    border-color: var(--glass-border);
     transform: translateY(-1px);
 }
 
 /* -----------------------------
    14. REDUCED MOTION
-   Respect users who've asked the OS to dial things back.
    ----------------------------- */
 @media (prefers-reduced-motion: reduce) {
     body[data-theme^="glass"] *,
