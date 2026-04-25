@@ -1003,3 +1003,67 @@ body[data-theme^="glass"] .task-category-menu-button:hover {
     color: var(--heading);
     background: transparent;
 }
+
+/* Browser-style tabs + task sorting controls */
+body[data-theme^="glass"] .modal-tabs,
+body[data-theme^="glass"] .auth-tabs,
+body[data-theme^="glass"] .task-category-tabs {
+    --browser-tab-baseline: rgba(255, 255, 255, 0.12);
+    --browser-tab-border: rgba(255, 255, 255, 0.12);
+    --browser-tab-active-bg: rgba(20, 20, 24, 0.82);
+    --browser-tab-inactive-bg: rgba(16, 18, 24, 0.42);
+    --browser-tab-hover-bg: rgba(111, 170, 255, 0.16);
+}
+
+body[data-theme="glass-light"] .modal-tabs,
+body[data-theme="glass-light"] .auth-tabs,
+body[data-theme="glass-light"] .task-category-tabs {
+    --browser-tab-baseline: rgba(7, 26, 50, 0.16);
+    --browser-tab-border: rgba(255, 255, 255, 0.42);
+    --browser-tab-active-bg: rgba(255, 255, 255, 0.62);
+    --browser-tab-inactive-bg: rgba(255, 255, 255, 0.30);
+    --browser-tab-hover-bg: rgba(255, 255, 255, 0.48);
+}
+
+body[data-theme^="glass"] .modal-tab,
+body[data-theme^="glass"] .auth-tab,
+body[data-theme^="glass"] .task-category-tab-shell,
+body[data-theme^="glass"] .task-category-inline-input {
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+body[data-theme^="glass"] .modal-tab.active,
+body[data-theme^="glass"] .modal-tab[aria-selected="true"],
+body[data-theme^="glass"] .auth-tab.auth-tab-active,
+body[data-theme^="glass"] .task-category-tab-shell.is-active {
+    border-color: var(--accent) !important;
+    border-bottom-color: transparent !important;
+}
+
+body[data-theme^="glass"] .task-sort-control {
+    padding: 10px 12px;
+    border: 1px solid var(--glass-border-soft);
+    background: var(--surface);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+body[data-theme^="glass"] .task-sort-select {
+    background-color: rgba(16, 18, 24, 0.58);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: var(--heading);
+    box-shadow: none;
+}
+
+body[data-theme="glass-light"] .task-sort-select {
+    background-color: rgba(255,255,255,0.52);
+    border-color: rgba(255,255,255,0.38);
+}
+
+body[data-theme^="glass"] .modal-tab.active,
+body[data-theme^="glass"] .modal-tab[aria-selected="true"],
+body[data-theme^="glass"] .auth-tab.auth-tab-active,
+body[data-theme^="glass"] .task-category-tab-shell.is-active {
+    background: var(--browser-tab-active-bg) !important;
+}

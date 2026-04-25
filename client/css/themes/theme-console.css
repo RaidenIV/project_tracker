@@ -1366,3 +1366,69 @@ body[data-theme^="console"] .task-tag-pill {
     border: 1px solid rgba(90, 173, 255, 0.22);
     box-shadow: none;
 }
+
+/* Browser-style tabs + task sorting controls */
+body[data-theme^="console"] .modal-tabs,
+body[data-theme^="console"] .auth-tabs,
+body[data-theme^="console"] .task-category-tabs {
+    --browser-tab-baseline: var(--line);
+    --browser-tab-border: var(--line);
+    --browser-tab-active-bg: var(--panel);
+    --browser-tab-inactive-bg: var(--inset);
+    --browser-tab-hover-bg: var(--surface-2);
+}
+
+body[data-theme^="console"] .modal-tab,
+body[data-theme^="console"] .auth-tab,
+body[data-theme^="console"] .task-category-tab-shell {
+    border-radius: 10px 10px 0 0 !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="console"] .modal-tab.active,
+body[data-theme^="console"] .modal-tab[aria-selected="true"],
+body[data-theme^="console"] .auth-tab.auth-tab-active,
+body[data-theme^="console"] .task-category-tab-shell.is-active {
+    background: var(--panel) !important;
+    border-color: var(--accent) !important;
+    border-bottom-color: transparent !important;
+    color: var(--accent) !important;
+}
+
+body[data-theme^="console"] .task-category-menu-popover {
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.38);
+}
+
+body[data-theme^="console"] .task-sort-control {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: var(--inset);
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .task-sort-select {
+    background-color: var(--panel);
+    color: var(--heading);
+    border: 1px solid var(--line);
+    box-shadow: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body[data-theme^="console"] .task-sort-select:hover,
+body[data-theme^="console"] .task-sort-select:focus {
+    border-color: var(--accent);
+}
+
+body[data-theme^="console"] .task-sort-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23f2f2f4' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 12px;
+}
+
+body[data-theme="console-light"] .task-sort-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231a1a1d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}

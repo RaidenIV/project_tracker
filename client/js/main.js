@@ -153,7 +153,11 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
 }
 
 function handleTaskFloatingMenuDocumentClick(event) {
-    if (event.target.closest('.task-priority-control') || event.target.closest('.task-category-tab-wrap')) return;
+    if (
+        event.target.closest('.task-priority-control') ||
+        event.target.closest('.task-category-tab-wrap') ||
+        event.target.closest('.task-category-menu-popover')
+    ) return;
     if (!uiState.openTaskPriorityMenu && !uiState.openTaskCategoryMenu) return;
     closeOpenTaskMenus();
 }
@@ -166,7 +170,7 @@ function sortTasks(tasks) {
 }
 
 function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
-    const baseOrder = sortTasks(tasks);
+    const baseOrder = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
     if (mode !== 'tag-priority') return baseOrder;
 
     return [...baseOrder].sort((a, b) => {
@@ -255,7 +259,8 @@ const uiState = {
         settings: false
     },
     openTaskPriorityMenu: null,
-    openTaskCategoryMenu: null
+    openTaskCategoryMenu: null,
+    creatingTaskCategoryProjectId: null
 };
 
 const LOCAL_STORAGE_KEYS = {
@@ -1436,16 +1441,37 @@ function addTaskToProject(projectId) {
     return newTask.id;
 }
 
-function reorderTasks(projectId, oldIndex, newIndex) {
-    
-    
+function reorderTasks(projectId, oldIndex, newIndex, renderedTaskIds = []) {
     const project = state.findProject(projectId);
-    if (!project) return;
-    
-    const tasks = [...project.tasks];
-    const [movedTask] = tasks.splice(oldIndex, 1);
-    tasks.splice(newIndex, 0, movedTask);
-    
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const visibleTaskIds = renderedTaskIds
+        .map(id => Number(id))
+        .filter(id => Number.isFinite(id));
+
+    const movedTaskId = visibleTaskIds[oldIndex];
+    if (!Number.isFinite(movedTaskId)) return;
+
+    const displayOrder = [...visibleTaskIds];
+    const [movedId] = displayOrder.splice(oldIndex, 1);
+    displayOrder.splice(newIndex, 0, movedId);
+
+    const displayIndexById = new Map(displayOrder.map((id, index) => [id, index]));
+    const originalTasks = project.tasks.map((task, index) => normalizeTask(task, index));
+    const visibleTasks = originalTasks.filter(task => displayIndexById.has(task.id));
+
+    if (visibleTasks.length !== displayOrder.length) return;
+
+    const reorderedVisibleTasks = [...visibleTasks].sort((a, b) => {
+        return displayIndexById.get(a.id) - displayIndexById.get(b.id);
+    });
+
+    let visibleCursor = 0;
+    const tasks = originalTasks.map(task => {
+        if (!displayIndexById.has(task.id)) return task;
+        return reorderedVisibleTasks[visibleCursor++] || task;
+    });
+
     state.updateProject(projectId, projectUpdate({ tasks }));
     saveData();
     openProjectModal(projectId);
@@ -2158,7 +2184,8 @@ function setupTaskDragAndDrop(projectId) {
 
         // persist the new order (updates state → saves to MongoDB → re-renders modal)
         if (originalIndex !== newIndex) {
-            reorderTasks(projectId, originalIndex, newIndex);
+            const renderedTaskIds = all.map(item => item.dataset.taskId).filter(Boolean);
+            reorderTasks(projectId, originalIndex, newIndex, renderedTaskIds);
         }
     }
 
@@ -2218,6 +2245,7 @@ function renderTaskCategoryOptions(project, selectedValue) {
 function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
     const categories = getProjectTaskCategories(project);
     const canEdit = state.canEdit(projectId);
+    const isCreating = uiState.creatingTaskCategoryProjectId === projectId;
     const tabItems = [
         { kind: 'all', label: 'All', category: DEFAULT_TASK_CATEGORY_FILTER }
     ];
@@ -2227,7 +2255,7 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
     });
 
     if (canEdit) {
-        tabItems.push({ kind: 'create', label: '+', category: null });
+        tabItems.push({ kind: isCreating ? 'create-input' : 'create', label: '+', category: null });
     }
 
     return `
@@ -2236,9 +2264,11 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                 ${tabItems.map((tab, index) => {
                     const positionClass = getTaskCategoryTabPositionClass(index, tabItems.length);
                     const isAll = tab.kind === 'all';
-                    const isCreate = tab.kind === 'create';
+                    const isCreate = tab.kind === 'create' || tab.kind === 'create-input';
+                    const isInput = tab.kind === 'create-input';
                     const isActive = !isCreate && activeCategory === tab.category;
                     const categoryLiteral = tab.category ? serializeInlineJsString(tab.category) : null;
+                    const filterLiteral = serializeInlineJsString(tab.category || DEFAULT_TASK_CATEGORY_FILTER);
                     const menuOpen = tab.kind === 'category' && canEdit && isTaskCategoryMenuOpen(projectId, tab.category);
                     const shellClasses = ['task-category-tab-shell', positionClass];
                     const wrapClasses = ['task-category-tab-wrap', positionClass.replace('shell', 'wrap')];
@@ -2250,17 +2280,32 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                         shellClasses.push('task-category-tab-shell--create');
                         wrapClasses.push('task-category-tab-wrap--create');
                     }
+                    if (isInput) {
+                        shellClasses.push('is-editing');
+                        wrapClasses.push('is-editing');
+                    }
                     if (isActive) {
                         shellClasses.push('is-active');
                         wrapClasses.push('is-active');
                     }
+                    const tabControl = isInput ? `
+                        <input class="task-category-inline-input"
+                               type="text"
+                               aria-label="New task category"
+                               placeholder="New tab"
+                               autocomplete="off"
+                               onkeydown="handleInlineTaskCategoryCreateKeydown('${projectId}', event)"
+                               onblur="commitInlineTaskCategoryCreate('${projectId}', this.value)">
+                    ` : `
+                        <button class="task-category-tab"
+                                type="button"
+                                ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
+                                onclick="${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
+                    `;
                     return `
                         <div class="${wrapClasses.join(' ')}">
                             <div class="${shellClasses.join(' ')}">
-                                <button class="task-category-tab"
-                                        type="button"
-                                        ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
-                                        onclick="${isCreate ? `createTaskCategory('${projectId}')` : `setProjectTaskCategoryFilter('${projectId}', '${tab.category}')`}">${escapeHtml(tab.label)}</button>
+                                ${tabControl}
                                 ${tab.kind === 'category' && canEdit ? `
                                     <button class="task-category-menu-button"
                                             type="button"
@@ -2272,8 +2317,8 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                             </div>
                             ${menuOpen ? `
                                 <div class="task-category-menu-popover" onclick="event.stopPropagation()">
-                                    <button class="task-category-menu-option" type="button" onclick="renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
-                                    <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
+                                    <button class="task-category-menu-option" type="button" onclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
+                                    <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="event.stopPropagation(); deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
                                 </div>
                             ` : ''}
                         </div>`;
@@ -2294,6 +2339,12 @@ function renderTaskCategoryControls(projectId) {
         setStoredProjectTaskCategoryFilter(projectId, activeCategory);
     }
     container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
+    if (uiState.creatingTaskCategoryProjectId === projectId) {
+        requestAnimationFrame(() => {
+            const input = container.querySelector('.task-category-inline-input');
+            if (input) input.focus();
+        });
+    }
 }
 
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
@@ -2421,7 +2472,9 @@ function selectTaskPriority(projectId, taskId, tagValue) {
 }
 
 function toggleTaskCategoryMenu(projectId, category, event) {
+    event?.preventDefault?.();
     event?.stopPropagation?.();
+    event?.stopImmediatePropagation?.();
     const isOpen = isTaskCategoryMenuOpen(projectId, category);
     uiState.openTaskPriorityMenu = null;
     uiState.openTaskCategoryMenu = isOpen ? null : { projectId, category };
@@ -2525,25 +2578,65 @@ function updateTaskCategory(projectId, taskId, categoryValue) {
     render();
 }
 
-function createTaskCategory(projectId) {
+function startInlineTaskCategoryCreate(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+    uiState.creatingTaskCategoryProjectId = projectId;
+    renderTaskCategoryControls(projectId);
+}
+
+function cancelInlineTaskCategoryCreate(projectId) {
+    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
+    uiState.creatingTaskCategoryProjectId = null;
+    renderTaskCategoryControls(projectId);
+}
+
+function commitInlineTaskCategoryCreate(projectId, rawValue) {
+    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
-    const rawValue = window.prompt('New category');
-    if (rawValue === null) return;
-    const nextCategory = sanitizeTaskCategoryName(rawValue);
-    if (!nextCategory) return;
+
+    const rawText = String(rawValue ?? '').trim();
+    if (!rawText) {
+        cancelInlineTaskCategoryCreate(projectId);
+        return;
+    }
+
+    const nextCategory = sanitizeTaskCategoryName(rawText);
     const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    uiState.creatingTaskCategoryProjectId = null;
     state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
     saveData();
     setProjectTaskCategoryFilter(projectId, nextCategory);
     render();
 }
 
+function handleInlineTaskCategoryCreateKeydown(projectId, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineTaskCategoryCreate(projectId, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineTaskCategoryCreate(projectId);
+    }
+}
+
+function createTaskCategory(projectId, rawValue = '') {
+    if (rawValue) {
+        uiState.creatingTaskCategoryProjectId = projectId;
+        commitInlineTaskCategoryCreate(projectId, rawValue);
+        return;
+    }
+    startInlineTaskCategoryCreate(projectId);
+}
+
 function handleTaskCategoryCreateKeydown(event, projectId) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        createTaskCategory(projectId);
+        startInlineTaskCategoryCreate(projectId, event);
     }
 }
 
@@ -3920,6 +4013,10 @@ window.toggleTaskCategoryMenu = toggleTaskCategoryMenu;
 window.renameTaskCategoryPrompt = renameTaskCategoryPrompt;
 window.deleteTaskCategory = deleteTaskCategory;
 window.createTaskCategory = createTaskCategory;
+window.startInlineTaskCategoryCreate = startInlineTaskCategoryCreate;
+window.commitInlineTaskCategoryCreate = commitInlineTaskCategoryCreate;
+window.cancelInlineTaskCategoryCreate = cancelInlineTaskCategoryCreate;
+window.handleInlineTaskCategoryCreateKeydown = handleInlineTaskCategoryCreateKeydown;
 window.handleTaskCategoryCreateKeydown = handleTaskCategoryCreateKeydown;
 window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
