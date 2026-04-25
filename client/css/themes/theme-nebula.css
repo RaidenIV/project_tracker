@@ -1158,3 +1158,54 @@ body[data-theme^="glass"] .task-sort-control {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
+
+/* Round 26 task modal polish */
+body[data-theme^="glass"] .modal-tasks-card {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body[data-theme^="glass"] .task-category-tabs {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+}
+
+body[data-theme^="glass"] .task-category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+body[data-theme^="glass"] .task-category-tab-shell {
+    padding: 0 !important;
+    cursor: pointer;
+}
+
+body[data-theme^="glass"] .task-category-tab {
+    align-self: stretch !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    cursor: pointer !important;
+}
+
+body[data-theme^="glass"] .task-category-menu-button {
+    align-self: stretch !important;
+    min-width: 34px !important;
+    min-height: 38px !important;
+    padding: 0 12px 0 4px !important;
+    cursor: pointer !important;
+}
+
+body[data-theme^="glass"] .modal-task-controls-row {
+    align-items: flex-start !important;
+}
+
+body[data-theme^="glass"] .task-sort-control {
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+}

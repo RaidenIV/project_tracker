@@ -2350,6 +2350,11 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                     const dropAttributes = tab.kind === 'category'
                         ? ` data-task-category-drop="${escapeHtml(tab.category)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
                         : '';
+                    const shellClick = isInput
+                        ? ''
+                        : (tab.kind === 'create'
+                            ? ` onclick="startInlineTaskCategoryCreate('${projectId}', event)"`
+                            : ` onclick="setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})"`);
                     const tabControl = isInput ? `
                         <input class="task-category-inline-input"
                                type="text"
@@ -2362,18 +2367,19 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                         <button class="task-category-tab"
                                 type="button"
                                 ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
-                                onclick="${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
+                                onclick="event.stopPropagation(); ${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
                     `;
                     return `
                         <div class="${wrapClasses.join(' ')}"${dropAttributes}>
-                            <div class="${shellClasses.join(' ')}">
+                            <div class="${shellClasses.join(' ')}"${shellClick}>
                                 ${tabControl}
                                 ${tab.kind === 'category' && canEdit ? `
                                     <button class="task-category-menu-button"
                                             type="button"
                                             aria-label="Category options"
                                             aria-expanded="${menuOpen ? 'true' : 'false'}"
-                                            onmousedown="event.preventDefault(); event.stopPropagation();"
+                                            onmousedown="event.stopPropagation();"
+                                            onpointerdown="event.stopPropagation();"
                                             onclick="toggleTaskCategoryMenu('${projectId}', ${categoryLiteral}, event)">
                                         <span></span><span></span><span></span>
                                     </button>
@@ -2444,7 +2450,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                        placeholder="New task"
                        style="display: none;"
                        onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
-                       onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${normalizedTask.id})">
+                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); }">
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
                 <div class="task-priority-control ${priorityMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
@@ -3140,22 +3146,23 @@ function pasteTasks() {
 }
 
 function pasteTasksInModal(projectId) {
-    
-    
     const pasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+    if (!pasteBox) return;
+
     const taskText = pasteBox.value.trim();
-    
     if (!taskText) return;
-    
+
     const taskLines = taskText.split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
-    
+
     if (taskLines.length === 0) return;
-    
+
     const project = state.findProject(projectId);
     if (!project) return;
-    
+
+    const modalScroll = pasteBox.closest('.modal-scroll-inner');
+    const previousScrollTop = modalScroll?.scrollTop ?? null;
     const activeCategory = getProjectTaskCategoryFilter(projectId);
     const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
     const newTasks = taskLines.map(text => normalizeTask({
@@ -3166,12 +3173,22 @@ function pasteTasksInModal(projectId) {
         category
     }));
     const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
-    
+
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
-    
+
+    pasteBox.value = '';
     saveData();
-    openProjectModal(projectId);
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+
+    requestAnimationFrame(() => {
+        if (modalScroll && previousScrollTop !== null) {
+            modalScroll.scrollTop = previousScrollTop;
+        }
+        const nextPasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+        if (nextPasteBox) nextPasteBox.focus({ preventScroll: true });
+    });
 }
 
 async function archiveProject(projectId) {

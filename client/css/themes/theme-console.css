@@ -1519,3 +1519,78 @@ body[data-theme^="console"] .task-sort-control {
     background: transparent !important;
     box-shadow: none !important;
 }
+
+/* Round 26 task modal polish + member-section console cleanup */
+body[data-theme^="console"] .modal-tasks-card {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .task-category-tabs {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+}
+
+body[data-theme^="console"] .task-category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+body[data-theme^="console"] .task-category-tab-shell {
+    padding: 0 !important;
+    cursor: pointer;
+}
+
+body[data-theme^="console"] .task-category-tab {
+    align-self: stretch !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    cursor: pointer !important;
+}
+
+body[data-theme^="console"] .task-category-menu-button {
+    align-self: stretch !important;
+    min-width: 34px !important;
+    min-height: 38px !important;
+    padding: 0 12px 0 4px !important;
+    cursor: pointer !important;
+}
+
+body[data-theme^="console"] .modal-task-controls-row {
+    align-items: flex-start !important;
+}
+
+body[data-theme^="console"] .task-sort-control {
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+}
+
+body[data-theme^="console"] .member-row,
+body[data-theme^="console"] .member-row--owner,
+body[data-theme^="console"] .invite-form,
+body[data-theme^="console"] .member-avatar,
+body[data-theme^="console"] .member-role-select,
+body[data-theme^="console"] .member-role-badge,
+body[data-theme^="console"] .member-remove-btn {
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .member-row,
+body[data-theme^="console"] .invite-form {
+    background: var(--inset) !important;
+    border: 1px solid var(--line) !important;
+}
+
+body[data-theme^="console"] .member-row--owner {
+    background: var(--panel) !important;
+}
+
+body[data-theme^="console"] .member-avatar {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--line) !important;
+    color: var(--heading) !important;
+}

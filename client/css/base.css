@@ -7694,3 +7694,119 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     z-index: 10030 !important;
     pointer-events: none !important;
 }
+
+/* ============================================================================
+   ROUND 26 TASK MODAL TAB + PRIORITY MENU REPAIR
+   ============================================================================ */
+.modal-tasks-card {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.task-category-tabs {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+}
+
+.task-category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.task-category-tab-wrap,
+.task-category-tab-shell {
+    overflow: visible !important;
+}
+
+.task-category-tab-shell {
+    padding: 0 !important;
+    cursor: pointer;
+}
+
+.task-category-tab {
+    align-self: stretch !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 auto !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    cursor: pointer !important;
+}
+
+.task-category-tab-shell--create .task-category-tab {
+    min-width: 48px !important;
+    padding: 0 18px !important;
+}
+
+.task-category-menu-button {
+    align-self: stretch !important;
+    min-width: 34px !important;
+    min-height: 38px !important;
+    padding: 0 12px 0 4px !important;
+    cursor: pointer !important;
+}
+
+.task-category-menu-popover {
+    z-index: 10080 !important;
+    pointer-events: auto !important;
+}
+
+.modal-task-controls-row {
+    align-items: flex-start !important;
+}
+
+.modal-task-controls-row .hide-completed-toggle,
+.task-sort-control {
+    justify-content: flex-start !important;
+}
+
+.modal-task-controls-row .hide-completed-toggle .toggle-label,
+.task-sort-control .toggle-label {
+    line-height: 1.2 !important;
+    margin: 0 0 8px !important;
+}
+
+.task-sort-control {
+    align-items: flex-end !important;
+}
+
+.modal-tasks,
+.task-list,
+.task-item,
+.task-meta-controls {
+    overflow: visible !important;
+}
+
+.task-priority-control.is-open,
+.task-priority-control:has(.task-priority-popover) {
+    z-index: 10070 !important;
+}
+
+.task-item:has(.task-priority-popover) {
+    z-index: 10060 !important;
+}
+
+.task-priority-popover {
+    top: 0 !important;
+    right: calc(100% + 8px) !important;
+    left: auto !important;
+    transform: none !important;
+    min-width: 170px !important;
+    z-index: 10075 !important;
+    pointer-events: auto !important;
+}
+
+@media (max-width: 900px) {
+    .task-priority-popover {
+        right: auto !important;
+        left: 0 !important;
+        top: calc(100% + 8px) !important;
+    }
+}
