@@ -456,6 +456,13 @@ function moveColorModeToggleToSidebarHeader() {
         wrapper.appendChild(toggle);
     }
 
+    let label = wrapper.querySelector('.sidebar-theme-toggle-label');
+    if (!label) {
+        label = document.createElement('span');
+        label.className = 'sidebar-theme-toggle-label';
+        wrapper.appendChild(label);
+    }
+
     const oldRow = document.querySelector('.ui-options-mode-toggle-row');
     if (oldRow && oldRow !== wrapper) {
         oldRow.classList.add('ui-options-mode-toggle-row--relocated');
@@ -471,6 +478,8 @@ function syncColorModeToggle() {
     toggle.setAttribute('aria-pressed', String(isDark));
     toggle.setAttribute('title', `Switch to ${isDark ? 'light' : 'dark'} mode`);
     toggle.setAttribute('aria-label', `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
+    const label = document.querySelector('.sidebar-theme-toggle-label');
+    if (label) label.textContent = isDark ? 'Dark' : 'Light';
 }
 
 function syncThemeBranding() {
