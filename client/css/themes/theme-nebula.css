@@ -902,3 +902,62 @@ body[data-theme^="glass"] .task-item:hover .task-priority-button.is-empty {
     border-color: rgba(50, 120, 235, 0.28);
     background: rgba(50, 120, 235, 0.08);
 }
+
+
+/* --------------------------------------------------------------------------
+   Glassmorphism task tabs + priority picker
+   -------------------------------------------------------------------------- */
+body[data-theme^="glass"] .task-category-tabs {
+    gap: 4px;
+    padding-bottom: 2px;
+}
+
+body[data-theme^="glass"] .task-category-tab,
+body[data-theme^="glass"] .task-category-tab-input {
+    border-color: var(--glass-border-soft);
+    border-bottom-color: transparent;
+    background: rgba(12, 18, 30, 0.9);
+    color: var(--muted);
+    box-shadow: none;
+}
+
+body[data-theme^="glass"] .task-category-tab::after,
+body[data-theme^="glass"] .task-category-tab-input::after {
+    background: rgba(12, 18, 30, 0.9);
+}
+
+body[data-theme^="glass"] .task-category-tab:hover,
+body[data-theme^="glass"] .task-category-tab:focus-visible {
+    background: rgba(18, 28, 44, 0.96);
+    border-color: rgba(50, 120, 235, 0.38);
+    color: var(--heading);
+    transform: none;
+}
+
+body[data-theme^="glass"] .task-category-tab.is-active {
+    background: rgba(20, 31, 48, 0.98);
+    border-color: rgba(50, 120, 235, 0.52);
+    color: #ffffff;
+}
+
+body[data-theme^="glass"] .task-category-tab.is-active::after {
+    background: rgba(20, 31, 48, 0.98);
+}
+
+body[data-theme^="glass"] .task-category-tab--create {
+    min-width: 34px;
+    width: 34px;
+}
+
+body[data-theme^="glass"] .task-priority-popover {
+    background: rgba(8, 13, 22, 0.96);
+    border-color: rgba(50, 120, 235, 0.2);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+
+body[data-theme^="glass"] .task-priority-option:hover,
+body[data-theme^="glass"] .task-priority-option:focus-visible,
+body[data-theme^="glass"] .task-priority-option.is-active {
+    border-color: rgba(50, 120, 235, 0.26);
+    background: rgba(50, 120, 235, 0.12);
+}

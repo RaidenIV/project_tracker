@@ -116,6 +116,24 @@ function getTaskTagPriority(task) {
     return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[''];
 }
 
+function isTaskPriorityPickerOpen(projectId, taskId) {
+    return !!uiState.activeTaskPriorityPicker
+        && String(uiState.activeTaskPriorityPicker.projectId) == String(projectId)
+        && Number(uiState.activeTaskPriorityPicker.taskId) === Number(taskId);
+}
+
+function closeTaskPriorityPicker({ projectId = null, taskId = null, rerender = true } = {}) {
+    const active = uiState.activeTaskPriorityPicker;
+    if (!active) return;
+    if (projectId !== null && String(active.projectId) !== String(projectId)) return;
+    if (taskId !== null && Number(active.taskId) != Number(taskId)) return;
+    const activeProjectId = active.projectId;
+    uiState.activeTaskPriorityPicker = null;
+    if (rerender) {
+        renderModalTaskList(activeProjectId);
+    }
+}
+
 function getProjectTaskCategories(project) {
     const explicit = Array.isArray(project?.taskCategories) ? project.taskCategories : [];
     const fromTasks = Array.isArray(project?.tasks) ? project.tasks.map(task => normalizeTask(task).category) : [];
@@ -221,7 +239,8 @@ const uiState = {
         notifications: false,
         settings: false
     },
-    taskCategoryEditing: null
+    taskCategoryEditing: null,
+    activeTaskPriorityPicker: null
 };
 
 const LOCAL_STORAGE_KEYS = {
@@ -2345,13 +2364,35 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const canEdit = state.canEdit(projectId);
     const tagLabel = escapeHtml(getTaskTagLabel(normalizedTask));
     const categoryLabel = escapeHtml(getTaskCategoryDisplayLabel(normalizedTask.category));
+    const priorityPickerOpen = isTaskPriorityPickerOpen(projectId, normalizedTask.id);
+    const priorityOptionsMarkup = ['', ...TASK_TAG_OPTIONS.map(option => option.value)].map(value => {
+        const label = value ? getTaskTagLabel({ tag: value }) : 'No priority';
+        const activeClass = normalizedTask.tag === value ? 'is-active' : '';
+        const valueClass = value ? `task-priority-option--${value}` : 'task-priority-option--none';
+        const iconMarkup = `<span class="task-tag-flag ${value ? `task-tag-flag--${value}` : 'task-tag-flag--none'}" aria-hidden="true"></span>`;
+        return `
+            <button class="task-priority-option ${valueClass} ${activeClass}"
+                    type="button"
+                    onclick="event.stopPropagation(); selectTaskPriority('${projectId}', ${normalizedTask.id}, '${value}')">
+                ${iconMarkup}
+                <span>${escapeHtml(label)}</span>
+            </button>`;
+    }).join('');
     const priorityMarkup = canEdit ? `
         <button class="task-priority-button ${normalizedTask.tag ? `task-priority-button--${normalizedTask.tag}` : 'is-empty'}"
                 type="button"
+                aria-haspopup="dialog"
+                aria-expanded="${priorityPickerOpen ? 'true' : 'false'}"
                 title="${normalizedTask.tag ? `Priority: ${tagLabel}. Click to change.` : 'Set priority'}"
-                onclick="event.stopPropagation(); cycleTaskPriority('${projectId}', ${normalizedTask.id})">
-            ${normalizedTask.tag ? `<span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>` : ''}
-        </button>` : (normalizedTask.tag ? `
+                onclick="event.stopPropagation(); toggleTaskPriorityPicker('${projectId}', ${normalizedTask.id})">
+            <span class="task-tag-flag ${normalizedTask.tag ? `task-tag-flag--${normalizedTask.tag}` : 'task-tag-flag--none'}" aria-hidden="true"></span>
+        </button>
+        ${priorityPickerOpen ? `
+            <div class="task-priority-popover" role="dialog" aria-label="Select task priority" onclick="event.stopPropagation();">
+                <div class="task-priority-popover-title">Priority</div>
+                <div class="task-priority-options">${priorityOptionsMarkup}
+                </div>
+            </div>` : ''}` : (normalizedTask.tag ? `
         <span class="task-priority-button task-priority-button--readonly task-priority-button--${normalizedTask.tag}" title="Priority: ${tagLabel}">
             <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
         </span>` : '');
@@ -2473,14 +2514,19 @@ function updateTaskTag(projectId, taskId, tagValue) {
     render();
 }
 
-function cycleTaskPriority(projectId, taskId) {
-    const project = state.findProject(projectId);
-    if (!project) return;
-    const task = (project.tasks || []).find(candidate => Number(candidate.id) === Number(taskId));
-    const currentTag = normalizeTaskTag(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG);
-    const currentIndex = Math.max(0, TASK_PRIORITY_CYCLE.indexOf(currentTag));
-    const nextTag = TASK_PRIORITY_CYCLE[(currentIndex + 1) % TASK_PRIORITY_CYCLE.length];
-    updateTaskTag(projectId, taskId, nextTag);
+function toggleTaskPriorityPicker(projectId, taskId) {
+    if (!state.canEdit(projectId)) return;
+    if (isTaskPriorityPickerOpen(projectId, taskId)) {
+        closeTaskPriorityPicker({ projectId, taskId });
+        return;
+    }
+    uiState.activeTaskPriorityPicker = { projectId: String(projectId), taskId: Number(taskId) };
+    renderModalTaskList(projectId);
+}
+
+function selectTaskPriority(projectId, taskId, tagValue) {
+    closeTaskPriorityPicker({ projectId, taskId, rerender: false });
+    updateTaskTag(projectId, taskId, tagValue);
 }
 
 function updateTaskCategory(projectId, taskId, categoryValue) {
@@ -3508,6 +3554,9 @@ function initializeEventHandlers() {
         if (menuOpen && menuContainer && !menuContainer.contains(e.target)) {
             closeMenuDropdown();
         }
+        if (uiState.activeTaskPriorityPicker && !e.target.closest('.task-priority-button') && !e.target.closest('.task-priority-popover')) {
+            closeTaskPriorityPicker({ rerender: true });
+        }
     });
 
     function closeMenuDropdown() {
@@ -3874,7 +3923,8 @@ window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;
-window.cycleTaskPriority = cycleTaskPriority;
+window.toggleTaskPriorityPicker = toggleTaskPriorityPicker;
+window.selectTaskPriority = selectTaskPriority;
 window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
 window.createTaskCategory = createTaskCategory;
