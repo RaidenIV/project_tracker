@@ -87,28 +87,31 @@ body[data-theme="glass-light"] {
 }
 
 /* -----------------------------
-   1b. THEME TOKENS — DARK
+   1b. THEME TOKENS — DARK (black palette)
+   Structural neutrals are now genuine blacks/grays. Accents
+   stay blue + violet — on true black they read more cosmic,
+   not less, which is what the "nebula" name promises.
    ----------------------------- */
 body[data-theme="glass-dark"] {
-    --bg:        #0b1322;
-    --bg-2:      #1a2b4a;
-    --bg-3:      #060d19;
+    --bg:        #0a0a0c;   /* near-black, hair of cool to avoid the dead "TV-off" feel */
+    --bg-2:      #141416;
+    --bg-3:      #050506;
 
-    --panel:        rgba(22, 36, 62, 0.58);
-    --panel-strong: rgba(28, 44, 74, 0.72);
-    --surface:      rgba(28, 45, 73, 0.48);
-    --surface-2:    rgba(38, 58, 92, 0.58);
+    --panel:        rgba(24, 24, 26, 0.62);
+    --panel-strong: rgba(32, 32, 34, 0.76);
+    --surface:      rgba(36, 36, 38, 0.50);
+    --surface-2:    rgba(52, 52, 54, 0.58);
 
-    --text:    #eaf1fc;
+    --text:    #eaeaec;
     --heading: #ffffff;
-    --muted:   #b8cbe8;
-    --muted-2: #9fb4d4;
+    --muted:   #b6b6b9;
+    --muted-2: #909094;
 
     --accent:        #6faaff;
     --accent-2:      #3f7fde;
     --accent-alt:    #b18cff;
-    --accent-glow:   rgba(111, 170, 255, 0.42);
-    --accent-glow-2: rgba(177, 140, 255, 0.34);
+    --accent-glow:   rgba(111, 170, 255, 0.45);   /* nudged up — reads stronger on true black */
+    --accent-glow-2: rgba(177, 140, 255, 0.36);
     --progress:      #6faaff;
 
     --success: #5dd6a0;
@@ -120,29 +123,29 @@ body[data-theme="glass-dark"] {
     --radius-lg: 22px;
 
     --card-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.10),
-        0 24px 56px rgba(0, 0, 0, 0.45),
-        0 6px 16px rgba(0, 0, 0, 0.28);
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 24px 56px rgba(0, 0, 0, 0.55),
+        0 6px 16px rgba(0, 0, 0, 0.34);
 
-    --glass-border:      rgba(181, 212, 255, 0.24);
-    --glass-border-soft: rgba(181, 212, 255, 0.14);
-    --glass-divider:     rgba(255, 255, 255, 0.08);
+    --glass-border:      rgba(255, 255, 255, 0.14);
+    --glass-border-soft: rgba(255, 255, 255, 0.08);
+    --glass-divider:     rgba(255, 255, 255, 0.06);
 
-    --glass-project-card-bg: rgba(22, 36, 62, 0.62);
-    --glass-project-surface: rgba(38, 58, 92, 0.50);
-    --glass-card-text:       #eaf1fc;
-    --glass-card-muted:      rgba(184, 203, 232, 0.78);
-    --glass-card-border:     rgba(181, 212, 255, 0.22);
-    --glass-card-edge:       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --glass-project-card-bg: rgba(26, 26, 28, 0.68);
+    --glass-project-surface: rgba(48, 48, 50, 0.50);
+    --glass-card-text:       #eaeaec;
+    --glass-card-muted:      rgba(190, 190, 194, 0.78);
+    --glass-card-border:     rgba(255, 255, 255, 0.12);
+    --glass-card-edge:       inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-    --glass-control-surface: rgba(34, 54, 86, 0.42);
+    --glass-control-surface: rgba(40, 40, 42, 0.46);
 
-    --scrollbar-thumb:       rgba(234, 241, 252, 0.22);
-    --scrollbar-thumb-hover: rgba(234, 241, 252, 0.38);
+    --scrollbar-thumb:       rgba(255, 255, 255, 0.18);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
 
-    --selection-bg:   rgba(111, 170, 255, 0.38);
-    --selection-text: #07111f;
-    --focus-ring:     0 0 0 3px rgba(111, 170, 255, 0.45);
+    --selection-bg:   rgba(111, 170, 255, 0.42);
+    --selection-text: #06080d;
+    --focus-ring:     0 0 0 3px rgba(111, 170, 255, 0.50);
 
     --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
@@ -317,7 +320,13 @@ body[data-theme^="glass"] .command-palette-item.is-active {
 }
 
 /* -----------------------------
-   6. PRIMARY ACCENT BUTTONS
+   6. PRIMARY ACCENT BUTTONS — flat
+   No inset highlight (that was the bezel). No layered sheen or
+   fresnel gradients (those simulated curved glass). No colored
+   drop shadow (that lifted the button off the surface). No
+   translateY on hover (that was 3D motion). What remains: a
+   single accent gradient, a thin glass edge, white text.
+   Hover/active are flat brightness shifts only.
    ----------------------------- */
 body[data-theme^="glass"] .task-checkbox.checked,
 body[data-theme^="glass"] .add-project-button,
@@ -327,21 +336,14 @@ body[data-theme^="glass"] .modal-add-task-top,
 body[data-theme^="glass"] .auth-submit,
 body[data-theme^="glass"] .invite-submit-btn,
 body[data-theme^="glass"] .activate-button {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 42%),
-        linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.10) 48%, transparent 52%),
-        linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     color: #ffffff;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.40),
-        0 12px 28px var(--accent-glow),
-        0 6px 18px var(--accent-glow-2),
-        0 4px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
     transition:
-        transform  var(--dur-fast) var(--ease-out),
-        box-shadow var(--dur-base) var(--ease-out),
-        filter     var(--dur-fast) var(--ease-out);
+        filter       var(--dur-fast) var(--ease-out),
+        background   var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] .add-project-button:hover,
@@ -351,13 +353,8 @@ body[data-theme^="glass"] .modal-add-task-top:hover,
 body[data-theme^="glass"] .auth-submit:hover,
 body[data-theme^="glass"] .invite-submit-btn:hover,
 body[data-theme^="glass"] .activate-button:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.06);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.50),
-        0 18px 38px var(--accent-glow),
-        0 10px 24px var(--accent-glow-2),
-        0 6px 14px rgba(0, 0, 0, 0.10);
+    filter: brightness(1.08);
+    border-color: rgba(255, 255, 255, 0.24);
 }
 
 body[data-theme^="glass"] .add-project-button:active,
@@ -367,8 +364,7 @@ body[data-theme^="glass"] .modal-add-task-top:active,
 body[data-theme^="glass"] .auth-submit:active,
 body[data-theme^="glass"] .invite-submit-btn:active,
 body[data-theme^="glass"] .activate-button:active {
-    transform: translateY(0);
-    filter: brightness(0.98);
+    filter: brightness(0.94);
 }
 
 body[data-theme^="glass"] .task-checkbox.checked {
@@ -542,7 +538,7 @@ body[data-theme^="glass"] .control-panel .stat-card.active .stat-label {
 
 body[data-theme^="glass"] .control-panel .add-project-button,
 body[data-theme^="glass"] .control-panel .paste-button {
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 body[data-theme^="glass"] .control-panel .undo-button,
@@ -712,29 +708,10 @@ body[data-theme^="glass"] .control-panel .side-project-card:hover {
         transition-duration: 0.001ms !important;
     }
     body[data-theme^="glass"] .project-card:hover,
-    body[data-theme^="glass"] .add-project-button:hover,
     body[data-theme^="glass"] .sidebar-action-button:hover,
     body[data-theme^="glass"] .section-action-button:hover,
     body[data-theme^="glass"] .leaderboard-item:hover,
     body[data-theme^="glass"] .control-panel .side-project-card:hover {
         transform: none;
     }
-}
-
-/* Task tag controls */
-body[data-theme^="glass"] .task-sort-select,
-body[data-theme^="glass"] .task-custom-tag-input {
-    background: rgba(255, 255, 255, 0.16);
-    color: var(--heading);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-body[data-theme="glass-dark"] .task-sort-select,
-body[data-theme="glass-dark"] .task-custom-tag-input {
-    background: rgba(15, 24, 38, 0.62);
-    border-color: rgba(148, 163, 184, 0.26);
-}
-
-body[data-theme^="glass"] .task-tag-pill {
-    border: 1px solid rgba(255, 255, 255, 0.18);
 }
