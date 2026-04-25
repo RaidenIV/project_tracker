@@ -858,3 +858,47 @@ body[data-theme^="glass"] .sidebar-nav-card.active {
     border-color: var(--accent);
     color: var(--heading);
 }
+
+/* --------------------------------------------------------------------------
+   Glassmorphism refinements: flat edge-only card hover + icon hover colors
+   -------------------------------------------------------------------------- */
+body[data-theme^="glass"] .project-card:hover {
+    background: var(--glass-project-surface) !important;
+    border-color: rgba(50, 120, 235, 0.55) !important;
+    box-shadow: inset 0 0 0 1px rgba(50, 120, 235, 0.28) !important;
+    transform: none !important;
+}
+
+body[data-theme^="glass"] .project-card .edit-button:hover,
+body[data-theme^="glass"] .project-card .copy-button:hover {
+    color: var(--accent) !important;
+    background: transparent !important;
+    border-color: rgba(50, 120, 235, 0.24) !important;
+}
+
+body[data-theme^="glass"] .project-card .card-delete-button:hover {
+    color: #dc2626 !important;
+    background: transparent !important;
+    border-color: rgba(220, 38, 38, 0.22) !important;
+}
+
+body[data-theme^="glass"] .task-category-tab:hover,
+body[data-theme^="glass"] .task-category-tab.is-active,
+body[data-theme^="glass"] .task-category-tab-input,
+body[data-theme^="glass"] .task-category-pill {
+    border-color: var(--accent);
+}
+
+body[data-theme^="glass"] .task-category-tab:hover,
+body[data-theme^="glass"] .task-category-tab.is-active,
+body[data-theme^="glass"] .task-category-tab--create:hover {
+    background: var(--accent-glow);
+    color: var(--heading);
+}
+
+body[data-theme^="glass"] .task-priority-button:hover,
+body[data-theme^="glass"] .task-priority-button:focus-visible,
+body[data-theme^="glass"] .task-item:hover .task-priority-button.is-empty {
+    border-color: rgba(50, 120, 235, 0.28);
+    background: rgba(50, 120, 235, 0.08);
+}

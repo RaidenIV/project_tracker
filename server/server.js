@@ -44,8 +44,8 @@ const taskSchema = new mongoose.Schema({
     text:          String,
     completed:     Boolean,
     completedDate: String,
-    tag:           { type: String, enum: ['critical', 'high', 'medium', 'low'], default: 'medium' },
-    category:      { type: String, default: 'General' }
+    tag:           { type: String, enum: ['', 'critical', 'high', 'medium', 'low'], default: '' },
+    category:      { type: String, default: '' }
 });
 
 const collaboratorSchema = new mongoose.Schema({
@@ -75,7 +75,7 @@ const projectSchema = new mongoose.Schema({
     owner:         { type: String, required: true },   // Account._id as string
     collaborators: [collaboratorSchema],
     activities:    { type: [activitySchema], default: [] },
-    taskCategories: { type: [String], default: ['General'] },
+    taskCategories: { type: [String], default: [] },
     lastModified:  { type: Date, default: Date.now }
 });
 const Project = mongoose.model('Project', projectSchema);
@@ -253,12 +253,12 @@ function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
     const hasValidId = Number.isFinite(numericId);
-    const rawTag = String(task?.tag || task?.priorityTag || 'medium').trim().toLowerCase();
-    const allowedTags = new Set(['critical', 'high', 'medium', 'low']);
-    const tag = allowedTags.has(rawTag) ? rawTag : 'medium';
+    const rawTag = String(task?.tag || task?.priorityTag || '').trim().toLowerCase();
+    const allowedTags = new Set(['', 'critical', 'high', 'medium', 'low']);
+    const tag = rawTag === 'critical' ? 'high' : (allowedTags.has(rawTag) ? rawTag : '');
     const category = typeof task?.category === 'string' && task.category.trim()
         ? task.category.trim().replace(/\s+/g, ' ').slice(0, 32)
-        : 'General';
+        : '';
     return {
         id: hasValidId ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
@@ -277,8 +277,8 @@ function sanitizeIncomingProjectUpdate(body = {}) {
         ? body.tasks.map((task, index) => sanitizeTask(task, index))
         : [];
     if (body.taskCategories !== undefined) sanitized.taskCategories = Array.isArray(body.taskCategories)
-        ? [...new Set(body.taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean).concat('General'))]
-        : ['General'];
+        ? [...new Set(body.taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean))]
+        : [];
     if (body.priority !== undefined) {
         const numericPriority = Number(body.priority);
         sanitized.priority = Number.isFinite(numericPriority) ? numericPriority : 0;
@@ -448,7 +448,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
-            taskCategories: Array.isArray(taskCategories) ? [...new Set(taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean).concat('General'))] : ['General'],
+            taskCategories: Array.isArray(taskCategories) ? [...new Set(taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean))] : [],
             dateCreated:   dateCreated  || new Date().toISOString(),
             priority:      priority     ?? 0,
             completed:     completed    || false,
