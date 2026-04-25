@@ -8021,3 +8021,37 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     height: 2px !important;
     bottom: -2px !important;
 }
+
+/* ============================================================================
+   ROUND 29 TASK CATEGORY TAB/CARD BORDER RESTORE
+   ============================================================================ */
+
+/* Restore the task-card top edge under the category tabs, but keep that line
+   inside the rounded card boundary so it does not protrude past the corner. */
+.task-category-tabs {
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.modal-tasks-card-body {
+    margin-top: 0 !important;
+    border-top: 1px solid var(--line, rgba(127, 127, 127, 0.22)) !important;
+    border-radius: 0 18px 18px 18px !important;
+    background-clip: padding-box !important;
+}
+
+.task-category-tab-wrap {
+    margin-bottom: -1px !important;
+}
+
+.task-category-tab-shell.is-active,
+.task-category-tab-wrap.is-active .task-category-tab-shell {
+    border-bottom-color: transparent !important;
+}
+
+.task-category-tab-shell.is-active::after,
+.task-category-tab-wrap.is-active .task-category-tab-shell::after {
+    bottom: -2px !important;
+    height: 2px !important;
+    background: var(--browser-tab-active-bg, var(--panel)) !important;
+}
