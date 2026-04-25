@@ -44,8 +44,8 @@ const taskSchema = new mongoose.Schema({
     text:          String,
     completed:     Boolean,
     completedDate: String,
-    tag:           { type: String, enum: ['critical', 'high', 'medium', 'low', 'custom'], default: 'medium' },
-    customTag:     { type: String, default: '' }
+    tag:           { type: String, enum: ['critical', 'high', 'medium', 'low'], default: 'medium' },
+    category:      { type: String, default: 'General' }
 });
 
 const collaboratorSchema = new mongoose.Schema({
@@ -75,6 +75,7 @@ const projectSchema = new mongoose.Schema({
     owner:         { type: String, required: true },   // Account._id as string
     collaborators: [collaboratorSchema],
     activities:    { type: [activitySchema], default: [] },
+    taskCategories: { type: [String], default: ['General'] },
     lastModified:  { type: Date, default: Date.now }
 });
 const Project = mongoose.model('Project', projectSchema);
@@ -253,16 +254,18 @@ function sanitizeTask(task, index = 0) {
     const numericId = Number(task?.id);
     const hasValidId = Number.isFinite(numericId);
     const rawTag = String(task?.tag || task?.priorityTag || 'medium').trim().toLowerCase();
-    const allowedTags = new Set(['critical', 'high', 'medium', 'low', 'custom']);
+    const allowedTags = new Set(['critical', 'high', 'medium', 'low']);
     const tag = allowedTags.has(rawTag) ? rawTag : 'medium';
-    const customTag = typeof task?.customTag === 'string' ? task.customTag.trim() : '';
+    const category = typeof task?.category === 'string' && task.category.trim()
+        ? task.category.trim().replace(/\s+/g, ' ').slice(0, 32)
+        : 'General';
     return {
         id: hasValidId ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         tag,
-        customTag: tag === 'custom' ? (customTag || 'Custom') : ''
+        category
     };
 }
 
@@ -273,6 +276,9 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.tasks !== undefined) sanitized.tasks = Array.isArray(body.tasks)
         ? body.tasks.map((task, index) => sanitizeTask(task, index))
         : [];
+    if (body.taskCategories !== undefined) sanitized.taskCategories = Array.isArray(body.taskCategories)
+        ? [...new Set(body.taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean).concat('General'))]
+        : ['General'];
     if (body.priority !== undefined) {
         const numericPriority = Number(body.priority);
         sanitized.priority = Number.isFinite(numericPriority) ? numericPriority : 0;
@@ -438,10 +444,11 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, dateCreated, priority, completed, completedDate, notes } = req.body;
+        const { title, tasks, taskCategories, dateCreated, priority, completed, completedDate, notes } = req.body;
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
+            taskCategories: Array.isArray(taskCategories) ? [...new Set(taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean).concat('General'))] : ['General'],
             dateCreated:   dateCreated  || new Date().toISOString(),
             priority:      priority     ?? 0,
             completed:     completed    || false,
@@ -470,7 +477,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'priority', 'completed', 'completedDate', 'notes', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'priority', 'completed', 'completedDate', 'notes', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);

@@ -715,3 +715,146 @@ body[data-theme^="glass"] .control-panel .side-project-card:hover {
         transform: none;
     }
 }
+
+
+/* ============================================================
+   GLASSMORPHISM FLAT OVERRIDES
+   ============================================================ */
+body[data-theme="glass-light"] {
+    --accent: #0077d4;
+    --accent-2: #0066bb;
+    --accent-alt: #0077d4;
+    --accent-glow: rgba(0, 119, 212, 0.16);
+    --accent-glow-2: rgba(0, 119, 212, 0.12);
+    --progress: #0077d4;
+    --card-shadow: none;
+}
+
+body[data-theme="glass-dark"] {
+    --accent: #0099ff;
+    --accent-2: #0088ee;
+    --accent-alt: #0099ff;
+    --accent-glow: rgba(0, 153, 255, 0.16);
+    --accent-glow-2: rgba(0, 153, 255, 0.12);
+    --progress: #0099ff;
+    --card-shadow: none;
+}
+
+body[data-theme^="glass"] .control-panel-content,
+body[data-theme^="glass"] .project-card,
+body[data-theme^="glass"] .menu-button,
+body[data-theme^="glass"] .menu-dropdown,
+body[data-theme^="glass"] .shortcuts-panel,
+body[data-theme^="glass"] .shortcuts-toggle,
+body[data-theme^="glass"] .side-project-card,
+body[data-theme^="glass"] .notification-card,
+body[data-theme^="glass"] .auth-card,
+body[data-theme^="glass"] .modal-content,
+body[data-theme^="glass"] .confirm-dialog,
+body[data-theme^="glass"] .saved-view-main,
+body[data-theme^="glass"] .archived-project-card,
+body[data-theme^="glass"] .command-palette-item,
+body[data-theme^="glass"] .theme-card,
+body[data-theme^="glass"] .save-status,
+body[data-theme^="glass"] .stat-card,
+body[data-theme^="glass"] .panel-user-pill,
+body[data-theme^="glass"] .sidebar-action-button,
+body[data-theme^="glass"] .section-action-button,
+body[data-theme^="glass"] .leaderboard-item,
+body[data-theme^="glass"] .control-panel .side-project-card,
+body[data-theme^="glass"] .view-toolbar-button,
+body[data-theme^="glass"] .add-project-button,
+body[data-theme^="glass"] .paste-button,
+body[data-theme^="glass"] .activate-button,
+body[data-theme^="glass"] .modal-tab,
+body[data-theme^="glass"] .toggle-slider,
+body[data-theme^="glass"] .toggle-slider:before,
+body[data-theme^="glass"] .color-mode-toggle,
+body[data-theme^="glass"] .color-mode-toggle-thumb {
+    box-shadow: none !important;
+    transform: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="glass"] .project-card:hover,
+body[data-theme^="glass"] .theme-card.is-active,
+body[data-theme^="glass"] .command-palette-item.is-active,
+body[data-theme^="glass"] .sidebar-action-button:hover,
+body[data-theme^="glass"] .section-action-button:hover,
+body[data-theme^="glass"] .leaderboard-item:hover,
+body[data-theme^="glass"] .control-panel .side-project-card:hover,
+body[data-theme^="glass"] .view-toolbar-button:hover,
+body[data-theme^="glass"] .add-project-button:hover,
+body[data-theme^="glass"] .paste-button:hover,
+body[data-theme^="glass"] .activate-button:hover,
+body[data-theme^="glass"] .modal-tab.active,
+body[data-theme^="glass"] .menu-button.active,
+body[data-theme^="glass"] .menu-dropdown-item:hover,
+body[data-theme^="glass"] .panel-user-pill:hover {
+    background: var(--accent-glow) !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+body[data-theme^="glass"] .project-card,
+body[data-theme^="glass"] .leaderboard-item,
+body[data-theme^="glass"] .control-panel .side-project-card,
+body[data-theme^="glass"] .sidebar-action-button,
+body[data-theme^="glass"] .section-action-button,
+body[data-theme^="glass"] .notification-card,
+body[data-theme^="glass"] .settings-panel-card,
+body[data-theme^="glass"] .notifications-summary-card,
+body[data-theme^="glass"] .leaderboard-panel-card {
+    border-radius: 14px;
+}
+
+body[data-theme^="glass"] .sidebar-total-completion-section h3,
+body[data-theme^="glass"] .sidebar-total-completion-section .total-percentage,
+body[data-theme^="glass"] .sidebar-total-completion-section .total-percentage-label,
+body[data-theme^="glass"] .sidebar-total-completion-section .sidebar-completion-stat strong {
+    color: var(--accent);
+}
+
+body[data-theme^="glass"] .sidebar-total-completion-section .sidebar-completion-stat span {
+    color: var(--muted);
+}
+
+body[data-theme^="glass"] .control-panel .side-project-card,
+body[data-theme^="glass"] .sidebar-action-button,
+body[data-theme^="glass"] .section-action-button,
+body[data-theme^="glass"] .leaderboard-item,
+body[data-theme^="glass"] .notification-card {
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+body[data-theme^="glass"] .task-category-tab:hover,
+body[data-theme^="glass"] .task-category-create-button:hover,
+body[data-theme^="glass"] .task-category-tab.is-active,
+body[data-theme^="glass"] .task-category-pill,
+body[data-theme^="glass"] .task-tag-pill,
+body[data-theme^="glass"] .task-category-create-input {
+    border-color: var(--accent);
+}
+
+body[data-theme^="glass"] .task-category-tab:hover,
+body[data-theme^="glass"] .task-category-create-button:hover,
+body[data-theme^="glass"] .task-category-tab.is-active {
+    background: var(--accent-glow);
+    color: var(--heading);
+}
+
+body[data-theme^="glass"] .sidebar-nav-card {
+    background: var(--glass-control-surface);
+    border: 1px solid var(--glass-border-soft);
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+body[data-theme^="glass"] .sidebar-nav-card:hover,
+body[data-theme^="glass"] .sidebar-nav-card.active {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--heading);
+}

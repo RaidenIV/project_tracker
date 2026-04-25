@@ -48,30 +48,42 @@ function toTitleCase(text) {
         .join(' ');
 }
 
+
 const TASK_TAG_OPTIONS = [
     { value: 'critical', label: 'Critical' },
     { value: 'high', label: 'High' },
     { value: 'medium', label: 'Medium' },
-    { value: 'low', label: 'Low' },
-    { value: 'custom', label: 'Custom' }
+    { value: 'low', label: 'Low' }
 ];
 
 const DEFAULT_TASK_TAG = 'medium';
+const DEFAULT_TASK_CATEGORY = 'General';
+const DEFAULT_TASK_CATEGORY_FILTER = 'all';
 const DEFAULT_TASK_SORT_MODE = 'default';
 const TASK_TAG_PRIORITY = {
     critical: 0,
     high: 1,
     medium: 2,
-    low: 3,
-    custom: 4
+    low: 3
 };
+
+function sanitizeTaskCategoryName(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return DEFAULT_TASK_CATEGORY;
+    return raw
+        .replace(/\s+/g, ' ')
+        .slice(0, 32)
+        .split(' ')
+        .map(part => part ? part.charAt(0).toUpperCase() + part.slice(1) : '')
+        .join(' ');
+}
 
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
     const tagValue = String(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG).trim().toLowerCase();
     const tag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
-    const customTag = typeof task?.customTag === 'string' ? task.customTag.trim() : '';
+    const category = sanitizeTaskCategoryName(task?.category || task?.taskCategory || DEFAULT_TASK_CATEGORY);
 
     return {
         ...task,
@@ -80,21 +92,27 @@ function normalizeTask(task = {}, index = 0) {
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         tag,
-        customTag: tag === 'custom' ? customTag : ''
+        category
     };
 }
 
 function getTaskTagLabel(task) {
     const normalized = normalizeTask(task);
-    if (normalized.tag === 'custom') {
-        return normalized.customTag || 'Custom';
-    }
     return TASK_TAG_OPTIONS.find(option => option.value === normalized.tag)?.label || 'Medium';
 }
 
 function getTaskTagPriority(task) {
     const normalized = normalizeTask(task);
     return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG];
+}
+
+function getProjectTaskCategories(project) {
+    const explicit = Array.isArray(project?.taskCategories) ? project.taskCategories : [];
+    const fromTasks = Array.isArray(project?.tasks) ? project.tasks.map(task => normalizeTask(task).category) : [];
+    const combined = [DEFAULT_TASK_CATEGORY, ...explicit, ...fromTasks]
+        .map(sanitizeTaskCategoryName)
+        .filter(Boolean);
+    return [...new Set(combined)];
 }
 
 function sortTasks(tasks) {
@@ -132,15 +150,15 @@ const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea1
 const THEME_OPTIONS = {
     'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
     'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' },
-    'glass-light': { label: 'Glassmorphic Light', family: 'glass', mode: 'light' },
-    'glass-dark': { label: 'Glassmorphic Dark', family: 'glass', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphism Light', family: 'glass', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphism Dark', family: 'glass', mode: 'dark' },
     'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
     'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
 };
 
 const THEME_FAMILY_OPTIONS = {
     blueprint: { label: 'Blueprint' },
-    glass: { label: 'Glassmorphic' },
+    glass: { label: 'Glassmorphism' },
     console: { label: 'Console' }
 };
 
@@ -199,7 +217,8 @@ const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
     THEME: 'tracker_ui_theme_v1',
     PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
-    PROJECT_TASK_SORT: 'tracker_project_task_sort_v1'
+    PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
+    PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1'
 };
 
 function escapeHtml(value) {
@@ -284,6 +303,43 @@ function setProjectTaskSortPreference(projectId, sortMode) {
     const preferences = loadProjectTaskSortPreferences();
     preferences[key] = sortMode === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
     saveProjectTaskSortPreferences(preferences);
+}
+
+
+function loadProjectTaskCategoryFilterPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_CATEGORY_FILTER);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project task category filter preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectTaskCategoryFilterPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_CATEGORY_FILTER, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project task category filter preferences:', err);
+    }
+}
+
+function getProjectTaskCategoryFilter(projectId) {
+    const key = String(projectId || '');
+    if (!key) return DEFAULT_TASK_CATEGORY_FILTER;
+    const preferences = loadProjectTaskCategoryFilterPreferences();
+    const value = preferences[key];
+    return typeof value === 'string' && value.trim() ? value : DEFAULT_TASK_CATEGORY_FILTER;
+}
+
+function setStoredProjectTaskCategoryFilter(projectId, categoryValue) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectTaskCategoryFilterPreferences();
+    preferences[key] = categoryValue || DEFAULT_TASK_CATEGORY_FILTER;
+    saveProjectTaskCategoryFilterPreferences(preferences);
 }
 
 function getLeaderboardUsername(entry) {
@@ -445,15 +501,18 @@ function projectUpdate(updates = {}, options = {}) {
     return payload;
 }
 
+
 function normalizeProject(project) {
     if (!project || typeof project !== 'object') return null;
-    return {
+    const normalizedTasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+    const normalizedProject = {
         ...project,
         id: project.id || project._id || String(Date.now()),
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
         notes: typeof project.notes === 'string' ? project.notes : '',
-        tasks: Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [],
+        tasks: normalizedTasks,
+        taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
         collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
         activities: Array.isArray(project.activities) ? project.activities : [],
         archived: Boolean(project.archived),
@@ -462,6 +521,7 @@ function normalizeProject(project) {
         lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
         __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
     };
+    return normalizedProject;
 }
 
 function runRenderStep(stepName, fn) {
@@ -1061,6 +1121,7 @@ async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        taskCategories: [DEFAULT_TASK_CATEGORY],
         userRole: 'owner',
         collaborators: []
     };
@@ -1317,12 +1378,14 @@ function addTaskToProject(projectId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
-    
-    const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, customTag: '' });
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
+    const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, category });
     // Add new tasks at the beginning (they'll appear first after sorting)
     const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
     
     return newTask.id;
@@ -2077,15 +2140,23 @@ function setupTaskDragAndDrop(projectId) {
 // ============================================================================
 
 
+
 function getDisplayTasksForProject(project, options = {}) {
     const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
     const sortMode = options.sortMode || getProjectTaskSortPreference(project?.id);
     const hideCompleted = options.hideCompleted !== undefined
         ? !!options.hideCompleted
         : getProjectHideCompletedPreference(project?.id);
+    const activeCategory = options.activeCategory !== undefined
+        ? options.activeCategory
+        : getProjectTaskCategoryFilter(project?.id);
     const orderedTasks = sortTasksForDisplay(tasks, sortMode);
-    return hideCompleted ? orderedTasks.filter(task => !task.completed) : orderedTasks;
+    const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
+        ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
+        : orderedTasks;
+    return hideCompleted ? categoryFilteredTasks.filter(task => !task.completed) : categoryFilteredTasks;
 }
+
 
 function renderTaskTagOptions(selectedValue) {
     return TASK_TAG_OPTIONS.map(option => `
@@ -2093,11 +2164,60 @@ function renderTaskTagOptions(selectedValue) {
     `).join('');
 }
 
+function renderTaskCategoryOptions(project, selectedValue) {
+    return getProjectTaskCategories(project).map(category => `
+        <option value="${escapeHtml(category)}" ${selectedValue === category ? 'selected' : ''}>${escapeHtml(category)}</option>
+    `).join('');
+}
+
+function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
+    const categories = getProjectTaskCategories(project);
+    const canEdit = state.canEdit(projectId);
+    return `
+        <div class="task-category-toolbar">
+            <div class="task-category-tabs" role="tablist" aria-label="Task categories">
+                <button class="task-category-tab ${activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? 'is-active' : ''}"
+                        type="button"
+                        onclick="setProjectTaskCategoryFilter('${projectId}', '${DEFAULT_TASK_CATEGORY_FILTER}')">All</button>
+                ${categories.map(category => `
+                    <button class="task-category-tab ${activeCategory === category ? 'is-active' : ''}"
+                            type="button"
+                            onclick="setProjectTaskCategoryFilter('${projectId}', ${JSON.stringify(category).replace(/"/g, '&quot;')})">${escapeHtml(category)}</button>
+                `).join('')}
+            </div>
+            ${canEdit ? `
+                <div class="task-category-create">
+                    <input class="task-category-create-input"
+                           id="task-category-create-input-${projectId}"
+                           type="text"
+                           maxlength="32"
+                           placeholder="New category"
+                           onkeydown="handleTaskCategoryCreateKeydown(event, '${projectId}')">
+                    <button class="task-category-create-button" type="button" onclick="createTaskCategory('${projectId}')">Add Category</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function renderTaskCategoryControls(projectId) {
+    const project = state.findProject(projectId);
+    const container = document.getElementById(`task-category-controls-${projectId}`);
+    if (!project || !container) return;
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
+}
+
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
+    const project = state.findProject(projectId);
     const tagLabel = escapeHtml(getTaskTagLabel(normalizedTask));
-    const isCustom = normalizedTask.tag === 'custom';
-    const customValue = escapeHtml(normalizedTask.customTag || '');
+    const categoryLabel = escapeHtml(normalizedTask.category || DEFAULT_TASK_CATEGORY);
 
     return `
         <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
@@ -2131,23 +2251,27 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                        onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${normalizedTask.id})">
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <label class="task-category-select-wrap" title="${categoryLabel}">
+                    <span class="task-category-pill">${categoryLabel}</span>
+                    <select class="task-category-select"
+                            id="modal-task-category-${normalizedTask.id}"
+                            aria-label="Task category"
+                            onchange="updateTaskCategory('${projectId}', ${normalizedTask.id}, this.value)">
+                        ${renderTaskCategoryOptions(project, normalizedTask.category)}
+                    </select>
+                </label>
                 <label class="task-tag-select-wrap" title="${tagLabel}">
-                    <span class="task-tag-pill task-tag-pill--${normalizedTask.tag}">${tagLabel}</span>
+                    <span class="task-tag-pill task-tag-pill--${normalizedTask.tag}">
+                        <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                        <span class="task-tag-label">${tagLabel}</span>
+                    </span>
                     <select class="task-tag-select task-tag-select--${normalizedTask.tag}"
                             id="modal-task-tag-${normalizedTask.id}"
-                            aria-label="Task tag"
+                            aria-label="Task priority"
                             onchange="updateTaskTag('${projectId}', ${normalizedTask.id}, this.value)">
                         ${renderTaskTagOptions(normalizedTask.tag)}
                     </select>
                 </label>
-                <input type="text"
-                       class="task-custom-tag-input ${isCustom ? 'is-visible' : ''}"
-                       id="modal-task-custom-tag-${normalizedTask.id}"
-                       value="${customValue}"
-                       placeholder="Custom tag"
-                       ${isCustom ? '' : 'style="display:none;"'}
-                       onblur="updateTaskCustomTag('${projectId}', ${normalizedTask.id}, this.value)"
-                       onkeydown="handleTaskCustomTagKeydown(event, '${projectId}', ${normalizedTask.id})">
                 <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${normalizedTask.id})" style="opacity: 1;">
                     <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -2166,19 +2290,39 @@ function renderModalTaskList(projectId) {
 
     const hideCompleted = getProjectHideCompletedPreference(projectId);
     const sortMode = getProjectTaskSortPreference(projectId);
-    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode });
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory });
     const selectedTasks = state.getSelectedTasks(projectId);
 
     taskList.dataset.sortMode = sortMode;
+    taskList.dataset.activeCategory = activeCategory;
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    renderTaskCategoryControls(projectId);
 
     if (sortMode === DEFAULT_TASK_SORT_MODE) {
         setTimeout(() => setupTaskDragAndDrop(projectId), 100);
     }
 }
 
+
 function setProjectTaskSortMode(projectId, sortMode) {
     setProjectTaskSortPreference(projectId, sortMode);
+    renderModalTaskList(projectId);
+}
+
+function setProjectTaskCategoryFilter(projectId, categoryValue) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const categories = getProjectTaskCategories(project);
+    const nextCategory = categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? DEFAULT_TASK_CATEGORY_FILTER
+        : (categories.includes(categoryValue) ? categoryValue : DEFAULT_TASK_CATEGORY);
+    setStoredProjectTaskCategoryFilter(projectId, nextCategory);
     renderModalTaskList(projectId);
 }
 
@@ -2193,8 +2337,7 @@ function updateTaskTag(projectId, taskId, tagValue) {
         if (normalizedTask.id !== taskId) return normalizedTask;
         return {
             ...normalizedTask,
-            tag: nextTag,
-            customTag: nextTag === 'custom' ? (normalizedTask.customTag || 'Custom') : ''
+            tag: nextTag
         };
     });
 
@@ -2204,33 +2347,46 @@ function updateTaskTag(projectId, taskId, tagValue) {
     render();
 }
 
-function updateTaskCustomTag(projectId, taskId, value) {
+function updateTaskCategory(projectId, taskId, categoryValue) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
-
-    const trimmedValue = String(value || '').trim();
+    const nextCategory = sanitizeTaskCategoryName(categoryValue || DEFAULT_TASK_CATEGORY);
     const updatedTasks = project.tasks.map((task, index) => {
         const normalizedTask = normalizeTask(task, index);
         if (normalizedTask.id !== taskId) return normalizedTask;
-        if (normalizedTask.tag !== 'custom') return normalizedTask;
         return {
             ...normalizedTask,
-            customTag: trimmedValue || 'Custom'
+            category: nextCategory
         };
     });
-
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
     renderModalTaskList(projectId);
     render();
 }
 
-function handleTaskCustomTagKeydown(event, projectId, taskId) {
-    if (event.key === 'Enter') {
+function createTaskCategory(projectId) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    const input = document.getElementById(`task-category-create-input-${projectId}`);
+    if (!project || !input) return;
+    const rawValue = String(input.value || '').trim();
+    if (!rawValue) return;
+    const nextCategory = sanitizeTaskCategoryName(rawValue);
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
+    input.value = '';
+    saveData();
+    setProjectTaskCategoryFilter(projectId, nextCategory);
+    render();
+}
+
+function handleTaskCategoryCreateKeydown(event, projectId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        event.target.blur();
-        updateTaskCustomTag(projectId, taskId, event.target.value);
+        createTaskCategory(projectId);
     }
 }
 
@@ -2242,8 +2398,9 @@ function openProjectModal(projectId, options = {}) {
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
     const hideCompleted = getProjectHideCompletedPreference(project.id);
     const taskSortMode = getProjectTaskSortPreference(project.id);
+    const activeCategory = getProjectTaskCategoryFilter(project.id);
     state.setHideCompletedTasks(hideCompleted);
-    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode });
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
 
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
@@ -2316,6 +2473,10 @@ function openProjectModal(projectId, options = {}) {
                 Add Task
             </button>
             
+            <div class="task-category-controls" id="task-category-controls-${project.id}">
+                ${buildTaskCategoryControlsMarkup(project.id, project, activeCategory)}
+            </div>
+
             <div class="modal-task-controls-row">
                 <div class="hide-completed-toggle">
                     <div class="toggle-label">Hide completed tasks</div>
@@ -2649,11 +2810,12 @@ function pasteTasks() {
         text: capitalizeFirstLetter(text),
         completed: false,
         tag: DEFAULT_TASK_TAG,
-        customTag: ''
+        category: DEFAULT_TASK_CATEGORY
     }));
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), DEFAULT_TASK_CATEGORY])];
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     
     pasteBox.value = '';
     projectSelect.value = '';
@@ -2680,16 +2842,19 @@ function pasteTasksInModal(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
     const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
         text: capitalizeFirstLetter(text),
         completed: false,
         tag: DEFAULT_TASK_TAG,
-        customTag: ''
+        category
     }));
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     
     saveData();
     openProjectModal(projectId);
@@ -3586,8 +3751,10 @@ window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;
-window.updateTaskCustomTag = updateTaskCustomTag;
-window.handleTaskCustomTagKeydown = handleTaskCustomTagKeydown;
+window.updateTaskCategory = updateTaskCategory;
+window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
+window.createTaskCategory = createTaskCategory;
+window.handleTaskCategoryCreateKeydown = handleTaskCategoryCreateKeydown;
 window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
 window.changeCollaboratorRole = changeCollaboratorRole;

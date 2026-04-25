@@ -6851,3 +6851,183 @@ body[data-color-mode="dark"] .task-tag-pill--custom { color: #d5d9e1; }
 .task-list[data-sort-mode="tag-priority"] .task-drag-handle {
     opacity: 0.18;
 }
+
+
+/* ============================================================================
+   TASK PRIORITY FLAGS + TASK CATEGORIES
+   ============================================================================ */
+
+.task-category-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.task-category-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.task-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.task-category-tab,
+.task-category-create-button {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border, rgba(0,0,0,0.08));
+    background: var(--panel);
+    color: var(--heading);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.task-category-tab:hover,
+.task-category-create-button:hover {
+    background: var(--surface-2);
+}
+
+.task-category-tab.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.task-category-create {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.task-category-create-input,
+.task-category-select,
+.task-category-pill {
+    height: 36px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.task-category-create-input {
+    min-width: 148px;
+    padding: 0 12px;
+    border: none;
+    background: var(--panel);
+    color: var(--heading);
+    box-shadow: var(--card-shadow);
+}
+
+.task-category-select-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+.task-category-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-65%) rotate(45deg);
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.task-category-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    padding: 0 34px 0 12px;
+    background: rgba(50, 120, 235, 0.08);
+    color: var(--heading);
+    border: 1px solid rgba(50, 120, 235, 0.16);
+}
+
+.task-category-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-width: 120px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.task-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 126px;
+    height: 36px;
+    padding: 0 34px 0 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    box-shadow: var(--card-shadow);
+    color: var(--heading);
+    background: rgba(50, 120, 235, 0.12);
+}
+
+.task-tag-label {
+    white-space: nowrap;
+}
+
+.task-tag-flag {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+    background-color: currentColor;
+    -webkit-mask: url('../assets/flag.svg') center / contain no-repeat;
+    mask: url('../assets/flag.svg') center / contain no-repeat;
+}
+
+.task-tag-pill--critical { background: rgba(184, 28, 28, 0.14); color: #991b1b; }
+.task-tag-pill--high { background: rgba(220, 38, 38, 0.14); color: #dc2626; }
+.task-tag-pill--medium { background: rgba(245, 124, 0, 0.16); color: #ea580c; }
+.task-tag-pill--low { background: rgba(22, 163, 74, 0.14); color: #16a34a; }
+
+body[data-color-mode="dark"] .task-tag-pill--critical { color: #fca5a5; }
+body[data-color-mode="dark"] .task-tag-pill--high { color: #ff7b7b; }
+body[data-color-mode="dark"] .task-tag-pill--medium { color: #fdba74; }
+body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
+
+@media (max-width: 900px) {
+    .task-category-toolbar,
+    .task-category-create {
+        align-items: stretch;
+    }
+
+    .task-category-tabs,
+    .task-category-create,
+    .task-category-create-input,
+    .task-category-create-button {
+        width: 100%;
+    }
+
+    .task-meta-controls {
+        width: 100%;
+        margin-left: 0;
+        padding-left: 32px;
+    }
+}
