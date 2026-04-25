@@ -1,18 +1,24 @@
 /* ============================================================
-   NEBULA GLASS THEME — Sidebar Cleanup Edition
+   NEBULA GLASS THEME — Sidebar Unification Edition
    ------------------------------------------------------------
    Changes from previous version:
-   • Body background reverted to a clean solid color — no radial
-     gradient, no noise overlay.
-   • Scrollbar redesigned to match the glass aesthetic: thin,
-     ghosted, theme-tinted via --scrollbar-thumb tokens.
-     Firefox gets scrollbar-width / scrollbar-color too.
-   • Leaderboard, notifications, and settings sidebar sections
-     no longer wrap their contents in a visible card. The card-
-     on-card stack was killing contrast. Wrappers are now
-     transparent containers; the buttons/items inside use the
-     same control-surface treatment as the project section
-     (.side-project-card) in the sidebar.
+   • Project section in the sidebar now uses the same recipe as
+     the leaderboard / notifications / settings sections — the
+     .side-project-card items get control-surface bg, soft
+     border, blur(18px) saturate(160%), --radius-md, and the
+     translateY(-1px) hover lift.
+   • Scrollbar made thinner (6px) and cleaner — no transparent
+     padding border, no scroll buttons, Firefox scrollbar-color
+     applied universally so inner scroll containers (sidebar,
+     project modals) pick it up.
+   • Color mode toggle is now structurally identical to the
+     standard toggle (.toggle-slider). Section 8's custom dark-
+     track / white-thumb styling is gone; .color-mode-toggle and
+     .color-mode-toggle-thumb share the same surface tokens as
+     every other toggle in the system.
+   • Project modal text in light mode bumped to --heading
+     (#071a32) — the previous --text (#0f2744) was washing out
+     against the translucent modal panel.
    ============================================================ */
 
 /* -----------------------------
@@ -66,11 +72,8 @@ body[data-theme="glass-light"] {
 
     --glass-control-surface: rgba(255, 255, 255, 0.32);
 
-    /* Scrollbar — text-color base at low opacity reads correctly
-       on every glass surface in this theme without ever turning
-       opaque. */
-    --scrollbar-thumb:       rgba(15, 39, 68, 0.18);
-    --scrollbar-thumb-hover: rgba(15, 39, 68, 0.32);
+    --scrollbar-thumb:       rgba(15, 39, 68, 0.22);
+    --scrollbar-thumb-hover: rgba(15, 39, 68, 0.38);
 
     --selection-bg:   rgba(37, 112, 238, 0.28);
     --selection-text: #ffffff;
@@ -134,8 +137,8 @@ body[data-theme="glass-dark"] {
 
     --glass-control-surface: rgba(34, 54, 86, 0.42);
 
-    --scrollbar-thumb:       rgba(234, 241, 252, 0.18);
-    --scrollbar-thumb-hover: rgba(234, 241, 252, 0.32);
+    --scrollbar-thumb:       rgba(234, 241, 252, 0.22);
+    --scrollbar-thumb-hover: rgba(234, 241, 252, 0.38);
 
     --selection-bg:   rgba(111, 170, 255, 0.38);
     --selection-text: #07111f;
@@ -149,7 +152,7 @@ body[data-theme="glass-dark"] {
 }
 
 /* -----------------------------
-   2. BODY — solid background, no gradient, no noise
+   2. BODY
    ----------------------------- */
 body[data-theme^="glass"] {
     font-family: 'Rajdhani', 'Inter', 'Segoe UI', sans-serif;
@@ -157,9 +160,6 @@ body[data-theme^="glass"] {
     background: var(--bg);
     background-attachment: fixed;
     min-height: 100vh;
-    /* Firefox scrollbar */
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 body[data-theme^="glass"] ::selection {
@@ -192,7 +192,6 @@ body[data-theme^="glass"] textarea::placeholder {
 
 /* -----------------------------
    3. PRIMARY GLASS PANELS
-   (Removed .leaderboard-summary-card — it's no longer a card.)
    ----------------------------- */
 body[data-theme^="glass"] .control-panel-content,
 body[data-theme^="glass"] .project-card,
@@ -237,8 +236,10 @@ body[data-theme^="glass"] .panel-user-pill {
 }
 
 /* -----------------------------
-   4. SECONDARY SURFACES (inputs, rows, pills)
-   FLAT — no neumorphic shadow combos.
+   4. SECONDARY SURFACES
+   .color-mode-toggle and its thumb are now part of this list
+   so the theme/dark-mode toggle in the sidebar matches the
+   hide-completed toggle exactly.
    ----------------------------- */
 body[data-theme^="glass"] .view-toolbar-search,
 body[data-theme^="glass"] .view-toolbar-select,
@@ -269,14 +270,17 @@ body[data-theme^="glass"] .modal-add-task,
 body[data-theme^="glass"] .modal-add-task-top,
 body[data-theme^="glass"] .menu-dropdown-item,
 body[data-theme^="glass"] .toggle-slider,
-body[data-theme^="glass"] .toggle-slider:before {
+body[data-theme^="glass"] .toggle-slider:before,
+body[data-theme^="glass"] .color-mode-toggle,
+body[data-theme^="glass"] .color-mode-toggle-thumb {
     background: var(--surface);
     box-shadow: none;
     border: 1px solid var(--glass-border-soft);
     transition:
         background    var(--dur-fast) var(--ease-out),
         border-color  var(--dur-fast) var(--ease-out),
-        box-shadow    var(--dur-fast) var(--ease-out);
+        box-shadow    var(--dur-fast) var(--ease-out),
+        transform     var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] .view-toolbar-search:hover,
@@ -373,9 +377,12 @@ body[data-theme^="glass"] .task-checkbox.checked {
 
 /* -----------------------------
    7. BORDER RADII — hierarchical
+   .side-project-card no longer in the lg list — it gets --md
+   from section 13 to match the sidebar siblings.
    ----------------------------- */
 body[data-theme^="glass"] .task-checkbox,
-body[data-theme^="glass"] .toggle-slider:before {
+body[data-theme^="glass"] .toggle-slider:before,
+body[data-theme^="glass"] .color-mode-toggle-thumb {
     border-radius: var(--radius-sm);
 }
 
@@ -396,7 +403,6 @@ body[data-theme^="glass"] .account-stat-card {
 body[data-theme^="glass"] .theme-card,
 body[data-theme^="glass"] .saved-view-main,
 body[data-theme^="glass"] .notification-card,
-body[data-theme^="glass"] .side-project-card,
 body[data-theme^="glass"] .archived-project-card,
 body[data-theme^="glass"] .project-card,
 body[data-theme^="glass"] .auth-card,
@@ -411,22 +417,14 @@ body[data-theme^="glass"] .account-avatar-fallback {
 }
 
 /* -----------------------------
-   8. COLOR MODE TOGGLE
+   8. (intentionally empty)
+   The custom .color-mode-toggle styling has been removed —
+   the toggle now uses the same surface tokens as every other
+   toggle in the system (see section 4).
    ----------------------------- */
-body[data-theme^="glass"] .color-mode-toggle {
-    background: rgba(30, 54, 96, 0.35);
-    border: none;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
-}
-
-body[data-theme^="glass"] .color-mode-toggle-thumb {
-    background: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    transition: transform var(--dur-base) var(--ease-out);
-}
 
 /* -----------------------------
-   9. PROJECT CARDS (the hero surface)
+   9. PROJECT CARDS
    ----------------------------- */
 body[data-theme^="glass"] .project-card {
     background: var(--glass-project-card-bg);
@@ -488,7 +486,10 @@ body[data-theme^="glass"] .project-card .card-owner-pill {
 }
 
 /* -----------------------------
-   10. CONTROL PANEL
+   10. CONTROL PANEL (sidebar)
+   .side-project-card kept here for the base control-surface
+   look; section 13 adds blur + radius + hover to fully unify
+   it with the leaderboard / notifications / settings items.
    ----------------------------- */
 body[data-theme^="glass"] .control-panel .stat-card,
 body[data-theme^="glass"] .control-panel .undo-button,
@@ -558,6 +559,10 @@ body[data-theme^="glass"] .control-panel .expand-button:hover {
 
 /* -----------------------------
    11. MODALS
+   Project modal text bumped to --heading in light mode for
+   stronger contrast on the translucent panel. Inputs and
+   textareas explicitly colored too — they don't inherit
+   text color by default.
    ----------------------------- */
 body[data-theme^="glass"] .account-modal-content,
 body[data-theme^="glass"] .ui-options-modal-content,
@@ -565,6 +570,20 @@ body[data-theme^="glass"] .modal-content,
 body[data-theme^="glass"] .theme-card {
     overflow: hidden;
     background-clip: padding-box;
+}
+
+body[data-theme="glass-light"] .modal-content,
+body[data-theme="glass-light"] .modal-content .modal-tab,
+body[data-theme="glass-light"] .modal-content label {
+    color: var(--heading);
+}
+
+body[data-theme="glass-light"] .modal-content input,
+body[data-theme="glass-light"] .modal-content textarea,
+body[data-theme="glass-light"] .modal-content select,
+body[data-theme="glass-light"] .modal-title-input,
+body[data-theme="glass-light"] .notes-textarea {
+    color: var(--heading);
 }
 
 body[data-theme^="glass"] .account-modal-scroll {
@@ -591,47 +610,58 @@ body[data-theme^="glass"] .hide-completed-toggle {
 }
 
 /* -----------------------------
-   12. SCROLLBAR — glass-themed
-   Thin, soft, uses theme-tinted tokens. No solid bar against
-   translucent panels. Applies globally so sidebar + project
-   modals + everywhere else stays consistent.
+   12. SCROLLBAR — thin glass-themed
+   6px clean rounded bar. No transparent padding-border, no
+   scroll buttons. Firefox styling applied universally so
+   inner scroll containers (sidebar, modals) get it too,
+   not just the body.
    ----------------------------- */
 body[data-theme^="glass"] ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
-body[data-theme^="glass"] ::-webkit-scrollbar-track {
+body[data-theme^="glass"] ::-webkit-scrollbar-track,
+body[data-theme^="glass"] ::-webkit-scrollbar-corner {
     background: transparent;
 }
 
 body[data-theme^="glass"] ::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
-    border: 2px solid transparent;
-    background-clip: padding-box;
     border-radius: 999px;
     transition: background var(--dur-fast) var(--ease-out);
 }
 
 body[data-theme^="glass"] ::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-thumb-hover);
-    background-clip: padding-box;
 }
 
-body[data-theme^="glass"] ::-webkit-scrollbar-corner {
-    background: transparent;
+body[data-theme^="glass"] ::-webkit-scrollbar-button {
+    display: none;
+}
+
+body[data-theme^="glass"],
+body[data-theme^="glass"] * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 /* -----------------------------
-   13. SIDEBAR — leaderboard / notifications / settings
-   No wrapper card. Buttons/items get the same control-surface
-   treatment as the project section (.side-project-card) so
-   everything in the sidebar reads as a consistent stack of
-   sibling glass tiles instead of cards-on-cards.
+   13. SIDEBAR — unified section styling
+   Project section now uses the same recipe as the leaderboard,
+   notifications, and settings sections. All four are siblings
+   visually — no card wrapper, items get control-surface +
+   blur(18px) + --radius-md + hover lift.
    ----------------------------- */
+
+/* Section wrappers — transparent, no card shell */
 body[data-theme^="glass"] .leaderboard-summary-card,
 body[data-theme^="glass"] .notifications-summary-card,
-body[data-theme^="glass"] .settings-panel-card {
+body[data-theme^="glass"] .settings-panel-card,
+body[data-theme^="glass"] .projects-summary-card,
+body[data-theme^="glass"] .projects-panel-card,
+body[data-theme^="glass"] .sidebar-projects-card,
+body[data-theme^="glass"] .projects-section-card {
     background: transparent;
     border: none;
     box-shadow: none;
@@ -640,9 +670,14 @@ body[data-theme^="glass"] .settings-panel-card {
     border-radius: 0;
 }
 
+/* Section items — single shared recipe.
+   The .control-panel .side-project-card selector is intentionally
+   more specific so it beats section 10's plainer treatment and
+   adds the blur + radius + hover. */
 body[data-theme^="glass"] .sidebar-action-button,
 body[data-theme^="glass"] .section-action-button,
-body[data-theme^="glass"] .leaderboard-item {
+body[data-theme^="glass"] .leaderboard-item,
+body[data-theme^="glass"] .control-panel .side-project-card {
     background: var(--glass-control-surface);
     border: 1px solid var(--glass-border-soft);
     color: var(--heading);
@@ -658,7 +693,8 @@ body[data-theme^="glass"] .leaderboard-item {
 
 body[data-theme^="glass"] .sidebar-action-button:hover,
 body[data-theme^="glass"] .section-action-button:hover,
-body[data-theme^="glass"] .leaderboard-item:hover {
+body[data-theme^="glass"] .leaderboard-item:hover,
+body[data-theme^="glass"] .control-panel .side-project-card:hover {
     background: var(--surface-2);
     border-color: var(--glass-border);
     transform: translateY(-1px);
@@ -679,7 +715,8 @@ body[data-theme^="glass"] .leaderboard-item:hover {
     body[data-theme^="glass"] .add-project-button:hover,
     body[data-theme^="glass"] .sidebar-action-button:hover,
     body[data-theme^="glass"] .section-action-button:hover,
-    body[data-theme^="glass"] .leaderboard-item:hover {
+    body[data-theme^="glass"] .leaderboard-item:hover,
+    body[data-theme^="glass"] .control-panel .side-project-card:hover {
         transform: none;
     }
 }
