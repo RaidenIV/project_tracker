@@ -48,11 +48,138 @@ function toTitleCase(text) {
         .join(' ');
 }
 
-// Sort tasks: incomplete first (newest first), then completed last (oldest first)
+
+const TASK_TAG_OPTIONS = [
+    { value: 'none', label: 'No priority' },
+    { value: 'high', label: 'High' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'low', label: 'Low' }
+];
+
+const DEFAULT_TASK_TAG = 'none';
+const DEFAULT_TASK_CATEGORY = 'General';
+const DEFAULT_TASK_CATEGORY_FILTER = 'all';
+const DEFAULT_TASK_SORT_MODE = 'default';
+const TASK_TAG_PRIORITY = {
+    high: 0,
+    medium: 1,
+    low: 2,
+    none: 3
+};
+
+function sanitizeTaskCategoryName(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return DEFAULT_TASK_CATEGORY;
+    return raw
+        .replace(/\s+/g, ' ')
+        .slice(0, 32)
+        .split(' ')
+        .map(part => part ? part.charAt(0).toUpperCase() + part.slice(1) : '')
+        .join(' ');
+}
+
+function normalizeTask(task = {}, index = 0) {
+    const numericId = Number(task?.id);
+    const fallbackId = Date.now() + index + Math.random();
+    const rawTagValue = String(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG).trim().toLowerCase();
+    const tagValue = rawTagValue === 'critical' ? 'high' : rawTagValue;
+    const tag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+    const category = sanitizeTaskCategoryName(task?.category || task?.taskCategory || DEFAULT_TASK_CATEGORY);
+
+    return {
+        ...task,
+        id: Number.isFinite(numericId) ? numericId : fallbackId,
+        text: typeof task?.text === 'string' ? task.text : '',
+        completed: !!task?.completed,
+        completedDate: task?.completedDate ? String(task.completedDate) : null,
+        tag,
+        category
+    };
+}
+
+function getTaskTagLabel(task) {
+    const normalized = normalizeTask(task);
+    return TASK_TAG_OPTIONS.find(option => option.value === normalized.tag)?.label || 'No priority';
+}
+
+function getTaskTagPriority(task) {
+    const normalized = normalizeTask(task);
+    return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG];
+}
+
+function getTaskCategoryTabPositionClass(index, total) {
+    if (index <= 0) return 'task-category-tab-shell--left';
+    if (index >= total - 1) return 'task-category-tab-shell--right';
+    return 'task-category-tab-shell--center';
+}
+
+function getProjectTaskCategories(project) {
+    const explicit = Array.isArray(project?.taskCategories) ? project.taskCategories : [];
+    const fromTasks = Array.isArray(project?.tasks) ? project.tasks.map(task => normalizeTask(task).category) : [];
+    const combined = [DEFAULT_TASK_CATEGORY, ...explicit, ...fromTasks]
+        .map(sanitizeTaskCategoryName)
+        .filter(Boolean);
+    return [...new Set(combined)];
+}
+
+function serializeInlineJsString(value) {
+    return JSON.stringify(String(value ?? '')).replace(/"/g, '&quot;');
+}
+
+function isTaskPriorityMenuOpen(projectId, taskId) {
+    return uiState.openTaskPriorityMenu?.projectId === projectId && uiState.openTaskPriorityMenu?.taskId === taskId;
+}
+
+function isTaskCategoryMenuOpen(projectId, category) {
+    return uiState.openTaskCategoryMenu?.projectId === projectId && uiState.openTaskCategoryMenu?.category === category;
+}
+
+function closeOpenTaskMenus({ rerender = true } = {}) {
+    const priorityMenu = uiState.openTaskPriorityMenu;
+    const categoryMenu = uiState.openTaskCategoryMenu;
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+
+    if (!rerender) return;
+
+    const rerenderedProjects = new Set();
+    if (priorityMenu?.projectId) {
+        renderModalTaskList(priorityMenu.projectId);
+        rerenderedProjects.add(priorityMenu.projectId);
+    }
+    if (categoryMenu?.projectId && !rerenderedProjects.has(categoryMenu.projectId)) {
+        renderTaskCategoryControls(categoryMenu.projectId);
+    }
+}
+
+function handleTaskFloatingMenuDocumentClick(event) {
+    if (
+        event.target.closest('.task-priority-control') ||
+        event.target.closest('.task-category-menu-button') ||
+        event.target.closest('.task-category-tab-wrap') ||
+        event.target.closest('.task-category-menu-popover')
+    ) return;
+    if (!uiState.openTaskPriorityMenu && !uiState.openTaskCategoryMenu) return;
+    closeOpenTaskMenus();
+}
+
 function sortTasks(tasks) {
-    const incomplete = tasks.filter(t => !t.completed).sort((a, b) => b.id - a.id);
-    const completed = tasks.filter(t => t.completed).sort((a, b) => a.id - b.id);
+    const normalizedTasks = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
+    const incomplete = normalizedTasks.filter(t => !t.completed).sort((a, b) => Number(b.id) - Number(a.id));
+    const completed = normalizedTasks.filter(t => t.completed).sort((a, b) => Number(a.id) - Number(b.id));
     return [...incomplete, ...completed];
+}
+
+function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
+    const baseOrder = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
+    if (mode !== 'tag-priority') return baseOrder;
+
+    return [...baseOrder].sort((a, b) => {
+        const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
+        if (priorityDiff !== 0) return priorityDiff;
+        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+        return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
+    });
 }
 
 
@@ -65,37 +192,32 @@ const DEFAULT_PROFILE_ICON_SVG = `
     </g>
 </svg>`;
 
-const LOGO_SET = {
-    aigox: {
-        light: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w',
-        dark: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w'
-    },
-    xodia: {
-        light: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/7803d573-dd87-40ed-9570-0bc7c5ed8915/xodia_logo_black.png?format=750w',
-        dark: 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/c311da3d-6fbf-446a-858c-227fa011e7e3/Xodia+MEDIA+Group+%28TRANS%29+%281%29+%281%29.png?format=750w'
-    }
-};
+const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w';
+const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'console-light': { label: 'Console Light', family: 'console', mode: 'light', logoSet: 'xodia' },
-    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark', logoSet: 'xodia' },
-    'nebula-light': { label: 'Nebula Light', family: 'nebula', mode: 'light', logoSet: 'aigox' },
-    'nebula-dark': { label: 'Nebula Dark', family: 'nebula', mode: 'dark', logoSet: 'aigox' },
-    'duplex-light': { label: 'Duplex Light', family: 'duplex', mode: 'light', logoSet: 'xodia' },
-    'duplex-dark': { label: 'Duplex Dark', family: 'duplex', mode: 'dark', logoSet: 'xodia' }
+    'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
+    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphism Light', family: 'glass', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphism Dark', family: 'glass', mode: 'dark' },
+    'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
+    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
+};
+
+const THEME_FAMILY_OPTIONS = {
+    blueprint: { label: 'Blueprint' },
+    glass: { label: 'Glassmorphism' },
+    console: { label: 'Console' }
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'console-dark',
-    glass: 'nebula-dark',
+    default: 'blueprint-light',
+    blueprint: 'blueprint-light',
+    glass: 'glass-light',
     midnight: 'console-dark',
-    blueprint: 'duplex-light',
-    'industrial-light': 'console-light',
-    'industrial-dark': 'console-dark',
-    'glass-light': 'nebula-light',
-    'glass-dark': 'nebula-dark',
-    'blueprint-light': 'duplex-light',
-    'blueprint-dark': 'duplex-dark'
+    industrial: 'blueprint-light',
+    'industrial-light': 'blueprint-light',
+    'industrial-dark': 'blueprint-dark'
 };
 
 const notificationState = {
@@ -114,6 +236,9 @@ const accountState = {
         sharedProjects: 0,
         activeProjects: 0
     },
+    leaderboard: [],
+    currentLeaderboardRank: null,
+    currentLeaderboardEntry: null,
     pendingProfilePic: null
 };
 
@@ -123,17 +248,28 @@ const uiState = {
     sortMode: 'manual',
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'console-dark',
+    theme: 'blueprint-light',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
     commandQuery: '',
-    commandActiveIndex: 0
+    commandActiveIndex: 0,
+    sidebarSections: {
+        leaderboard: false,
+        notifications: false,
+        settings: false
+    },
+    openTaskPriorityMenu: null,
+    openTaskCategoryMenu: null,
+    creatingTaskCategoryProjectId: null
 };
 
 const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
-    THEME: 'tracker_ui_theme_v1'
+    THEME: 'tracker_ui_theme_v1',
+    PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
+    PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
+    PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1'
 };
 
 function escapeHtml(value) {
@@ -145,9 +281,127 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+
+function loadProjectHideCompletedPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_HIDE_COMPLETED);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project hide-completed preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectHideCompletedPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_HIDE_COMPLETED, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project hide-completed preferences:', err);
+    }
+}
+
+function getProjectHideCompletedPreference(projectId) {
+    const preferences = loadProjectHideCompletedPreferences();
+    const key = String(projectId || '');
+    if (!key) return true;
+    if (Object.prototype.hasOwnProperty.call(preferences, key)) {
+        return preferences[key] !== false;
+    }
+    return true;
+}
+
+function setProjectHideCompletedPreference(projectId, hideCompleted) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectHideCompletedPreferences();
+    preferences[key] = !!hideCompleted;
+    saveProjectHideCompletedPreferences(preferences);
+}
+
+function loadProjectTaskSortPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_SORT);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project task sort preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectTaskSortPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_SORT, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project task sort preferences:', err);
+    }
+}
+
+function getProjectTaskSortPreference(projectId) {
+    const preferences = loadProjectTaskSortPreferences();
+    const key = String(projectId || '');
+    if (!key) return DEFAULT_TASK_SORT_MODE;
+    const value = preferences[key];
+    return value === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+}
+
+function setProjectTaskSortPreference(projectId, sortMode) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectTaskSortPreferences();
+    preferences[key] = sortMode === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+    saveProjectTaskSortPreferences(preferences);
+}
+
+
+function loadProjectTaskCategoryFilterPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_CATEGORY_FILTER);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project task category filter preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectTaskCategoryFilterPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_CATEGORY_FILTER, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project task category filter preferences:', err);
+    }
+}
+
+function getProjectTaskCategoryFilter(projectId) {
+    const key = String(projectId || '');
+    if (!key) return DEFAULT_TASK_CATEGORY_FILTER;
+    const preferences = loadProjectTaskCategoryFilterPreferences();
+    const value = preferences[key];
+    return typeof value === 'string' && value.trim() ? value : DEFAULT_TASK_CATEGORY_FILTER;
+}
+
+function setStoredProjectTaskCategoryFilter(projectId, categoryValue) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectTaskCategoryFilterPreferences();
+    preferences[key] = categoryValue || DEFAULT_TASK_CATEGORY_FILTER;
+    saveProjectTaskCategoryFilterPreferences(preferences);
+}
+
+function getLeaderboardUsername(entry) {
+    const rawUsername = String(entry?.username || entry?.name || entry?.displayName || 'User').trim();
+    if (!rawUsername) return 'User';
+    return rawUsername.includes('@') ? rawUsername.split('@')[0] : rawUsername;
+}
+
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    return THEME_OPTIONS[resolved] ? resolved : 'console-dark';
+    return THEME_OPTIONS[resolved] ? resolved : 'blueprint-light';
 }
 
 function getThemeMeta(themeName) {
@@ -158,27 +412,79 @@ function getThemeLabel(themeName) {
     return getThemeMeta(themeName).label;
 }
 
+function buildThemeName(themeFamily, colorMode) {
+    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'blueprint';
+    const mode = colorMode === 'dark' ? 'dark' : 'light';
+    const candidate = `${family}-${mode}`;
+    return THEME_OPTIONS[candidate] ? candidate : 'blueprint-light';
+}
+
+function getColorModeLabel(colorMode) {
+    return colorMode === 'dark' ? 'Dark Mode' : 'Light Mode';
+}
+
+function getThemeFamilyLabel(themeFamily) {
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Blueprint';
+}
+
+
+function moveColorModeToggleToSidebarHeader() {
+    const toggle = document.getElementById('colorModeToggleBtn');
+    const header = document.querySelector('.control-panel .control-panel-header');
+    const panelMain = header?.querySelector('.panel-header-main');
+    if (!toggle || !header || !panelMain) return;
+
+    let wrapper = header.querySelector('.sidebar-header-theme-toggle');
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.className = 'sidebar-header-theme-toggle';
+        header.appendChild(wrapper);
+    }
+
+    if (toggle.parentElement !== wrapper) {
+        wrapper.appendChild(toggle);
+    }
+
+    const oldRow = document.querySelector('.ui-options-mode-toggle-row');
+    if (oldRow && oldRow !== wrapper) {
+        oldRow.classList.add('ui-options-mode-toggle-row--relocated');
+    }
+}
+
+function syncColorModeToggle() {
+    const toggle = document.getElementById('colorModeToggleBtn');
+    if (!toggle) return;
+    const meta = getThemeMeta(uiState.theme);
+    const isDark = meta.mode === 'dark';
+    toggle.classList.toggle('is-dark', isDark);
+    toggle.setAttribute('aria-pressed', String(isDark));
+    toggle.setAttribute('title', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+    toggle.setAttribute('aria-label', `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
+}
+
 function syncThemeBranding() {
     const meta = getThemeMeta(uiState.theme);
     document.body.setAttribute('data-theme', uiState.theme);
     document.body.setAttribute('data-theme-family', meta.family);
     document.body.setAttribute('data-color-mode', meta.mode);
 
-    const logoSet = LOGO_SET[meta.logoSet] || LOGO_SET.xodia;
-    const nextLogo = meta.mode === 'dark' ? logoSet.dark : logoSet.light;
+    const panelLogo = document.querySelector('.panel-logo-img-inline');
+    if (panelLogo) {
+        panelLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
 
-    document.querySelectorAll('.panel-logo-img-inline, .auth-logo-img').forEach(logo => {
-        logo.src = nextLogo;
-    });
+    const topAppLogo = document.getElementById('topAppLogo');
+    if (topAppLogo) {
+        topAppLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
 }
 
 function loadSavedViewsFromStorage() {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
     try {
-        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
-        uiState.savedViews = raw ? JSON.parse(raw) : [];
-    } catch {
-        uiState.savedViews = [];
-    }
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function persistSavedViews() {
@@ -186,30 +492,41 @@ function persistSavedViews() {
 }
 
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
+    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
     applyTheme(uiState.theme, false);
 }
 
 function applyTheme(themeName, persist = true) {
     uiState.theme = normalizeThemeName(themeName);
     syncThemeBranding();
+    syncColorModeToggle();
     if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
     const status = document.getElementById('uiOptionsStatus');
-    if (status) status.textContent = `Current style: ${getThemeLabel(uiState.theme)}`;
+    if (status) {
+        const meta = getThemeMeta(uiState.theme);
+        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    }
     renderThemeOptions();
 }
 
+function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
+    const currentMeta = getThemeMeta(uiState.theme);
+    const nextMode = preferredMode || currentMeta.mode || 'light';
+    applyTheme(buildThemeName(themeFamily, nextMode), persist);
+}
 
 function renderThemeOptions() {
-    document.querySelectorAll('[data-theme-option]').forEach(card => {
-        const isActive = card.getAttribute('data-theme-option') === uiState.theme;
+    const activeFamily = getThemeMeta(uiState.theme).family;
+    document.querySelectorAll('[data-theme-family-option]').forEach(card => {
+        const isActive = card.getAttribute('data-theme-family-option') === activeFamily;
         card.classList.toggle('is-active', isActive);
     });
 }
 
 function openUiOptionsModal() {
     renderThemeOptions();
-    document.getElementById('uiOptionsStatus').textContent = `Current style: ${getThemeLabel(uiState.theme)}`;
+    const meta = getThemeMeta(uiState.theme);
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -222,7 +539,8 @@ function setSaveStatus(status, message) {
     uiState.saveMessage = message;
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
-    pill.className = `save-status save-status--${status}`;
+    const visualStatus = status === 'idle' ? 'saved' : status;
+    pill.className = `save-status save-status--${visualStatus}`;
     pill.textContent = message;
 }
 
@@ -234,15 +552,18 @@ function projectUpdate(updates = {}, options = {}) {
     return payload;
 }
 
+
 function normalizeProject(project) {
     if (!project || typeof project !== 'object') return null;
-    return {
+    const normalizedTasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+    const normalizedProject = {
         ...project,
         id: project.id || project._id || String(Date.now()),
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
         notes: typeof project.notes === 'string' ? project.notes : '',
-        tasks: Array.isArray(project.tasks) ? project.tasks : [],
+        tasks: normalizedTasks,
+        taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
         collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
         activities: Array.isArray(project.activities) ? project.activities : [],
         archived: Boolean(project.archived),
@@ -251,6 +572,7 @@ function normalizeProject(project) {
         lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
         __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
     };
+    return normalizedProject;
 }
 
 function runRenderStep(stepName, fn) {
@@ -323,94 +645,47 @@ function renderActiveFilterChips() {
     if (uiState.projectSearch.trim()) chips.push(`Search: ${uiState.projectSearch.trim()}`);
     if (uiState.ownerFilter !== 'all') chips.push(`Filter: ${uiState.ownerFilter}`);
     if (uiState.sortMode !== 'manual') chips.push(`Sort: ${uiState.sortMode}`);
-    if (uiState.activeSavedViewId) {
-        const view = uiState.savedViews.find(item => item.id === uiState.activeSavedViewId);
-        if (view) chips.push(`Saved View: ${view.name}`);
-    }
     container.innerHTML = chips.map(chip => `<span class="filter-chip">${escapeHtml(chip)}</span>`).join('');
 }
 
 function saveCurrentView() {
-    const name = window.prompt('Name this saved view:');
-    if (!name) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const view = {
-        id: `view_${Date.now()}`,
-        name: trimmed,
-        projectSearch: uiState.projectSearch,
-        ownerFilter: uiState.ownerFilter,
-        sortMode: uiState.sortMode,
-        savedAt: new Date().toISOString()
-    };
-    uiState.savedViews.unshift(view);
-    uiState.activeSavedViewId = view.id;
-    persistSavedViews();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function applySavedView(viewId) {
-    const view = uiState.savedViews.find(item => item.id === viewId);
-    if (!view) return;
-    uiState.projectSearch = view.projectSearch || '';
-    uiState.ownerFilter = view.ownerFilter || 'all';
-    uiState.sortMode = view.sortMode || 'manual';
-    uiState.activeSavedViewId = view.id;
-    const search = document.getElementById('projectSearchInput');
-    const filter = document.getElementById('projectOwnerFilter');
-    const sort = document.getElementById('projectSortSelect');
-    if (search) search.value = uiState.projectSearch;
-    if (filter) filter.value = uiState.ownerFilter;
-    if (sort) sort.value = uiState.sortMode;
-    render();
+    uiState.activeSavedViewId = '';
 }
 
 function deleteSavedView(viewId) {
-    uiState.savedViews = uiState.savedViews.filter(item => item.id !== viewId);
-    if (uiState.activeSavedViewId === viewId) uiState.activeSavedViewId = '';
-    persistSavedViews();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function clearSavedViews() {
     uiState.savedViews = [];
     uiState.activeSavedViewId = '';
-    persistSavedViews();
-    renderSavedViewsPanel();
-    renderActiveFilterChips();
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
 }
 
 function renderSavedViewsPanel() {
-    const list = document.getElementById('savedViewsList');
-    const count = document.getElementById('savedViewsCount');
-    if (!list || !count) return;
-    count.textContent = String(uiState.savedViews.length);
-    if (!uiState.savedViews.length) {
-        list.innerHTML = '<div class="side-panel-empty">No saved views yet</div>';
-        return;
-    }
-    list.innerHTML = uiState.savedViews.map(view => `
-        <div class="saved-view-card">
-            <button class="saved-view-main" type="button" onclick="applySavedView('${view.id}')">
-                <div class="saved-view-name">${escapeHtml(view.name)}</div>
-                <div class="saved-view-meta">${escapeHtml((view.projectSearch && `search “${view.projectSearch}”`) || 'no search')} • ${escapeHtml(view.ownerFilter)} • ${escapeHtml(view.sortMode)}</div>
-            </button>
-            <div class="saved-view-actions">
-                <button class="icon-button-small" type="button" onclick="applySavedView('${view.id}')">Open</button>
-                <button class="icon-button-small" type="button" onclick="deleteSavedView('${view.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
+    uiState.savedViews = Array.isArray(uiState.savedViews) ? uiState.savedViews : [];
 }
 
 function renderArchivedProjectsPanel() {
     const list = document.getElementById('archivedProjectsList');
     const count = document.getElementById('archivedProjectsCount');
-    if (!list || !count) return;
     const archivedProjects = getArchivedProjects();
-    count.textContent = String(archivedProjects.length);
+    if (count) count.textContent = String(archivedProjects.length);
+    if (!list) return;
     if (!archivedProjects.length) {
         list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
         return;
@@ -527,6 +802,76 @@ function setAccountStatus(message = '', type = '') {
     el.classList.toggle('is-success', type === 'success');
 }
 
+function renderLeaderboardPanel() {
+    const list = document.getElementById('leaderboardList');
+    if (!list) return;
+
+    const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
+    const rankedEntries = Array.isArray(accountState.leaderboard) ? [...accountState.leaderboard] : [];
+    let currentEntry = accountState.currentLeaderboardEntry || rankedEntries.find(entry => String(entry.userId) === currentUserId) || null;
+
+    if (!currentEntry && currentUserId) {
+        const ownProjects = state.getProjects().filter(project => String(project.ownerId || project.owner || '') === currentUserId || project.userRole === 'owner');
+        const liveCompletedTasks = ownProjects.reduce((sum, project) => sum + (Array.isArray(project.tasks) ? project.tasks.filter(task => task.completed).length : 0), 0);
+        const liveCompletedProjects = ownProjects.filter(project => project.completed && !project.archived).length;
+        currentEntry = {
+            userId: currentUserId,
+            username: accountState.user?.username || 'User',
+            completedProjects: liveCompletedProjects,
+            completedTasks: liveCompletedTasks,
+            totalCompletionPercentage: ownProjects.length ? calculateTotalCompletion() : 0,
+            rank: accountState.currentLeaderboardRank || null
+        };
+    }
+
+    const visibleEntries = rankedEntries.slice(0, 10);
+    if (currentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
+        visibleEntries.push(currentEntry);
+    }
+
+    if (!visibleEntries.length) {
+        list.innerHTML = '<div class="side-panel-empty">No rankings yet</div>';
+        return;
+    }
+
+    list.innerHTML = visibleEntries.map(entry => {
+        const isCurrent = currentUserId && String(entry.userId) === currentUserId;
+        const username = getLeaderboardUsername(entry);
+        return `
+            <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
+                <div class="leaderboard-row-title">
+                    <span class="leaderboard-row-rank">#${entry.rank || '—'}</span>
+                    <span class="leaderboard-row-name ${isCurrent ? 'is-current' : ''}">${escapeHtml(username)}</span>
+                </div>
+                <span class="leaderboard-row-stats">${Math.round(Number(entry.totalCompletionPercentage || 0))}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks completed</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function setSidebarSectionExpanded(sectionKey, expanded) {
+    const normalizedKey = String(sectionKey || '');
+    if (!normalizedKey) return;
+    uiState.sidebarSections[normalizedKey] = !!expanded;
+    const section = document.querySelector(`[data-sidebar-section="${normalizedKey}"]`);
+    if (!section) return;
+    section.classList.toggle('is-expanded', !!expanded);
+    const body = section.querySelector('.sidebar-section-body');
+    if (body) body.hidden = !expanded;
+    const toggle = section.querySelector('.sidebar-section-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+
+function toggleSidebarSection(sectionKey) {
+    setSidebarSectionExpanded(sectionKey, !uiState.sidebarSections[sectionKey]);
+}
+
+function initializeSidebarSections() {
+    ['leaderboard', 'notifications', 'settings'].forEach(sectionKey => {
+        setSidebarSectionExpanded(sectionKey, false);
+    });
+}
+
 
 function formatCompactDateTime(value) {
     if (!value) return 'Unknown';
@@ -601,9 +946,13 @@ async function refreshAccountProfile() {
         if (!response?.user && !fallbackUser) return;
         accountState.user = response?.user || fallbackUser;
         accountState.stats = response?.stats || accountState.stats;
+        accountState.leaderboard = Array.isArray(response?.leaderboard) ? response.leaderboard : [];
+        accountState.currentLeaderboardRank = response?.currentLeaderboardRank ?? null;
+        accountState.currentLeaderboardEntry = response?.currentLeaderboardEntry || null;
         accountState.pendingProfilePic = null;
         applyAccountUI(accountState.user);
         syncAccountStatsToModal();
+        renderLeaderboardPanel();
     } catch (err) {
         console.error('Failed to load account profile:', err);
         const fallbackUser = getCurrentUser?.() || accountState.user;
@@ -611,6 +960,7 @@ async function refreshAccountProfile() {
             accountState.user = fallbackUser;
             applyAccountUI(accountState.user);
             syncAccountStatsToModal();
+            renderLeaderboardPanel();
         }
     }
 }
@@ -788,6 +1138,11 @@ async function saveData() {
                     }, { skipTouch: true }));
                 });
             }
+            try {
+                await refreshAccountProfile();
+            } catch (err) {
+                console.error('Failed to refresh account profile after save:', err);
+            }
             setSaveStatus('saved', __saveQueued ? 'Saving queued changes…' : 'All changes saved');
         } while (__saveQueued);
     } finally {
@@ -817,6 +1172,7 @@ async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        taskCategories: [DEFAULT_TASK_CATEGORY],
         userRole: 'owner',
         collaborators: []
     };
@@ -1073,27 +1429,50 @@ function addTaskToProject(projectId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
-    
-    const newTask = { id: Date.now(), text: '', completed: false };
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
+    const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, category });
     // Add new tasks at the beginning (they'll appear first after sorting)
     const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
     
     return newTask.id;
 }
 
-function reorderTasks(projectId, oldIndex, newIndex) {
-    
-    
+function reorderTasks(projectId, oldIndex, newIndex, renderedTaskIds = []) {
     const project = state.findProject(projectId);
-    if (!project) return;
-    
-    const tasks = [...project.tasks];
-    const [movedTask] = tasks.splice(oldIndex, 1);
-    tasks.splice(newIndex, 0, movedTask);
-    
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const visibleTaskIds = renderedTaskIds
+        .map(id => Number(id))
+        .filter(id => Number.isFinite(id));
+
+    const movedTaskId = visibleTaskIds[oldIndex];
+    if (!Number.isFinite(movedTaskId)) return;
+
+    const displayOrder = [...visibleTaskIds];
+    const [movedId] = displayOrder.splice(oldIndex, 1);
+    displayOrder.splice(newIndex, 0, movedId);
+
+    const displayIndexById = new Map(displayOrder.map((id, index) => [id, index]));
+    const originalTasks = project.tasks.map((task, index) => normalizeTask(task, index));
+    const visibleTasks = originalTasks.filter(task => displayIndexById.has(task.id));
+
+    if (visibleTasks.length !== displayOrder.length) return;
+
+    const reorderedVisibleTasks = [...visibleTasks].sort((a, b) => {
+        return displayIndexById.get(a.id) - displayIndexById.get(b.id);
+    });
+
+    let visibleCursor = 0;
+    const tasks = originalTasks.map(task => {
+        if (!displayIndexById.has(task.id)) return task;
+        return reorderedVisibleTasks[visibleCursor++] || task;
+    });
+
     state.updateProject(projectId, projectUpdate({ tasks }));
     saveData();
     openProjectModal(projectId);
@@ -1260,18 +1639,30 @@ function syncViewTitle() {
 // VIEW MANAGEMENT
 // ============================================================================
 
+function setSidebarProjectsNav(activeId) {
+    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard', 'archivedProjectsCard'].forEach(id => {
+        document.getElementById(id)?.classList.toggle('active', id === activeId);
+    });
+}
+
 function switchToActiveView() {
+    // Reset owner filter so that clicking "Active" after "Shared" shows
+    // all active projects, not just the shared subset.
+    uiState.ownerFilter = 'all';
+    const ownerFilterEl = document.getElementById('projectOwnerFilter');
+    if (ownerFilterEl) ownerFilterEl.value = 'all';
     state.setView(VIEWS.ACTIVE);
-    document.getElementById('activeProjectsCard').classList.add('active');
-    document.getElementById('completedProjectsCard').classList.remove('active');
+    setSidebarProjectsNav('activeProjectsCard');
     setViewTitle('Active Projects');
     render();
 }
 
 function switchToCompletedView() {
+    uiState.ownerFilter = 'all';
+    const ownerFilterEl = document.getElementById('projectOwnerFilter');
+    if (ownerFilterEl) ownerFilterEl.value = 'all';
     state.setView(VIEWS.COMPLETED);
-    document.getElementById('completedProjectsCard').classList.add('active');
-    document.getElementById('activeProjectsCard').classList.remove('active');
+    setSidebarProjectsNav('completedProjectsCard');
     setViewTitle('Completed Projects');
     render();
 }
@@ -1654,12 +2045,19 @@ function setupTaskDragAndDrop(projectId) {
     const taskList = document.getElementById(`modal-task-list-${projectId}`);
     if (!taskList) return;
 
+    if (typeof taskList.__taskDragCleanup === 'function') {
+        taskList.__taskDragCleanup();
+    }
+
     // ── per-gesture state (reset each drag) ──
     let draggableItem = null;
     let pointerStartX = 0;
     let pointerStartY = 0;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
     let itemsGap = 0;
     let cachedItems = [];          // lazily populated, cleared on release
+    let currentDropCategory = null;
 
     // ── helpers ──
     function getAllItems() {
@@ -1672,6 +2070,27 @@ function setupTaskDragAndDrop(projectId) {
     }
     function isAbove(el)   { return el.hasAttribute('data-is-above'); }
     function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
+    function getCategoryDropTargets() {
+        return Array.from(document.querySelectorAll('[data-task-category-drop]'))
+            .filter(el => el.dataset.taskCategoryDropProject === projectId);
+    }
+    function clearCategoryDropTarget() {
+        getCategoryDropTargets().forEach(el => el.classList.remove('is-drop-target'));
+        currentDropCategory = null;
+    }
+    function setCategoryDropTarget(category) {
+        const normalizedCategory = category ? sanitizeTaskCategoryName(category) : null;
+        currentDropCategory = normalizedCategory;
+        getCategoryDropTargets().forEach(el => {
+            el.classList.toggle('is-drop-target', !!normalizedCategory && el.dataset.taskCategoryDrop === normalizedCategory);
+        });
+    }
+    function getCategoryDropTargetAtPoint(x, y) {
+        const hit = document.elementFromPoint(x, y);
+        const target = hit?.closest?.('[data-task-category-drop]');
+        if (!target || target.dataset.taskCategoryDropProject !== projectId) return null;
+        return target.dataset.taskCategoryDrop || null;
+    }
 
     // ── drag start ──
     function onStart(e) {
@@ -1684,6 +2103,9 @@ function setupTaskDragAndDrop(projectId) {
 
         pointerStartX = e.clientX ?? e.touches?.[0]?.clientX;
         pointerStartY = e.clientY ?? e.touches?.[0]?.clientY;
+        lastPointerX = pointerStartX;
+        lastPointerY = pointerStartY;
+        clearCategoryDropTarget();
 
         // measure the gap between the first two idle items (used to size the slide)
         const idle = getIdleItems();
@@ -1721,6 +2143,9 @@ function setupTaskDragAndDrop(projectId) {
 
         const cx = e.clientX ?? e.touches[0].clientX;
         const cy = e.clientY ?? e.touches[0].clientY;
+        lastPointerX = cx;
+        lastPointerY = cy;
+        setCategoryDropTarget(getCategoryDropTargetAtPoint(cx, cy));
 
         // 1. follow the pointer
         draggableItem.style.transform =
@@ -1780,7 +2205,17 @@ function setupTaskDragAndDrop(projectId) {
             if (reordered[i] === undefined) { newIndex = i; break; }
         }
 
-        // wipe all visual state before committing (reorderTasks re-renders the modal)
+        const dropCategory = currentDropCategory || getCategoryDropTargetAtPoint(lastPointerX, lastPointerY);
+        const draggedTaskId = Number(draggableItem.dataset.taskId);
+        const draggedTask = state.findProject(projectId)?.tasks
+            ?.map((task, index) => normalizeTask(task, index))
+            .find(task => task.id === draggedTaskId);
+        const shouldMoveToCategory = !!dropCategory &&
+            Number.isFinite(draggedTaskId) &&
+            draggedTask &&
+            draggedTask.category !== dropCategory;
+
+        // wipe all visual state before committing (reorderTasks/updateTaskCategory re-renders the modal)
         draggableItem.classList.remove('dragging');
         draggableItem.style.transform = '';
         all.forEach(item => {
@@ -1791,9 +2226,15 @@ function setupTaskDragAndDrop(projectId) {
 
         reset();
 
+        if (shouldMoveToCategory) {
+            updateTaskCategory(projectId, draggedTaskId, dropCategory);
+            return;
+        }
+
         // persist the new order (updates state → saves to MongoDB → re-renders modal)
-        if (originalIndex !== newIndex) {
-            reorderTasks(projectId, originalIndex, newIndex);
+        if (getProjectTaskSortPreference(projectId) === DEFAULT_TASK_SORT_MODE && originalIndex !== newIndex) {
+            const renderedTaskIds = all.map(item => item.dataset.taskId).filter(Boolean);
+            reorderTasks(projectId, originalIndex, newIndex, renderedTaskIds);
         }
     }
 
@@ -1801,6 +2242,7 @@ function setupTaskDragAndDrop(projectId) {
     function reset() {
         cachedItems     = [];
         draggableItem   = null;
+        clearCategoryDropTarget();
         document.body.style.overflow    = '';
         document.body.style.userSelect  = '';
         document.body.style.touchAction = '';
@@ -1813,11 +2255,458 @@ function setupTaskDragAndDrop(projectId) {
     // ── attach ──
     taskList.addEventListener('mousedown',  onStart);
     taskList.addEventListener('touchstart', onStart, { passive: false });
+    taskList.__taskDragCleanup = () => {
+        taskList.removeEventListener('mousedown', onStart);
+        taskList.removeEventListener('touchstart', onStart);
+        reset();
+    };
 }
 
 // ============================================================================
 // MODAL MANAGEMENT
 // ============================================================================
+
+
+
+function getDisplayTasksForProject(project, options = {}) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const sortMode = options.sortMode || getProjectTaskSortPreference(project?.id);
+    const hideCompleted = options.hideCompleted !== undefined
+        ? !!options.hideCompleted
+        : getProjectHideCompletedPreference(project?.id);
+    const activeCategory = options.activeCategory !== undefined
+        ? options.activeCategory
+        : getProjectTaskCategoryFilter(project?.id);
+    const orderedTasks = sortTasksForDisplay(tasks, sortMode);
+    const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
+        ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
+        : orderedTasks;
+    return hideCompleted ? categoryFilteredTasks.filter(task => !task.completed) : categoryFilteredTasks;
+}
+
+
+function renderTaskTagOptions(selectedValue) {
+    return TASK_TAG_OPTIONS.map(option => `
+        <option value="${option.value}" ${selectedValue === option.value ? 'selected' : ''}>${option.label}</option>
+    `).join('');
+}
+
+function renderTaskCategoryOptions(project, selectedValue) {
+    return getProjectTaskCategories(project).map(category => `
+        <option value="${escapeHtml(category)}" ${selectedValue === category ? 'selected' : ''}>${escapeHtml(category)}</option>
+    `).join('');
+}
+
+function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
+    const categories = getProjectTaskCategories(project);
+    const canEdit = state.canEdit(projectId);
+    const isCreating = uiState.creatingTaskCategoryProjectId === projectId;
+    const tabItems = [
+        { kind: 'all', label: 'All', category: DEFAULT_TASK_CATEGORY_FILTER }
+    ];
+
+    categories.forEach(category => {
+        tabItems.push({ kind: 'category', label: category, category });
+    });
+
+    if (canEdit) {
+        tabItems.push({ kind: isCreating ? 'create-input' : 'create', label: '+', category: null });
+    }
+
+    return `
+        <div class="task-category-toolbar">
+            <div class="task-category-tabs" role="tablist" aria-label="Task categories">
+                ${tabItems.map((tab, index) => {
+                    const positionClass = getTaskCategoryTabPositionClass(index, tabItems.length);
+                    const isAll = tab.kind === 'all';
+                    const isCreate = tab.kind === 'create' || tab.kind === 'create-input';
+                    const isInput = tab.kind === 'create-input';
+                    const isActive = !isCreate && activeCategory === tab.category;
+                    const categoryLiteral = tab.category ? serializeInlineJsString(tab.category) : null;
+                    const filterLiteral = serializeInlineJsString(tab.category || DEFAULT_TASK_CATEGORY_FILTER);
+                    const menuOpen = tab.kind === 'category' && canEdit && isTaskCategoryMenuOpen(projectId, tab.category);
+                    const shellClasses = ['task-category-tab-shell', positionClass];
+                    const wrapClasses = ['task-category-tab-wrap', positionClass.replace('shell', 'wrap')];
+                    if (isAll) {
+                        shellClasses.push('task-category-tab-shell--all');
+                        wrapClasses.push('task-category-tab-wrap--all');
+                    }
+                    if (isCreate) {
+                        shellClasses.push('task-category-tab-shell--create');
+                        wrapClasses.push('task-category-tab-wrap--create');
+                    }
+                    if (isInput) {
+                        shellClasses.push('is-editing');
+                        wrapClasses.push('is-editing');
+                    }
+                    if (isActive) {
+                        shellClasses.push('is-active');
+                        wrapClasses.push('is-active');
+                    }
+                    if (menuOpen) {
+                        shellClasses.push('is-menu-open');
+                        wrapClasses.push('is-menu-open');
+                    }
+                    const dropAttributes = tab.kind === 'category'
+                        ? ` data-task-category-drop="${escapeHtml(tab.category)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
+                        : '';
+                    const shellClick = isInput
+                        ? ''
+                        : (tab.kind === 'create'
+                            ? ` onclick="startInlineTaskCategoryCreate('${projectId}', event)"`
+                            : ` onclick="setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})"`);
+                    const tabControl = isInput ? `
+                        <input class="task-category-inline-input"
+                               type="text"
+                               aria-label="New task category"
+                               placeholder="New tab"
+                               autocomplete="off"
+                               onkeydown="handleInlineTaskCategoryCreateKeydown('${projectId}', event)"
+                               onblur="commitInlineTaskCategoryCreate('${projectId}', this.value)">
+                    ` : `
+                        <button class="task-category-tab"
+                                type="button"
+                                ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
+                                onclick="event.stopPropagation(); ${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
+                    `;
+                    return `
+                        <div class="${wrapClasses.join(' ')}"${dropAttributes}>
+                            <div class="${shellClasses.join(' ')}"${shellClick}>
+                                ${tabControl}
+                                ${tab.kind === 'category' && canEdit ? `
+                                    <button class="task-category-menu-button"
+                                            type="button"
+                                            aria-label="Category options"
+                                            aria-expanded="${menuOpen ? 'true' : 'false'}"
+                                            onmousedown="event.stopPropagation();"
+                                            onpointerdown="event.stopPropagation();"
+                                            onclick="toggleTaskCategoryMenu('${projectId}', ${categoryLiteral}, event)">
+                                        <span></span><span></span><span></span>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ${menuOpen ? `
+                                <div class="task-category-menu-popover" onclick="event.stopPropagation()">
+                                    <button class="task-category-menu-option" type="button" onclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
+                                    <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="event.stopPropagation(); deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
+                                </div>
+                            ` : ''}
+                        </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderTaskCategoryControls(projectId) {
+    const project = state.findProject(projectId);
+    const container = document.getElementById(`task-category-controls-${projectId}`);
+    if (!project || !container) return;
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
+    if (uiState.creatingTaskCategoryProjectId === projectId) {
+        requestAnimationFrame(() => {
+            const input = container.querySelector('.task-category-inline-input');
+            if (input) input.focus();
+        });
+    }
+}
+
+function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
+    const normalizedTask = normalizeTask(task);
+    const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
+
+    return `
+        <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
+             data-task-item
+             data-task-id="${normalizedTask.id}"
+             onclick="handleTaskClick('${projectId}', ${normalizedTask.id}, event)">
+            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+            </svg>
+            <div class="task-checkbox ${normalizedTask.completed ? 'checked' : ''}"
+                 data-task-checkbox="${normalizedTask.id}"
+                 onclick="event.stopPropagation(); toggleTask('${projectId}', ${normalizedTask.id})">
+                ${normalizedTask.completed ? `
+                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                ` : ''}
+            </div>
+            <div class="task-main-content">
+                <span class="task-text ${normalizedTask.completed ? 'completed' : ''}"
+                      data-task-text="${normalizedTask.id}"
+                      id="modal-task-text-${normalizedTask.id}"
+                      onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${escapeHtml(normalizedTask.text)}</span>
+                <input type="text"
+                       class="task-input"
+                       id="modal-task-input-${normalizedTask.id}"
+                       value="${escapeHtml(normalizedTask.text)}"
+                       placeholder="New task"
+                       style="display: none;"
+                       onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
+                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); }">
+            </div>
+            <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <div class="task-priority-control ${priorityMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+                    <button class="task-priority-button task-priority-button--${normalizedTask.tag}"
+                            type="button"
+                            aria-label="Task priority"
+                            onclick="toggleTaskPriorityMenu('${projectId}', ${normalizedTask.id}, event)">
+                        <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                    </button>
+                    ${priorityMenuOpen ? `
+                        <div class="task-priority-popover" onclick="event.stopPropagation()">
+                            ${TASK_TAG_OPTIONS.map(option => `
+                                <button class="task-priority-option ${normalizedTask.tag === option.value ? 'is-active' : ''}"
+                                        type="button"
+                                        onclick="selectTaskPriority('${projectId}', ${normalizedTask.id}, '${option.value}')">
+                                    <span class="task-tag-flag task-tag-flag--${option.value}" aria-hidden="true"></span>
+                                    <span>${option.label}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${normalizedTask.id})" style="opacity: 1;">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function renderModalTaskList(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const taskList = document.getElementById(`modal-task-list-${projectId}`);
+    if (!taskList) return;
+
+    const hideCompleted = getProjectHideCompletedPreference(projectId);
+    const sortMode = getProjectTaskSortPreference(projectId);
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory });
+    const selectedTasks = state.getSelectedTasks(projectId);
+
+    taskList.dataset.sortMode = sortMode;
+    taskList.dataset.activeCategory = activeCategory;
+    taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    renderTaskCategoryControls(projectId);
+
+    setTimeout(() => setupTaskDragAndDrop(projectId), 100);
+}
+
+
+function setProjectTaskSortMode(projectId, sortMode) {
+    setProjectTaskSortPreference(projectId, sortMode);
+    renderModalTaskList(projectId);
+}
+
+function setProjectTaskCategoryFilter(projectId, categoryValue) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const categories = getProjectTaskCategories(project);
+    const nextCategory = categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? DEFAULT_TASK_CATEGORY_FILTER
+        : (categories.includes(categoryValue) ? categoryValue : DEFAULT_TASK_CATEGORY);
+    setStoredProjectTaskCategoryFilter(projectId, nextCategory);
+    renderModalTaskList(projectId);
+}
+
+function toggleTaskPriorityMenu(projectId, taskId, event) {
+    event?.stopPropagation?.();
+    const isOpen = isTaskPriorityMenuOpen(projectId, taskId);
+    uiState.openTaskCategoryMenu = null;
+    uiState.openTaskPriorityMenu = isOpen ? null : { projectId, taskId };
+    renderModalTaskList(projectId);
+}
+
+function selectTaskPriority(projectId, taskId, tagValue) {
+    updateTaskTag(projectId, taskId, tagValue);
+    uiState.openTaskPriorityMenu = null;
+    renderModalTaskList(projectId);
+}
+
+function toggleTaskCategoryMenu(projectId, category, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    event?.stopImmediatePropagation?.();
+    const isOpen = isTaskCategoryMenuOpen(projectId, category);
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = isOpen ? null : { projectId, category };
+    renderTaskCategoryControls(projectId);
+}
+
+function renameTaskCategoryPrompt(projectId, currentCategory) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const nextNameRaw = window.prompt('Rename category', currentCategory);
+    if (nextNameRaw === null) return;
+    const nextCategory = sanitizeTaskCategoryName(nextNameRaw);
+    if (!nextCategory) return;
+    if (nextCategory === currentCategory) {
+        uiState.openTaskCategoryMenu = null;
+        renderTaskCategoryControls(projectId);
+        return;
+    }
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.category !== currentCategory) return normalizedTask;
+        return { ...normalizedTask, category: nextCategory };
+    });
+    const nextCategories = [...new Set(getProjectTaskCategories(project).map(category => category === currentCategory ? nextCategory : category))];
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
+        setStoredProjectTaskCategoryFilter(projectId, nextCategory);
+    }
+    uiState.openTaskCategoryMenu = null;
+    saveData();
+    uiState.openTaskPriorityMenu = null;
+    renderModalTaskList(projectId);
+    render();
+}
+
+function deleteTaskCategory(projectId, currentCategory) {
+    if (!state.canEdit(projectId) || currentCategory === DEFAULT_TASK_CATEGORY) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    if (!window.confirm(`Delete "${currentCategory}"? Tasks in this category will move to ${DEFAULT_TASK_CATEGORY}.`)) return;
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.category !== currentCategory) return normalizedTask;
+        return { ...normalizedTask, category: DEFAULT_TASK_CATEGORY };
+    });
+    const nextCategories = getProjectTaskCategories(project).filter(category => category !== currentCategory);
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
+        setStoredProjectTaskCategoryFilter(projectId, DEFAULT_TASK_CATEGORY_FILTER);
+    }
+    uiState.openTaskCategoryMenu = null;
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function updateTaskTag(projectId, taskId, tagValue) {
+    if (!state.canEdit(projectId)) return;
+    const normalizedTagValue = String(tagValue ?? '').trim().toLowerCase();
+    const nextTag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, normalizedTagValue) ? normalizedTagValue : DEFAULT_TASK_TAG;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            tag: nextTag
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function updateTaskCategory(projectId, taskId, categoryValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const nextCategory = sanitizeTaskCategoryName(categoryValue || DEFAULT_TASK_CATEGORY);
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            category: nextCategory
+        };
+    });
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function startInlineTaskCategoryCreate(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+    uiState.creatingTaskCategoryProjectId = projectId;
+    renderTaskCategoryControls(projectId);
+}
+
+function cancelInlineTaskCategoryCreate(projectId) {
+    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
+    uiState.creatingTaskCategoryProjectId = null;
+    renderTaskCategoryControls(projectId);
+}
+
+function commitInlineTaskCategoryCreate(projectId, rawValue) {
+    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const rawText = String(rawValue ?? '').trim();
+    if (!rawText) {
+        cancelInlineTaskCategoryCreate(projectId);
+        return;
+    }
+
+    const nextCategory = sanitizeTaskCategoryName(rawText);
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
+    uiState.creatingTaskCategoryProjectId = null;
+    state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
+    saveData();
+    setProjectTaskCategoryFilter(projectId, nextCategory);
+    render();
+}
+
+function handleInlineTaskCategoryCreateKeydown(projectId, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineTaskCategoryCreate(projectId, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineTaskCategoryCreate(projectId);
+    }
+}
+
+function createTaskCategory(projectId, rawValue = '') {
+    if (rawValue) {
+        uiState.creatingTaskCategoryProjectId = projectId;
+        commitInlineTaskCategoryCreate(projectId, rawValue);
+        return;
+    }
+    startInlineTaskCategoryCreate(projectId);
+}
+
+function handleTaskCategoryCreateKeydown(event, projectId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        startInlineTaskCategoryCreate(projectId, event);
+    }
+}
 
 function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
@@ -1825,8 +2714,11 @@ function openProjectModal(projectId, options = {}) {
 
     const tasks = Array.isArray(project.tasks) ? project.tasks : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-    const hideCompleted = state.shouldHideCompletedTasks();
-    const displayTasks = hideCompleted ? tasks.filter(t => !t.completed) : tasks;
+    const hideCompleted = getProjectHideCompletedPreference(project.id);
+    const taskSortMode = getProjectTaskSortPreference(project.id);
+    const activeCategory = getProjectTaskCategoryFilter(project.id);
+    state.setHideCompletedTasks(hideCompleted);
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
 
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
@@ -1899,68 +2791,50 @@ function openProjectModal(projectId, options = {}) {
                 Add Task
             </button>
             
-            <!-- Hide Completed Toggle with Block Slider -->
-            <div class="hide-completed-toggle">
-                <div class="toggle-label">Hide completed tasks</div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
-                           onchange="toggleHideCompleted()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-            
-            <div class="modal-tasks">
-                <div class="task-list" id="modal-task-list-${project.id}">
-                    ${displayTasks.map(task => `
-                        <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
-                             data-task-item 
-                             data-task-id="${task.id}"
-                             onclick="handleTaskClick('${project.id}', ${task.id}, event)">
-                            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                            </svg>
-                            <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                                 data-task-checkbox="${task.id}"
-                                 onclick="event.stopPropagation(); toggleTask('${project.id}', ${task.id})">
-                                ${task.completed ? `
-                                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                ` : ''}
-                            </div>
-                            <span class="task-text ${task.completed ? 'completed' : ''}" 
-                                  data-task-text="${task.id}"
-                                  id="modal-task-text-${task.id}"
-                                  onclick="event.stopPropagation(); editModalTask(${task.id})">${task.text}</span>
-                            <input type="text" 
-                                   class="task-input"
-                                   id="modal-task-input-${task.id}"
-                                   value="${task.text}"
-                                   placeholder="New task"
-                                   style="display: none;"
-                                   onblur="finishEditModalTask('${project.id}', ${task.id})"
-                                   onkeydown="if(event.key==='Enter') finishEditModalTask('${project.id}', ${task.id})">
-                            <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${project.id}', ${task.id})" style="opacity: 1;">
-                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
+            <div class="modal-tasks-card">
+                <div class="task-category-controls" id="task-category-controls-${project.id}">
+                    ${buildTaskCategoryControlsMarkup(project.id, project, activeCategory)}
+                </div>
+
+                <div class="modal-tasks-card-body">
+                    <div class="modal-task-controls-row">
+                        <div class="hide-completed-toggle">
+                            <div class="toggle-label">Hide completed tasks</div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
+                                       onchange="toggleHideCompleted()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="task-sort-control">
+                            <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
+                            <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
+                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                                <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-tasks">
+                        <div class="task-list" id="modal-task-list-${project.id}">
+                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
+                        </div>
+                        
+                        <!-- Paste Tasks Section in Modal -->
+                        <div class="modal-paste-section">
+                            <h4 class="modal-paste-title">Tasks List</h4>
+                            <textarea 
+                                class="paste-box"
+                                id="modal-paste-box-${project.id}"
+                                placeholder="Enter tasks here"
+                                onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
+                            <button 
+                                class="paste-button"
+                                onclick="pasteTasksInModal('${project.id}')">
+                                Add Pasted Tasks
                             </button>
                         </div>
-                    `).join('')}
-                </div>
-                
-                <!-- Paste Tasks Section in Modal -->
-                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(47, 39, 206, 0.1);">
-                    <h4 style="font-size: 14px; font-weight: bold; color: #2d3748; margin-bottom: 12px;">Tasks List</h4>
-                    <textarea 
-                        id="modal-paste-box-${project.id}"
-                        placeholder="Enter tasks here"
-                        style="width: 100%; min-height: 80px; background: #e8ecf1; border: 1px solid rgba(47, 39, 206, 0.2); border-radius: 8px; padding: 12px; color: #2d3748; font-size: 12px; font-family: inherit; resize: vertical; box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9); outline: none;"></textarea>
-                    <button 
-                        onclick="pasteTasksInModal('${project.id}')"
-                        style="width: 100%; margin-top: 8px; padding: 8px; background: rgba(47, 39, 206, 0.2); border: none; border-radius: 8px; color: #2f27ce; font-size: 12px; cursor: pointer; font-family: inherit;">
-                        Add Pasted Tasks
-                    </button>
+                    </div>
                 </div>
             </div>
             
@@ -2077,7 +2951,7 @@ function openProjectModal(projectId, options = {}) {
         restoreProjectModalState(project.id, options.restoreState);
     }
     
-    // Setup drag and drop for tasks
+    // Setup task dragging for manual reordering and category-tab drops.
     setTimeout(() => setupTaskDragAndDrop(project.id), 100);
 }
 
@@ -2101,62 +2975,16 @@ function saveProjectNotes(projectId) {
 
 function toggleHideCompleted() {
     const checkbox = document.getElementById('hide-completed-checkbox');
+    if (!checkbox) return;
     state.setHideCompletedTasks(checkbox.checked);
-    
-    // Find the currently open modal project
+
     const modalContent = document.getElementById('modalContent');
-    const progressBar = modalContent.querySelector('[data-progress-bar]');
+    const progressBar = modalContent?.querySelector('[data-progress-bar]');
     const projectId = progressBar?.getAttribute('data-progress-bar');
-    if (projectId) {
-        const project = state.findProject(projectId);
-        if (!project) return;
+    if (!projectId) return;
 
-        const hideCompleted = checkbox.checked;
-        const displayTasks = hideCompleted ? project.tasks.filter(t => !t.completed) : project.tasks;
-        const selectedTasks = state.getSelectedTasks(projectId);
-
-        const taskList = document.getElementById(`modal-task-list-${projectId}`);
-        if (taskList) {
-            taskList.innerHTML = displayTasks.map(task => `
-                <div class="task-item ${selectedTasks.has(task.id) ? 'selected' : ''}" 
-                     data-task-item 
-                     data-task-id="${task.id}"
-                     onclick="handleTaskClick('${projectId}', ${task.id}, event)">
-                    <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                    </svg>
-                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                         data-task-checkbox="${task.id}"
-                         onclick="event.stopPropagation(); toggleTask('${projectId}', ${task.id})">
-                        ${task.completed ? `
-                            <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        ` : ''}
-                    </div>
-                    <span class="task-text ${task.completed ? 'completed' : ''}" 
-                          data-task-text="${task.id}"
-                          id="modal-task-text-${task.id}"
-                          onclick="event.stopPropagation(); editModalTask(${task.id})">${task.text}</span>
-                    <input type="text" 
-                           class="task-input"
-                           id="modal-task-input-${task.id}"
-                           value="${task.text}"
-                           placeholder="New task"
-                           style="display: none;"
-                           onblur="finishEditModalTask('${projectId}', ${task.id})"
-                           onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${task.id})">
-                    <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${task.id})" style="opacity: 1;">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            `).join('');
-            // Re-attach drag-and-drop to the new task elements
-            setTimeout(() => setupTaskDragAndDrop(projectId), 100);
-        }
-    }
+    setProjectHideCompletedPreference(projectId, checkbox.checked);
+    renderModalTaskList(projectId);
 }
 
 function closeProjectModal() {
@@ -2297,14 +3125,17 @@ function pasteTasks() {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const newTasks = taskLines.map(text => ({
+    const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
         text: capitalizeFirstLetter(text),
-        completed: false
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        category: DEFAULT_TASK_CATEGORY
     }));
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), DEFAULT_TASK_CATEGORY])];
     
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     
     pasteBox.value = '';
     projectSelect.value = '';
@@ -2315,33 +3146,49 @@ function pasteTasks() {
 }
 
 function pasteTasksInModal(projectId) {
-    
-    
     const pasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+    if (!pasteBox) return;
+
     const taskText = pasteBox.value.trim();
-    
     if (!taskText) return;
-    
+
     const taskLines = taskText.split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
-    
+
     if (taskLines.length === 0) return;
-    
+
     const project = state.findProject(projectId);
     if (!project) return;
-    
-    const newTasks = taskLines.map(text => ({
+
+    const modalScroll = pasteBox.closest('.modal-scroll-inner');
+    const previousScrollTop = modalScroll?.scrollTop ?? null;
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
         text: capitalizeFirstLetter(text),
-        completed: false
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        category
     }));
-    
+    const nextCategories = [...new Set([...getProjectTaskCategories(project), category])];
+
     const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
-    
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+
+    pasteBox.value = '';
     saveData();
-    openProjectModal(projectId);
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+
+    requestAnimationFrame(() => {
+        if (modalScroll && previousScrollTop !== null) {
+            modalScroll.scrollTop = previousScrollTop;
+        }
+        const nextPasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+        if (nextPasteBox) nextPasteBox.focus({ preventScroll: true });
+    });
 }
 
 async function archiveProject(projectId) {
@@ -2361,6 +3208,12 @@ async function restoreArchivedProject(projectId) {
     render();
 }
 
+function handleModalPasteKeydown(projectId, event) {
+    if (!event || event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    pasteTasksInModal(projectId);
+}
+
 function getCommandPaletteActions() {
     const currentVisible = getFilteredProjects();
     return [
@@ -2368,9 +3221,7 @@ function getCommandPaletteActions() {
         { id: 'view-active', title: 'Switch to Active Projects', copy: 'Show active projects.', run: () => switchToActiveView() },
         { id: 'view-completed', title: 'Switch to Completed Projects', copy: 'Show completed projects.', run: () => switchToCompletedView() },
         { id: 'toggle-panel', title: 'Toggle control panel', copy: 'Collapse or expand the side panel.', run: () => {
-            const controlPanel = document.getElementById('controlPanel');
-            if (state.isControlPanelOpen()) document.getElementById('collapseButton')?.click();
-            else document.getElementById('expandButton')?.click();
+            document.getElementById('panelEdgeToggle')?.click();
         } },
         { id: 'open-account', title: 'Open account settings', copy: 'Edit your profile and stats.', run: () => openAccountSettingsModal() },
         { id: 'open-ui', title: 'Open UI options', copy: 'Change the current theme.', run: () => openUiOptionsModal() },
@@ -2461,6 +3312,7 @@ function render() {
     runRenderStep('shared projects panel', renderSharedProjectsPanel);
     runRenderStep('archived projects panel', renderArchivedProjectsPanel);
     runRenderStep('notifications panel', renderNotificationsPanel);
+    runRenderStep('leaderboard panel', renderLeaderboardPanel);
     runRenderStep('saved views panel', renderSavedViewsPanel);
     runRenderStep('active filter chips', renderActiveFilterChips);
     runRenderStep('account stats', syncAccountStatsToModal);
@@ -2575,13 +3427,13 @@ function renderProjectCard(project) {
 function renderSharedProjectsPanel() {
     const sharedProjectsList = document.getElementById('sharedProjectsList');
     const sharedProjectsCount = document.getElementById('sharedProjectsCount');
-    if (!sharedProjectsList || !sharedProjectsCount) return;
 
     const sharedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).filter(project =>
         project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
     );
 
-    sharedProjectsCount.textContent = String(sharedActiveProjects.length);
+    if (sharedProjectsCount) sharedProjectsCount.textContent = String(sharedActiveProjects.length);
+    if (!sharedProjectsList) return;
 
     if (!sharedActiveProjects.length) {
         sharedProjectsList.innerHTML = '<div class="side-panel-empty">No shared active projects</div>';
@@ -2631,18 +3483,28 @@ function timeAgo(isoString) {
 }
 
 function renderNotificationsPanel() {
-    const notificationsList = document.getElementById('notificationsList');
     const notificationsUnreadCount = document.getElementById('notificationsUnreadCount');
-    if (!notificationsList || !notificationsUnreadCount) return;
+    const notificationsSummaryText = document.getElementById('notificationsSummaryText');
+    const notificationsModalList = document.getElementById('notificationsModalList');
 
-    notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
+    if (notificationsUnreadCount) {
+        notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
+    }
+
+    if (notificationsSummaryText) {
+        notificationsSummaryText.textContent = notificationState.unreadCount
+            ? `${notificationState.unreadCount} unread notification${notificationState.unreadCount === 1 ? '' : 's'}`
+            : 'No unread notifications';
+    }
+
+    if (!notificationsModalList) return;
 
     if (!notificationState.items.length) {
-        notificationsList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
+        notificationsModalList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
         return;
     }
 
-    notificationsList.innerHTML = notificationState.items.map(notification => `
+    notificationsModalList.innerHTML = notificationState.items.map(notification => `
         <button class="notification-card ${notification.read ? '' : 'notification-card--unread'}"
                 type="button"
                 onclick="openNotificationProject('${notification._id}', '${notification.projectId}')">
@@ -2653,6 +3515,72 @@ function renderNotificationsPanel() {
             <div class="notification-message"><strong>${notification.actorName || 'Someone'}</strong> ${notification.message}</div>
         </button>
     `).join('');
+}
+
+function openNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.add('active');
+}
+
+function closeNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.remove('active');
+}
+
+function openShortcutsModal() {
+    document.getElementById('shortcutsModal')?.classList.add('active');
+}
+
+function closeShortcutsModal() {
+    document.getElementById('shortcutsModal')?.classList.remove('active');
+}
+
+function switchToSharedView() {
+    uiState.ownerFilter = 'shared';
+    uiState.activeSavedViewId = '';
+    const ownerFilter = document.getElementById('projectOwnerFilter');
+    if (ownerFilter) ownerFilter.value = 'shared';
+    state.setView(VIEWS.ACTIVE);
+    setSidebarProjectsNav('sharedProjectsCard');
+    setViewTitle('Shared Projects');
+    render();
+}
+
+function renderArchivedProjectsModalList() {
+    const list = document.getElementById('archivedProjectsModalList');
+    if (!list) return;
+    const archivedProjects = getArchivedProjects();
+    if (!archivedProjects.length) {
+        list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
+        return;
+    }
+    list.innerHTML = archivedProjects.map(project => `
+        <div class="archived-project-card">
+            <div>
+                <div class="archived-project-title">${escapeHtml(project.title)}</div>
+                <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
+            </div>
+            <div class="archived-project-actions">
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openArchivedProjectsModal() {
+    setSidebarProjectsNav('archivedProjectsCard');
+    renderArchivedProjectsModalList();
+    document.getElementById('archivedProjectsModal')?.classList.add('active');
+}
+
+function closeArchivedProjectsModal() {
+    document.getElementById('archivedProjectsModal')?.classList.remove('active');
+    if (uiState.ownerFilter === 'shared' && state.getView() === VIEWS.ACTIVE) {
+        setSidebarProjectsNav('sharedProjectsCard');
+    } else if (state.getView() === VIEWS.COMPLETED) {
+        setSidebarProjectsNav('completedProjectsCard');
+    } else {
+        setSidebarProjectsNav('activeProjectsCard');
+    }
 }
 
 async function refreshNotifications() {
@@ -2831,10 +3759,13 @@ function initializeEventHandlers() {
         expandButton?.classList.toggle('hidden', !isCollapsed);
         collapseButton?.setAttribute('aria-expanded', String(!isCollapsed));
         expandButton?.setAttribute('aria-expanded', String(isCollapsed));
+        const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+        panelEdgeToggle?.setAttribute('aria-expanded', String(!isCollapsed));
+        panelEdgeToggle?.setAttribute('aria-label', isCollapsed ? 'Open control panel' : 'Close control panel');
     };
 
     const collapseControlPanel = () => {
-        if (!controlPanel || !expandButton) return;
+        if (!controlPanel) return;
         state.setControlPanelOpen(false);
         controlPanel.classList.add('collapsed');
         viewport?.classList.remove('full');
@@ -2842,7 +3773,7 @@ function initializeEventHandlers() {
     };
 
     const expandControlPanel = () => {
-        if (!controlPanel || !expandButton) return;
+        if (!controlPanel) return;
         state.setControlPanelOpen(true);
         controlPanel.classList.remove('collapsed');
         viewport?.classList.remove('full');
@@ -2851,6 +3782,17 @@ function initializeEventHandlers() {
 
     collapseButton?.addEventListener('click', collapseControlPanel);
     expandButton?.addEventListener('click', expandControlPanel);
+
+    // Always-visible edge toggle — toggles between expand/collapse based on current state
+    const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+    panelEdgeToggle?.addEventListener('click', () => {
+        if (controlPanel?.classList.contains('collapsed')) {
+            expandControlPanel();
+        } else {
+            collapseControlPanel();
+        }
+    });
+
     syncControlPanelState();
 
     // Add project button
@@ -2862,7 +3804,21 @@ function initializeEventHandlers() {
     // Paste button
     document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
+    document.querySelectorAll('[data-sidebar-toggle]').forEach(button => {
+        button.addEventListener('click', () => toggleSidebarSection(button.dataset.sidebarToggle));
+    });
+    initializeSidebarSections();
+
     document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
+    document.getElementById('viewNotificationsBtn')?.addEventListener('click', openNotificationsModal);
+    document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
+    document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
+    document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
+    document.getElementById('sidebarSignOutBtn')?.addEventListener('click', logout);
+    document.getElementById('activeProjectsCard')?.addEventListener('click', switchToActiveView);
+    document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
+    document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
+    document.getElementById('archivedProjectsCard')?.addEventListener('click', openArchivedProjectsModal);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -2890,6 +3846,21 @@ function initializeEventHandlers() {
         if (e.target.id === 'uiOptionsModal') closeUiOptionsModal();
     });
 
+    document.getElementById('notificationsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'notificationsModal') closeNotificationsModal();
+    });
+    document.getElementById('closeNotificationsModalBtn')?.addEventListener('click', closeNotificationsModal);
+
+    document.getElementById('shortcutsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'shortcutsModal') closeShortcutsModal();
+    });
+    document.getElementById('closeShortcutsModalBtn')?.addEventListener('click', closeShortcutsModal);
+
+    document.getElementById('archivedProjectsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'archivedProjectsModal') closeArchivedProjectsModal();
+    });
+    document.getElementById('closeArchivedProjectsModalBtn')?.addEventListener('click', closeArchivedProjectsModal);
+
     document.getElementById('commandPaletteModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'commandPaletteModal') closeCommandPalette();
     });
@@ -2909,10 +3880,13 @@ function initializeEventHandlers() {
         uiState.activeSavedViewId = '';
         render();
     });
-    document.getElementById('saveCurrentViewBtn')?.addEventListener('click', saveCurrentView);
-    document.getElementById('clearSavedViewsBtn')?.addEventListener('click', clearSavedViews);
-    document.querySelectorAll('[data-theme-option]').forEach(button => {
-        button.addEventListener('click', () => applyTheme(button.getAttribute('data-theme-option')));
+    document.querySelectorAll('[data-theme-family-option]').forEach(button => {
+        button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
+    });
+    document.getElementById('colorModeToggleBtn')?.addEventListener('click', () => {
+        const meta = getThemeMeta(uiState.theme);
+        const nextMode = meta.mode === 'dark' ? 'light' : 'dark';
+        applyTheme(buildThemeName(meta.family, nextMode));
     });
     document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
         uiState.commandQuery = e.target.value || '';
@@ -2950,14 +3924,10 @@ function initializeEventHandlers() {
                 addProject();
                 break;
             case SHORTCUTS.TOGGLE_PANEL:
-                if (state.isControlPanelOpen()) {
-                    collapseButton.click();
-                } else {
-                    expandButton.click();
-                }
+                document.getElementById('panelEdgeToggle')?.click();
                 break;
             case SHORTCUTS.TOGGLE_MENU:
-                menuButton.click();
+                openShortcutsModal();
                 break;
             case SHORTCUTS.VIEW_ACTIVE:
                 switchToActiveView();
@@ -2978,7 +3948,7 @@ function initializeEventHandlers() {
 
 N - New Project
 C - Toggle Control Panel
-M - Toggle Menu
+M - Keyboard Shortcuts
 A - View Active Projects
 D - View Completed Projects
 Z - Undo (last deletion)
@@ -3110,6 +4080,21 @@ window.handleTaskClick = handleTaskClick;
 window.switchModalTab = switchModalTab;
 window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
+window.setProjectTaskSortMode = setProjectTaskSortMode;
+window.updateTaskTag = updateTaskTag;
+window.updateTaskCategory = updateTaskCategory;
+window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
+window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
+window.selectTaskPriority = selectTaskPriority;
+window.toggleTaskCategoryMenu = toggleTaskCategoryMenu;
+window.renameTaskCategoryPrompt = renameTaskCategoryPrompt;
+window.deleteTaskCategory = deleteTaskCategory;
+window.createTaskCategory = createTaskCategory;
+window.startInlineTaskCategoryCreate = startInlineTaskCategoryCreate;
+window.commitInlineTaskCategoryCreate = commitInlineTaskCategoryCreate;
+window.cancelInlineTaskCategoryCreate = cancelInlineTaskCategoryCreate;
+window.handleInlineTaskCategoryCreateKeydown = handleInlineTaskCategoryCreateKeydown;
+window.handleTaskCategoryCreateKeydown = handleTaskCategoryCreateKeydown;
 window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
 window.changeCollaboratorRole = changeCollaboratorRole;
@@ -3118,7 +4103,17 @@ window.editProjectTitleOnCard = editProjectTitleOnCard;
 window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.openNotificationProject = openNotificationProject;
+window.toggleSidebarSection = toggleSidebarSection;
+window.handleModalPasteKeydown = handleModalPasteKeydown;
 window.markAllNotificationsRead = markAllNotificationsRead;
+window.openNotificationsModal = openNotificationsModal;
+window.closeNotificationsModal = closeNotificationsModal;
+window.openShortcutsModal = openShortcutsModal;
+window.closeShortcutsModal = closeShortcutsModal;
+window.switchToSharedView = switchToSharedView;
+window.openArchivedProjectsModal = openArchivedProjectsModal;
+window.closeArchivedProjectsModal = closeArchivedProjectsModal;
+
 window.applySavedView = applySavedView;
 window.deleteSavedView = deleteSavedView;
 window.restoreArchivedProject = restoreArchivedProject;
@@ -3270,18 +4265,6 @@ function initAuthScreen() {
         if (rememberEl) rememberEl.checked = true;
     }
 
-    // Shortcuts toggle
-    document.getElementById('shortcutsToggle')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const panel = document.getElementById('shortcutsPanel');
-        const wrapper = document.getElementById('shortcutsWrapper');
-        const toggle = document.getElementById('shortcutsToggle');
-        if (!panel || !wrapper || !toggle) return;
-        const isHidden = panel.classList.contains('hidden');
-        panel.classList.toggle('hidden', !isHidden);
-        wrapper.classList.toggle('menu-shortcuts-wrapper--open', isHidden);
-        toggle.setAttribute('aria-expanded', String(isHidden));
-    });
 }
 
 function onAuthSuccess(user) {
@@ -3325,9 +4308,13 @@ function onAuthSuccess(user) {
 // INITIALIZATION
 // ============================================================================
 
+document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
+
 document.addEventListener('DOMContentLoaded', () => {
+    state.setHideCompletedTasks(true);
     loadSavedViewsFromStorage();
     loadThemePreference();
+    moveColorModeToggleToSidebarHeader();
     initAuthScreen();
 
     if (isLoggedIn()) {
