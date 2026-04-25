@@ -947,3 +947,59 @@ body[data-theme^="glass"] .task-category-tab-shell .task-category-tab:hover,
 body[data-theme^="glass"] .task-category-menu-button:hover {
     color: var(--heading);
 }
+
+/* Round 24 Glassmorphism tab + task card refinement */
+body[data-theme^="glass"] .modal-tasks-card-body {
+    background: rgba(20, 20, 24, 0.78);
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: none;
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+body[data-theme="glass-light"] .modal-tasks-card-body {
+    background: rgba(255,255,255,0.34);
+    border-color: rgba(255,255,255,0.34);
+}
+
+body[data-theme^="glass"] .task-category-tab-shell,
+body[data-theme^="glass"] .task-category-menu-popover,
+body[data-theme^="glass"] .task-priority-button,
+body[data-theme^="glass"] .task-priority-popover {
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    box-shadow: none;
+}
+
+body[data-theme^="glass"] .task-category-tab-shell {
+    --tab-bg: rgba(16, 18, 24, 0.82);
+    color: rgba(255,255,255,0.76);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+body[data-theme="glass-light"] .task-category-tab-shell {
+    --tab-bg: rgba(255,255,255,0.48);
+    color: rgba(16,18,24,0.74);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
+}
+
+body[data-theme^="glass"] .task-category-tab-shell.is-active {
+    --tab-bg: rgba(20, 20, 24, 0.94);
+    color: var(--heading);
+    box-shadow: inset 0 0 0 1px var(--accent), inset 0 2px 0 0 var(--accent);
+}
+
+body[data-theme="glass-light"] .task-category-tab-shell.is-active {
+    --tab-bg: rgba(255,255,255,0.62);
+}
+
+body[data-theme^="glass"] .task-category-tab,
+body[data-theme^="glass"] .task-category-menu-button {
+    color: inherit;
+}
+
+body[data-theme^="glass"] .task-category-tab:hover,
+body[data-theme^="glass"] .task-category-menu-button:hover {
+    color: var(--heading);
+    background: transparent;
+}

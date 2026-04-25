@@ -7034,13 +7034,20 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
 
 
 /* ==========================================================================
-   ROUND 23 TASK CARD + TAB VISUAL REPAIR
+   ROUND 24 TASK CARD + TAB REFINEMENT
    ========================================================================== */
 .modal-tasks-card {
     position: relative;
     margin-bottom: 24px;
+    overflow: visible;
+}
+
+.modal-tasks-card-body {
+    position: relative;
+    z-index: 1;
+    margin-top: -1px;
     padding: 16px;
-    border-radius: 18px;
+    border-radius: 0 18px 18px 18px;
     border: 1px solid var(--line, rgba(255,255,255,0.08));
     background: var(--panel);
     box-shadow: var(--card-shadow);
@@ -7048,7 +7055,9 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
 }
 
 .task-category-controls {
-    margin: -16px -16px 16px;
+    position: relative;
+    z-index: 2;
+    margin: 0 0 12px;
 }
 
 .task-category-toolbar {
@@ -7059,9 +7068,9 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     display: flex;
     flex-wrap: nowrap;
     align-items: flex-end;
-    gap: 6px;
+    gap: 0;
     width: 100%;
-    padding: 0 12px 0 0;
+    padding: 0 10px 0 0;
     overflow-x: auto;
     overflow-y: visible;
     scrollbar-width: none;
@@ -7071,90 +7080,95 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     display: none;
 }
 
-.task-category-tab-shell {
+.task-category-tab-wrap {
     position: relative;
-    display: inline-flex;
-    align-items: stretch;
-    gap: 0;
-    height: 38px;
     flex: 0 0 auto;
+    margin-right: 4px;
     margin-bottom: -1px;
-    border: 1px solid var(--line, rgba(255,255,255,0.1));
-    border-bottom: none;
-    border-radius: 14px 14px 0 0;
-    background: color-mix(in srgb, var(--panel) 92%, transparent);
-    overflow: hidden;
-    z-index: 1;
 }
 
-.task-category-tab-shell--all {
+.task-category-tab-wrap--all {
     margin-left: 0;
 }
 
-.task-category-tab-shell--all,
-.task-category-tab-shell--all .task-category-tab {
-    border-top-left-radius: 18px;
+.task-category-tab-shell {
+    --tab-radius: 18px;
+    --tab-bg: var(--panel-strong, var(--panel));
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding-inline: 12px;
+    width: fit-content;
+    background: var(--tab-bg) border-box;
+    color: var(--muted);
+    box-shadow: inset 0 0 0 1px var(--line, rgba(255,255,255,0.1));
+    z-index: 1;
+}
+
+.task-category-tab-shell--left {
+    border-right: var(--tab-radius) solid #0000;
+    border-radius: var(--tab-radius) calc(2 * var(--tab-radius)) 0 0 / var(--tab-radius);
+    -webkit-mask: radial-gradient(var(--tab-radius) at 100% 0, #0000 98%, #000 101%) 100% 100% / var(--tab-radius) var(--tab-radius) no-repeat, conic-gradient(#000 0 0) padding-box;
+    mask: radial-gradient(var(--tab-radius) at 100% 0, #0000 98%, #000 101%) 100% 100% / var(--tab-radius) var(--tab-radius) no-repeat, conic-gradient(#000 0 0) padding-box;
+}
+
+.task-category-tab-shell--center {
+    border-inline: var(--tab-radius) solid #0000;
+    border-radius: calc(2 * var(--tab-radius)) calc(2 * var(--tab-radius)) 0 0 / var(--tab-radius);
+    -webkit-mask: radial-gradient(var(--tab-radius) at var(--tab-radius) 0, #0000 98%, #000 101%) calc(-1 * var(--tab-radius)) 100% / 100% var(--tab-radius) repeat-x, conic-gradient(#000 0 0) padding-box;
+    mask: radial-gradient(var(--tab-radius) at var(--tab-radius) 0, #0000 98%, #000 101%) calc(-1 * var(--tab-radius)) 100% / 100% var(--tab-radius) repeat-x, conic-gradient(#000 0 0) padding-box;
+}
+
+.task-category-tab-shell--right {
+    border-left: var(--tab-radius) solid #0000;
+    border-radius: calc(2 * var(--tab-radius)) var(--tab-radius) 0 0 / var(--tab-radius) var(--tab-radius) 0 0;
+    -webkit-mask: radial-gradient(var(--tab-radius) at 0 0, #0000 98%, #000 101%) 0 100% / var(--tab-radius) var(--tab-radius) no-repeat, conic-gradient(#000 0 0) padding-box;
+    mask: radial-gradient(var(--tab-radius) at 0 0, #0000 98%, #000 101%) 0 100% / var(--tab-radius) var(--tab-radius) no-repeat, conic-gradient(#000 0 0) padding-box;
 }
 
 .task-category-tab-shell.is-active {
-    background: var(--panel);
-    border-color: var(--accent);
-    box-shadow: inset 0 2px 0 0 var(--accent);
+    color: var(--heading);
+    box-shadow: inset 0 0 0 1px var(--accent), inset 0 2px 0 0 var(--accent);
     z-index: 3;
 }
 
-.task-category-tab-shell .task-category-tab {
+.task-category-tab {
     height: 100%;
-    padding: 0 16px;
+    padding: 0;
     border: none;
-    border-radius: 0;
     background: transparent;
     box-shadow: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--muted);
+    color: inherit;
     white-space: nowrap;
 }
 
-.task-category-tab-shell .task-category-tab:hover {
+.task-category-tab:hover {
     background: transparent;
     color: var(--heading);
-}
-
-.task-category-tab-shell.is-active .task-category-tab {
-    color: var(--heading);
-}
-
-.task-category-menu {
-    position: relative;
-    display: inline-flex;
-    align-items: stretch;
-    flex: 0 0 auto;
 }
 
 .task-category-menu-button {
-    width: 32px;
-    height: 100%;
-    padding: 0;
+    width: auto;
+    height: auto;
+    padding: 0 2px 0 0;
     border: none;
-    border-left: 1px solid var(--line, rgba(255,255,255,0.1));
     border-radius: 0;
     background: transparent;
-    color: var(--muted);
+    color: inherit;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 3px;
     cursor: pointer;
+    box-shadow: none;
 }
 
 .task-category-menu-button:hover {
-    color: var(--heading);
-}
-
-.task-category-tab-shell.is-active .task-category-menu-button {
-    border-left-color: color-mix(in srgb, var(--accent) 36%, var(--line, rgba(255,255,255,0.1)));
     color: var(--heading);
 }
 
@@ -7176,7 +7190,7 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     border: 1px solid var(--line, rgba(255,255,255,0.1));
     background: var(--panel-strong, var(--panel));
     box-shadow: 0 18px 34px rgba(0,0,0,0.22);
-    z-index: 40;
+    z-index: 60;
     display: grid;
     gap: 6px;
 }
@@ -7230,17 +7244,28 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     border: 1px solid var(--line, rgba(255,255,255,0.1));
     border-radius: 10px;
     background: var(--panel);
-    color: var(--heading);
+    color: var(--muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
 }
 
+.task-priority-button--none { color: color-mix(in srgb, var(--muted) 72%, transparent); }
+.task-priority-button--high,
+.task-tag-flag--critical,
+.task-tag-flag--high { color: #ef4444; }
+.task-priority-button--medium,
+.task-tag-flag--medium { color: #f97316; }
+.task-priority-button--low,
+.task-tag-flag--low { color: #22c55e; }
+.task-priority-button--critical { color: #ef4444; }
+.task-tag-flag--none { color: color-mix(in srgb, var(--muted) 72%, transparent); }
+
 .task-priority-popover {
     position: absolute;
     top: 50%;
-    right: calc(100% + 10px);
+    right: calc(100% - 6px);
     transform: translateY(-50%);
     min-width: 156px;
     padding: 8px;
@@ -7248,7 +7273,7 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     border: 1px solid var(--line, rgba(255,255,255,0.12));
     background: var(--panel-strong, var(--panel));
     box-shadow: 0 18px 38px rgba(0,0,0,0.28);
-    z-index: 60;
+    z-index: 120;
     display: grid;
     gap: 6px;
 }

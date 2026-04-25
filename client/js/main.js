@@ -50,21 +50,21 @@ function toTitleCase(text) {
 
 
 const TASK_TAG_OPTIONS = [
-    { value: 'critical', label: 'Critical' },
+    { value: 'none', label: 'No priority' },
     { value: 'high', label: 'High' },
     { value: 'medium', label: 'Medium' },
     { value: 'low', label: 'Low' }
 ];
 
-const DEFAULT_TASK_TAG = 'medium';
+const DEFAULT_TASK_TAG = 'none';
 const DEFAULT_TASK_CATEGORY = 'General';
 const DEFAULT_TASK_CATEGORY_FILTER = 'all';
 const DEFAULT_TASK_SORT_MODE = 'default';
 const TASK_TAG_PRIORITY = {
-    critical: 0,
-    high: 1,
-    medium: 2,
-    low: 3
+    high: 0,
+    medium: 1,
+    low: 2,
+    none: 3
 };
 
 function sanitizeTaskCategoryName(value) {
@@ -81,7 +81,8 @@ function sanitizeTaskCategoryName(value) {
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
-    const tagValue = String(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG).trim().toLowerCase();
+    const rawTagValue = String(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG).trim().toLowerCase();
+    const tagValue = rawTagValue === 'critical' ? 'high' : rawTagValue;
     const tag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
     const category = sanitizeTaskCategoryName(task?.category || task?.taskCategory || DEFAULT_TASK_CATEGORY);
 
@@ -98,12 +99,18 @@ function normalizeTask(task = {}, index = 0) {
 
 function getTaskTagLabel(task) {
     const normalized = normalizeTask(task);
-    return TASK_TAG_OPTIONS.find(option => option.value === normalized.tag)?.label || 'Medium';
+    return TASK_TAG_OPTIONS.find(option => option.value === normalized.tag)?.label || 'No priority';
 }
 
 function getTaskTagPriority(task) {
     const normalized = normalizeTask(task);
     return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG];
+}
+
+function getTaskCategoryTabPositionClass(index, total) {
+    if (index <= 0) return 'task-category-tab-shell--left';
+    if (index >= total - 1) return 'task-category-tab-shell--right';
+    return 'task-category-tab-shell--center';
 }
 
 function getProjectTaskCategories(project) {
@@ -146,7 +153,7 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
 }
 
 function handleTaskFloatingMenuDocumentClick(event) {
-    if (event.target.closest('.task-priority-control') || event.target.closest('.task-category-menu')) return;
+    if (event.target.closest('.task-priority-control') || event.target.closest('.task-category-tab-wrap')) return;
     if (!uiState.openTaskPriorityMenu && !uiState.openTaskCategoryMenu) return;
     closeOpenTaskMenus();
 }
@@ -2211,53 +2218,67 @@ function renderTaskCategoryOptions(project, selectedValue) {
 function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
     const categories = getProjectTaskCategories(project);
     const canEdit = state.canEdit(projectId);
+    const tabItems = [
+        { kind: 'all', label: 'All', category: DEFAULT_TASK_CATEGORY_FILTER }
+    ];
+
+    categories.forEach(category => {
+        tabItems.push({ kind: 'category', label: category, category });
+    });
+
+    if (canEdit) {
+        tabItems.push({ kind: 'create', label: '+', category: null });
+    }
+
     return `
         <div class="task-category-toolbar">
             <div class="task-category-tabs" role="tablist" aria-label="Task categories">
-                <div class="task-category-tab-shell task-category-tab-shell--all ${activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? 'is-active' : ''}">
-                    <button class="task-category-tab"
-                            type="button"
-                            onclick="setProjectTaskCategoryFilter('${projectId}', '${DEFAULT_TASK_CATEGORY_FILTER}')">All</button>
-                </div>
-                ${categories.map(category => {
-                    const menuOpen = canEdit && isTaskCategoryMenuOpen(projectId, category);
-                    const categoryLiteral = serializeInlineJsString(category);
+                ${tabItems.map((tab, index) => {
+                    const positionClass = getTaskCategoryTabPositionClass(index, tabItems.length);
+                    const isAll = tab.kind === 'all';
+                    const isCreate = tab.kind === 'create';
+                    const isActive = !isCreate && activeCategory === tab.category;
+                    const categoryLiteral = tab.category ? serializeInlineJsString(tab.category) : null;
+                    const menuOpen = tab.kind === 'category' && canEdit && isTaskCategoryMenuOpen(projectId, tab.category);
+                    const shellClasses = ['task-category-tab-shell', positionClass];
+                    const wrapClasses = ['task-category-tab-wrap', positionClass.replace('shell', 'wrap')];
+                    if (isAll) {
+                        shellClasses.push('task-category-tab-shell--all');
+                        wrapClasses.push('task-category-tab-wrap--all');
+                    }
+                    if (isCreate) {
+                        shellClasses.push('task-category-tab-shell--create');
+                        wrapClasses.push('task-category-tab-wrap--create');
+                    }
+                    if (isActive) {
+                        shellClasses.push('is-active');
+                        wrapClasses.push('is-active');
+                    }
                     return `
-                    <div class="task-category-tab-shell ${activeCategory === category ? 'is-active' : ''}">
-                        <button class="task-category-tab"
-                                type="button"
-                                ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"
-                                onclick="setProjectTaskCategoryFilter('${projectId}', ${categoryLiteral})">${escapeHtml(category)}</button>
-                        ${canEdit ? `
-                            <div class="task-category-menu">
-                                <button class="task-category-menu-button"
+                        <div class="${wrapClasses.join(' ')}">
+                            <div class="${shellClasses.join(' ')}">
+                                <button class="task-category-tab"
                                         type="button"
-                                        aria-label="Category options"
-                                        onclick="toggleTaskCategoryMenu('${projectId}', ${categoryLiteral}, event)">
-                                    <span></span><span></span><span></span>
-                                </button>
-                                ${menuOpen ? `
-                                    <div class="task-category-menu-popover" onclick="event.stopPropagation()">
-                                        <button class="task-category-menu-option" type="button" onclick="renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
-                                        <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
-                                    </div>
+                                        ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
+                                        onclick="${isCreate ? `createTaskCategory('${projectId}')` : `setProjectTaskCategoryFilter('${projectId}', '${tab.category}')`}">${escapeHtml(tab.label)}</button>
+                                ${tab.kind === 'category' && canEdit ? `
+                                    <button class="task-category-menu-button"
+                                            type="button"
+                                            aria-label="Category options"
+                                            onclick="toggleTaskCategoryMenu('${projectId}', ${categoryLiteral}, event)">
+                                        <span></span><span></span><span></span>
+                                    </button>
                                 ` : ''}
                             </div>
-                        ` : ''}
-                    </div>`;
+                            ${menuOpen ? `
+                                <div class="task-category-menu-popover" onclick="event.stopPropagation()">
+                                    <button class="task-category-menu-option" type="button" onclick="renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
+                                    <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
+                                </div>
+                            ` : ''}
+                        </div>`;
                 }).join('')}
             </div>
-            ${canEdit ? `
-                <div class="task-category-create">
-                    <input class="task-category-create-input"
-                           id="task-category-create-input-${projectId}"
-                           type="text"
-                           maxlength="32"
-                           placeholder="New category"
-                           onkeydown="handleTaskCategoryCreateKeydown(event, '${projectId}')">
-                    <button class="task-category-create-button" type="button" onclick="createTaskCategory('${projectId}')">Add Category</button>
-                </div>
-            ` : ''}
         </div>
     `;
 }
@@ -2277,8 +2298,6 @@ function renderTaskCategoryControls(projectId) {
 
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
-    const project = state.findProject(projectId);
-    const categoryLabel = escapeHtml(normalizedTask.category || DEFAULT_TASK_CATEGORY);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
 
     return `
@@ -2313,15 +2332,6 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                        onkeydown="if(event.key==='Enter') finishEditModalTask('${projectId}', ${normalizedTask.id})">
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
-                <label class="task-category-select-wrap" title="${categoryLabel}">
-                    <span class="task-category-pill">${categoryLabel}</span>
-                    <select class="task-category-select"
-                            id="modal-task-category-${normalizedTask.id}"
-                            aria-label="Task category"
-                            onchange="updateTaskCategory('${projectId}', ${normalizedTask.id}, this.value)">
-                        ${renderTaskCategoryOptions(project, normalizedTask.category)}
-                    </select>
-                </label>
                 <div class="task-priority-control ${priorityMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
                     <button class="task-priority-button task-priority-button--${normalizedTask.tag}"
                             type="button"
@@ -2475,7 +2485,8 @@ function deleteTaskCategory(projectId, currentCategory) {
 
 function updateTaskTag(projectId, taskId, tagValue) {
     if (!state.canEdit(projectId)) return;
-    const nextTag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+    const normalizedTagValue = String(tagValue ?? '').trim().toLowerCase();
+    const nextTag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, normalizedTagValue) ? normalizedTagValue : DEFAULT_TASK_TAG;
     const project = state.findProject(projectId);
     if (!project) return;
 
@@ -2517,14 +2528,13 @@ function updateTaskCategory(projectId, taskId, categoryValue) {
 function createTaskCategory(projectId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
-    const input = document.getElementById(`task-category-create-input-${projectId}`);
-    if (!project || !input) return;
-    const rawValue = String(input.value || '').trim();
-    if (!rawValue) return;
+    if (!project) return;
+    const rawValue = window.prompt('New category');
+    if (rawValue === null) return;
     const nextCategory = sanitizeTaskCategoryName(rawValue);
+    if (!nextCategory) return;
     const nextCategories = [...new Set([...getProjectTaskCategories(project), nextCategory])];
     state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
-    input.value = '';
     saveData();
     setProjectTaskCategoryFilter(projectId, nextCategory);
     render();
@@ -2625,42 +2635,44 @@ function openProjectModal(projectId, options = {}) {
                     ${buildTaskCategoryControlsMarkup(project.id, project, activeCategory)}
                 </div>
 
-                <div class="modal-task-controls-row">
-                <div class="hide-completed-toggle">
-                    <div class="toggle-label">Hide completed tasks</div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
-                               onchange="toggleHideCompleted()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="task-sort-control">
-                    <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
-                    <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
-                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
-                        <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
-                    </select>
-                </div>
-            </div>
-            
-                <div class="modal-tasks">
-                    <div class="task-list" id="modal-task-list-${project.id}">
-                        ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
+                <div class="modal-tasks-card-body">
+                    <div class="modal-task-controls-row">
+                        <div class="hide-completed-toggle">
+                            <div class="toggle-label">Hide completed tasks</div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
+                                       onchange="toggleHideCompleted()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="task-sort-control">
+                            <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
+                            <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
+                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                                <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    <!-- Paste Tasks Section in Modal -->
-                    <div class="modal-paste-section">
-                    <h4 class="modal-paste-title">Tasks List</h4>
-                    <textarea 
-                        class="paste-box"
-                        id="modal-paste-box-${project.id}"
-                        placeholder="Enter tasks here"
-                        onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
-                    <button 
-                        class="paste-button"
-                        onclick="pasteTasksInModal('${project.id}')">
-                        Add Pasted Tasks
-                    </button>
+                    <div class="modal-tasks">
+                        <div class="task-list" id="modal-task-list-${project.id}">
+                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
+                        </div>
+                        
+                        <!-- Paste Tasks Section in Modal -->
+                        <div class="modal-paste-section">
+                            <h4 class="modal-paste-title">Tasks List</h4>
+                            <textarea 
+                                class="paste-box"
+                                id="modal-paste-box-${project.id}"
+                                placeholder="Enter tasks here"
+                                onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
+                            <button 
+                                class="paste-button"
+                                onclick="pasteTasksInModal('${project.id}')">
+                                Add Pasted Tasks
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
