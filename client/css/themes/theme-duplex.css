@@ -1612,3 +1612,166 @@ body[data-theme^="blueprint"] #projectModal .paste-button:active {
     box-shadow: var(--shadow-pressed) !important;
     transform: translateY(0) !important;
 }
+
+/* ============================================================================
+   ROUND 34 DUPLEX-ONLY CORRECTIONS
+   Scope: requested final Duplex polish only.
+   ============================================================================ */
+
+/* Sidebar theme toggle label: always render the visible mode label below the switch. */
+body[data-theme^="blueprint"] .control-panel .sidebar-header-theme-toggle {
+    position: relative !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+body[data-theme^="blueprint"] .control-panel .sidebar-header-theme-toggle .sidebar-theme-toggle-label {
+    position: relative !important;
+    z-index: 4 !important;
+    display: block !important;
+    min-height: 12px !important;
+    width: 64px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    color: transparent !important;
+}
+
+body[data-theme^="blueprint"] .control-panel .sidebar-header-theme-toggle .sidebar-theme-toggle-label::after {
+    display: block !important;
+    font-size: 0.7rem !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--muted-2) !important;
+    text-align: center !important;
+}
+
+body[data-color-mode="light"][data-theme^="blueprint"] .control-panel .sidebar-header-theme-toggle .sidebar-theme-toggle-label::after {
+    content: "Light" !important;
+    color: var(--primary) !important;
+}
+
+body[data-color-mode="dark"][data-theme^="blueprint"] .control-panel .sidebar-header-theme-toggle .sidebar-theme-toggle-label::after {
+    content: "Dark" !important;
+}
+
+/* Sidebar Add Project button: accent-colored, raised neumorphic control. */
+body[data-theme^="blueprint"] .control-panel .add-project-button,
+body[data-theme^="blueprint"] .control-panel .add-project-btn {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border: 1px solid color-mix(in srgb, var(--primary) 70%, #ffffff 20%) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 6px 6px 12px var(--dark-shadow), -3px -3px 10px var(--light-shadow) !important;
+    transform: none !important;
+}
+
+body[data-theme^="blueprint"] .control-panel .add-project-button:hover,
+body[data-theme^="blueprint"] .control-panel .add-project-btn:hover {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: color-mix(in srgb, var(--primary) 86%, #ffffff 14%) !important;
+    box-shadow: 8px 8px 18px var(--dark-shadow), -4px -4px 12px var(--light-shadow), 0 0 10px var(--primary-glow) !important;
+    transform: translateY(-2px) !important;
+}
+
+body[data-theme^="blueprint"] .control-panel .add-project-button:active,
+body[data-theme^="blueprint"] .control-panel .add-project-btn:active {
+    box-shadow: 2px 2px 6px var(--dark-shadow), -1px -1px 4px var(--light-shadow) !important;
+    transform: translateY(0) !important;
+}
+
+/* Remove the shared-card treatment from the task tab content area. */
+body[data-theme^="blueprint"] #projectModal #tasks-section.modal-section,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card-body,
+body[data-theme^="blueprint"] #projectModal .modal-tasks,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section,
+body[data-theme^="blueprint"] #projectModal .modal-actions {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card-body {
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Bottom project modal action buttons: individual neumorphic buttons, not a shared card. */
+body[data-theme^="blueprint"] #projectModal .modal-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    margin-top: 18px !important;
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-done-btn {
+    min-height: 42px !important;
+    padding: 0 18px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--panel) !important;
+    color: var(--heading) !important;
+    font-weight: 800 !important;
+    box-shadow: 6px 6px 12px var(--dark-shadow), -3px -3px 10px var(--light-shadow) !important;
+    transform: none !important;
+    transition: transform 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-done-btn:hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-done-btn:focus-visible {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    box-shadow: 8px 8px 18px var(--dark-shadow), -4px -4px 12px var(--light-shadow), 0 0 10px var(--primary-glow) !important;
+    transform: translateY(-2px) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth-of-type(2):hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth-of-type(2):focus-visible {
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+    box-shadow: 8px 8px 18px var(--dark-shadow), -4px -4px 12px var(--light-shadow), 0 0 10px color-mix(in srgb, var(--danger) 35%, transparent) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:active,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-done-btn:active {
+    box-shadow: 2px 2px 6px var(--dark-shadow), -1px -1px 4px var(--light-shadow) !important;
+    transform: translateY(0) !important;
+}
+
+/* Task delete icon: black at rest in Duplex light mode, red only on hover. */
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button .icon,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button svg,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button svg * {
+    color: #05080d !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:hover,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:focus-visible,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:hover .icon,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:focus-visible .icon,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:hover svg,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:focus-visible svg,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:hover svg *,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-meta-controls .delete-button:focus-visible svg * {
+    color: var(--danger) !important;
+    stroke: currentColor !important;
+}
