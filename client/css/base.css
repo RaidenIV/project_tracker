@@ -7034,7 +7034,7 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
 
 
 /* ==========================================================================
-   ROUND 22 TASK CARD + TAB MENUS + PRIORITY POPOVER
+   ROUND 23 TASK CARD + TAB VISUAL REPAIR
    ========================================================================== */
 .modal-tasks-card {
     position: relative;
@@ -7057,11 +7057,18 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
 
 .task-category-tabs {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-end;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
-    padding: 0 14px;
+    padding: 0 12px 0 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+}
+
+.task-category-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .task-category-tab-shell {
@@ -7069,46 +7076,71 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     display: inline-flex;
     align-items: stretch;
     gap: 0;
+    height: 38px;
+    flex: 0 0 auto;
     margin-bottom: -1px;
+    border: 1px solid var(--line, rgba(255,255,255,0.1));
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    overflow: hidden;
+    z-index: 1;
 }
 
 .task-category-tab-shell--all {
-    margin-left: -14px;
+    margin-left: 0;
+}
+
+.task-category-tab-shell--all,
+.task-category-tab-shell--all .task-category-tab {
+    border-top-left-radius: 18px;
+}
+
+.task-category-tab-shell.is-active {
+    background: var(--panel);
+    border-color: var(--accent);
+    box-shadow: inset 0 2px 0 0 var(--accent);
+    z-index: 3;
 }
 
 .task-category-tab-shell .task-category-tab {
-    height: 38px;
+    height: 100%;
     padding: 0 16px;
-    border-radius: 12px 12px 0 0;
-    border: 1px solid var(--line, rgba(255,255,255,0.1));
-    border-bottom: none;
-    background: color-mix(in srgb, var(--panel) 84%, transparent);
+    border: none;
+    border-radius: 0;
+    background: transparent;
     box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.task-category-tab-shell .task-category-tab:hover {
+    background: transparent;
+    color: var(--heading);
 }
 
 .task-category-tab-shell.is-active .task-category-tab {
-    background: var(--panel);
     color: var(--heading);
-    border-color: var(--line, rgba(255,255,255,0.1));
-}
-
-.task-category-tab-shell--all.is-active .task-category-tab {
-    border-top-left-radius: 18px;
 }
 
 .task-category-menu {
     position: relative;
     display: inline-flex;
-    align-items: center;
+    align-items: stretch;
+    flex: 0 0 auto;
 }
 
 .task-category-menu-button {
-    width: 34px;
-    border: 1px solid var(--line, rgba(255,255,255,0.1));
-    border-bottom: none;
-    border-left: none;
-    border-radius: 12px 12px 0 0;
-    background: color-mix(in srgb, var(--panel) 84%, transparent);
+    width: 32px;
+    height: 100%;
+    padding: 0;
+    border: none;
+    border-left: 1px solid var(--line, rgba(255,255,255,0.1));
+    border-radius: 0;
+    background: transparent;
     color: var(--muted);
     display: inline-flex;
     align-items: center;
@@ -7117,8 +7149,13 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
     cursor: pointer;
 }
 
+.task-category-menu-button:hover {
+    color: var(--heading);
+}
+
 .task-category-tab-shell.is-active .task-category-menu-button {
-    background: var(--panel);
+    border-left-color: color-mix(in srgb, var(--accent) 36%, var(--line, rgba(255,255,255,0.1)));
+    color: var(--heading);
 }
 
 .task-category-menu-button span {
@@ -7245,11 +7282,7 @@ body[data-color-mode="dark"] .task-tag-pill--low { color: #86efac; }
 
 @media (max-width: 900px) {
     .task-category-tabs {
-        padding: 0 12px;
-    }
-
-    .task-category-tab-shell--all {
-        margin-left: -12px;
+        padding-right: 8px;
     }
 
     .task-priority-popover {
