@@ -1209,3 +1209,181 @@ body[data-theme^="glass"] .task-sort-control {
     align-items: flex-end !important;
     justify-content: flex-start !important;
 }
+
+/* ============================================================================
+   ROUND 36 — Nebula-only toggle, total completion, and task contrast fixes
+   ============================================================================ */
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
+    margin-left: auto !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle {
+    position: relative !important;
+    width: 56px !important;
+    height: 28px !important;
+    min-width: 56px !important;
+    min-height: 28px !important;
+    max-width: 56px !important;
+    max-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--glass-border-soft) !important;
+    background: var(--surface) !important;
+    color: var(--heading) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    overflow: hidden !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle-track {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    border-radius: inherit !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle-option {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle-thumb {
+    position: absolute !important;
+    top: 4px !important;
+    left: 4px !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    border: 0 !important;
+    background: var(--accent) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    transform: translateX(0) !important;
+    transition: transform var(--dur-base) var(--ease-out), background var(--dur-fast) var(--ease-out) !important;
+    z-index: 2 !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle.is-dark .color-mode-toggle-thumb {
+    transform: translateX(28px) !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle-icon {
+    position: absolute !important;
+    inset: auto !important;
+    width: 12px !important;
+    height: 12px !important;
+    max-width: 12px !important;
+    max-height: 12px !important;
+    color: currentColor !important;
+    display: block !important;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle-icon--moon {
+    display: none !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle-icon--sun {
+    display: block !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle.is-dark .color-mode-toggle-icon--moon {
+    display: block !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .color-mode-toggle.is-dark .color-mode-toggle-icon--sun {
+    display: none !important;
+}
+
+body[data-theme^="glass"] .control-panel .sidebar-header-theme-toggle .sidebar-theme-toggle-label {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    text-align: center !important;
+    color: var(--heading) !important;
+    white-space: nowrap !important;
+}
+
+body[data-theme^="glass"] .sidebar-total-completion-section .total-percentage,
+body[data-theme^="glass"] .sidebar-total-completion-section .sidebar-completion-stat strong {
+    color: var(--accent) !important;
+}
+
+body[data-theme="glass-light"] .sidebar-total-completion-section h3,
+body[data-theme="glass-light"] .sidebar-total-completion-section .total-percentage-label,
+body[data-theme="glass-light"] .sidebar-total-completion-section .sidebar-completion-stat span {
+    color: #06131f !important;
+}
+
+body[data-theme="glass-dark"] .sidebar-total-completion-section h3,
+body[data-theme="glass-dark"] .sidebar-total-completion-section .total-percentage-label {
+    color: var(--heading) !important;
+}
+
+body[data-theme="glass-dark"] .sidebar-total-completion-section .sidebar-completion-stat span {
+    color: var(--muted) !important;
+}
+
+body[data-theme^="glass"] .modal-tasks-card-body {
+    background: rgba(14, 16, 22, 0.88) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+body[data-theme="glass-light"] .modal-tasks-card-body {
+    background: rgba(255, 255, 255, 0.76) !important;
+    border-color: rgba(7, 26, 50, 0.18) !important;
+}
+
+body[data-theme^="glass"] .modal-content .task-item,
+body[data-theme^="glass"] .modal-content .task-input,
+body[data-theme^="glass"] .modal-content .paste-box {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: var(--heading) !important;
+}
+
+body[data-theme="glass-light"] .modal-content .task-item,
+body[data-theme="glass-light"] .modal-content .task-input,
+body[data-theme="glass-light"] .modal-content .paste-box {
+    background: rgba(255, 255, 255, 0.86) !important;
+    border-color: rgba(7, 26, 50, 0.22) !important;
+    color: #06131f !important;
+}
+
+body[data-theme^="glass"] .modal-content .task-checkbox {
+    background: rgba(255, 255, 255, 0.10) !important;
+    border: 2px solid rgba(255, 255, 255, 0.68) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="glass-light"] .modal-content .task-checkbox {
+    background: rgba(255, 255, 255, 0.94) !important;
+    border-color: rgba(7, 26, 50, 0.68) !important;
+}
+
+body[data-theme^="glass"] .modal-content .task-checkbox.checked {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
