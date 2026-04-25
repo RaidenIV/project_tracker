@@ -155,6 +155,7 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
 function handleTaskFloatingMenuDocumentClick(event) {
     if (
         event.target.closest('.task-priority-control') ||
+        event.target.closest('.task-category-menu-button') ||
         event.target.closest('.task-category-tab-wrap') ||
         event.target.closest('.task-category-menu-popover')
     ) return;
@@ -2041,16 +2042,22 @@ function cleanupProjectDrag() {
 
 
 function setupTaskDragAndDrop(projectId) {
-    if (getProjectTaskSortPreference(projectId) !== DEFAULT_TASK_SORT_MODE) return;
     const taskList = document.getElementById(`modal-task-list-${projectId}`);
     if (!taskList) return;
+
+    if (typeof taskList.__taskDragCleanup === 'function') {
+        taskList.__taskDragCleanup();
+    }
 
     // ── per-gesture state (reset each drag) ──
     let draggableItem = null;
     let pointerStartX = 0;
     let pointerStartY = 0;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
     let itemsGap = 0;
     let cachedItems = [];          // lazily populated, cleared on release
+    let currentDropCategory = null;
 
     // ── helpers ──
     function getAllItems() {
@@ -2063,6 +2070,27 @@ function setupTaskDragAndDrop(projectId) {
     }
     function isAbove(el)   { return el.hasAttribute('data-is-above'); }
     function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
+    function getCategoryDropTargets() {
+        return Array.from(document.querySelectorAll('[data-task-category-drop]'))
+            .filter(el => el.dataset.taskCategoryDropProject === projectId);
+    }
+    function clearCategoryDropTarget() {
+        getCategoryDropTargets().forEach(el => el.classList.remove('is-drop-target'));
+        currentDropCategory = null;
+    }
+    function setCategoryDropTarget(category) {
+        const normalizedCategory = category ? sanitizeTaskCategoryName(category) : null;
+        currentDropCategory = normalizedCategory;
+        getCategoryDropTargets().forEach(el => {
+            el.classList.toggle('is-drop-target', !!normalizedCategory && el.dataset.taskCategoryDrop === normalizedCategory);
+        });
+    }
+    function getCategoryDropTargetAtPoint(x, y) {
+        const hit = document.elementFromPoint(x, y);
+        const target = hit?.closest?.('[data-task-category-drop]');
+        if (!target || target.dataset.taskCategoryDropProject !== projectId) return null;
+        return target.dataset.taskCategoryDrop || null;
+    }
 
     // ── drag start ──
     function onStart(e) {
@@ -2075,6 +2103,9 @@ function setupTaskDragAndDrop(projectId) {
 
         pointerStartX = e.clientX ?? e.touches?.[0]?.clientX;
         pointerStartY = e.clientY ?? e.touches?.[0]?.clientY;
+        lastPointerX = pointerStartX;
+        lastPointerY = pointerStartY;
+        clearCategoryDropTarget();
 
         // measure the gap between the first two idle items (used to size the slide)
         const idle = getIdleItems();
@@ -2112,6 +2143,9 @@ function setupTaskDragAndDrop(projectId) {
 
         const cx = e.clientX ?? e.touches[0].clientX;
         const cy = e.clientY ?? e.touches[0].clientY;
+        lastPointerX = cx;
+        lastPointerY = cy;
+        setCategoryDropTarget(getCategoryDropTargetAtPoint(cx, cy));
 
         // 1. follow the pointer
         draggableItem.style.transform =
@@ -2171,7 +2205,17 @@ function setupTaskDragAndDrop(projectId) {
             if (reordered[i] === undefined) { newIndex = i; break; }
         }
 
-        // wipe all visual state before committing (reorderTasks re-renders the modal)
+        const dropCategory = currentDropCategory || getCategoryDropTargetAtPoint(lastPointerX, lastPointerY);
+        const draggedTaskId = Number(draggableItem.dataset.taskId);
+        const draggedTask = state.findProject(projectId)?.tasks
+            ?.map((task, index) => normalizeTask(task, index))
+            .find(task => task.id === draggedTaskId);
+        const shouldMoveToCategory = !!dropCategory &&
+            Number.isFinite(draggedTaskId) &&
+            draggedTask &&
+            draggedTask.category !== dropCategory;
+
+        // wipe all visual state before committing (reorderTasks/updateTaskCategory re-renders the modal)
         draggableItem.classList.remove('dragging');
         draggableItem.style.transform = '';
         all.forEach(item => {
@@ -2182,8 +2226,13 @@ function setupTaskDragAndDrop(projectId) {
 
         reset();
 
+        if (shouldMoveToCategory) {
+            updateTaskCategory(projectId, draggedTaskId, dropCategory);
+            return;
+        }
+
         // persist the new order (updates state → saves to MongoDB → re-renders modal)
-        if (originalIndex !== newIndex) {
+        if (getProjectTaskSortPreference(projectId) === DEFAULT_TASK_SORT_MODE && originalIndex !== newIndex) {
             const renderedTaskIds = all.map(item => item.dataset.taskId).filter(Boolean);
             reorderTasks(projectId, originalIndex, newIndex, renderedTaskIds);
         }
@@ -2193,6 +2242,7 @@ function setupTaskDragAndDrop(projectId) {
     function reset() {
         cachedItems     = [];
         draggableItem   = null;
+        clearCategoryDropTarget();
         document.body.style.overflow    = '';
         document.body.style.userSelect  = '';
         document.body.style.touchAction = '';
@@ -2205,6 +2255,11 @@ function setupTaskDragAndDrop(projectId) {
     // ── attach ──
     taskList.addEventListener('mousedown',  onStart);
     taskList.addEventListener('touchstart', onStart, { passive: false });
+    taskList.__taskDragCleanup = () => {
+        taskList.removeEventListener('mousedown', onStart);
+        taskList.removeEventListener('touchstart', onStart);
+        reset();
+    };
 }
 
 // ============================================================================
@@ -2288,6 +2343,13 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                         shellClasses.push('is-active');
                         wrapClasses.push('is-active');
                     }
+                    if (menuOpen) {
+                        shellClasses.push('is-menu-open');
+                        wrapClasses.push('is-menu-open');
+                    }
+                    const dropAttributes = tab.kind === 'category'
+                        ? ` data-task-category-drop="${escapeHtml(tab.category)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
+                        : '';
                     const tabControl = isInput ? `
                         <input class="task-category-inline-input"
                                type="text"
@@ -2303,13 +2365,15 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                                 onclick="${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
                     `;
                     return `
-                        <div class="${wrapClasses.join(' ')}">
+                        <div class="${wrapClasses.join(' ')}"${dropAttributes}>
                             <div class="${shellClasses.join(' ')}">
                                 ${tabControl}
                                 ${tab.kind === 'category' && canEdit ? `
                                     <button class="task-category-menu-button"
                                             type="button"
                                             aria-label="Category options"
+                                            aria-expanded="${menuOpen ? 'true' : 'false'}"
+                                            onmousedown="event.preventDefault(); event.stopPropagation();"
                                             onclick="toggleTaskCategoryMenu('${projectId}', ${categoryLiteral}, event)">
                                         <span></span><span></span><span></span>
                                     </button>
@@ -2435,9 +2499,7 @@ function renderModalTaskList(projectId) {
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
     renderTaskCategoryControls(projectId);
 
-    if (sortMode === DEFAULT_TASK_SORT_MODE) {
-        setTimeout(() => setupTaskDragAndDrop(projectId), 100);
-    }
+    setTimeout(() => setupTaskDragAndDrop(projectId), 100);
 }
 
 
@@ -2883,10 +2945,8 @@ function openProjectModal(projectId, options = {}) {
         restoreProjectModalState(project.id, options.restoreState);
     }
     
-    // Setup drag and drop for tasks when using the default task order.
-    if (taskSortMode === DEFAULT_TASK_SORT_MODE) {
-        setTimeout(() => setupTaskDragAndDrop(project.id), 100);
-    }
+    // Setup task dragging for manual reordering and category-tab drops.
+    setTimeout(() => setupTaskDragAndDrop(project.id), 100);
 }
 
 
