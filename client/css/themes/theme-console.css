@@ -801,16 +801,17 @@ body[data-theme^="console"] .confirm-dialog {
 }
 
 body[data-theme^="console"] .modal-close {
-    background: var(--danger);
+    background: transparent;
     border: none;
     border-radius: 8px;
-    color: #fff;
-    transition: all 0.2s ease;
+    color: var(--muted);
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 body[data-theme^="console"] .modal-close:hover {
-    background: var(--danger-2);
-    transform: scale(1.05);
+    background: var(--surface);
+    color: var(--danger);
+    transform: none;
 }
 
 body[data-theme^="console"] .account-modal-title {
