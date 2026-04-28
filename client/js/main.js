@@ -912,14 +912,12 @@ function renderLeaderboardPanel() {
         const completedTasks = Number(entry.completedTasks || 0);
         const rank = String(entry.rank || '—').padStart(2, '0');
         const meta = `${completionPercentage}% • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
+        const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
         return `
             <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
-                <span class="leaderboard-rank">${rank}</span>
-                <span class="leaderboard-row-avatar" aria-hidden="true">${escapeHtml(username.charAt(0).toUpperCase() || 'U')}</span>
-                <span class="leaderboard-row-main">
-                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
-                    <span class="leaderboard-meta" title="${escapeHtml(meta)}">${escapeHtml(meta)}</span>
-                </span>
+                <span class="leaderboard-rank${rankClass}">${rank}</span>
+                <span class="leaderboard-row-avatar" aria-hidden="true"></span>
+                <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
             </div>
         `;
