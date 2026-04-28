@@ -1345,6 +1345,16 @@ function updateProjectTitle(projectId, newTitle) {
     });
 }
 
+function updateProjectDescription(projectId, descriptionValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const description = normalizeProjectDescription(descriptionValue);
+    if (description === (project.description || '')) return;
+    state.updateProject(projectId, projectUpdate({ description }));
+    saveData();
+}
+
 function updateProjectNotes(projectId, notes) {
     if (!state.canEdit(projectId)) return;
     state.updateProject(projectId, projectUpdate({ notes }));
@@ -3252,9 +3262,14 @@ function openProjectModal(projectId, options = {}) {
             </div>
         </div>
         
-        <button class="modal-project-description ${getProjectModalDescription(project) ? '' : 'is-empty'}" type="button" onclick="editModalTitle('${project.id}')" title="Edit project description">
-            ${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}
-        </button>
+        <textarea class="modal-project-description-input ${getProjectModalDescription(project) ? '' : 'is-empty'}"
+                  id="modal-project-description-${project.id}"
+                  maxlength="280"
+                  placeholder="Add project description"
+                  title="Project description"
+                  ${state.canEdit(project.id) ? '' : 'readonly'}
+                  onblur="finishEditProjectDescription('${project.id}')"
+                  onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${escapeHtml(getProjectModalDescription(project))}</textarea>
 
         <div class="modal-progress">
             <div class="progress-bar-container">
@@ -3475,91 +3490,40 @@ function closeProjectModal() {
     render();
 }
 
-function ensureProjectDetailsModal() {
-    let modal = document.getElementById('projectDetailsModal');
-    if (modal) return modal;
-
-    document.body.insertAdjacentHTML('beforeend', `
-        <div class="modal-overlay project-details-modal-overlay" id="projectDetailsModal" aria-hidden="true">
-            <div class="modal-content project-details-modal-content" role="dialog" aria-modal="true" aria-labelledby="projectDetailsModalTitle">
-                <div class="project-details-modal-header">
-                    <div>
-                        <h3 class="project-details-modal-title" id="projectDetailsModalTitle">Edit Project</h3>
-                        <p class="project-details-modal-subtitle">Update the project name and description.</p>
-                    </div>
-                    <button class="modal-close" type="button" onclick="closeProjectDetailsModal()" aria-label="Close project details editor">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <label class="project-details-field">
-                    <span>Project Name</span>
-                    <input class="project-details-input" id="projectDetailsTitleInput" type="text" maxlength="80" placeholder="Project name">
-                </label>
-                <label class="project-details-field">
-                    <span>Project Description</span>
-                    <textarea class="project-details-textarea" id="projectDetailsDescriptionInput" maxlength="280" placeholder="Add a short project description..."></textarea>
-                </label>
-                <div class="project-details-modal-actions">
-                    <button class="confirm-cancel" type="button" onclick="closeProjectDetailsModal()">Cancel</button>
-                    <button class="modal-done-btn" type="button" onclick="saveProjectDetailsFromModal()">Save Project</button>
-                </div>
-            </div>
-        </div>
-    `);
-
-    modal = document.getElementById('projectDetailsModal');
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) closeProjectDetailsModal();
-    });
-    return modal;
-}
-
 function editModalTitle(projectId) {
     if (!state.canEdit(projectId)) return;
-    const project = state.findProject(projectId);
-    if (!project) return;
-
-    const modal = ensureProjectDetailsModal();
-    modal.dataset.projectId = projectId;
-
-    const titleInput = modal.querySelector('#projectDetailsTitleInput');
-    const descriptionInput = modal.querySelector('#projectDetailsDescriptionInput');
-    if (titleInput) titleInput.value = project.title || 'New Project';
-    if (descriptionInput) descriptionInput.value = project.description || '';
-
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => titleInput?.focus({ preventScroll: true }));
-}
-
-function closeProjectDetailsModal() {
-    const modal = document.getElementById('projectDetailsModal');
-    if (!modal) return;
-    modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
-    delete modal.dataset.projectId;
-}
-
-function saveProjectDetailsFromModal() {
-    const modal = document.getElementById('projectDetailsModal');
-    if (!modal) return;
-    const projectId = modal.dataset.projectId;
-    const titleInput = modal.querySelector('#projectDetailsTitleInput');
-    const descriptionInput = modal.querySelector('#projectDetailsDescriptionInput');
-    if (!projectId || !titleInput || !descriptionInput) return;
-
-    updateProjectDetails(projectId, {
-        title: titleInput.value,
-        description: descriptionInput.value
+    const titleButton = document.getElementById(`modal-title-${projectId}`);
+    const titleInput = document.getElementById(`modal-title-input-${projectId}`);
+    if (!titleButton || !titleInput) return;
+    titleButton.style.display = 'none';
+    titleInput.style.display = 'block';
+    titleInput.value = titleButton.textContent.trim() || 'New Project';
+    requestAnimationFrame(() => {
+        titleInput.focus({ preventScroll: true });
+        titleInput.select();
     });
-    closeProjectDetailsModal();
-    openProjectModal(projectId);
 }
 
 function finishEditModalTitle(projectId) {
-    saveProjectDetailsFromModal();
+    const titleButton = document.getElementById(`modal-title-${projectId}`);
+    const titleInput = document.getElementById(`modal-title-input-${projectId}`);
+    if (!titleButton || !titleInput) return;
+
+    const nextTitle = toTitleCase(String(titleInput.value || '').trim() || 'New Project');
+    titleInput.value = nextTitle;
+    titleButton.textContent = nextTitle;
+    titleInput.style.display = 'none';
+    titleButton.style.display = '';
+    updateProjectTitle(projectId, nextTitle);
+}
+
+function finishEditProjectDescription(projectId) {
+    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionInput) return;
+    const description = normalizeProjectDescription(descriptionInput.value);
+    descriptionInput.value = description;
+    descriptionInput.classList.toggle('is-empty', !description);
+    updateProjectDescription(projectId, description);
 }
 
 function editModalTask(taskId) {
@@ -4513,8 +4477,7 @@ window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
 window.closeProjectModal = closeProjectModal;
 window.editModalTitle = editModalTitle;
 window.finishEditModalTitle = finishEditModalTitle;
-window.closeProjectDetailsModal = closeProjectDetailsModal;
-window.saveProjectDetailsFromModal = saveProjectDetailsFromModal;
+window.finishEditProjectDescription = finishEditProjectDescription;
 window.editModalTask = editModalTask;
 window.finishEditModalTask = finishEditModalTask;
 window.addTaskToModal = addTaskToModal;

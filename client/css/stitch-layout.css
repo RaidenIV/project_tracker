@@ -1349,3 +1349,137 @@ body.control-panel-is-collapsed .project-grid {
     color: var(--accent, currentColor) !important;
     border-color: var(--accent, currentColor) !important;
 }
+
+
+/* ============================================================================
+   Follow-up patch: menu order, 4-card desktop grid, inline description editor
+   ============================================================================ */
+@media (min-width: 981px) {
+    .container {
+        grid-template-columns: 20% minmax(0, 1fr) !important;
+    }
+
+    .control-panel {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+
+    .panel-edge-toggle {
+        left: 20vw !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        left: 5rem !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    .top-app-bar {
+        grid-template-columns: max-content minmax(18rem, 1fr) minmax(10rem, 12rem) auto !important;
+        align-items: center !important;
+        gap: 0.85rem !important;
+    }
+
+    .top-app-bar > .top-app-bar-title {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: start !important;
+        align-self: center !important;
+        min-width: max-content !important;
+        margin: 0 !important;
+    }
+
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar {
+        display: contents !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar.top-view-toolbar .view-toolbar-search-wrap {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        justify-self: stretch !important;
+    }
+
+    #projectSortSelect {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-self: stretch !important;
+    }
+
+    .top-app-logo {
+        grid-column: 4 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+    }
+
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+    }
+}
+
+.modal-project-description-input {
+    appearance: none !important;
+    display: block !important;
+    width: min(100%, 54rem) !important;
+    min-height: 3.15rem !important;
+    max-height: 8rem !important;
+    margin: 0.15rem auto 1rem !important;
+    padding: 0.85rem 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+    resize: vertical !important;
+    outline: none !important;
+    cursor: text !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+}
+
+.modal-project-description-input::placeholder {
+    color: var(--muted, rgba(100, 116, 139, 0.9)) !important;
+    font-style: italic !important;
+}
+
+.modal-project-description-input:hover,
+.modal-project-description-input:focus {
+    border-color: var(--accent, currentColor) !important;
+}
+
+.modal-project-description-input:focus {
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+}
+
+.modal-project-description-input[readonly] {
+    cursor: default !important;
+    opacity: 0.82 !important;
+}
