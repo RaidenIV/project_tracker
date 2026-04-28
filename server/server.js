@@ -687,7 +687,7 @@ async function getOrCreateStats(userId) {
 
 async function buildLeaderboardData(currentUserId) {
     const [accounts, projects] = await Promise.all([
-        Account.find({}, 'username').lean(),
+        Account.find({}, 'username profilePic').lean(),
         Project.find({ archived: false }, 'owner completed tasks').lean()
     ]);
 
@@ -698,6 +698,7 @@ async function buildLeaderboardData(currentUserId) {
         rows.set(userId, {
             userId,
             username: account.username || 'User',
+            profilePic: account.profilePic || '',
             completedProjects: 0,
             completedTasks: 0,
             totalTasks: 0,
@@ -729,6 +730,7 @@ async function buildLeaderboardData(currentUserId) {
     }).map((row, index) => ({
         userId: row.userId,
         username: row.username,
+        profilePic: row.profilePic || '',
         completedProjects: row.completedProjects,
         completedTasks: row.completedTasks,
         totalCompletionPercentage: row.totalCompletionPercentage,

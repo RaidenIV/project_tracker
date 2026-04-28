@@ -913,10 +913,14 @@ function renderLeaderboardPanel() {
         const rank = String(entry.rank || '—').padStart(2, '0');
         const meta = `${completionPercentage}% • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
         const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
+        const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
+        const avatarMarkup = profilePic
+            ? `<img class="leaderboard-row-avatar-img" src="${escapeHtml(profilePic)}" alt="">`
+            : `<span class="leaderboard-row-avatar-fallback" aria-hidden="true"></span>`;
         return `
             <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
                 <span class="leaderboard-rank${rankClass}">${rank}</span>
-                <span class="leaderboard-row-avatar" aria-hidden="true"></span>
+                <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
                 <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
             </div>

@@ -2237,3 +2237,26 @@ body[data-theme^="console"] .add-project-button,
 body[data-theme^="console"] .add-project-button svg {
     color: #ffffff !important;
 }
+
+/* ============================================================================
+   Console flat-background and card-color chip overrides
+   ============================================================================ */
+body[data-theme^="console"] {
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .bg-gradient {
+    display: none !important;
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .viewport,
+body[data-theme^="console"] .top-app-bar {
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .filter-chip,
+body[data-theme^="console"] .filter-chip:hover,
+body[data-theme^="console"] .filter-chip.is-active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+}

@@ -688,3 +688,135 @@ body[data-theme^="console"] .leaderboard-row-score {
         grid-column: 1 !important;
     }
 }
+
+/* ============================================================================
+   Stitch polish pass 2: title placement, card-color chips, avatar leaderboard, flat bg
+   ============================================================================ */
+body[data-theme^="console"],
+body[data-theme^="console"] .container,
+body[data-theme^="console"] .viewport {
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .bg-gradient,
+body[data-theme^="console"]::before,
+body[data-theme^="console"]::after {
+    display: none !important;
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .top-app-bar {
+    background: var(--bg) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.top-app-bar {
+    grid-template-columns: max-content minmax(0, 1fr) auto !important;
+    gap: 1.25rem !important;
+}
+
+.top-app-bar > .top-app-bar-title {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: max-content !important;
+    margin: 0 !important;
+    justify-self: start !important;
+    align-self: center !important;
+}
+
+.top-app-bar > .top-view-toolbar,
+.top-app-bar > .view-toolbar.top-view-toolbar {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: minmax(26rem, 1fr) 12rem !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.top-view-toolbar .view-toolbar-search-wrap {
+    grid-column: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.top-view-toolbar #projectSortSelect {
+    grid-column: 2 !important;
+    width: 12rem !important;
+    min-width: 12rem !important;
+}
+
+.top-view-toolbar .top-app-bar-title {
+    display: none !important;
+}
+
+body[data-theme^="console"] .filter-chip {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    border-color: var(--line) !important;
+    color: var(--text) !important;
+}
+
+body[data-theme^="console"] .filter-chip:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--line)) !important;
+    color: var(--accent) !important;
+}
+
+body[data-theme^="console"] .filter-chip.is-active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar {
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar-img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: inherit !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar-fallback {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: var(--surface-2) !important;
+}
+
+@media (max-width: 1180px) {
+    .top-app-bar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        grid-template-columns: minmax(0, 1fr) 11rem !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .top-view-toolbar #projectSortSelect {
+        grid-column: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
