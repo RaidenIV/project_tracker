@@ -992,3 +992,126 @@ body[data-theme^="console"] .sidebar-more-menu .section-count-pill {
         display: none !important;
     }
 }
+
+
+/* ============================================================================
+   Targeted fixes: desktop card count, editable chips, task-note indicator, settings hover
+   ============================================================================ */
+
+.project-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+}
+
+body.control-panel-is-collapsed .project-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 1450px) {
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+.project-card-tag {
+    appearance: none !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    font: inherit !important;
+    line-height: 1.15 !important;
+    cursor: pointer !important;
+}
+
+.project-card-tag--editable:hover,
+.project-card-tag--editable:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-tag-chip {
+    min-width: 0 !important;
+}
+
+.project-tag-chip.is-editing {
+    padding: 0.15rem !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+.project-tag-label {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    letter-spacing: inherit !important;
+    line-height: 1.15 !important;
+    cursor: pointer !important;
+}
+
+.project-tag-label:hover,
+.project-tag-label:focus-visible {
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-tag-inline-input--edit {
+    min-width: 5.5rem !important;
+    max-width: 12rem !important;
+    height: 1.55rem !important;
+    padding: 0.2rem 0.45rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    background: var(--surface, rgba(255,255,255,0.1)) !important;
+    color: var(--heading, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    outline: none !important;
+}
+
+.task-note-button {
+    position: relative !important;
+}
+
+.task-note-button.has-note {
+    color: var(--accent, currentColor) !important;
+    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+}
+
+.task-note-button.has-note::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 999px !important;
+    background: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 2px var(--surface, rgba(255,255,255,0.9)) !important;
+}
+
+#sidebarAccountSettingsBtn:hover,
+#sidebarAccountSettingsBtn:focus-visible,
+#sidebarUiOptionsBtn:hover,
+#sidebarUiOptionsBtn:focus-visible,
+#sidebarMoreToggleBtn:hover,
+#sidebarMoreToggleBtn:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: transparent !important;
+    outline: none !important;
+}

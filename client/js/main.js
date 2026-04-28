@@ -299,7 +299,8 @@ const uiState = {
     openTaskPriorityMenu: null,
     openTaskCategoryMenu: null,
     creatingTaskCategoryProjectId: null,
-    creatingProjectTagProjectId: null
+    creatingProjectTagProjectId: null,
+    editingProjectTag: null
 };
 
 const LOCAL_STORAGE_KEYS = {
@@ -2531,6 +2532,9 @@ function buildProjectTagControlsMarkup(projectId, project) {
     const tags = getProjectTags(project);
     const canEdit = state.canEdit(projectId);
     const isCreating = uiState.creatingProjectTagProjectId === projectId;
+    const editingTag = uiState.editingProjectTag?.projectId === projectId
+        ? uiState.editingProjectTag.originalTag
+        : null;
 
     return `
         <div class="project-tag-controls" id="project-tag-controls-${projectId}">
@@ -2538,10 +2542,27 @@ function buildProjectTagControlsMarkup(projectId, project) {
             <div class="project-tag-chip-list">
                 ${tags.length ? tags.map(tag => {
                     const tagLiteral = serializeInlineJsString(tag);
+                    const isEditing = canEdit && editingTag === tag;
                     return `
-                        <span class="project-tag-chip">
-                            <span>${escapeHtml(tag)}</span>
-                            ${canEdit ? `<button class="project-tag-remove" type="button" aria-label="Remove ${escapeHtml(tag)} tag" onclick="deleteProjectTag('${projectId}', ${tagLiteral}, event)">×</button>` : ''}
+                        <span class="project-tag-chip ${isEditing ? 'is-editing' : ''}">
+                            ${isEditing ? `
+                                <input class="project-tag-inline-input project-tag-inline-input--edit"
+                                       type="text"
+                                       maxlength="${PROJECT_TAG_MAX_LENGTH}"
+                                       value="${escapeHtml(tag)}"
+                                       autocomplete="off"
+                                       aria-label="Edit ${escapeHtml(tag)} tag"
+                                       onclick="event.stopPropagation();"
+                                       onkeydown="handleInlineProjectTagEditKeydown('${projectId}', ${tagLiteral}, event)"
+                                       onblur="commitInlineProjectTagEdit('${projectId}', ${tagLiteral}, this.value)">
+                            ` : `
+                                <button class="project-tag-label"
+                                        type="button"
+                                        title="Edit ${escapeHtml(tag)} tag"
+                                        aria-label="Edit ${escapeHtml(tag)} tag"
+                                        onclick="startInlineProjectTagEdit('${projectId}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>
+                                ${canEdit ? `<button class="project-tag-remove" type="button" aria-label="Remove ${escapeHtml(tag)} tag" onclick="deleteProjectTag('${projectId}', ${tagLiteral}, event)">×</button>` : ''}
+                            `}
                         </span>
                     `;
                 }).join('') : ''}
@@ -2571,12 +2592,22 @@ function renderProjectTagControls(projectId) {
             document.querySelector(`#project-tag-controls-${projectId} .project-tag-inline-input`)?.focus({ preventScroll: true });
         });
     }
+    if (uiState.editingProjectTag?.projectId === projectId) {
+        requestAnimationFrame(() => {
+            const input = document.querySelector(`#project-tag-controls-${projectId} .project-tag-inline-input--edit`);
+            if (input) {
+                input.focus({ preventScroll: true });
+                input.select?.();
+            }
+        });
+    }
 }
 
 function startInlineProjectTagCreate(projectId, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
+    uiState.editingProjectTag = null;
     uiState.creatingProjectTagProjectId = projectId;
     renderProjectTagControls(projectId);
 }
@@ -2617,6 +2648,77 @@ function handleInlineProjectTagCreateKeydown(projectId, event) {
     }
 }
 
+function startInlineProjectTagEdit(projectId, tagName, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const normalizedTag = normalizeProjectTagName(tagName);
+    if (!getProjectTags(project).includes(normalizedTag)) return;
+    uiState.creatingProjectTagProjectId = null;
+    uiState.editingProjectTag = { projectId, originalTag: normalizedTag };
+    renderProjectTagControls(projectId);
+}
+
+function cancelInlineProjectTagEdit(projectId) {
+    if (uiState.editingProjectTag?.projectId !== projectId) return;
+    uiState.editingProjectTag = null;
+    renderProjectTagControls(projectId);
+}
+
+function commitInlineProjectTagEdit(projectId, originalTagName, rawValue) {
+    if (!state.canEdit(projectId)) return;
+    const editing = uiState.editingProjectTag;
+    if (!editing || editing.projectId !== projectId) return;
+
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const originalTag = normalizeProjectTagName(originalTagName || editing.originalTag);
+    const nextTag = normalizeProjectTagName(rawValue);
+    uiState.editingProjectTag = null;
+
+    if (!originalTag) {
+        renderProjectTagControls(projectId);
+        return;
+    }
+
+    let nextTags;
+    if (!nextTag) {
+        nextTags = getProjectTags(project).filter(tag => tag !== originalTag);
+        if (uiState.activeProjectTag === originalTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
+    } else {
+        nextTags = normalizeProjectTags(getProjectTags(project).map(tag => tag === originalTag ? nextTag : tag));
+        if (uiState.activeProjectTag === originalTag) uiState.activeProjectTag = nextTag;
+    }
+
+    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+    saveData();
+    renderProjectTagControls(projectId);
+    render();
+}
+
+function handleInlineProjectTagEditKeydown(projectId, originalTagName, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineProjectTagEdit(projectId, originalTagName, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineProjectTagEdit(projectId);
+    }
+}
+
+function openProjectTagEditFromCard(projectId, tagName, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const normalizedTag = normalizeProjectTagName(tagName);
+    uiState.creatingProjectTagProjectId = null;
+    uiState.editingProjectTag = { projectId, originalTag: normalizedTag };
+    openProjectModal(projectId);
+}
+
 function deleteProjectTag(projectId, tagName, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -2627,6 +2729,9 @@ function deleteProjectTag(projectId, tagName, event) {
     const nextTags = getProjectTags(project).filter(tag => tag !== normalizedTag);
     state.updateProject(projectId, projectUpdate({ tags: nextTags }));
     if (uiState.activeProjectTag === normalizedTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
+    if (uiState.editingProjectTag?.projectId === projectId && uiState.editingProjectTag.originalTag === normalizedTag) {
+        uiState.editingProjectTag = null;
+    }
     saveData();
     renderProjectTagControls(projectId);
     render();
@@ -3766,7 +3871,10 @@ function renderProjectCard(project) {
 
             ${projectTags.length ? `
                 <div class="project-card-tags">
-                    ${projectTags.slice(0, 4).map(tag => `<span class="project-card-tag">${escapeHtml(tag)}</span>`).join('')}
+                    ${projectTags.slice(0, 4).map(tag => {
+                        const tagLiteral = serializeInlineJsString(tag);
+                        return `<button class="project-card-tag project-card-tag--editable" type="button" title="Edit ${escapeHtml(tag)} tag" onclick="openProjectTagEditFromCard('${project.id}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>`;
+                    }).join('')}
                 </div>
             ` : ''}
 

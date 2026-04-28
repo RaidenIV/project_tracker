@@ -45,7 +45,8 @@ const taskSchema = new mongoose.Schema({
     completed:     Boolean,
     completedDate: String,
     tag:           { type: String, enum: ['', 'critical', 'high', 'medium', 'low'], default: '' },
-    category:      { type: String, default: '' }
+    category:      { type: String, default: '' },
+    note:          { type: String, default: '' }
 });
 
 const collaboratorSchema = new mongoose.Schema({
@@ -213,7 +214,8 @@ function sanitizeTask(task, index = 0) {
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         tag,
-        category
+        category,
+        note: typeof task?.note === 'string' ? task.note.trim() : (typeof task?.notes === 'string' ? task.notes.trim() : '')
     };
 }
 
