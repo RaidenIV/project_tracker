@@ -1238,33 +1238,39 @@ async function saveStatsOnly() {
 
 async function addProject() {
     const panel = document.getElementById('newProjectCreatePanel');
-    const input = document.getElementById('newProjectDescriptionInput');
+    const nameInput = document.getElementById('newProjectTitleInput');
+    const descriptionInput = document.getElementById('newProjectDescriptionInput');
 
-    if (panel && input) {
+    if (panel && descriptionInput) {
         if (panel.classList.contains('hidden')) {
             showNewProjectCreatePanel();
             return;
         }
 
-        const requiredDescription = normalizeProjectDescription(input.value);
+        const projectTitle = normalizeProjectTitleInput(nameInput?.value);
+        const requiredDescription = normalizeProjectDescription(descriptionInput.value);
         if (!requiredDescription) {
             showNewProjectDescriptionWarning(true);
-            input.focus({ preventScroll: true });
+            descriptionInput.focus({ preventScroll: true });
             return;
         }
 
-        await createProjectWithDescription(requiredDescription);
+        await createProjectWithDescription(requiredDescription, projectTitle);
         resetNewProjectCreatePanel();
         return;
     }
 }
 
-async function createProjectWithDescription(requiredDescription) {
+function normalizeProjectTitleInput(value) {
+    return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);
+}
+
+async function createProjectWithDescription(requiredDescription, projectTitle = '') {
     const tempId = Date.now();
     const createdAt = new Date().toISOString();
     const newProject = {
         id: tempId,
-        title: 'New Project',
+        title: projectTitle || 'New Project',
         tasks: [],
         dateCreated: createdAt,
         lastModified: createdAt,
@@ -1308,17 +1314,20 @@ async function createProjectWithDescription(requiredDescription) {
 
 function showNewProjectCreatePanel() {
     const panel = document.getElementById('newProjectCreatePanel');
-    const input = document.getElementById('newProjectDescriptionInput');
-    if (!panel || !input) return;
+    const nameInput = document.getElementById('newProjectTitleInput');
+    const descriptionInput = document.getElementById('newProjectDescriptionInput');
+    if (!panel || !descriptionInput) return;
     panel.classList.remove('hidden');
     showNewProjectDescriptionWarning(false);
-    requestAnimationFrame(() => input.focus({ preventScroll: true }));
+    requestAnimationFrame(() => (nameInput || descriptionInput).focus({ preventScroll: true }));
 }
 
 function resetNewProjectCreatePanel() {
     const panel = document.getElementById('newProjectCreatePanel');
-    const input = document.getElementById('newProjectDescriptionInput');
-    if (input) input.value = '';
+    const nameInput = document.getElementById('newProjectTitleInput');
+    const descriptionInput = document.getElementById('newProjectDescriptionInput');
+    if (nameInput) nameInput.value = '';
+    if (descriptionInput) descriptionInput.value = '';
     if (panel) panel.classList.add('hidden');
     showNewProjectDescriptionWarning(false);
 }
@@ -4278,12 +4287,14 @@ function initializeEventHandlers() {
     document.getElementById('confirmNewProjectButton')?.addEventListener('click', addProject);
     document.getElementById('cancelNewProjectButton')?.addEventListener('click', resetNewProjectCreatePanel);
     document.getElementById('newProjectDescriptionInput')?.addEventListener('input', () => showNewProjectDescriptionWarning(false));
-    document.getElementById('newProjectDescriptionInput')?.addEventListener('keydown', event => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-            event.preventDefault();
-            addProject();
-        }
-        if (event.key === 'Escape') resetNewProjectCreatePanel();
+    ['newProjectTitleInput', 'newProjectDescriptionInput'].forEach(inputId => {
+        document.getElementById(inputId)?.addEventListener('keydown', event => {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                addProject();
+            }
+            if (event.key === 'Escape') resetNewProjectCreatePanel();
+        });
     });
 
     // Undo button
