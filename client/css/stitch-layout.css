@@ -1934,3 +1934,181 @@ body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-ava
     min-width: 2.35rem !important;
     min-height: 2.35rem !important;
 }
+
+
+/* ============================================================================
+   v8 targeted patch: keep SYNC placement, include username in invisible avatar button
+   ============================================================================ */
+.control-panel .panel-user-info,
+body[data-theme^="console"] .control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas:
+        "avatar username"
+        "status status" !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0.55rem !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    grid-area: auto !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas: "avatar username" !important;
+    column-gap: 0.75rem !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.5rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    overflow: visible !important;
+    transform: none !important;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 22%, transparent) !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-avatar {
+    grid-area: avatar !important;
+    flex: 0 0 auto !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    outline: 0 solid transparent !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: box-shadow 0.18s ease, outline-color 0.18s ease, outline-offset 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar,
+.control-panel .panel-user-pill:hover .panel-avatar,
+.control-panel .panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible .panel-avatar {
+    outline: 2px solid color-mix(in srgb, var(--accent, #3b82f6) 72%, transparent) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-username,
+.control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-username {
+    grid-area: username !important;
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: inherit !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    grid-area: auto !important;
+    justify-self: start !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .control-panel-header,
+body.control-panel-is-collapsed .panel-header-main,
+body.control-panel-is-collapsed .panel-user-info,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel-header,
+body[data-theme^="console"].control-panel-is-collapsed .panel-header-main,
+body[data-theme^="console"].control-panel-is-collapsed .panel-user-info {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button,
+body.control-panel-is-collapsed .control-panel .panel-user-pill,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    height: 2.65rem !important;
+    min-height: 2.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-avatar,
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill .panel-avatar {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-width: 2.35rem !important;
+    min-height: 2.35rem !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body.control-panel-is-collapsed .control-panel .save-status,
+body.control-panel-is-collapsed .control-panel .save-status--inline,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status--inline {
+    display: none !important;
+}
