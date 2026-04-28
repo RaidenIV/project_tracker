@@ -282,7 +282,7 @@ const accountState = {
 const uiState = {
     projectSearch: '',
     ownerFilter: 'all',
-    sortMode: 'manual',
+    sortMode: 'recent',
     activeProjectTag: PROJECT_TAG_ALL_FILTER,
     savedViews: [],
     activeSavedViewId: '',
@@ -4124,7 +4124,7 @@ function initializeEventHandlers() {
         switchProjectCategory(e.target.value || 'active');
     });
     document.getElementById('projectSortSelect')?.addEventListener('change', (e) => {
-        uiState.sortMode = e.target.value || 'manual';
+        uiState.sortMode = e.target.value || 'recent';
         uiState.activeSavedViewId = '';
         render();
     });
