@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/themes/theme-console.css">
     <link rel="stylesheet" href="css/themes/theme-nebula.css">
     <link rel="stylesheet" href="css/themes/theme-duplex.css">
+    <link rel="stylesheet" href="css/stitch-layout.css">
 </head>
 <body>
     <div class="bg-gradient"></div>
@@ -105,12 +106,6 @@
                 <div class="view-toolbar-search-wrap">
                     <input class="view-toolbar-search" id="projectSearchInput" type="search" placeholder="Search projects, tasks, or notes">
                 </div>
-                <select class="view-toolbar-select" id="projectOwnerFilter">
-                    <option value="all">All Access</option>
-                    <option value="owned">Owned by Me</option>
-                    <option value="shared">Shared with Me</option>
-                    <option value="collab">Has Collaborators</option>
-                </select>
                 <select class="view-toolbar-select" id="projectSortSelect">
                     <option value="manual">Manual Order</option>
                     <option value="recent">Recently Updated</option>
@@ -138,7 +133,7 @@
             <div class="empty-state" id="emptyState">
                 <div>
                     <p class="title">No active projects</p>
-                    <p class="subtitle">Click "Add Project" to get started</p>
+                    <p class="subtitle">Click "New Project" to get started</p>
                 </div>
             </div>
             <div class="project-grid" id="projectGrid"></div>
@@ -175,25 +170,21 @@
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    Add Project
+                    New Project
                 </button>
 
                 <div class="sidebar-nav-list">
                     <button class="sidebar-nav-card active" id="activeProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Active</span>
+                        <span class="sidebar-nav-card-label">Active Projects</span>
                         <span class="sidebar-nav-card-count" id="activeProjectsCount">0</span>
                     </button>
                     <button class="sidebar-nav-card" id="sharedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Shared</span>
+                        <span class="sidebar-nav-card-label">Shared with Me</span>
                         <span class="sidebar-nav-card-count" id="sharedProjectsCount">0</span>
                     </button>
                     <button class="sidebar-nav-card" id="completedProjectsCard" type="button">
                         <span class="sidebar-nav-card-label">Completed</span>
                         <span class="sidebar-nav-card-count" id="completedProjectsCount">0</span>
-                    </button>
-                    <button class="sidebar-nav-card" id="archivedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Archived</span>
-                        <span class="sidebar-nav-card-count" id="archivedProjectsCount">0</span>
                     </button>
                 </div>
 
@@ -216,13 +207,13 @@
                 </div>
 
                 <div class="sidebar-collapsible" data-sidebar-section="leaderboard">
-                    <button class="sidebar-section-toggle" data-sidebar-toggle="leaderboard" type="button" aria-expanded="false">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="leaderboard" type="button" aria-expanded="true">
                         <span class="sidebar-section-toggle-label">Leaderboard</span>
                         <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
                         </svg>
                     </button>
-                    <div class="sidebar-section-body" id="leaderboardSectionBody" hidden>
+                    <div class="sidebar-section-body" id="leaderboardSectionBody">
                         <div class="leaderboard-panel-card">
                             <div class="leaderboard-list" id="leaderboardList">
                                 <div class="side-panel-empty">No rankings yet</div>
@@ -231,41 +222,27 @@
                     </div>
                 </div>
 
-                <div class="sidebar-collapsible" data-sidebar-section="notifications">
-                    <button class="sidebar-section-toggle" data-sidebar-toggle="notifications" type="button" aria-expanded="false">
-                        <span class="sidebar-section-toggle-label">Notifications</span>
-                        <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
-                        </svg>
-                    </button>
-                    <div class="sidebar-section-body" id="notificationsSectionBody" hidden>
-                        <div class="notifications-summary-card">
-                            <div class="notifications-summary-row">
-                                <span class="notifications-summary-text" id="notificationsSummaryText">No unread notifications</span>
-                                <span class="section-count-pill" id="notificationsUnreadCount">0</span>
-                            </div>
-                            <div class="notifications-summary-actions">
-                                <button class="section-action-button" id="viewNotificationsBtn" type="button">View All</button>
-                                <button class="section-action-button" id="markAllNotificationsReadBtn" type="button">Mark all read</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="sidebar-collapsible" data-sidebar-section="settings">
-                    <button class="sidebar-section-toggle" data-sidebar-toggle="settings" type="button" aria-expanded="false">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="settings" type="button" aria-expanded="true">
                         <span class="sidebar-section-toggle-label">Settings</span>
                         <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
                         </svg>
                     </button>
-                    <div class="sidebar-section-body" id="settingsSectionBody" hidden>
+                    <div class="sidebar-section-body" id="settingsSectionBody">
                         <div class="settings-panel-card">
                             <div class="settings-actions">
                                 <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button">Account Settings</button>
                                 <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button">UI Options</button>
-                                <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">Keyboard Shortcuts</button>
-                                <button class="sidebar-action-button" id="undoButton" type="button">Undo</button>
+                                <div class="sidebar-more-group" aria-label="More workspace actions">
+                                    <div class="sidebar-more-label">More...</div>
+                                    <button class="sidebar-action-button sidebar-action-button--with-count" id="archivedProjectsMoreBtn" type="button">
+                                        <span>Archived Projects</span>
+                                        <span class="section-count-pill" id="archivedProjectsCount">0</span>
+                                    </button>
+                                    <button class="sidebar-action-button" id="undoButton" type="button">Undo</button>
+                                    <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">Keyboard Shortcuts</button>
+                                </div>
                                 <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button">Sign Out</button>
                             </div>
                         </div>
@@ -406,7 +383,7 @@
                     </button>
                     <button class="theme-card" type="button" data-theme-family-option="console">
                         <span class="theme-card-title">Console</span>
-                        <span class="theme-card-copy">Terminal-inspired admin aesthetic with darker surfaces, blue accents, and monospace details.</span>
+                        <span class="theme-card-copy">Terminal-inspired admin aesthetic with darker surfaces, Stitch orange accents, and monospace details.</span>
                     </button>
                 </div>
 
@@ -418,31 +395,9 @@
         </div>
     </div>
 
-    <!-- Notifications Modal -->
-    <div class="modal-overlay" id="notificationsModal">
-        <div class="modal-content notifications-modal-content">
-            <div class="account-modal-scroll">
-                <div class="account-modal-header">
-                    <div>
-                        <h2 class="account-modal-title">Notifications</h2>
-                        <p class="account-modal-subtitle">Project activity across your workspace.</p>
-                    </div>
-                    <button class="modal-close" type="button" id="closeNotificationsModalBtn">
-                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="project-activity-list notifications-modal-list" id="notificationsModalList">
-                    <div class="side-panel-empty">No notifications yet</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Archived Projects Modal -->
     <div class="modal-overlay" id="archivedProjectsModal">
-        <div class="modal-content notifications-modal-content">
+        <div class="modal-content archived-projects-modal-content">
             <div class="account-modal-scroll">
                 <div class="account-modal-header">
                     <div>
@@ -455,7 +410,7 @@
                         </svg>
                     </button>
                 </div>
-                <div class="project-activity-list notifications-modal-list" id="archivedProjectsModalList">
+                <div class="project-activity-list archived-projects-modal-list" id="archivedProjectsModalList">
                     <div class="side-panel-empty">No archived projects</div>
                 </div>
             </div>

@@ -30,6 +30,7 @@ export async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        tags: [],
         userRole: 'owner',
         collaborators: []
     };

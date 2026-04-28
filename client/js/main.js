@@ -16,9 +16,6 @@ const {
     removeCollaboratorFromServer
 } = api;
 
-const loadNotificationsFromServer = api.loadNotificationsFromServer || (async () => ({ notifications: [], unreadCount: 0 }));
-const markNotificationReadOnServer = api.markNotificationReadOnServer || (async () => ({ success: true }));
-const markAllNotificationsReadOnServer = api.markAllNotificationsReadOnServer || (async () => ({ success: true }));
 const loadAccountProfileFromServer = api.loadAccountProfileFromServer || (async () => ({ user: auth.getCurrentUser?.() || null, stats: {} }));
 const updateAccountProfileOnServer = api.updateAccountProfileOnServer || (async (payload = {}) => ({ user: { ...(auth.getCurrentUser?.() || {}), ...payload } }));
 const archiveProjectOnServer = api.archiveProjectOnServer || (async () => ({ success: false }));
@@ -60,6 +57,8 @@ const DEFAULT_TASK_TAG = 'none';
 const DEFAULT_TASK_CATEGORY = 'General';
 const DEFAULT_TASK_CATEGORY_FILTER = 'all';
 const DEFAULT_TASK_SORT_MODE = 'default';
+const PROJECT_TAG_ALL_FILTER = 'all';
+const PROJECT_TAG_MAX_LENGTH = 24;
 const TASK_TAG_PRIORITY = {
     high: 0,
     medium: 1,
@@ -131,6 +130,40 @@ function getProjectTaskCategories(project) {
     // not create a visible custom tab by default; only user-created categories
     // should appear next to All.
     return getTaskCategoryListWith([...explicit, ...fromTasks]);
+}
+
+
+function normalizeProjectTagName(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const normalized = raw
+        .replace(/\s+/g, ' ')
+        .slice(0, PROJECT_TAG_MAX_LENGTH);
+    if (normalized.toLowerCase() === PROJECT_TAG_ALL_FILTER) return '';
+    return toTitleCase(normalized);
+}
+
+function normalizeProjectTags(valueList = []) {
+    return [...new Set((Array.isArray(valueList) ? valueList : [])
+        .map(normalizeProjectTagName)
+        .filter(Boolean))];
+}
+
+function getProjectTags(project) {
+    return normalizeProjectTags(project?.tags || project?.projectTags || []);
+}
+
+function getAllVisibleProjectTags() {
+    return [...new Set(getVisibleBaseProjects()
+        .flatMap(project => getProjectTags(project))
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+}
+
+function projectHasTag(project, tagName) {
+    const normalizedTag = normalizeProjectTagName(tagName);
+    if (!normalizedTag) return true;
+    return getProjectTags(project).includes(normalizedTag);
 }
 
 function serializeInlineJsString(value) {
@@ -231,13 +264,6 @@ const LEGACY_THEME_MAP = {
     'industrial-dark': 'blueprint-dark'
 };
 
-const notificationState = {
-    items: [],
-    unreadCount: 0,
-    hasLoadedOnce: false,
-    pollHandle: null
-};
-
 const accountState = {
     user: null,
     stats: {
@@ -257,6 +283,7 @@ const uiState = {
     projectSearch: '',
     ownerFilter: 'all',
     sortMode: 'manual',
+    activeProjectTag: PROJECT_TAG_ALL_FILTER,
     savedViews: [],
     activeSavedViewId: '',
     theme: 'blueprint-light',
@@ -266,13 +293,13 @@ const uiState = {
     commandQuery: '',
     commandActiveIndex: 0,
     sidebarSections: {
-        leaderboard: false,
-        notifications: false,
-        settings: false
+        leaderboard: true,
+        settings: true
     },
     openTaskPriorityMenu: null,
     openTaskCategoryMenu: null,
-    creatingTaskCategoryProjectId: null
+    creatingTaskCategoryProjectId: null,
+    creatingProjectTagProjectId: null
 };
 
 const LOCAL_STORAGE_KEYS = {
@@ -582,6 +609,7 @@ function normalizeProject(project) {
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
         notes: typeof project.notes === 'string' ? project.notes : '',
+        tags: normalizeProjectTags(project.tags || project.projectTags || []),
         tasks: normalizedTasks,
         taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
         collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
@@ -616,6 +644,7 @@ function matchesProjectSearch(project, query) {
     const haystack = [
         project.title,
         project.notes,
+        ...getProjectTags(project),
         ...(project.tasks || []).map(task => task.text)
     ].join(' ').toLowerCase();
     return haystack.includes(query.toLowerCase());
@@ -633,6 +662,10 @@ function getFilteredProjects() {
     if (uiState.projectSearch.trim()) {
         const query = uiState.projectSearch.trim();
         projects = projects.filter(project => matchesProjectSearch(project, query));
+    }
+
+    if (uiState.activeProjectTag && uiState.activeProjectTag !== PROJECT_TAG_ALL_FILTER) {
+        projects = projects.filter(project => projectHasTag(project, uiState.activeProjectTag));
     }
 
     if (uiState.sortMode === 'recent') {
@@ -663,11 +696,17 @@ function getFilteredProjects() {
 function renderActiveFilterChips() {
     const container = document.getElementById('activeFilterChips');
     if (!container) return;
-    const chips = [];
-    if (uiState.projectSearch.trim()) chips.push(`Search: ${uiState.projectSearch.trim()}`);
-    if (uiState.sortMode !== 'manual') chips.push(`Sort: ${uiState.sortMode}`);
-    container.innerHTML = chips.map(chip => `<span class="filter-chip">${escapeHtml(chip)}</span>`).join('');
+
+    const tags = [PROJECT_TAG_ALL_FILTER, ...getAllVisibleProjectTags()];
+    const activeTag = uiState.activeProjectTag || PROJECT_TAG_ALL_FILTER;
+
+    container.innerHTML = tags.map(tag => {
+        const label = tag === PROJECT_TAG_ALL_FILTER ? 'All' : tag;
+        const isActive = tag === activeTag;
+        return `<button class="filter-chip ${isActive ? 'is-active' : ''}" type="button" onclick="setProjectTagFilter(${serializeInlineJsString(tag)})">${escapeHtml(label)}</button>`;
+    }).join('');
 }
+
 
 function saveCurrentView() {
     uiState.savedViews = [];
@@ -861,13 +900,19 @@ function renderLeaderboardPanel() {
         const completionPercentage = isCurrent
             ? calculateTotalCompletion()
             : Math.round(Number(entry.totalCompletionPercentage || 0));
+        const completedProjects = Number(entry.completedProjects || 0);
+        const completedTasks = Number(entry.completedTasks || 0);
+        const rank = String(entry.rank || '—').padStart(2, '0');
+        const meta = `${completionPercentage}% • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
         return `
             <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
-                <div class="leaderboard-row-title">
-                    <span class="leaderboard-row-rank">#${entry.rank || '—'}</span>
-                    <span class="leaderboard-row-name ${isCurrent ? 'is-current' : ''}">${escapeHtml(username)}</span>
-                </div>
-                <span class="leaderboard-row-stats">${completionPercentage}% • ${Number(entry.completedProjects || 0)} projects • ${Number(entry.completedTasks || 0)} tasks completed</span>
+                <span class="leaderboard-rank">${rank}</span>
+                <span class="leaderboard-row-avatar" aria-hidden="true">${escapeHtml(username.charAt(0).toUpperCase() || 'U')}</span>
+                <span class="leaderboard-row-main">
+                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
+                    <span class="leaderboard-meta" title="${escapeHtml(meta)}">${escapeHtml(meta)}</span>
+                </span>
+                <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
             </div>
         `;
     }).join('');
@@ -891,7 +936,7 @@ function toggleSidebarSection(sectionKey) {
 }
 
 function initializeSidebarSections() {
-    ['leaderboard', 'notifications', 'settings'].forEach(sectionKey => {
+    ['leaderboard', 'settings'].forEach(sectionKey => {
         setSidebarSectionExpanded(sectionKey, false);
     });
 }
@@ -1062,7 +1107,6 @@ async function saveAccountSettingsFromModal() {
             accountState.pendingProfilePic = null;
             applyAccountUI(response.user);
             await loadData();
-            await refreshNotifications();
             setAccountStatus('Changes saved.', 'success');
             setTimeout(() => closeAccountSettingsModal(), 700);
         }
@@ -1114,11 +1158,6 @@ export async function loadData() {
         state.setProjects(projects);
         state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
         render();
-        try {
-            await refreshNotifications();
-        } catch (err) {
-            console.error('Failed to refresh notifications after load:', err);
-        }
     } catch (err) {
         console.error('Failed to load project data:', err);
         state.setProjects([]);
@@ -1196,6 +1235,7 @@ async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        tags: [],
         taskCategories: [],
         userRole: 'owner',
         collaborators: []
@@ -1656,7 +1696,13 @@ function setViewTitle(title) {
 }
 
 function syncViewTitle() {
-    setViewTitle(state.getView() === VIEWS.COMPLETED ? 'Completed Projects' : 'Active Projects');
+    if (state.getView() === VIEWS.COMPLETED) {
+        setViewTitle('Completed Projects');
+    } else if (uiState.ownerFilter === 'shared') {
+        setViewTitle('Shared with Me');
+    } else {
+        setViewTitle('Active Projects');
+    }
 }
 
 // ============================================================================
@@ -1664,17 +1710,15 @@ function syncViewTitle() {
 // ============================================================================
 
 function setSidebarProjectsNav(activeId) {
-    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard', 'archivedProjectsCard'].forEach(id => {
+    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard'].forEach(id => {
         document.getElementById(id)?.classList.toggle('active', id === activeId);
     });
 }
 
 function switchToActiveView() {
-    // Reset owner filter so that clicking "Active" after "Shared" shows
-    // all active projects, not just the shared subset.
+    // Reset the internal view filter so clicking "Active" after "Shared"
+    // shows all active projects.
     uiState.ownerFilter = 'all';
-    const ownerFilterEl = document.getElementById('projectOwnerFilter');
-    if (ownerFilterEl) ownerFilterEl.value = 'all';
     state.setView(VIEWS.ACTIVE);
     setSidebarProjectsNav('activeProjectsCard');
     setViewTitle('Active Projects');
@@ -1683,8 +1727,6 @@ function switchToActiveView() {
 
 function switchToCompletedView() {
     uiState.ownerFilter = 'all';
-    const ownerFilterEl = document.getElementById('projectOwnerFilter');
-    if (ownerFilterEl) ownerFilterEl.value = 'all';
     state.setView(VIEWS.COMPLETED);
     setSidebarProjectsNav('completedProjectsCard');
     setViewTitle('Completed Projects');
@@ -2445,6 +2487,136 @@ function renderTaskCategoryControls(projectId) {
     }
 }
 
+
+function buildProjectTagControlsMarkup(projectId, project) {
+    const tags = getProjectTags(project);
+    const canEdit = state.canEdit(projectId);
+    const isCreating = uiState.creatingProjectTagProjectId === projectId;
+
+    return `
+        <div class="project-tag-controls" id="project-tag-controls-${projectId}">
+            <div class="project-tag-controls-label">Project Tags</div>
+            <div class="project-tag-chip-list">
+                ${tags.length ? tags.map(tag => {
+                    const tagLiteral = serializeInlineJsString(tag);
+                    return `
+                        <span class="project-tag-chip">
+                            <span>${escapeHtml(tag)}</span>
+                            ${canEdit ? `<button class="project-tag-remove" type="button" aria-label="Remove ${escapeHtml(tag)} tag" onclick="deleteProjectTag('${projectId}', ${tagLiteral}, event)">×</button>` : ''}
+                        </span>
+                    `;
+                }).join('') : '<span class="project-tag-empty">No tags</span>'}
+                ${canEdit ? (isCreating ? `
+                    <input class="project-tag-inline-input"
+                           type="text"
+                           maxlength="${PROJECT_TAG_MAX_LENGTH}"
+                           placeholder="New tag"
+                           autocomplete="off"
+                           onkeydown="handleInlineProjectTagCreateKeydown('${projectId}', event)"
+                           onblur="commitInlineProjectTagCreate('${projectId}', this.value)">
+                ` : `
+                    <button class="project-tag-add" type="button" onclick="startInlineProjectTagCreate('${projectId}', event)">+</button>
+                `) : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderProjectTagControls(projectId) {
+    const project = state.findProject(projectId);
+    const container = document.getElementById(`project-tag-controls-${projectId}`);
+    if (!project || !container) return;
+    container.outerHTML = buildProjectTagControlsMarkup(projectId, project);
+    if (uiState.creatingProjectTagProjectId === projectId) {
+        requestAnimationFrame(() => {
+            document.querySelector(`#project-tag-controls-${projectId} .project-tag-inline-input`)?.focus({ preventScroll: true });
+        });
+    }
+}
+
+function startInlineProjectTagCreate(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    uiState.creatingProjectTagProjectId = projectId;
+    renderProjectTagControls(projectId);
+}
+
+function cancelInlineProjectTagCreate(projectId) {
+    if (uiState.creatingProjectTagProjectId !== projectId) return;
+    uiState.creatingProjectTagProjectId = null;
+    renderProjectTagControls(projectId);
+}
+
+function commitInlineProjectTagCreate(projectId, rawValue) {
+    if (uiState.creatingProjectTagProjectId !== projectId) return;
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const nextTag = normalizeProjectTagName(rawValue);
+    uiState.creatingProjectTagProjectId = null;
+    if (!nextTag) {
+        renderProjectTagControls(projectId);
+        return;
+    }
+
+    const nextTags = normalizeProjectTags([...getProjectTags(project), nextTag]);
+    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+    saveData();
+    renderProjectTagControls(projectId);
+    render();
+}
+
+function handleInlineProjectTagCreateKeydown(projectId, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineProjectTagCreate(projectId, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineProjectTagCreate(projectId);
+    }
+}
+
+function deleteProjectTag(projectId, tagName, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const normalizedTag = normalizeProjectTagName(tagName);
+    const nextTags = getProjectTags(project).filter(tag => tag !== normalizedTag);
+    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+    if (uiState.activeProjectTag === normalizedTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
+    saveData();
+    renderProjectTagControls(projectId);
+    render();
+}
+
+function setProjectTagFilter(tagName) {
+    const normalizedTag = tagName === PROJECT_TAG_ALL_FILTER ? PROJECT_TAG_ALL_FILTER : normalizeProjectTagName(tagName);
+    uiState.activeProjectTag = normalizedTag || PROJECT_TAG_ALL_FILTER;
+    uiState.activeSavedViewId = '';
+    render();
+}
+
+function getProjectCardPreviewTasks(project) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+    const incomplete = tasks.filter(task => !task.completed);
+    const completed = tasks.filter(task => task.completed);
+    return [...incomplete, ...completed].slice(0, 2);
+}
+
+function formatProjectSyncText(project) {
+    return `LAST SYNC: ${timeAgo(project?.lastModified || project?.dateCreated)}`;
+}
+
+function formatLeaderboardScore(entry, isCurrent = false) {
+    const raw = isCurrent ? (state.getStats()?.completedTasks || 0) : Number(entry?.completedTasks || 0);
+    if (raw >= 1000) return `${(raw / 1000).toFixed(raw >= 10000 ? 0 : 1)}k`;
+    return String(raw);
+}
+
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
@@ -2892,6 +3064,7 @@ function openProjectModal(projectId, options = {}) {
                     <span>•</span>
                     <span>${completedTasks} done</span>
                 </div>
+                ${buildProjectTagControlsMarkup(project.id, project)}
             </div>
             <div style="display: flex; gap: 4px;">
                 <button class="modal-copy-button" onclick="copyProjectToClipboard('${project.id}', event)">
@@ -3368,7 +3541,6 @@ function getCommandPaletteActions() {
         } },
         { id: 'open-account', title: 'Open account settings', copy: 'Edit your profile and stats.', run: () => openAccountSettingsModal() },
         { id: 'open-ui', title: 'Open UI options', copy: 'Change the current theme.', run: () => openUiOptionsModal() },
-        { id: 'mark-notifications', title: 'Mark all notifications as read', copy: 'Clear unread notification badges.', run: () => markAllNotificationsRead() },
         ...currentVisible.slice(0, 10).map(project => ({
             id: `open-${project.id}`,
             title: `Open ${project.title}`,
@@ -3454,7 +3626,6 @@ function render() {
     runRenderStep('view title', syncViewTitle);
     runRenderStep('shared projects panel', renderSharedProjectsPanel);
     runRenderStep('archived projects panel', renderArchivedProjectsPanel);
-    runRenderStep('notifications panel', renderNotificationsPanel);
     runRenderStep('leaderboard panel', renderLeaderboardPanel);
     runRenderStep('saved views panel', renderSavedViewsPanel);
     runRenderStep('active filter chips', renderActiveFilterChips);
@@ -3467,13 +3638,13 @@ function render() {
         const emptyTitle = emptyState.querySelector('.title');
         const emptySubtitle = emptyState.querySelector('.subtitle');
         if (emptyTitle) emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
-        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Click "Add Project" to get started';
+        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Click "New Project" to get started';
     } else {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
 
-        if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual') {
+        if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER) {
             setTimeout(setupProjectDragAndDrop, 100);
         }
     }
@@ -3483,7 +3654,7 @@ function render() {
 
 
 function renderProjectCard(project) {
-    const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+    const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
     const completedTasksCount = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
@@ -3493,10 +3664,22 @@ function renderProjectCard(project) {
     const isEditor = project.userRole === 'editor';
     const canEditProject = state.canEdit(project.id);
     const canOwnerDelete = project.userRole === 'owner';
-    const canReorderProject = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual';
+    const canReorderProject = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
+    const previewTasks = getProjectCardPreviewTasks(project);
+    const projectTags = getProjectTags(project);
+
+    const accessLabel = isViewer || isEditor
+        ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
+        : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner: <strong>Me</strong>');
+
+    const statusLabel = project.completed
+        ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
+        : (isViewer || isEditor
+            ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
+            : '<span class="project-card-status">ACTIVE</span>');
 
     return `
-        <div class="project-card ${isViewer ? 'project-card--viewer' : ''}"
+        <div class="project-card stitch-project-card ${isViewer ? 'project-card--viewer' : ''}"
              data-project-id="${project.id}"
              onclick="openProjectModal('${project.id}')">
             <div class="project-header">
@@ -3506,34 +3689,25 @@ function renderProjectCard(project) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                         </svg>
                     </button>` : ''}
-                    <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${project.title}</div>
-                    <input type="text"
-                           class="project-title-input project-title-input--card"
-                           id="project-title-input-${project.id}"
-                           value="${project.title}"
-                           style="display: none;"
-                           onclick="event.stopPropagation();"
-                           onblur="finishEditProjectTitleOnCard('${project.id}')"
-                           onkeydown="if(event.key==='Enter'){ finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ cancelEditProjectTitleOnCard('${project.id}'); }">
+                    <div>
+                        <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${escapeHtml(project.title)}</div>
+                        <input type="text"
+                               class="project-title-input project-title-input--card"
+                               id="project-title-input-${project.id}"
+                               value="${escapeHtml(project.title)}"
+                               style="display: none;"
+                               onclick="event.stopPropagation();"
+                               onblur="finishEditProjectTitleOnCard('${project.id}')"
+                               onkeydown="if(event.key==='Enter'){ finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ cancelEditProjectTitleOnCard('${project.id}'); }">
+                        <p class="project-sync-text">${escapeHtml(formatProjectSyncText(project))}</p>
+                    </div>
                 </div>
                 <div class="project-actions">
-                    ${(isViewer || isEditor) ? `<span class="role-badge role-badge--${project.userRole}">${project.userRole}</span>` : ''}
-                    ${isShared && !isViewer && !isEditor ? `<span class="shared-badge" title="${collaborators.length} collaborator(s)">
-                        <svg width="12" height="12" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                            <path d="M 76.8 153.6 Q 76.8 125.6 90.4 102.4 L 90.4 102.4 L 90.4 102.4 Q 104 79.2 128 64.8 Q 152 51.2 179.2 51.2 Q 206.4 51.2 230.4 64.8 Q 254.4 79.2 268 102.4 Q 281.6 125.6 281.6 153.6 Q 281.6 181.6 268 204.8 Q 254.4 228 230.4 242.4 Q 206.4 256 179.2 256 Q 152 256 128 242.4 Q 104 228 90.4 204.8 Q 76.8 181.6 76.8 153.6 L 76.8 153.6 Z M 0 436.8 Q 1.6 376.8 41.6 336 L 41.6 336 L 41.6 336 Q 82.4 296 142.4 294.4 L 216 294.4 L 216 294.4 Q 276 296 316.8 336 Q 356.8 376.8 358.4 436.8 Q 358.4 447.2 351.2 453.6 Q 344.8 460.8 334.4 460.8 L 24 460.8 L 24 460.8 Q 13.6 460.8 7.2 453.6 Q 0 447.2 0 436.8 L 0 436.8 Z M 487.2 460.8 L 376.8 460.8 L 487.2 460.8 L 376.8 460.8 Q 384 449.6 384 435.2 L 384 428.8 L 384 428.8 Q 384 392 368.8 360.8 Q 354.4 329.6 328 307.2 Q 328 307.2 328 307.2 Q 331.2 307.2 333.6 307.2 L 383.2 307.2 L 383.2 307.2 Q 437.6 308.8 474.4 344.8 Q 510.4 381.6 512 436 Q 512 446.4 504.8 453.6 Q 497.6 460.8 487.2 460.8 L 487.2 460.8 Z M 345.6 256 Q 307.2 255.2 282.4 229.6 Q 306.4 196.8 307.2 153.6 Q 307.2 120.8 292.8 94.4 Q 315.2 77.6 345.6 76.8 Q 384 77.6 408.8 103.2 Q 434.4 128 435.2 166.4 Q 434.4 204.8 408.8 229.6 Q 384 255.2 345.6 256 L 345.6 256 Z" />
-                        </svg>
-                        ${collaborators.length}
-                    </span>` : ''}
                     ${canEditProject ? `<button class="edit-button" type="button" title="Edit project name" onclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                     </button>` : ''}
-                    <button class="copy-button" type="button" onclick="event.stopPropagation(); copyProjectToClipboard('${project.id}', event)">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                    </button>
                     ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -3542,31 +3716,39 @@ function renderProjectCard(project) {
                 </div>
             </div>
 
-            <div class="project-stats">
-                <span>${tasks.length} tasks</span>
-                <span>•</span>
-                <span>${completedTasksCount} done</span>
-                ${(isShared || isViewer || isEditor) ? `<span>•</span><span class="card-owner-name">${isViewer || isEditor ? 'by ' + (project.ownerName || 'Unknown') : 'shared'}</span>` : ''}
+            <div class="project-card-tags">
+                ${projectTags.length ? projectTags.slice(0, 4).map(tag => `<span class="project-card-tag">${escapeHtml(tag)}</span>`).join('') : '<span class="project-card-tag project-card-tag--empty">No tags</span>'}
             </div>
 
-            <div class="progress-bar-container">
-                <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
+            <div class="project-card-progress">
+                <div class="project-card-progress-row">
+                    <span>${project.completed ? 'Completion' : 'Task Progress'}</span>
+                    <strong>${progressPercentage}%</strong>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
+                </div>
             </div>
-            <div class="progress-text-large" data-progress-text="${project.id}">${progressPercentage}%</div>
+
+            <ul class="project-preview-list">
+                ${previewTasks.length ? previewTasks.map(task => `
+                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''}">
+                        <span class="project-preview-check" aria-hidden="true">${task.completed ? '✓' : ''}</span>
+                        <span>${escapeHtml(task.text || 'Untitled task')}</span>
+                    </li>
+                `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
+            </ul>
+
             <div class="project-card-footer">
-                <span class="project-last-updated" title="Created ${formatCompactDateTime(project.dateCreated)}">Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
-                ${project.completed ? `
-                <button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">
-                    Activate
-                </button>
-                ` : ''}
+                <span class="project-card-access">${accessLabel}</span>
+                <span class="project-card-meta">
+                    ${statusLabel}
+                    ${project.completed ? `<button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">Activate</button>` : ''}
+                </span>
             </div>
         </div>
     `;
 }
-
-
-
 function renderSharedProjectsPanel() {
     const sharedProjectsList = document.getElementById('sharedProjectsList');
     const sharedProjectsCount = document.getElementById('sharedProjectsCount');
@@ -3625,49 +3807,6 @@ function timeAgo(isoString) {
     return `${Math.floor(months / 12)}y ago`;
 }
 
-function renderNotificationsPanel() {
-    const notificationsUnreadCount = document.getElementById('notificationsUnreadCount');
-    const notificationsSummaryText = document.getElementById('notificationsSummaryText');
-    const notificationsModalList = document.getElementById('notificationsModalList');
-
-    if (notificationsUnreadCount) {
-        notificationsUnreadCount.textContent = String(notificationState.unreadCount || 0);
-    }
-
-    if (notificationsSummaryText) {
-        notificationsSummaryText.textContent = notificationState.unreadCount
-            ? `${notificationState.unreadCount} unread notification${notificationState.unreadCount === 1 ? '' : 's'}`
-            : 'No unread notifications';
-    }
-
-    if (!notificationsModalList) return;
-
-    if (!notificationState.items.length) {
-        notificationsModalList.innerHTML = '<div class="side-panel-empty">No notifications yet</div>';
-        return;
-    }
-
-    notificationsModalList.innerHTML = notificationState.items.map(notification => `
-        <button class="notification-card ${notification.read ? '' : 'notification-card--unread'}"
-                type="button"
-                onclick="openNotificationProject('${notification._id}', '${notification.projectId}')">
-            <div class="notification-card-header">
-                <span class="notification-project">${notification.projectTitle || 'Project'}</span>
-                <span class="notification-time">${timeAgo(notification.createdAt)}</span>
-            </div>
-            <div class="notification-message"><strong>${notification.actorName || 'Someone'}</strong> ${notification.message}</div>
-        </button>
-    `).join('');
-}
-
-function openNotificationsModal() {
-    document.getElementById('notificationsModal')?.classList.add('active');
-}
-
-function closeNotificationsModal() {
-    document.getElementById('notificationsModal')?.classList.remove('active');
-}
-
 function openShortcutsModal() {
     document.getElementById('shortcutsModal')?.classList.add('active');
 }
@@ -3679,11 +3818,9 @@ function closeShortcutsModal() {
 function switchToSharedView() {
     uiState.ownerFilter = 'shared';
     uiState.activeSavedViewId = '';
-    const ownerFilter = document.getElementById('projectOwnerFilter');
-    if (ownerFilter) ownerFilter.value = 'shared';
     state.setView(VIEWS.ACTIVE);
     setSidebarProjectsNav('sharedProjectsCard');
-    setViewTitle('Shared Projects');
+    setViewTitle('Shared with Me');
     render();
 }
 
@@ -3710,7 +3847,6 @@ function renderArchivedProjectsModalList() {
 }
 
 function openArchivedProjectsModal() {
-    setSidebarProjectsNav('archivedProjectsCard');
     renderArchivedProjectsModalList();
     document.getElementById('archivedProjectsModal')?.classList.add('active');
 }
@@ -3726,68 +3862,6 @@ function closeArchivedProjectsModal() {
     }
 }
 
-async function refreshNotifications() {
-    try {
-        const response = await loadNotificationsFromServer(30);
-        notificationState.items = response?.notifications || [];
-        notificationState.unreadCount = response?.unreadCount || 0;
-    } catch (err) {
-        console.error('Failed to refresh notifications:', err);
-        notificationState.items = [];
-        notificationState.unreadCount = 0;
-    }
-    notificationState.hasLoadedOnce = true;
-    renderNotificationsPanel();
-}
-
-function startNotificationPolling() {
-    if (notificationState.pollHandle) clearInterval(notificationState.pollHandle);
-    notificationState.pollHandle = setInterval(() => {
-        if (document.hidden) return;
-        refreshNotifications();
-    }, 15000);
-}
-
-async function markNotificationRead(notificationId, suppressRefresh = false) {
-    if (!notificationId) return;
-    const targetNotification = notificationState.items.find(item => item._id === notificationId);
-    if (targetNotification && targetNotification.read) return;
-    try {
-        await markNotificationReadOnServer(notificationId);
-        if (!suppressRefresh) await refreshNotifications();
-    } catch (err) {
-        console.error('Failed to mark notification read:', err);
-    }
-}
-
-async function openNotificationProject(notificationId, projectId) {
-    await markNotificationRead(notificationId, true);
-    const targetNotification = notificationState.items.find(item => item._id === notificationId);
-    if (targetNotification) targetNotification.read = true;
-    notificationState.unreadCount = notificationState.items.filter(item => !item.read).length;
-    renderNotificationsPanel();
-
-    const project = state.findProject(projectId);
-    if (project) {
-        if (project.completed) {
-            switchToCompletedView();
-        } else {
-            switchToActiveView();
-        }
-        openProjectModal(projectId);
-    }
-}
-
-async function markAllNotificationsRead() {
-    try {
-        await markAllNotificationsReadOnServer();
-        notificationState.items = notificationState.items.map(item => ({ ...item, read: true }));
-        notificationState.unreadCount = 0;
-        renderNotificationsPanel();
-    } catch (err) {
-        console.error('Failed to mark all notifications read:', err);
-    }
-}
 
 function editProjectTitleOnCard(projectId) {
     const titleDiv = document.getElementById(`project-title-${projectId}`);
@@ -3952,8 +4026,6 @@ function initializeEventHandlers() {
     });
     initializeSidebarSections();
 
-    document.getElementById('markAllNotificationsReadBtn')?.addEventListener('click', markAllNotificationsRead);
-    document.getElementById('viewNotificationsBtn')?.addEventListener('click', openNotificationsModal);
     document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
     document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
     document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
@@ -3961,7 +4033,7 @@ function initializeEventHandlers() {
     document.getElementById('activeProjectsCard')?.addEventListener('click', switchToActiveView);
     document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
     document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
-    document.getElementById('archivedProjectsCard')?.addEventListener('click', openArchivedProjectsModal);
+    document.getElementById('archivedProjectsMoreBtn')?.addEventListener('click', openArchivedProjectsModal);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -3989,11 +4061,6 @@ function initializeEventHandlers() {
         if (e.target.id === 'uiOptionsModal') closeUiOptionsModal();
     });
 
-    document.getElementById('notificationsModal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'notificationsModal') closeNotificationsModal();
-    });
-    document.getElementById('closeNotificationsModalBtn')?.addEventListener('click', closeNotificationsModal);
-
     document.getElementById('shortcutsModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'shortcutsModal') closeShortcutsModal();
     });
@@ -4010,11 +4077,6 @@ function initializeEventHandlers() {
 
     document.getElementById('projectSearchInput')?.addEventListener('input', (e) => {
         uiState.projectSearch = e.target.value || '';
-        uiState.activeSavedViewId = '';
-        render();
-    });
-    document.getElementById('projectOwnerFilter')?.addEventListener('change', (e) => {
-        uiState.ownerFilter = e.target.value || 'all';
         uiState.activeSavedViewId = '';
         render();
     });
@@ -4242,6 +4304,12 @@ window.commitInlineTaskCategoryCreate = commitInlineTaskCategoryCreate;
 window.cancelInlineTaskCategoryCreate = cancelInlineTaskCategoryCreate;
 window.handleInlineTaskCategoryCreateKeydown = handleInlineTaskCategoryCreateKeydown;
 window.handleTaskCategoryCreateKeydown = handleTaskCategoryCreateKeydown;
+window.setProjectTagFilter = setProjectTagFilter;
+window.startInlineProjectTagCreate = startInlineProjectTagCreate;
+window.commitInlineProjectTagCreate = commitInlineProjectTagCreate;
+window.cancelInlineProjectTagCreate = cancelInlineProjectTagCreate;
+window.handleInlineProjectTagCreateKeydown = handleInlineProjectTagCreateKeydown;
+window.deleteProjectTag = deleteProjectTag;
 window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
 window.changeCollaboratorRole = changeCollaboratorRole;
@@ -4249,12 +4317,8 @@ window.removeCollaborator = removeCollaborator;
 window.editProjectTitleOnCard = editProjectTitleOnCard;
 window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
-window.openNotificationProject = openNotificationProject;
 window.toggleSidebarSection = toggleSidebarSection;
 window.handleModalPasteKeydown = handleModalPasteKeydown;
-window.markAllNotificationsRead = markAllNotificationsRead;
-window.openNotificationsModal = openNotificationsModal;
-window.closeNotificationsModal = closeNotificationsModal;
 window.openShortcutsModal = openShortcutsModal;
 window.closeShortcutsModal = closeShortcutsModal;
 window.switchToSharedView = switchToSharedView;
@@ -4444,11 +4508,6 @@ function onAuthSuccess(user) {
         .then(() => refreshAccountProfile())
         .catch(err => console.error('Initial account profile load failed:', err));
 
-    try {
-        startNotificationPolling();
-    } catch (err) {
-        console.error('Failed to start notification polling:', err);
-    }
 }
 
 // ============================================================================

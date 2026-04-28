@@ -1721,3 +1721,284 @@ body[data-theme^="console"] .save-status--saved,
 body[data-theme^="console"] .save-status--idle {
     color: var(--accent) !important;
 }
+
+
+/* ============================================================================
+   Stitch Console layout + exact orange accent
+   ============================================================================ */
+
+body[data-theme="console-dark"],
+body[data-theme="console-light"] {
+    --accent: #ff6b00;
+    --accent-2: #e66000;
+    --accent-3: #cc5600;
+    --accent-glow: rgba(255, 107, 0, 0.18);
+    --accent-ring: rgba(255, 107, 0, 0.38);
+    --progress: #ff6b00;
+    --selection-bg: rgba(255, 107, 0, 0.28);
+}
+
+body[data-theme="console-dark"] {
+    --bg: #050506;
+    --bg-2: #0b0b0d;
+    --bg-3: #111114;
+    --surface: #101014;
+    --panel: #15151a;
+    --surface-2: #1f1f26;
+    --inset: #0b0b0e;
+    --line: #2a2a32;
+    --line-soft: #202027;
+    --text: #f4f4f5;
+    --heading: #ffffff;
+    --muted: #a1a1aa;
+    --muted-2: #71717a;
+    --card-shadow: 0 18px 45px rgba(0,0,0,0.24);
+}
+
+body[data-theme="console-light"] {
+    --bg: #f4f1ed;
+    --bg-2: #fbfaf8;
+    --bg-3: #ece8e0;
+    --surface: #fffaf4;
+    --panel: #ffffff;
+    --surface-2: #f4eee6;
+    --inset: #fbf6f0;
+    --line: #e5d9cc;
+    --line-soft: #efe5db;
+    --text: #1c1917;
+    --heading: #0c0a09;
+    --muted: #6f6258;
+    --muted-2: #8a7d72;
+    --card-shadow: 0 18px 40px rgba(67, 45, 25, 0.10);
+}
+
+body[data-theme^="console"] {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', ui-monospace, monospace;
+    background:
+        radial-gradient(circle at top right, rgba(255,107,0,0.12), transparent 32rem),
+        linear-gradient(135deg, var(--bg-2), var(--bg), var(--bg-3));
+}
+
+body[data-theme^="console"] .control-panel {
+    border-right: 1px solid var(--line);
+    background:
+        linear-gradient(180deg, rgba(255,107,0,0.045), transparent 14rem),
+        var(--surface);
+    box-shadow: 1px 0 0 rgba(255,255,255,0.02);
+}
+
+body[data-theme^="console"] .top-app-bar {
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    box-shadow: none;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+body[data-theme^="console"] .top-app-bar-title {
+    color: var(--heading);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="console"] .top-app-logo {
+    filter: drop-shadow(0 0 18px var(--accent-glow));
+}
+
+body[data-theme^="console"] .viewport {
+    background:
+        radial-gradient(circle at 20% 0%, rgba(255,107,0,0.06), transparent 24rem),
+        transparent;
+}
+
+body[data-theme^="console"] .panel-user-pill,
+body[data-theme^="console"] .save-status,
+body[data-theme^="console"] .sidebar-nav-card,
+body[data-theme^="console"] .total-completion-section,
+body[data-theme^="console"] .leaderboard-panel-card,
+body[data-theme^="console"] .settings-panel-card,
+body[data-theme^="console"] .project-card,
+body[data-theme^="console"] .theme-card,
+body[data-theme^="console"] .modal-content {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel));
+    box-shadow: none;
+}
+
+body[data-theme^="console"] .panel-user-pill:hover,
+body[data-theme^="console"] .sidebar-nav-card:hover,
+body[data-theme^="console"] .sidebar-action-button:hover,
+body[data-theme^="console"] .project-card:hover,
+body[data-theme^="console"] .leaderboard-row:hover,
+body[data-theme^="console"] .filter-chip:hover {
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--line));
+    box-shadow: 0 0 0 1px rgba(255,107,0,0.08), 0 14px 36px rgba(255,107,0,0.08);
+}
+
+body[data-theme^="console"] .sidebar-section-label,
+body[data-theme^="console"] .sidebar-section-toggle-label,
+body[data-theme^="console"] .ui-options-section-label,
+body[data-theme^="console"] .project-tag-controls-label,
+body[data-theme^="console"] .sidebar-more-label {
+    color: var(--muted-2);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+body[data-theme^="console"] .add-project-button,
+body[data-theme^="console"] .modal-done-btn,
+body[data-theme^="console"] .auth-submit {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0b0b0c;
+    border-color: transparent;
+    font-weight: 900;
+    box-shadow: 0 12px 30px rgba(255,107,0,0.22);
+}
+
+body[data-theme^="console"] .add-project-button:hover,
+body[data-theme^="console"] .modal-done-btn:hover,
+body[data-theme^="console"] .auth-submit:hover {
+    background: linear-gradient(135deg, #ff7d1f, var(--accent));
+    color: #0b0b0c;
+    transform: translateY(-1px);
+}
+
+body[data-theme^="console"] .sidebar-nav-card {
+    min-height: 3rem;
+    border-radius: 0.95rem;
+}
+
+body[data-theme^="console"] .sidebar-nav-card.active,
+body[data-theme^="console"] .sidebar-nav-card.is-active {
+    border-color: var(--accent);
+    background:
+        linear-gradient(90deg, rgba(255,107,0,0.18), rgba(255,107,0,0.04)),
+        var(--panel);
+}
+
+body[data-theme^="console"] .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card.active .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card.is-active .sidebar-nav-card-count,
+body[data-theme^="console"] .total-percentage,
+body[data-theme^="console"] .sidebar-completion-stat strong,
+body[data-theme^="console"] .save-status,
+body[data-theme^="console"] .project-sync-text {
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .view-toolbar-search,
+body[data-theme^="console"] .view-toolbar-select,
+body[data-theme^="console"] .project-tag-inline-input,
+body[data-theme^="console"] input,
+body[data-theme^="console"] select,
+body[data-theme^="console"] textarea {
+    background: var(--inset);
+    border: 1px solid var(--line);
+    color: var(--text);
+}
+
+body[data-theme^="console"] .view-toolbar-search:focus,
+body[data-theme^="console"] .view-toolbar-select:focus,
+body[data-theme^="console"] .project-tag-inline-input:focus,
+body[data-theme^="console"] input:focus,
+body[data-theme^="console"] select:focus,
+body[data-theme^="console"] textarea:focus {
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+
+body[data-theme^="console"] .filter-chip,
+body[data-theme^="console"] .project-card-tag,
+body[data-theme^="console"] .project-tag-chip,
+body[data-theme^="console"] .project-card-status {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    background: rgba(255,107,0,0.08);
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .filter-chip.is-active {
+    background: var(--accent);
+    color: #0b0b0c;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.16);
+}
+
+body[data-theme^="console"] .project-card {
+    border-radius: 1.15rem;
+}
+
+body[data-theme^="console"] .project-card .progress-bar,
+body[data-theme^="console"] .progress-bar {
+    background: linear-gradient(90deg, var(--accent-3), var(--accent), #ff9a3d);
+    box-shadow: 0 0 18px rgba(255,107,0,0.28);
+}
+
+body[data-theme^="console"] .progress-bar-container {
+    background: var(--inset);
+    border: 1px solid var(--line-soft);
+}
+
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="console"] .project-preview-empty,
+body[data-theme^="console"] .project-tag-controls,
+body[data-theme^="console"] .leaderboard-row {
+    background: var(--inset);
+    border-color: var(--line-soft);
+}
+
+body[data-theme^="console"] .project-preview-check {
+    border-color: color-mix(in srgb, var(--accent) 44%, var(--line));
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .edit-button,
+body[data-theme^="console"] .card-delete-button,
+body[data-theme^="console"] .project-tag-add,
+body[data-theme^="console"] .project-tag-remove,
+body[data-theme^="console"] .panel-edge-toggle {
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
+}
+
+body[data-theme^="console"] .edit-button:hover,
+body[data-theme^="console"] .project-tag-add:hover,
+body[data-theme^="console"] .project-tag-remove:hover,
+body[data-theme^="console"] .panel-edge-toggle:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+body[data-theme^="console"] .card-delete-button:hover,
+body[data-theme^="console"] .sidebar-action-button--danger:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar {
+    background: rgba(255,107,0,0.12);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .leaderboard-row-score {
+    color: var(--accent);
+}
+
+body[data-theme^="console"] .empty-state {
+    border: 1px dashed color-mix(in srgb, var(--accent) 30%, var(--line));
+    background: rgba(255,107,0,0.04);
+}
+
+body[data-theme^="console"] .empty-state .title {
+    color: var(--heading);
+}
+
+body[data-theme^="console"] .empty-state .subtitle {
+    color: var(--muted);
+}

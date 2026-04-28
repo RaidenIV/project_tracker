@@ -71,6 +71,7 @@ const projectSchema = new mongoose.Schema({
     completed:     { type: Boolean, default: false },
     completedDate: String,
     notes:         { type: String, default: '' },
+    tags:          { type: [String], default: [] },
     archived:      { type: Boolean, default: false },
     owner:         { type: String, required: true },   // Account._id as string
     collaborators: [collaboratorSchema],
@@ -87,20 +88,6 @@ const statsSchema = new mongoose.Schema({
     completedProjects: { type: Number, default: 0 }
 });
 const Stats = mongoose.model('Stats', statsSchema);
-
-const notificationSchema = new mongoose.Schema({
-    userId:      { type: String, required: true, index: true },
-    projectId:   { type: String, required: true },
-    projectTitle:{ type: String, default: 'Project' },
-    actorUserId: { type: String, required: true },
-    actorName:   { type: String, required: true },
-    type:        { type: String, default: 'project_updated' },
-    message:     { type: String, required: true },
-    read:        { type: Boolean, default: false },
-    createdAt:   { type: Date, default: Date.now }
-});
-notificationSchema.index({ userId: 1, createdAt: -1 });
-const Notification = mongoose.model('Notification', notificationSchema);
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 
@@ -163,45 +150,6 @@ async function enrichProject(project, userId, accountMap) {
 async function buildAccountMap(ownerIds) {
     const accounts = await Account.find({ _id: { $in: ownerIds } }, 'username email profilePic');
     return Object.fromEntries(accounts.map(a => [a._id.toString(), a]));
-}
-
-async function resolveActorForNotifications(actor) {
-    if (!actor?.id) {
-        return { id: actor?.id || '', username: actor?.username || 'Someone' };
-    }
-    const account = await Account.findById(actor.id, 'username');
-    return {
-        id: actor.id,
-        username: account?.username || actor.username || 'Someone'
-    };
-}
-
-
-function getProjectParticipantIds(project) {
-    return Array.from(new Set([
-        project.owner,
-        ...(project.collaborators || []).map(c => c.userId)
-    ].filter(Boolean)));
-}
-
-async function createProjectNotifications({ project, actor, type = 'project_updated', message, recipientIds }) {
-    const freshActor = await resolveActorForNotifications(actor);
-    const recipients = (recipientIds || getProjectParticipantIds(project))
-        .filter(userId => userId && userId !== freshActor.id);
-
-    if (!recipients.length || !message) return;
-
-    await Notification.insertMany(recipients.map(userId => ({
-        userId,
-        projectId: project._id.toString(),
-        projectTitle: project.title || 'Project',
-        actorUserId: freshActor.id,
-        actorName: freshActor.username || 'Someone',
-        type,
-        message,
-        read: false,
-        createdAt: new Date()
-    })));
 }
 
 function appendProjectActivity(project, actor, type, message) {
@@ -269,6 +217,13 @@ function sanitizeTask(task, index = 0) {
     };
 }
 
+function sanitizeProjectTags(tags = []) {
+    return [...new Set((Array.isArray(tags) ? tags : [])
+        .map(tag => String(tag || '').trim().replace(/\s+/g, ' ').slice(0, 24))
+        .filter(tag => tag && tag.toLowerCase() !== 'all'))];
+}
+
+
 function sanitizeIncomingProjectUpdate(body = {}) {
     const sanitized = {};
 
@@ -279,6 +234,7 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.taskCategories !== undefined) sanitized.taskCategories = Array.isArray(body.taskCategories)
         ? [...new Set(body.taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean))]
         : [];
+    if (body.tags !== undefined) sanitized.tags = sanitizeProjectTags(body.tags);
     if (body.priority !== undefined) {
         const numericPriority = Number(body.priority);
         sanitized.priority = Number.isFinite(numericPriority) ? numericPriority : 0;
@@ -444,11 +400,12 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, dateCreated, priority, completed, completedDate, notes } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, completed, completedDate, notes } = req.body;
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
             taskCategories: Array.isArray(taskCategories) ? [...new Set(taskCategories.map(category => String(category || '').trim().replace(/\s+/g, ' ').slice(0, 32)).filter(Boolean))] : [],
+            tags:          sanitizeProjectTags(tags),
             dateCreated:   dateCreated  || new Date().toISOString(),
             priority:      priority     ?? 0,
             completed:     completed    || false,
@@ -477,7 +434,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'priority', 'completed', 'completedDate', 'notes', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'completed', 'completedDate', 'notes', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);
@@ -503,15 +460,6 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
             await req.project.save();
         }
         const updated = req.project;
-
-        if (summary && updated.collaborators.length > 0) {
-            await createProjectNotifications({
-                project: updated,
-                actor: req.user,
-                type: summary.type,
-                message: summary.message
-            });
-        }
 
         const ownerMap = await buildAccountMap([updated.owner]);
         const enriched = await enrichProject(updated, req.user.id, ownerMap);
@@ -580,14 +528,6 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
         appendProjectActivity(project, req.user, 'project_shared', `shared “${project.title}” with ${invitee.username} as ${role}`);
         await project.save();
 
-        await createProjectNotifications({
-            project,
-            actor: req.user,
-            type: 'project_shared',
-            message: `shared “${project.title}” with you as ${role}` ,
-            recipientIds: [invitee._id.toString()]
-        });
-
         const ownerMap = await buildAccountMap([project.owner]);
         const enriched = await enrichProject(project, req.user.id, ownerMap);
         res.json(enriched);
@@ -612,14 +552,6 @@ app.put('/api/projects/:id/collaborators/:userId', authenticateToken, requireRol
         appendProjectActivity(req.project, req.user, 'role_changed', `changed ${collab.username}'s access to ${role}`);
         await req.project.save();
 
-        await createProjectNotifications({
-            project: req.project,
-            actor: req.user,
-            type: 'role_changed',
-            message: `changed your access to “${req.project.title}” to ${role}` ,
-            recipientIds: [collab.userId]
-        });
-
         const ownerMap = await buildAccountMap([req.project.owner]);
         const enriched = await enrichProject(req.project, req.user.id, ownerMap);
         res.json(enriched);
@@ -638,16 +570,6 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
         req.project.lastModified = new Date();
         if (removedCollaborator) appendProjectActivity(req.project, req.user, 'access_removed', `removed ${removedCollaborator.username}'s access`);
         await req.project.save();
-
-        if (removedCollaborator) {
-            await createProjectNotifications({
-                project: req.project,
-                actor: req.user,
-                type: 'access_removed',
-                message: `removed your access to “${req.project.title}”`,
-                recipientIds: [removedCollaborator.userId]
-            });
-        }
 
         const ownerMap = await buildAccountMap([req.project.owner]);
         const enriched = await enrichProject(req.project, req.user.id, ownerMap);
@@ -752,48 +674,6 @@ app.put('/api/account', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('Error updating account:', err);
         res.status(500).json({ error: 'Failed to update account', details: err?.message });
-    }
-});
-
-// ─── Notification Routes ─────────────────────────────────────────────────────
-
-
-app.get('/api/notifications', authenticateToken, async (req, res) => {
-    try {
-        const limit = Math.min(Math.max(parseInt(req.query.limit || '25', 10), 1), 100);
-        const [notifications, unreadCount] = await Promise.all([
-            Notification.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(limit),
-            Notification.countDocuments({ userId: req.user.id, read: false })
-        ]);
-        res.json({ notifications, unreadCount });
-    } catch (err) {
-        console.error('Error fetching notifications:', err);
-        res.status(500).json({ error: 'Failed to fetch notifications', details: err?.message });
-    }
-});
-
-app.post('/api/notifications/read-all', authenticateToken, async (req, res) => {
-    try {
-        await Notification.updateMany({ userId: req.user.id, read: false }, { $set: { read: true } });
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Error marking notifications read:', err);
-        res.status(500).json({ error: 'Failed to mark notifications read', details: err?.message });
-    }
-});
-
-app.post('/api/notifications/:notificationId/read', authenticateToken, async (req, res) => {
-    try {
-        const updated = await Notification.findOneAndUpdate(
-            { _id: req.params.notificationId, userId: req.user.id },
-            { $set: { read: true } },
-            { new: true }
-        );
-        if (!updated) return res.status(404).json({ error: 'Notification not found' });
-        res.json({ success: true, notification: updated });
-    } catch (err) {
-        console.error('Error marking notification read:', err);
-        res.status(500).json({ error: 'Failed to mark notification read', details: err?.message });
     }
 });
 
