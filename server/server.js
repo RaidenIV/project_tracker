@@ -411,6 +411,14 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
         const { title, tasks, taskCategories, tags, dateCreated, priority, completed, completedDate, notes, description } = req.body;
+        const sanitizedDescription = typeof description === 'string'
+            ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
+            : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
+
+        if (!sanitizedDescription) {
+            return res.status(400).json({ error: 'Project description is required.' });
+        }
+
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
@@ -421,7 +429,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completed:     completed    || false,
             completedDate: completedDate || null,
             notes:         notes        || '',
-            description:   typeof description === 'string' ? description.trim().replace(/\s+/g, ' ').slice(0, 280) : '',
+            description:   sanitizedDescription,
             archived:      false,
             owner:         req.user.id,
             collaborators: [],

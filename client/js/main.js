@@ -1237,6 +1237,9 @@ async function saveStatsOnly() {
 // ============================================================================
 
 async function addProject() {
+    const requiredDescription = promptForRequiredProjectDescription();
+    if (requiredDescription === null) return;
+
     const tempId = Date.now();
     const createdAt = new Date().toISOString();
     const newProject = {
@@ -1248,7 +1251,7 @@ async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
-        description: '',
+        description: requiredDescription,
         tags: [],
         taskCategories: [],
         userRole: 'owner',
@@ -1266,7 +1269,7 @@ async function addProject() {
             id:  created.id  || created._id,
             lastModified: created.lastModified || createdAt,
             __syncedLastModified: created.lastModified || createdAt,
-            description: typeof created.description === 'string' ? created.description : '',
+            description: typeof created.description === 'string' ? created.description : requiredDescription,
             userRole: 'owner',
             ownerName: state.getCurrentUser()?.username || '',
             ownerEmail: state.getCurrentUser()?.email || '',
@@ -1327,12 +1330,24 @@ function normalizeProjectDescription(value) {
     return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
 }
 
+function promptForRequiredProjectDescription() {
+    while (true) {
+        const value = window.prompt('Project description is required to create a project.');
+        if (value === null) return null;
+
+        const description = normalizeProjectDescription(value);
+        if (description) return description;
+
+        window.alert('Please enter a project description before creating the project.');
+    }
+}
+
 function updateProjectDetails(projectId, details = {}) {
     if (!state.canEdit(projectId)) return;
     const trimmedTitle = String(details.title ?? '').trim();
-    const titleCased = toTitleCase(trimmedTitle || 'New Project');
+    const cleanTitle = trimmedTitle || 'New Project';
     const description = normalizeProjectDescription(details.description);
-    state.updateProject(projectId, projectUpdate({ title: titleCased, description }));
+    state.updateProject(projectId, projectUpdate({ title: cleanTitle, description }));
     saveData();
     render();
 }
@@ -1517,9 +1532,9 @@ function updateTaskText(projectId, taskId, newText) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const capitalized = capitalizeFirstLetter(newText);
+    const cleanText = String(newText ?? '').trim();
     const updatedTasks = project.tasks.map(t => 
-        t.id === taskId ? { ...t, text: capitalized } : t
+        t.id === taskId ? { ...t, text: cleanText } : t
     );
     
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
@@ -1766,7 +1781,7 @@ function syncViewTitle() {
     if (state.getView() === VIEWS.COMPLETED) {
         setViewTitle('Completed Projects');
     } else if (uiState.ownerFilter === 'shared') {
-        setViewTitle('Shared with Me');
+        setViewTitle('Shared');
     } else {
         setViewTitle('Active Projects');
     }
@@ -3509,7 +3524,7 @@ function finishEditModalTitle(projectId) {
     const titleInput = document.getElementById(`modal-title-input-${projectId}`);
     if (!titleButton || !titleInput) return;
 
-    const nextTitle = toTitleCase(String(titleInput.value || '').trim() || 'New Project');
+    const nextTitle = String(titleInput.value || '').trim() || 'New Project';
     titleInput.value = nextTitle;
     titleButton.textContent = nextTitle;
     titleInput.style.display = 'none';
@@ -3549,7 +3564,7 @@ function finishEditModalTask(projectId, taskId) {
             return;
         }
         updateTaskText(projectId, taskId, trimmed);
-        taskText.textContent = capitalizeFirstLetter(trimmed);
+        taskText.textContent = trimmed;
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
     }
@@ -3637,7 +3652,7 @@ function pasteTasks() {
     
     const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
-        text: capitalizeFirstLetter(text),
+        text,
         completed: false,
         tag: DEFAULT_TASK_TAG,
         category: DEFAULT_TASK_CATEGORY
@@ -3677,7 +3692,7 @@ function pasteTasksInModal(projectId) {
     const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
     const newTasks = taskLines.map(text => normalizeTask({
         id: Date.now() + Math.random(),
-        text: capitalizeFirstLetter(text),
+        text,
         completed: false,
         tag: DEFAULT_TASK_TAG,
         category
@@ -4022,7 +4037,7 @@ function switchToSharedView() {
     uiState.activeSavedViewId = '';
     state.setView(VIEWS.ACTIVE);
     setSidebarProjectsNav('sharedProjectsCard');
-    setViewTitle('Shared with Me');
+    setViewTitle('Shared');
     render();
 }
 
@@ -4080,7 +4095,7 @@ function finishEditProjectTitleOnCard(projectId) {
     const titleInput = document.getElementById(`project-title-input-${projectId}`);
     if (!titleDiv || !titleInput) return;
     updateProjectTitle(projectId, titleInput.value);
-    titleDiv.textContent = toTitleCase((titleInput.value || '').trim() || 'New Project');
+    titleDiv.textContent = (titleInput.value || '').trim() || 'New Project';
     titleDiv.style.display = 'block';
     titleInput.style.display = 'none';
 }

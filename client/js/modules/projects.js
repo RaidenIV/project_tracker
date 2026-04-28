@@ -4,22 +4,27 @@ import { state } from './state.js';
 import { requireAdmin } from './auth.js';
 import { createProjectOnServer, saveDataToServer } from './api.js';
 
-// Capitalize first letter of first word
-function capitalizeFirstLetter(text) {
-    if (!text) return text;
-    return text.charAt(0).toUpperCase() + text.slice(1);
+function normalizeProjectDescription(value) {
+    return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
 }
 
-// Capitalize first letter of each word (Title Case)
-function toTitleCase(text) {
-    if (!text) return text;
-    return text.split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
+function promptForRequiredProjectDescription() {
+    while (true) {
+        const value = window.prompt('Project description is required to create a project.');
+        if (value === null) return null;
+
+        const description = normalizeProjectDescription(value);
+        if (description) return description;
+
+        window.alert('Please enter a project description before creating the project.');
+    }
 }
 
 export async function addProject() {
     if (!requireAdmin()) return;
+
+    const requiredDescription = promptForRequiredProjectDescription();
+    if (requiredDescription === null) return;
 
     const tempId = String(Date.now());
     const newProject = {
@@ -30,6 +35,7 @@ export async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        description: requiredDescription,
         tags: [],
         userRole: 'owner',
         collaborators: []
@@ -90,8 +96,8 @@ export function completeProject(projectId) {
 export function updateProjectTitle(projectId, newTitle) {
     if (!requireAdmin()) return;
     
-    const titleCased = toTitleCase(newTitle);
-    state.updateProject(projectId, { title: titleCased });
+    const cleanTitle = String(newTitle ?? '').trim() || 'New Project';
+    state.updateProject(projectId, { title: cleanTitle });
     saveData();
 }
 

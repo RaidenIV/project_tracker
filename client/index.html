@@ -152,13 +152,13 @@
                 <div class="control-panel-header">
                     <div class="panel-header-main">
                         <div class="panel-user-info hidden" id="panelUserInfo">
-                            <button class="panel-user-pill" id="panelUserPill" type="button" title="Account Settings">
+                            <button class="panel-avatar-button" id="panelUserPill" type="button" title="Account Settings" aria-label="Open account settings">
                                 <div class="panel-avatar" id="panelAvatar">
                                     <img class="panel-avatar-img hidden" id="panelAvatarImg" alt="Profile picture">
                                     <span class="panel-avatar-fallback" id="panelAvatarFallback">U</span>
                                 </div>
-                                <span class="panel-username" id="panelUsername"></span>
                             </button>
+                            <span class="panel-username" id="panelUsername"></span>
                             <div class="save-status save-status--idle save-status--inline" id="saveStatusPill">All changes saved</div>
                         </div>
                     </div>
@@ -179,7 +179,7 @@
                         <span class="sidebar-nav-card-count" id="activeProjectsCount">0</span>
                     </button>
                     <button class="sidebar-nav-card" id="sharedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Shared with Me</span>
+                        <span class="sidebar-nav-card-label">Shared</span>
                         <span class="sidebar-nav-card-count" id="sharedProjectsCount">0</span>
                     </button>
                     <button class="sidebar-nav-card" id="completedProjectsCard" type="button">
