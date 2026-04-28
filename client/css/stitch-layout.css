@@ -2439,3 +2439,33 @@ body[data-theme^="console"] .control-panel .panel-user-pill .panel-username {
     border-color: var(--accent, currentColor) !important;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
 }
+
+/* ============================================================================
+   v11 targeted patch: invisible account-chip chrome and matching create inputs
+   ============================================================================ */
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, currentColor) 22%, transparent) !important;
+}
+
+.new-project-name-input,
+.new-project-description-input {
+    background: var(--inset, rgba(0, 0, 0, 0.06)) !important;
+}
