@@ -596,7 +596,7 @@ function setSaveStatus(status, message) {
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
     const visualStatus = status === 'idle' ? 'saved' : status;
-    pill.className = `save-status save-status--${visualStatus}`;
+    pill.className = `save-status save-status--inline save-status--${visualStatus}`;
     pill.textContent = message;
 }
 

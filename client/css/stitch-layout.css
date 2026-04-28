@@ -1645,3 +1645,162 @@ body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
         0 0 0 1px color-mix(in srgb, var(--danger, #ef4444) 48%, transparent),
         0 0 18px color-mix(in srgb, var(--danger, #ef4444) 46%, transparent) !important;
 }
+
+/* ============================================================================
+   v6 targeted patch: account chip, restored sync placement, safe minimized sidebar
+   ============================================================================ */
+.control-panel .panel-user-info {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.65rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.control-panel .panel-user-pill.panel-account-chip,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.6rem !important;
+    width: auto !important;
+    max-width: min(100%, 13.5rem) !important;
+    min-width: 0 !important;
+    min-height: 2.35rem !important;
+    padding: 0.28rem 0.78rem 0.28rem 0.34rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, #3b82f6) 32%, var(--line, rgba(148, 163, 184, 0.32))) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 9%, var(--surface, rgba(255, 255, 255, 0.78))) !important;
+    color: var(--text, inherit) !important;
+    box-shadow: 0 8px 20px color-mix(in srgb, #000 8%, transparent) !important;
+    backdrop-filter: blur(12px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease !important;
+}
+
+.control-panel .panel-user-pill.panel-account-chip:hover,
+.control-panel .panel-user-pill.panel-account-chip:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 15%, var(--surface, rgba(255, 255, 255, 0.82))) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 35%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent) !important;
+    transform: translateY(-1px) !important;
+    outline: none !important;
+}
+
+.control-panel .panel-user-pill .panel-avatar,
+.control-panel .panel-account-chip .panel-avatar {
+    flex: 0 0 1.85rem !important;
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    min-width: 1.85rem !important;
+    min-height: 1.85rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-user-pill:hover .panel-avatar,
+.control-panel .panel-user-pill:focus-visible .panel-avatar,
+.control-panel .panel-account-chip:hover .panel-avatar,
+.control-panel .panel-account-chip:focus-visible .panel-avatar {
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-user-pill .panel-username,
+.control-panel .panel-account-chip .panel-username {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: inherit !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .container {
+    grid-template-columns: 5rem minmax(0, 1fr) !important;
+}
+
+body.control-panel-is-collapsed .control-panel,
+body.control-panel-is-collapsed .control-panel.collapsed {
+    width: 5rem !important;
+    min-width: 5rem !important;
+    max-width: 5rem !important;
+    overflow: hidden !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .control-panel-header,
+body.control-panel-is-collapsed .panel-header-main,
+body.control-panel-is-collapsed .panel-user-info {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-user-pill,
+body.control-panel-is-collapsed .control-panel .panel-user-pill.panel-account-chip {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    min-height: 2.65rem !important;
+    height: 2.65rem !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body.control-panel-is-collapsed .control-panel .panel-account-chip .panel-username,
+body.control-panel-is-collapsed .control-panel .save-status,
+body.control-panel-is-collapsed .control-panel .save-status--inline {
+    display: none !important;
+}
+
+body.control-panel-is-collapsed .viewport,
+body.control-panel-is-collapsed .top-app-bar {
+    min-width: 0 !important;
+}
+
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        left: 5rem !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
