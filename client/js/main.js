@@ -1727,6 +1727,13 @@ function switchProjectCategory(categoryValue) {
     }
 }
 
+function setProjectCardSortMode(sortMode) {
+    uiState.sortMode = sortMode || 'recent';
+    const sortSelect = document.getElementById('projectSortSelect');
+    if (sortSelect) sortSelect.value = uiState.sortMode;
+    render();
+}
+
 function syncViewTitle() {
     if (state.getView() === VIEWS.COMPLETED) {
         setViewTitle('Completed Projects');
@@ -3703,7 +3710,8 @@ function renderProjectCard(project) {
     const isEditor = project.userRole === 'editor';
     const canEditProject = state.canEdit(project.id);
     const canOwnerDelete = project.userRole === 'owner';
-    const canReorderProject = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
+    const canShowReorderHandle = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
+    const canReorderProject = canShowReorderHandle && uiState.sortMode === 'manual';
     const previewTasks = getProjectCardPreviewTasks(project);
     const projectTags = getProjectTags(project);
     const projectDescription = getProjectCardDescription(project);
@@ -3724,7 +3732,7 @@ function renderProjectCard(project) {
              onclick="openProjectModal('${project.id}')">
             <div class="project-header">
                 <div class="project-title-container">
-                    ${canReorderProject ? `<button class="drag-handle" type="button" title="Drag to reorder" onclick="event.stopPropagation();">
+                    ${canShowReorderHandle ? `<button class="drag-handle ${canReorderProject ? '' : 'drag-handle--inactive'}" type="button" title="${canReorderProject ? 'Drag to reorder' : 'Switch to Manual Order to move cards'}" onclick="event.stopPropagation(); ${canReorderProject ? '' : "setProjectCardSortMode('manual');"}">
                         <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                         </svg>
@@ -4578,3 +4586,5 @@ document.addEventListener('DOMContentLoaded', () => {
         if (overlay) overlay.classList.remove('hidden');
     }
 });
+
+window.setProjectCardSortMode = setProjectCardSortMode;
