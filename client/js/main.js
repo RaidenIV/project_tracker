@@ -1237,9 +1237,29 @@ async function saveStatsOnly() {
 // ============================================================================
 
 async function addProject() {
-    const requiredDescription = promptForRequiredProjectDescription();
-    if (requiredDescription === null) return;
+    const panel = document.getElementById('newProjectCreatePanel');
+    const input = document.getElementById('newProjectDescriptionInput');
 
+    if (panel && input) {
+        if (panel.classList.contains('hidden')) {
+            showNewProjectCreatePanel();
+            return;
+        }
+
+        const requiredDescription = normalizeProjectDescription(input.value);
+        if (!requiredDescription) {
+            showNewProjectDescriptionWarning(true);
+            input.focus({ preventScroll: true });
+            return;
+        }
+
+        await createProjectWithDescription(requiredDescription);
+        resetNewProjectCreatePanel();
+        return;
+    }
+}
+
+async function createProjectWithDescription(requiredDescription) {
     const tempId = Date.now();
     const createdAt = new Date().toISOString();
     const newProject = {
@@ -1284,6 +1304,30 @@ async function addProject() {
         openProjectModal(finalId);
         setTimeout(() => editModalTitle(finalId), 100);
     }, 150);
+}
+
+function showNewProjectCreatePanel() {
+    const panel = document.getElementById('newProjectCreatePanel');
+    const input = document.getElementById('newProjectDescriptionInput');
+    if (!panel || !input) return;
+    panel.classList.remove('hidden');
+    showNewProjectDescriptionWarning(false);
+    requestAnimationFrame(() => input.focus({ preventScroll: true }));
+}
+
+function resetNewProjectCreatePanel() {
+    const panel = document.getElementById('newProjectCreatePanel');
+    const input = document.getElementById('newProjectDescriptionInput');
+    if (input) input.value = '';
+    if (panel) panel.classList.add('hidden');
+    showNewProjectDescriptionWarning(false);
+}
+
+function showNewProjectDescriptionWarning(show = true) {
+    const input = document.getElementById('newProjectDescriptionInput');
+    const warning = document.getElementById('newProjectDescriptionWarning');
+    input?.classList.toggle('has-error', Boolean(show));
+    warning?.classList.toggle('hidden', !show);
 }
 
 function deleteProject(projectId) {
@@ -4231,6 +4275,16 @@ function initializeEventHandlers() {
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
+    document.getElementById('confirmNewProjectButton')?.addEventListener('click', addProject);
+    document.getElementById('cancelNewProjectButton')?.addEventListener('click', resetNewProjectCreatePanel);
+    document.getElementById('newProjectDescriptionInput')?.addEventListener('input', () => showNewProjectDescriptionWarning(false));
+    document.getElementById('newProjectDescriptionInput')?.addEventListener('keydown', event => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            addProject();
+        }
+        if (event.key === 'Escape') resetNewProjectCreatePanel();
+    });
 
     // Undo button
     document.getElementById('undoButton')?.addEventListener('click', performUndo);

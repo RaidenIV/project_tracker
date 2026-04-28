@@ -173,6 +173,20 @@
                     New Project
                 </button>
 
+                <div class="new-project-create-panel hidden" id="newProjectCreatePanel" aria-live="polite">
+                    <label class="new-project-create-label" for="newProjectDescriptionInput">Project description</label>
+                    <textarea class="new-project-description-input"
+                              id="newProjectDescriptionInput"
+                              rows="3"
+                              maxlength="280"
+                              placeholder="Describe this project"></textarea>
+                    <div class="new-project-description-warning hidden" id="newProjectDescriptionWarning">Add a project description</div>
+                    <div class="new-project-create-actions">
+                        <button class="new-project-confirm-button" id="confirmNewProjectButton" type="button">Create Project</button>
+                        <button class="new-project-cancel-button" id="cancelNewProjectButton" type="button">Cancel</button>
+                    </div>
+                </div>
+
                 <div class="sidebar-nav-list">
                     <button class="sidebar-nav-card active" id="activeProjectsCard" type="button">
                         <span class="sidebar-nav-card-label">Active Projects</span>

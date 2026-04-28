@@ -2112,3 +2112,272 @@ body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-stat
 body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status--inline {
     display: none !important;
 }
+
+/* ============================================================================
+   v9 targeted patch: account chip, sync placement, tag section, create warning
+   ============================================================================ */
+.control-panel .panel-user-info,
+body[data-theme^="console"] .control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "account status" !important;
+    align-items: center !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    grid-area: account !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-grid !important;
+    grid-template-columns: auto minmax(0, max-content) !important;
+    grid-template-areas: "avatar username" !important;
+    align-items: center !important;
+    justify-content: start !important;
+    gap: 0.65rem !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.55rem !important;
+    margin: 0 !important;
+    padding: 0.22rem 0.85rem 0.22rem 0.22rem !important;
+    border-radius: 999px !important;
+    border: 1.5px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: none !important;
+    color: var(--text, inherit) !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    transform: none !important;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, currentColor) 22%, transparent) !important;
+    outline: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-avatar {
+    grid-area: avatar !important;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-width: 2.1rem !important;
+    min-height: 2.1rem !important;
+    align-self: center !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar,
+.control-panel .panel-user-pill:hover .panel-avatar,
+.control-panel .panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible .panel-avatar {
+    box-shadow: none !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+}
+
+.control-panel .panel-avatar-button .panel-username,
+.control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-username {
+    grid-area: username !important;
+    display: block !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    max-width: 9.5rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+    color: inherit !important;
+    transform: translateY(0) !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    grid-area: status !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: translateY(0) !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    text-align: right !important;
+}
+
+body.control-panel-is-collapsed .panel-user-info,
+body[data-theme^="console"].control-panel-is-collapsed .panel-user-info {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button,
+body.control-panel-is-collapsed .control-panel .panel-user-pill,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    height: 2.65rem !important;
+    min-height: 2.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.2rem !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body.control-panel-is-collapsed .control-panel .save-status,
+body.control-panel-is-collapsed .control-panel .save-status--inline,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status--inline {
+    display: none !important;
+}
+
+.project-tag-controls,
+body[data-theme^="console"] .project-tag-controls {
+    margin: 0.8rem 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.project-tag-controls-label,
+body[data-theme^="console"] .project-tag-controls-label {
+    margin-bottom: 0.45rem !important;
+}
+
+.new-project-create-panel {
+    display: grid !important;
+    gap: 0.55rem !important;
+    margin: 0.75rem 0 1rem !important;
+    padding: 0.85rem !important;
+    border-radius: 1rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+}
+
+.new-project-create-panel.hidden {
+    display: none !important;
+}
+
+.new-project-create-label {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.new-project-description-input {
+    width: 100% !important;
+    min-height: 5rem !important;
+    padding: 0.7rem 0.75rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--inset, rgba(0, 0, 0, 0.06)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.86rem !important;
+    line-height: 1.4 !important;
+    resize: vertical !important;
+    outline: none !important;
+}
+
+.new-project-description-input:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.new-project-description-input.has-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
+}
+
+.new-project-description-warning {
+    color: #ef4444 !important;
+    font-size: 0.76rem !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+}
+
+.new-project-description-warning.hidden {
+    display: none !important;
+}
+
+.new-project-create-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.new-project-confirm-button,
+.new-project-cancel-button {
+    appearance: none !important;
+    min-height: 2.1rem !important;
+    padding: 0.45rem 0.75rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+}
+
+.new-project-confirm-button:hover,
+.new-project-confirm-button:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.new-project-cancel-button:hover,
+.new-project-cancel-button:focus-visible {
+    border-color: var(--muted, currentColor) !important;
+    outline: none !important;
+}
