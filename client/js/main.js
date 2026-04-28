@@ -618,6 +618,7 @@ function normalizeProject(project) {
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
         notes: typeof project.notes === 'string' ? project.notes : '',
+        description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
         tags: normalizeProjectTags(project.tags || project.projectTags || []),
         tasks: normalizedTasks,
         taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
@@ -652,6 +653,7 @@ function matchesProjectSearch(project, query) {
     if (!query) return true;
     const haystack = [
         project.title,
+        project.description,
         project.notes,
         ...getProjectTags(project),
         ...(project.tasks || []).map(task => task.text)
@@ -1144,7 +1146,7 @@ function captureProjectModalState(projectId) {
 
 function restoreProjectModalState(projectId, modalState) {
     if (!modalState || String(modalState.projectId) !== String(projectId)) return;
-    const tab = ['tasks', 'notes', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
+    const tab = ['tasks', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
     switchModalTab(projectId, tab);
     const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
     if (!scrollEl) return;
@@ -1246,6 +1248,7 @@ async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        description: '',
         tags: [],
         taskCategories: [],
         userRole: 'owner',
@@ -1263,6 +1266,7 @@ async function addProject() {
             id:  created.id  || created._id,
             lastModified: created.lastModified || createdAt,
             __syncedLastModified: created.lastModified || createdAt,
+            description: typeof created.description === 'string' ? created.description : '',
             userRole: 'owner',
             ownerName: state.getCurrentUser()?.username || '',
             ownerEmail: state.getCurrentUser()?.email || '',
@@ -1319,13 +1323,26 @@ function completeProject(projectId) {
     render();
 }
 
-function updateProjectTitle(projectId, newTitle) {
+function normalizeProjectDescription(value) {
+    return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
+}
+
+function updateProjectDetails(projectId, details = {}) {
     if (!state.canEdit(projectId)) return;
-    const trimmedTitle = (newTitle || '').trim();
+    const trimmedTitle = String(details.title ?? '').trim();
     const titleCased = toTitleCase(trimmedTitle || 'New Project');
-    state.updateProject(projectId, projectUpdate({ title: titleCased }));
+    const description = normalizeProjectDescription(details.description);
+    state.updateProject(projectId, projectUpdate({ title: titleCased, description }));
     saveData();
     render();
+}
+
+function updateProjectTitle(projectId, newTitle) {
+    const project = state.findProject(projectId);
+    updateProjectDetails(projectId, {
+        title: newTitle,
+        description: project?.description || ''
+    });
 }
 
 function updateProjectNotes(projectId, notes) {
@@ -2756,9 +2773,14 @@ function formatProjectSyncText(project) {
 }
 
 function getProjectCardDescription(project) {
-    const rawDescription = String(project?.description || project?.summary || project?.notes || '').trim();
+    const rawDescription = String(project?.description || project?.summary || '').trim();
     if (!rawDescription) return '';
     return rawDescription.replace(/\s+/g, ' ').slice(0, 110);
+}
+
+function getProjectModalDescription(project) {
+    const rawDescription = String(project?.description || project?.summary || '').trim();
+    return rawDescription.replace(/\s+/g, ' ').slice(0, 280);
 }
 
 function formatLeaderboardScore(entry, isCurrent = false) {
@@ -3197,11 +3219,11 @@ function openProjectModal(projectId, options = {}) {
     content.innerHTML = `<div class="modal-scroll-inner">
         <div class="modal-header-centered">
             <div class="modal-title-container">
-                <div class="modal-title" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" style="cursor: pointer;">${project.title}</div>
+                <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
                 <input type="text" 
                        class="modal-title-input" 
                        id="modal-title-input-${project.id}"
-                       value="${project.title}"
+                       value="${escapeHtml(project.title)}"
                        style="display: none;"
                        onblur="finishEditModalTitle('${project.id}')"
                        onkeydown="if(event.key==='Enter') finishEditModalTitle('${project.id}')" >
@@ -3230,6 +3252,10 @@ function openProjectModal(projectId, options = {}) {
             </div>
         </div>
         
+        <button class="modal-project-description ${getProjectModalDescription(project) ? '' : 'is-empty'}" type="button" onclick="editModalTitle('${project.id}')" title="Edit project description">
+            ${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}
+        </button>
+
         <div class="modal-progress">
             <div class="progress-bar-container">
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${percentage}%"></div>
@@ -3240,7 +3266,6 @@ function openProjectModal(projectId, options = {}) {
         <!-- Tabs for Tasks, Notes and Members -->
         <div class="modal-tabs">
             <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
-            <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')">Notes</button>
             <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
                 Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
@@ -3385,16 +3410,6 @@ function openProjectModal(projectId, options = {}) {
             </div>
         </div>
 
-        <!-- Notes Section -->
-        <div class="modal-section hidden" id="notes-section-${project.id}">
-            <div class="modal-notes">
-                <textarea 
-                    class="notes-textarea"
-                    id="notes-textarea-${project.id}"
-                    placeholder="Add notes about this project..."
-                    onblur="saveProjectNotes('${project.id}')">${project.notes || ''}</textarea>
-            </div>
-        </div>
 
         <div class="modal-section hidden" id="history-section-${project.id}">
             <div class="project-activity-list">
@@ -3423,7 +3438,7 @@ function openProjectModal(projectId, options = {}) {
 
 
 function switchModalTab(projectId, tab) {
-    ['tasks', 'notes', 'members', 'history'].forEach(s => {
+    ['tasks', 'members', 'history'].forEach(s => {
         const sec = document.getElementById(`${s}-section-${projectId}`);
         const btn = document.getElementById(`${s}-tab-${projectId}`);
         if (!sec || !btn) return;
@@ -3460,26 +3475,91 @@ function closeProjectModal() {
     render();
 }
 
+function ensureProjectDetailsModal() {
+    let modal = document.getElementById('projectDetailsModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-details-modal-overlay" id="projectDetailsModal" aria-hidden="true">
+            <div class="modal-content project-details-modal-content" role="dialog" aria-modal="true" aria-labelledby="projectDetailsModalTitle">
+                <div class="project-details-modal-header">
+                    <div>
+                        <h3 class="project-details-modal-title" id="projectDetailsModalTitle">Edit Project</h3>
+                        <p class="project-details-modal-subtitle">Update the project name and description.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectDetailsModal()" aria-label="Close project details editor">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <label class="project-details-field">
+                    <span>Project Name</span>
+                    <input class="project-details-input" id="projectDetailsTitleInput" type="text" maxlength="80" placeholder="Project name">
+                </label>
+                <label class="project-details-field">
+                    <span>Project Description</span>
+                    <textarea class="project-details-textarea" id="projectDetailsDescriptionInput" maxlength="280" placeholder="Add a short project description..."></textarea>
+                </label>
+                <div class="project-details-modal-actions">
+                    <button class="confirm-cancel" type="button" onclick="closeProjectDetailsModal()">Cancel</button>
+                    <button class="modal-done-btn" type="button" onclick="saveProjectDetailsFromModal()">Save Project</button>
+                </div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectDetailsModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeProjectDetailsModal();
+    });
+    return modal;
+}
+
 function editModalTitle(projectId) {
-    const titleDiv = document.getElementById(`modal-title-${projectId}`);
-    const titleInput = document.getElementById(`modal-title-input-${projectId}`);
-    if (titleDiv && titleInput) {
-        titleDiv.style.display = 'none';
-        titleInput.style.display = 'block';
-        titleInput.focus();
-        titleInput.select();
-    }
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const modal = ensureProjectDetailsModal();
+    modal.dataset.projectId = projectId;
+
+    const titleInput = modal.querySelector('#projectDetailsTitleInput');
+    const descriptionInput = modal.querySelector('#projectDetailsDescriptionInput');
+    if (titleInput) titleInput.value = project.title || 'New Project';
+    if (descriptionInput) descriptionInput.value = project.description || '';
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => titleInput?.focus({ preventScroll: true }));
+}
+
+function closeProjectDetailsModal() {
+    const modal = document.getElementById('projectDetailsModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
+}
+
+function saveProjectDetailsFromModal() {
+    const modal = document.getElementById('projectDetailsModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    const titleInput = modal.querySelector('#projectDetailsTitleInput');
+    const descriptionInput = modal.querySelector('#projectDetailsDescriptionInput');
+    if (!projectId || !titleInput || !descriptionInput) return;
+
+    updateProjectDetails(projectId, {
+        title: titleInput.value,
+        description: descriptionInput.value
+    });
+    closeProjectDetailsModal();
+    openProjectModal(projectId);
 }
 
 function finishEditModalTitle(projectId) {
-    const titleDiv = document.getElementById(`modal-title-${projectId}`);
-    const titleInput = document.getElementById(`modal-title-input-${projectId}`);
-    if (titleDiv && titleInput) {
-        updateProjectTitle(projectId, titleInput.value);
-        titleDiv.textContent = toTitleCase(titleInput.value);
-        titleDiv.style.display = 'block';
-        titleInput.style.display = 'none';
-    }
+    saveProjectDetailsFromModal();
 }
 
 function editModalTask(taskId) {
@@ -4433,6 +4513,8 @@ window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
 window.closeProjectModal = closeProjectModal;
 window.editModalTitle = editModalTitle;
 window.finishEditModalTitle = finishEditModalTitle;
+window.closeProjectDetailsModal = closeProjectDetailsModal;
+window.saveProjectDetailsFromModal = saveProjectDetailsFromModal;
 window.editModalTask = editModalTask;
 window.finishEditModalTask = finishEditModalTask;
 window.addTaskToModal = addTaskToModal;

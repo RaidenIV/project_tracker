@@ -72,6 +72,7 @@ const projectSchema = new mongoose.Schema({
     completed:     { type: Boolean, default: false },
     completedDate: String,
     notes:         { type: String, default: '' },
+    description:   { type: String, default: '' },
     tags:          { type: [String], default: [] },
     archived:      { type: Boolean, default: false },
     owner:         { type: String, required: true },   // Account._id as string
@@ -244,6 +245,9 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.completed !== undefined) sanitized.completed = !!body.completed;
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
     if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
+    if (body.description !== undefined) sanitized.description = typeof body.description === 'string'
+        ? body.description.trim().replace(/\s+/g, ' ').slice(0, 280)
+        : String(body.description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
     if (body.archived !== undefined) sanitized.archived = !!body.archived;
 
     return sanitized;
@@ -302,6 +306,10 @@ function summarizeProjectUpdate(existingProject, incomingBody) {
         if (renamedTask) {
             return { type: 'task_updated', message: 'updated task details' };
         }
+    }
+
+    if (typeof update.description === 'string' && update.description !== (oldProject.description || '')) {
+        return { type: 'description_updated', message: 'updated the project description' };
     }
 
     if (typeof update.notes === 'string' && update.notes !== (oldProject.notes || '')) {
@@ -402,7 +410,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, tags, dateCreated, priority, completed, completedDate, notes } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, completed, completedDate, notes, description } = req.body;
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
@@ -413,6 +421,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completed:     completed    || false,
             completedDate: completedDate || null,
             notes:         notes        || '',
+            description:   typeof description === 'string' ? description.trim().replace(/\s+/g, ' ').slice(0, 280) : '',
             archived:      false,
             owner:         req.user.id,
             collaborators: [],
@@ -436,7 +445,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'completed', 'completedDate', 'notes', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'completed', 'completedDate', 'notes', 'description', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);

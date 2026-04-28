@@ -1115,3 +1115,237 @@ body.control-panel-is-collapsed .project-grid {
     background: transparent !important;
     outline: none !important;
 }
+
+/* Targeted project modal + desktop density fixes */
+@media (min-width: 981px) {
+    .container {
+        grid-template-columns: 20% minmax(0, 1fr) !important;
+    }
+
+    .control-panel {
+        width: 100% !important;
+    }
+
+    .panel-edge-toggle {
+        left: 20% !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        left: 5rem !important;
+    }
+
+    .top-app-bar {
+        grid-template-columns: max-content minmax(18rem, 1fr) minmax(10rem, 12rem) auto !important;
+        gap: 0.85rem !important;
+    }
+
+    .top-app-bar-title {
+        grid-column: 1 !important;
+        justify-self: start !important;
+        white-space: nowrap !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        display: contents !important;
+        width: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar.top-view-toolbar .view-toolbar-search-wrap {
+        grid-column: 2 !important;
+        width: 100% !important;
+        max-width: none !important;
+        justify-self: stretch !important;
+    }
+
+    #projectSortSelect {
+        grid-column: 3 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-self: stretch !important;
+    }
+
+    .top-app-logo {
+        grid-column: 4 !important;
+        justify-self: end !important;
+    }
+
+    .viewport {
+        padding: 1.15rem 2rem 1.5rem !important;
+    }
+
+    .view-filter-chips {
+        margin: 0 0 0.85rem !important;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+    }
+
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+        padding: 1.2rem !important;
+        gap: 0.78rem !important;
+    }
+
+    .project-preview-list {
+        gap: 0.55rem !important;
+    }
+
+    .project-preview-task,
+    .project-preview-empty {
+        min-height: 2.55rem !important;
+        padding: 0.62rem 0.75rem !important;
+    }
+}
+
+.modal-title-edit-button {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+
+.modal-title-edit-button:hover,
+.modal-title-edit-button:focus-visible,
+.modal-project-description:hover,
+.modal-project-description:focus-visible {
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.modal-project-description {
+    appearance: none !important;
+    width: min(100%, 54rem) !important;
+    margin: 0.15rem auto 1rem !important;
+    padding: 0.85rem 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease !important;
+}
+
+.modal-project-description.is-empty {
+    color: var(--muted, rgba(100, 116, 139, 0.9)) !important;
+    font-style: italic !important;
+}
+
+.modal-project-description:hover,
+.modal-project-description:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+}
+
+.project-details-modal-content {
+    width: min(92vw, 520px) !important;
+    max-width: 520px !important;
+    padding: 1.5rem !important;
+}
+
+.project-details-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1.15rem !important;
+}
+
+.project-details-modal-title {
+    margin: 0 !important;
+    color: var(--heading, inherit) !important;
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+}
+
+.project-details-modal-subtitle {
+    margin: 0.25rem 0 0 !important;
+    color: var(--muted, inherit) !important;
+    font-size: 0.85rem !important;
+}
+
+.project-details-field {
+    display: grid !important;
+    gap: 0.45rem !important;
+    margin-bottom: 1rem !important;
+    color: var(--heading, inherit) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-details-input,
+.project-details-textarea {
+    width: 100% !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.3)) !important;
+    border-radius: 0.9rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    outline: none !important;
+}
+
+.project-details-input {
+    min-height: 2.75rem !important;
+    padding: 0 0.9rem !important;
+}
+
+.project-details-textarea {
+    min-height: 7rem !important;
+    resize: vertical !important;
+    padding: 0.85rem 0.9rem !important;
+    line-height: 1.45 !important;
+}
+
+.project-details-input:focus,
+.project-details-textarea:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+}
+
+.project-details-modal-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin-top: 1.2rem !important;
+}
+
+#sidebarAccountSettingsBtn:hover,
+#sidebarAccountSettingsBtn:focus-visible,
+#sidebarUiOptionsBtn:hover,
+#sidebarUiOptionsBtn:focus-visible,
+#sidebarMoreToggleBtn:hover,
+#sidebarMoreToggleBtn:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
