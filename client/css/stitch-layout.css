@@ -263,3 +263,34 @@ body.control-panel-is-collapsed .sidebar-collapsible {
         display: none !important;
     }
 }
+
+/* ==========================================================================
+   Stitch menu refinement: project category + expanded search
+   ========================================================================== */
+.top-app-bar {
+    grid-template-columns: minmax(10rem, max-content) minmax(0, 1fr) auto !important;
+    gap: 1rem !important;
+}
+
+.top-view-toolbar {
+    width: 100% !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    justify-content: flex-end !important;
+}
+
+.view-toolbar-category-select {
+    flex: 0 0 8.75rem !important;
+    min-width: 8.75rem !important;
+}
+
+.view-toolbar-search-wrap {
+    width: auto !important;
+    max-width: none !important;
+    flex: 1 1 38rem !important;
+}
+
+#projectSortSelect {
+    flex: 0 0 11rem !important;
+    min-width: 11rem !important;
+}

@@ -2002,3 +2002,90 @@ body[data-theme^="console"] .empty-state .title {
 body[data-theme^="console"] .empty-state .subtitle {
     color: var(--muted);
 }
+
+/* ==========================================================================
+   Console-only Stitch refinements: fixed dark mode + synced indicator
+   ========================================================================== */
+body[data-theme^="console"] .ui-options-section--appearance,
+body[data-theme^="console"] .color-mode-toggle,
+body[data-theme^="console"] .sidebar-theme-toggle-label {
+    display: none !important;
+}
+
+body[data-theme^="console"] .control-panel-header {
+    align-items: center !important;
+}
+
+body[data-theme^="console"] .control-panel .panel-user-info {
+    width: 100% !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.9rem !important;
+}
+
+body[data-theme^="console"] .save-status {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    padding: 0 !important;
+    margin: 0 0 0 auto !important;
+    color: var(--accent) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.12em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+}
+
+body[data-theme^="console"] .save-status--saved,
+body[data-theme^="console"] .save-status--idle {
+    font-size: 0 !important;
+}
+
+body[data-theme^="console"] .save-status--saved::after,
+body[data-theme^="console"] .save-status--idle::after {
+    content: "SYNCED";
+    font-size: 0.72rem;
+}
+
+body[data-theme^="console"] .save-status::before {
+    width: 0.6rem !important;
+    height: 0.6rem !important;
+    margin-right: 0.55rem !important;
+    background: var(--accent) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 0 12px var(--accent-glow) !important;
+}
+
+body[data-theme^="console"] .project-card {
+    min-height: 27rem;
+    border-radius: 1.35rem !important;
+    padding: 1.55rem !important;
+}
+
+body[data-theme^="console"] .project-card-description-row {
+    color: var(--muted-2);
+    font-size: 0.84rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+body[data-theme^="console"] .project-card-description-row strong {
+    color: var(--accent);
+    text-shadow: 0 0 14px var(--accent-glow);
+}
+
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="console"] .project-preview-empty {
+    border-radius: 0.8rem;
+    background: var(--inset);
+}
+
+body[data-theme^="console"] .view-toolbar-category-select {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}

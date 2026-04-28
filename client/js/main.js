@@ -439,6 +439,7 @@ function getLeaderboardUsername(entry) {
 
 function normalizeThemeName(themeName) {
     const resolved = LEGACY_THEME_MAP[themeName] || themeName;
+    if (resolved === 'console-light') return 'console-dark';
     return THEME_OPTIONS[resolved] ? resolved : 'blueprint-light';
 }
 
@@ -452,7 +453,7 @@ function getThemeLabel(themeName) {
 
 function buildThemeName(themeFamily, colorMode) {
     const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'blueprint';
-    const mode = colorMode === 'dark' ? 'dark' : 'light';
+    const mode = family === 'console' ? 'dark' : (colorMode === 'dark' ? 'dark' : 'light');
     const candidate = `${family}-${mode}`;
     return THEME_OPTIONS[candidate] ? candidate : 'blueprint-light';
 }
@@ -500,13 +501,16 @@ function syncColorModeToggle() {
     const toggle = document.getElementById('colorModeToggleBtn');
     if (!toggle) return;
     const meta = getThemeMeta(uiState.theme);
+    const isConsole = meta.family === 'console';
     const isDark = meta.mode === 'dark';
     toggle.classList.toggle('is-dark', isDark);
+    toggle.hidden = isConsole;
+    toggle.setAttribute('aria-hidden', String(isConsole));
     toggle.setAttribute('aria-pressed', String(isDark));
-    toggle.setAttribute('title', `Switch to ${isDark ? 'light' : 'dark'} mode`);
-    toggle.setAttribute('aria-label', `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
+    toggle.setAttribute('title', isConsole ? 'Console uses the fixed Stitch dark mode' : `Switch to ${isDark ? 'light' : 'dark'} mode`);
+    toggle.setAttribute('aria-label', isConsole ? 'Console uses the fixed Stitch dark mode' : `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
     const label = document.querySelector('.sidebar-theme-toggle-label');
-    if (label) label.textContent = isDark ? 'Dark' : 'Light';
+    if (label) label.textContent = isConsole ? '' : (isDark ? 'Dark' : 'Light');
 }
 
 function syncThemeBranding() {
@@ -551,14 +555,16 @@ function applyTheme(themeName, persist = true) {
     const status = document.getElementById('uiOptionsStatus');
     if (status) {
         const meta = getThemeMeta(uiState.theme);
-        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+        status.textContent = meta.family === 'console'
+            ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
+            : `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
     }
     renderThemeOptions();
 }
 
 function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
     const currentMeta = getThemeMeta(uiState.theme);
-    const nextMode = preferredMode || currentMeta.mode || 'light';
+    const nextMode = themeFamily === 'console' ? 'dark' : (preferredMode || currentMeta.mode || 'light');
     applyTheme(buildThemeName(themeFamily, nextMode), persist);
 }
 
@@ -573,7 +579,9 @@ function renderThemeOptions() {
 function openUiOptionsModal() {
     renderThemeOptions();
     const meta = getThemeMeta(uiState.theme);
-    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    document.getElementById('uiOptionsStatus').textContent = meta.family === 'console'
+        ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
+        : `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -1693,6 +1701,28 @@ function setViewTitle(title) {
     if (viewportTitle) viewportTitle.textContent = title;
     const appBarTitle = document.getElementById('topAppBarTitle');
     if (appBarTitle) appBarTitle.textContent = title;
+    syncProjectCategorySelect();
+}
+
+function getCurrentProjectCategoryValue() {
+    if (state.getView() === VIEWS.COMPLETED) return 'completed';
+    if (uiState.ownerFilter === 'shared') return 'shared';
+    return 'active';
+}
+
+function syncProjectCategorySelect() {
+    const select = document.getElementById('projectCategorySelect');
+    if (select) select.value = getCurrentProjectCategoryValue();
+}
+
+function switchProjectCategory(categoryValue) {
+    if (categoryValue === 'shared') {
+        switchToSharedView();
+    } else if (categoryValue === 'completed') {
+        switchToCompletedView();
+    } else {
+        switchToActiveView();
+    }
 }
 
 function syncViewTitle() {
@@ -2505,7 +2535,7 @@ function buildProjectTagControlsMarkup(projectId, project) {
                             ${canEdit ? `<button class="project-tag-remove" type="button" aria-label="Remove ${escapeHtml(tag)} tag" onclick="deleteProjectTag('${projectId}', ${tagLiteral}, event)">×</button>` : ''}
                         </span>
                     `;
-                }).join('') : '<span class="project-tag-empty">No tags</span>'}
+                }).join('') : ''}
                 ${canEdit ? (isCreating ? `
                     <input class="project-tag-inline-input"
                            type="text"
@@ -2609,6 +2639,12 @@ function getProjectCardPreviewTasks(project) {
 
 function formatProjectSyncText(project) {
     return `LAST SYNC: ${timeAgo(project?.lastModified || project?.dateCreated)}`;
+}
+
+function getProjectCardDescription(project) {
+    const rawDescription = String(project?.description || project?.summary || project?.notes || '').trim();
+    if (!rawDescription) return '';
+    return rawDescription.replace(/\s+/g, ' ').slice(0, 110);
 }
 
 function formatLeaderboardScore(entry, isCurrent = false) {
@@ -3650,6 +3686,7 @@ function render() {
     }
 
     runRenderStep('project select', updateProjectSelect);
+    runRenderStep('project category select', syncProjectCategorySelect);
 }
 
 
@@ -3667,6 +3704,7 @@ function renderProjectCard(project) {
     const canReorderProject = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
     const previewTasks = getProjectCardPreviewTasks(project);
     const projectTags = getProjectTags(project);
+    const projectDescription = getProjectCardDescription(project);
 
     const accessLabel = isViewer || isEditor
         ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
@@ -3716,13 +3754,15 @@ function renderProjectCard(project) {
                 </div>
             </div>
 
-            <div class="project-card-tags">
-                ${projectTags.length ? projectTags.slice(0, 4).map(tag => `<span class="project-card-tag">${escapeHtml(tag)}</span>`).join('') : '<span class="project-card-tag project-card-tag--empty">No tags</span>'}
-            </div>
+            ${projectTags.length ? `
+                <div class="project-card-tags">
+                    ${projectTags.slice(0, 4).map(tag => `<span class="project-card-tag">${escapeHtml(tag)}</span>`).join('')}
+                </div>
+            ` : ''}
 
             <div class="project-card-progress">
-                <div class="project-card-progress-row">
-                    <span>${project.completed ? 'Completion' : 'Task Progress'}</span>
+                <div class="project-card-description-row">
+                    <span class="project-card-description">${projectDescription ? escapeHtml(projectDescription) : ''}</span>
                     <strong>${progressPercentage}%</strong>
                 </div>
                 <div class="progress-bar-container">
@@ -4080,6 +4120,9 @@ function initializeEventHandlers() {
         uiState.activeSavedViewId = '';
         render();
     });
+    document.getElementById('projectCategorySelect')?.addEventListener('change', (e) => {
+        switchProjectCategory(e.target.value || 'active');
+    });
     document.getElementById('projectSortSelect')?.addEventListener('change', (e) => {
         uiState.sortMode = e.target.value || 'manual';
         uiState.activeSavedViewId = '';
@@ -4090,6 +4133,7 @@ function initializeEventHandlers() {
     });
     document.getElementById('colorModeToggleBtn')?.addEventListener('click', () => {
         const meta = getThemeMeta(uiState.theme);
+        if (meta.family === 'console') return;
         const nextMode = meta.mode === 'dark' ? 'light' : 'dark';
         applyTheme(buildThemeName(meta.family, nextMode));
     });

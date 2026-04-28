@@ -8678,3 +8678,67 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
         display: none;
     }
 }
+
+/* ==========================================================================
+   Stitch card readability refinements
+   ========================================================================== */
+.project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 23.5rem), 26.5rem));
+    align-items: start;
+}
+
+.stitch-project-card {
+    min-height: 27rem;
+    gap: 1.05rem;
+    padding: 1.45rem;
+}
+
+.project-card-tags:empty {
+    display: none;
+}
+
+.project-card-description-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    color: var(--muted, currentColor);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.project-card-description {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-card-description:empty::before {
+    content: "";
+}
+
+.project-card-description-row strong {
+    color: var(--accent, currentColor);
+    font-weight: 900;
+}
+
+.project-preview-task,
+.project-preview-empty {
+    min-height: 2.75rem;
+    padding: 0.72rem 0.8rem;
+}
+
+.project-preview-task span:last-child {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+@media (max-width: 1180px) {
+    .project-grid {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 21.5rem), 1fr));
+    }
+}
