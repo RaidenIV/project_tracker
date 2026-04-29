@@ -138,6 +138,12 @@ function getNextTaskPriorityValue(task) {
     return getNextPriorityTagValue(normalizeTask(task).tag);
 }
 
+function isTypingTarget(target) {
+    if (!target) return false;
+    const element = target.closest?.('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"]');
+    return !!element;
+}
+
 function getTaskCategoryTabPositionClass(index, total) {
     if (index <= 0) return 'task-category-tab-shell--left';
     if (index >= total - 1) return 'task-category-tab-shell--right';
@@ -2105,6 +2111,7 @@ function bindProjectEditModeExitHandlers() {
 
     // Escape closes task-note modal first, then exits edit mode.
     document.addEventListener('keydown', (e) => {
+        if (isTypingTarget(e.target)) return;
         if (e.key === 'Escape' && document.getElementById('taskNoteModal')?.classList.contains('active')) {
             closeTaskNoteModal();
             return;
@@ -3695,7 +3702,7 @@ function openProjectModal(projectId, options = {}) {
                   id="modal-project-description-${project.id}"
                   data-placeholder="Add project description"
                   role="textbox"
-                  ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
+                  ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); return false; } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
             ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
         </div>
 
@@ -4427,15 +4434,7 @@ function renderProjectCard(project) {
                 ${previewTasks.length ? previewTasks.map(task => `
                     <li class="project-preview-task ${task.completed ? 'is-completed' : ''}">
                         <span class="project-preview-check" aria-hidden="true">${task.completed ? '✓' : ''}</span>
-                        ${canEditProject ? `
-                            <button class="project-preview-priority project-preview-priority--${task.tag}"
-                                    type="button"
-                                    title="Priority: ${escapeHtml(getTaskTagLabel(task))}"
-                                    aria-label="Change task priority for ${escapeHtml(task.text || 'Untitled task')}"
-                                    onclick="cycleProjectCardTaskPriority('${project.id}', ${task.id}, event)">
-                                <span class="task-tag-flag task-tag-flag--${task.tag}" aria-hidden="true"></span>
-                            </button>
-                        ` : `<span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>`}
+                        <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
                         <span>${escapeHtml(task.text || 'Untitled task')}</span>
                     </li>
                 `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
@@ -4819,12 +4818,12 @@ function initializeEventHandlers() {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-        const tagName = e.target.tagName;
-        if ((tagName === 'INPUT' || tagName === 'TEXTAREA') && !(uiState.commandPaletteOpen && e.target.id === 'commandPaletteInput')) {
+        const isCommandPaletteInput = uiState.commandPaletteOpen && e.target?.id === 'commandPaletteInput';
+        if (isTypingTarget(e.target) && !isCommandPaletteInput) {
             return;
         }
 
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        if (!isTypingTarget(e.target) && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
             e.preventDefault();
             if (uiState.commandPaletteOpen) closeCommandPalette();
             else openCommandPalette();
@@ -4840,6 +4839,7 @@ function initializeEventHandlers() {
             if (e.key === 'ArrowDown') { e.preventDefault(); uiState.commandActiveIndex = Math.min(actions.length - 1, uiState.commandActiveIndex + 1); renderCommandPalette(); return; }
             if (e.key === 'ArrowUp') { e.preventDefault(); uiState.commandActiveIndex = Math.max(0, uiState.commandActiveIndex - 1); renderCommandPalette(); return; }
             if (e.key === 'Enter') { e.preventDefault(); actions[uiState.commandActiveIndex]?.run(); closeCommandPalette(); return; }
+            if (isCommandPaletteInput) return;
         }
         
         switch(e.key.toLowerCase()) {

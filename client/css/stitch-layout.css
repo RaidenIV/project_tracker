@@ -1638,12 +1638,10 @@ body.control-panel-is-collapsed .project-grid {
 .sidebar-action-button--danger:focus-visible,
 body[data-theme^="console"] .sidebar-action-button--danger:hover,
 body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
-    color: var(--danger, #ef4444) !important;
-    border-color: var(--danger, #ef4444) !important;
-    background: color-mix(in srgb, var(--danger, #ef4444) 11%, transparent) !important;
-    box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--danger, #ef4444) 48%, transparent),
-        0 0 18px color-mix(in srgb, var(--danger, #ef4444) 46%, transparent) !important;
+    color: var(--heading, currentColor) !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 /* ============================================================================
@@ -2574,6 +2572,8 @@ body[data-theme^="blueprint"] .project-preview-priority {
     height: 1rem !important;
     flex-basis: 1rem !important;
     border-radius: 0.32rem !important;
+    cursor: default !important;
+    pointer-events: none !important;
 }
 
 .project-preview-priority .task-tag-flag,
