@@ -67,6 +67,23 @@ const TASK_TAG_PRIORITY = {
     none: 3
 };
 
+function normalizePriorityTagValue(value) {
+    const rawValue = String(value ?? DEFAULT_TASK_TAG).trim().toLowerCase();
+    const tagValue = rawValue === 'critical' ? 'high' : rawValue;
+    return Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+}
+
+function getPriorityTagLabel(value) {
+    const tag = normalizePriorityTagValue(value);
+    return TASK_TAG_OPTIONS.find(option => option.value === tag)?.label || 'No priority';
+}
+
+function getNextPriorityTagValue(value) {
+    const priorityCycle = ['none', 'high', 'medium', 'low'];
+    const currentIndex = priorityCycle.indexOf(normalizePriorityTagValue(value));
+    return priorityCycle[(currentIndex + 1) % priorityCycle.length] || DEFAULT_TASK_TAG;
+}
+
 function sanitizeTaskCategoryName(value) {
     const raw = String(value ?? '').trim();
     if (!raw) return DEFAULT_TASK_CATEGORY;
@@ -91,9 +108,7 @@ function getTaskCategoryListWith(valueList = []) {
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
-    const rawTagValue = String(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG).trim().toLowerCase();
-    const tagValue = rawTagValue === 'critical' ? 'high' : rawTagValue;
-    const tag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+    const tag = normalizePriorityTagValue(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG);
     const category = sanitizeTaskCategoryName(task?.category || task?.taskCategory || DEFAULT_TASK_CATEGORY);
 
     return {
@@ -110,7 +125,7 @@ function normalizeTask(task = {}, index = 0) {
 
 function getTaskTagLabel(task) {
     const normalized = normalizeTask(task);
-    return TASK_TAG_OPTIONS.find(option => option.value === normalized.tag)?.label || 'No priority';
+    return getPriorityTagLabel(normalized.tag);
 }
 
 function getTaskTagPriority(task) {
@@ -119,10 +134,7 @@ function getTaskTagPriority(task) {
 }
 
 function getNextTaskPriorityValue(task) {
-    const currentTag = normalizeTask(task).tag;
-    const priorityCycle = ['none', 'high', 'medium', 'low'];
-    const currentIndex = priorityCycle.indexOf(currentTag);
-    return priorityCycle[(currentIndex + 1) % priorityCycle.length] || DEFAULT_TASK_TAG;
+    return getNextPriorityTagValue(normalizeTask(task).tag);
 }
 
 function getTaskCategoryTabPositionClass(index, total) {
@@ -138,6 +150,22 @@ function getProjectTaskCategories(project) {
     // not create a visible custom tab by default; only user-created categories
     // should appear next to All.
     return getTaskCategoryListWith([...explicit, ...fromTasks]);
+}
+
+function getProjectPriorityTag(project = {}) {
+    return normalizePriorityTagValue(project?.projectPriorityTag || project?.projectPriority || (typeof project?.priorityTag === 'string' ? project.priorityTag : DEFAULT_TASK_TAG));
+}
+
+function getProjectPriorityLabel(project = {}) {
+    return getPriorityTagLabel(getProjectPriorityTag(project));
+}
+
+function getNextProjectPriorityValue(project = {}) {
+    return getNextPriorityTagValue(getProjectPriorityTag(project));
+}
+
+function renderPriorityFlagMarkup(tag) {
+    return `<span class="task-tag-flag task-tag-flag--${normalizePriorityTagValue(tag)}" aria-hidden="true"></span>`;
 }
 
 
@@ -627,6 +655,7 @@ function normalizeProject(project) {
         title: project.title || 'Untitled Project',
         notes: typeof project.notes === 'string' ? project.notes : '',
         description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
+        projectPriorityTag: getProjectPriorityTag(project),
         tags: normalizeProjectTags(project.tags || project.projectTags || []),
         tasks: normalizedTasks,
         taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
@@ -3229,6 +3258,33 @@ function cycleProjectCardTaskPriority(projectId, taskId, event) {
     updateTaskTag(projectId, taskId, getNextTaskPriorityValue(task));
 }
 
+function updateProjectPriority(projectId, tagValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const nextTag = normalizePriorityTagValue(tagValue);
+    state.updateProject(projectId, projectUpdate({ projectPriorityTag: nextTag }));
+    saveData();
+
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    if (modalOpen) {
+        openProjectModal(projectId, { restoreState: modalState });
+    } else {
+        render();
+    }
+}
+
+function cycleProjectPriority(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    updateProjectPriority(projectId, getNextProjectPriorityValue(project));
+}
+
 function updateTaskCategory(projectId, taskId, categoryValue) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
@@ -3357,6 +3413,16 @@ function openProjectModal(projectId, options = {}) {
                     <span>${completedTasks} done</span>
                 </div>
                 ${buildProjectTagControlsMarkup(project.id, project)}
+                <div class="modal-project-priority-row">
+                    <span class="project-priority-indicator project-priority-indicator--${getProjectPriorityTag(project)}">${renderPriorityFlagMarkup(getProjectPriorityTag(project))}</span>
+                    <button class="project-priority-button project-priority-button--${getProjectPriorityTag(project)}"
+                            type="button"
+                            title="Project priority: ${escapeHtml(getProjectPriorityLabel(project))}"
+                            aria-label="Change project priority"
+                            ${state.canEdit(project.id) ? `onclick="cycleProjectPriority('${project.id}', event)"` : 'disabled'}>
+                        Priority: ${escapeHtml(getProjectPriorityLabel(project))}
+                    </button>
+                </div>
             </div>
             <div style="display: flex; gap: 4px;">
                 <button class="modal-copy-button" onclick="copyProjectToClipboard('${project.id}', event)">
@@ -3372,14 +3438,20 @@ function openProjectModal(projectId, options = {}) {
             </div>
         </div>
         
+        <div class="modal-project-description-view ${getProjectModalDescription(project) ? '' : 'is-empty'}"
+             id="modal-project-description-view-${project.id}">
+            <span class="modal-project-description-text">${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
+            ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
+        </div>
         <textarea class="modal-project-description-input ${getProjectModalDescription(project) ? '' : 'is-empty'}"
                   id="modal-project-description-${project.id}"
                   maxlength="280"
                   placeholder="Add project description"
                   title="Project description"
+                  style="display: none;"
                   ${state.canEdit(project.id) ? '' : 'readonly'}
                   onblur="finishEditProjectDescription('${project.id}')"
-                  onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${escapeHtml(getProjectModalDescription(project))}</textarea>
+                  onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter'){ event.preventDefault(); this.blur(); } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }">${escapeHtml(getProjectModalDescription(project))}</textarea>
 
         <div class="modal-progress">
             <div class="progress-bar-container">
@@ -3627,12 +3699,57 @@ function finishEditModalTitle(projectId) {
     updateProjectTitle(projectId, nextTitle);
 }
 
+function setProjectDescriptionViewState(projectId, description) {
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    const descriptionText = descriptionView?.querySelector('.modal-project-description-text');
+    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    const cleanDescription = normalizeProjectDescription(description);
+
+    if (descriptionText) descriptionText.textContent = cleanDescription || 'Add project description';
+    descriptionView?.classList.toggle('is-empty', !cleanDescription);
+    descriptionInput?.classList.toggle('is-empty', !cleanDescription);
+}
+
+function editProjectDescription(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionView || !descriptionInput) return;
+
+    descriptionInput.value = getProjectModalDescription(project);
+    descriptionView.style.display = 'none';
+    descriptionInput.style.display = 'block';
+    requestAnimationFrame(() => {
+        descriptionInput.focus({ preventScroll: true });
+        descriptionInput.select();
+    });
+}
+
+function cancelEditProjectDescription(projectId) {
+    const project = state.findProject(projectId);
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionView || !descriptionInput) return;
+
+    descriptionInput.value = getProjectModalDescription(project);
+    descriptionInput.style.display = 'none';
+    descriptionView.style.display = '';
+    setProjectDescriptionViewState(projectId, descriptionInput.value);
+}
+
 function finishEditProjectDescription(projectId) {
     const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
     if (!descriptionInput) return;
     const description = normalizeProjectDescription(descriptionInput.value);
     descriptionInput.value = description;
-    descriptionInput.classList.toggle('is-empty', !description);
+    descriptionInput.style.display = 'none';
+    if (descriptionView) descriptionView.style.display = '';
+    setProjectDescriptionViewState(projectId, description);
     updateProjectDescription(projectId, description);
 }
 
@@ -3974,6 +4091,8 @@ function renderProjectCard(project) {
     const previewTasks = getProjectCardPreviewTasks(project);
     const projectTags = getProjectTags(project);
     const projectDescription = getProjectCardDescription(project);
+    const projectPriorityTag = getProjectPriorityTag(project);
+    const projectPriorityLabel = getProjectPriorityLabel(project);
 
     const accessLabel = isViewer || isEditor
         ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
@@ -4016,6 +4135,13 @@ function renderProjectCard(project) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                     </button>` : ''}
+                    <button class="project-priority-card-button project-priority-card-button--${projectPriorityTag}"
+                            type="button"
+                            title="Project priority: ${escapeHtml(projectPriorityLabel)}"
+                            aria-label="Change project priority"
+                            ${canEditProject ? `onclick="cycleProjectPriority('${project.id}', event)"` : 'disabled'}>
+                        <span class="project-priority-card-indicator project-priority-card-indicator--${projectPriorityTag}">${renderPriorityFlagMarkup(projectPriorityTag)}</span>
+                    </button>
                     ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -4609,6 +4735,8 @@ window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
 window.closeProjectModal = closeProjectModal;
 window.editModalTitle = editModalTitle;
 window.finishEditModalTitle = finishEditModalTitle;
+window.editProjectDescription = editProjectDescription;
+window.cancelEditProjectDescription = cancelEditProjectDescription;
 window.finishEditProjectDescription = finishEditProjectDescription;
 window.editModalTask = editModalTask;
 window.finishEditModalTask = finishEditModalTask;
@@ -4627,6 +4755,7 @@ window.toggleHideCompleted = toggleHideCompleted;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;
 window.cycleProjectCardTaskPriority = cycleProjectCardTaskPriority;
+window.cycleProjectPriority = cycleProjectPriority;
 window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
 window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
