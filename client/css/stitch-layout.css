@@ -3004,3 +3004,36 @@ body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
     border-color: var(--danger, #ef4444) !important;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger, #ef4444) 18%, transparent) !important;
 }
+
+
+/* Request: project description card button, plain description text, and title-limit warning */
+.project-card-description,
+body[data-theme^="console"] .project-card-description,
+body[data-theme^="glass"] .project-card-description,
+body[data-theme^="blueprint"] .project-card-description {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+.project-card-description-add,
+body[data-theme^="console"] .project-card-description-add,
+body[data-theme^="glass"] .project-card-description-add,
+body[data-theme^="blueprint"] .project-card-description-add {
+    justify-self: start !important;
+    align-self: center !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+}
+
+.modal-project-description-view:not(.is-editing) .modal-project-description-text,
+body[data-theme^="console"] .modal-project-description-view:not(.is-editing) .modal-project-description-text,
+body[data-theme^="glass"] .modal-project-description-view:not(.is-editing) .modal-project-description-text,
+body[data-theme^="blueprint"] .modal-project-description-view:not(.is-editing) .modal-project-description-text {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}

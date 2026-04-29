@@ -62,6 +62,7 @@ const DEFAULT_TASK_SORT_MODE = 'default';
 const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
 const PROJECT_TITLE_MAX_LENGTH = 16;
+const PROJECT_TITLE_LIMIT_WARNING = 'The number of characters cannot exceed 16';
 const TASK_TAG_PRIORITY = {
     high: 0,
     medium: 1,
@@ -1404,8 +1405,80 @@ function normalizeProjectTitleInput(value) {
 function getProjectTitleWarningMessage(value) {
     const title = normalizeProjectTitleInput(value) || 'New Project';
     return title.length > PROJECT_TITLE_MAX_LENGTH
-        ? `Project title must be ${PROJECT_TITLE_MAX_LENGTH} characters or fewer.`
+        ? PROJECT_TITLE_LIMIT_WARNING
         : '';
+}
+
+function setProjectTitleInputLimit(input) {
+    if (!input) return;
+    input.setAttribute('maxlength', String(PROJECT_TITLE_MAX_LENGTH));
+    input.setAttribute('aria-describedby', `${input.id || 'project-title'}-warning`);
+}
+
+function getLimitedProjectTitleValue(value) {
+    return String(value ?? '').slice(0, PROJECT_TITLE_MAX_LENGTH);
+}
+
+function showProjectTitleLimitWarning(input) {
+    if (!input) return;
+    showProjectTitleWarning(input, PROJECT_TITLE_LIMIT_WARNING);
+}
+
+function handleProjectTitleBeforeInput(input, event) {
+    if (!input || !event || event.isComposing) return true;
+    const inputType = event.inputType || '';
+    if (inputType.startsWith('delete') || inputType === 'historyUndo' || inputType === 'historyRedo') return true;
+
+    const insertText = event.data ?? '';
+    const selectionStart = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+    const selectionEnd = typeof input.selectionEnd === 'number' ? input.selectionEnd : selectionStart;
+    const selectedLength = Math.max(0, selectionEnd - selectionStart);
+    const nextLength = input.value.length - selectedLength + insertText.length;
+
+    if (nextLength > PROJECT_TITLE_MAX_LENGTH) {
+        event.preventDefault();
+        showProjectTitleLimitWarning(input);
+        return false;
+    }
+    return true;
+}
+
+function handleProjectTitlePaste(input, event) {
+    if (!input || !event?.clipboardData) return true;
+    const pasted = event.clipboardData.getData('text') || '';
+    const selectionStart = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+    const selectionEnd = typeof input.selectionEnd === 'number' ? input.selectionEnd : selectionStart;
+    const available = PROJECT_TITLE_MAX_LENGTH - (input.value.length - Math.max(0, selectionEnd - selectionStart));
+
+    if (pasted.length > available) {
+        event.preventDefault();
+        const allowed = pasted.slice(0, Math.max(0, available));
+        input.setRangeText(allowed, selectionStart, selectionEnd, 'end');
+        showProjectTitleLimitWarning(input);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        return false;
+    }
+    return true;
+}
+
+function handleProjectTitleLimitInput(input) {
+    if (!input) return;
+    setProjectTitleInputLimit(input);
+    if (input.value.length > PROJECT_TITLE_MAX_LENGTH) {
+        input.value = getLimitedProjectTitleValue(input.value);
+        showProjectTitleLimitWarning(input);
+        return;
+    }
+    if (input.value.length < PROJECT_TITLE_MAX_LENGTH) clearProjectTitleWarning(input);
+}
+
+function bindProjectTitleLimitInput(input) {
+    if (!input || input.__projectTitleLimitBound) return;
+    input.__projectTitleLimitBound = true;
+    setProjectTitleInputLimit(input);
+    input.addEventListener('beforeinput', event => handleProjectTitleBeforeInput(input, event));
+    input.addEventListener('paste', event => handleProjectTitlePaste(input, event));
+    input.addEventListener('input', () => handleProjectTitleLimitInput(input));
 }
 
 function showProjectTitleWarning(input, message = '') {
@@ -1414,6 +1487,7 @@ function showProjectTitleWarning(input, message = '') {
     if (!warning || !warning.classList?.contains('project-title-warning')) {
         warning = document.createElement('div');
         warning.className = 'project-title-warning hidden';
+        if (input.id) warning.id = `${input.id}-warning`;
         input.insertAdjacentElement('afterend', warning);
     }
     warning.textContent = message;
@@ -1494,11 +1568,10 @@ function showNewProjectCreatePanel() {
     if (!panel || !descriptionInput) return;
     panel.classList.remove('hidden');
     showNewProjectDescriptionWarning(false);
+    bindProjectTitleLimitInput(nameInput);
     if (nameInput && !nameInput.__projectTitleWarningBound) {
         nameInput.__projectTitleWarningBound = true;
-        nameInput.addEventListener('input', () => {
-            if (nameInput.value.length <= PROJECT_TITLE_MAX_LENGTH) clearProjectTitleWarning(nameInput);
-        });
+        nameInput.addEventListener('input', () => handleProjectTitleLimitInput(nameInput));
     }
     requestAnimationFrame(() => (nameInput || descriptionInput).focus({ preventScroll: true }));
 }
@@ -1605,6 +1678,13 @@ function updateProjectDescription(projectId, descriptionValue) {
     if (description === (project.description || '')) return;
     state.updateProject(projectId, projectUpdate({ description }));
     saveData();
+}
+
+function openProjectDescriptionFromCard(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    openProjectModal(projectId, { editDescription: true });
 }
 
 function updateProjectNotes(projectId, notes) {
@@ -3754,6 +3834,7 @@ function openProjectModal(projectId, options = {}) {
                 <input type="text" 
                        class="modal-title-input" 
                        id="modal-title-input-${project.id}"
+                       maxlength="${PROJECT_TITLE_MAX_LENGTH}"
                        value="${escapeHtml(project.title)}"
                        style="display: none;"
                        onblur="finishEditModalTitle('${project.id}')"
@@ -3972,6 +4053,9 @@ function openProjectModal(projectId, options = {}) {
     
     // Setup task dragging for manual reordering and category-tab drops.
     setTimeout(() => setupTaskDragAndDrop(project.id), 100);
+    if (options.editDescription) {
+        setTimeout(() => editProjectDescription(project.id), 60);
+    }
 }
 
 
@@ -4018,6 +4102,7 @@ function editModalTitle(projectId) {
     const titleButton = document.getElementById(`modal-title-${projectId}`);
     const titleInput = document.getElementById(`modal-title-input-${projectId}`);
     if (!titleButton || !titleInput) return;
+    bindProjectTitleLimitInput(titleInput);
     titleButton.style.display = 'none';
     titleInput.style.display = 'block';
     titleInput.value = titleButton.textContent.trim() || 'New Project';
@@ -4475,6 +4560,7 @@ function renderProjectCard(project) {
                         <input type="text"
                                class="project-title-input project-title-input--card"
                                id="project-title-input-${project.id}"
+                               maxlength="${PROJECT_TITLE_MAX_LENGTH}"
                                value="${escapeHtml(project.title)}"
                                style="display: none;"
                                onclick="event.stopPropagation();"
@@ -4506,7 +4592,11 @@ function renderProjectCard(project) {
 
             <div class="project-card-progress">
                 <div class="project-card-description-row">
-                    <span class="project-card-description">${projectDescription ? escapeHtml(projectDescription) : ''}</span>
+                    ${projectDescription
+                        ? `<span class="project-card-description">${escapeHtml(projectDescription)}</span>`
+                        : (canEditProject
+                            ? `<button class="modal-project-description-edit project-card-description-add" type="button" onclick="openProjectDescriptionFromCard('${project.id}', event)">Add a description</button>`
+                            : '<span class="project-card-description"></span>')}
                     <strong>${progressPercentage}%</strong>
                 </div>
                 <div class="progress-bar-container">
@@ -4655,6 +4745,7 @@ function editProjectTitleOnCard(projectId) {
     const titleDiv = document.getElementById(`project-title-${projectId}`);
     const titleInput = document.getElementById(`project-title-input-${projectId}`);
     if (!titleDiv || !titleInput) return;
+    bindProjectTitleLimitInput(titleInput);
     titleDiv.style.display = 'none';
     titleInput.style.display = 'block';
     titleInput.focus();
@@ -4809,6 +4900,7 @@ function initializeEventHandlers() {
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
     document.getElementById('confirmNewProjectButton')?.addEventListener('click', addProject);
     document.getElementById('cancelNewProjectButton')?.addEventListener('click', resetNewProjectCreatePanel);
+    bindProjectTitleLimitInput(document.getElementById('newProjectTitleInput'));
     document.getElementById('newProjectDescriptionInput')?.addEventListener('input', () => showNewProjectDescriptionWarning(false));
     ['newProjectTitleInput', 'newProjectDescriptionInput'].forEach(inputId => {
         document.getElementById(inputId)?.addEventListener('keydown', event => {
@@ -5073,6 +5165,7 @@ window.copyProjectToClipboard = copyProjectToClipboard;
 window.switchToActiveView = switchToActiveView;
 window.switchToCompletedView = switchToCompletedView;
 window.openProjectModal = openProjectModal;
+window.openProjectDescriptionFromCard = openProjectDescriptionFromCard;
 window.openAccountSettingsModal = openAccountSettingsModal;
 window.closeAccountSettingsModal = closeAccountSettingsModal;
 window.triggerProfilePicUpload = triggerProfilePicUpload;
