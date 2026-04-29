@@ -3064,3 +3064,28 @@ body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
     font-weight: 800 !important;
     line-height: 1.35 !important;
 }
+
+/* ============================================================================
+   Targeted patch: uploaded favicon, compact tag add, icon-only priority, plain description edit
+   ============================================================================ */
+.project-card-tag--add {
+    min-width: 1.75rem !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.project-priority-card-label {
+    display: none !important;
+}
+
+.modal-project-description-text.is-editing,
+.modal-project-description-text.is-editing:focus,
+.modal-project-description-text.is-editing:focus-visible {
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}

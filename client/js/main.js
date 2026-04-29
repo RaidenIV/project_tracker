@@ -2748,7 +2748,7 @@ function renderProjectPriorityControlMarkup(projectId, project, surface = 'modal
         ? `project-priority-card-indicator project-priority-card-indicator--${tag}`
         : `project-priority-indicator project-priority-indicator--${tag}`;
     const buttonLabel = surface === 'card'
-        ? `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span><span class="project-priority-card-label">${escapeHtml(label)}</span>`
+        ? `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span>`
         : `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span><span>Priority: ${escapeHtml(label)}</span>`;
     const clickHandler = canEdit
         ? `onclick="toggleProjectPriorityMenu('${projectId}', '${surface}', event)"`
@@ -4514,7 +4514,7 @@ function renderProjectCard(project) {
                     const tagLiteral = serializeInlineJsString(tag);
                     return `<button class="project-card-tag project-card-tag--editable" type="button" title="Edit ${escapeHtml(tag)} tag" onclick="openProjectTagEditFromCard('${project.id}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>`;
                 }).join('') : ''}
-                ${canEditProject && projectTags.length < PROJECT_TAG_MAX_COUNT ? `<button class="project-card-tag project-card-tag--add" type="button" onclick="openProjectTagPickerModal('${project.id}', event)">Add a tag</button>` : ''}
+                ${canEditProject && projectTags.length < PROJECT_TAG_MAX_COUNT ? `<button class="project-card-tag project-card-tag--add" type="button" title="Add a tag" aria-label="Add a tag" onclick="openProjectTagPickerModal('${project.id}', event)">+</button>` : ''}
             </div>
 
             <div class="project-card-progress">
