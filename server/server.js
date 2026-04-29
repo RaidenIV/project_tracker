@@ -10,6 +10,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const PROJECT_TAG_MAX_COUNT = 5;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRES_IN = '30d';
 
@@ -291,7 +292,7 @@ function sanitizeTask(task, index = 0) {
 function sanitizeProjectTags(tags = []) {
     return [...new Set((Array.isArray(tags) ? tags : [])
         .map(tag => String(tag || '').trim().replace(/\s+/g, ' ').slice(0, 24))
-        .filter(tag => tag && tag.toLowerCase() !== 'all'))];
+        .filter(tag => tag && tag.toLowerCase() !== 'all'))].slice(0, PROJECT_TAG_MAX_COUNT);
 }
 
 function sanitizeProjectPriorityTag(value) {
@@ -578,19 +579,37 @@ app.patch('/api/projects/priorities', authenticateToken, async (req, res) => {
     try {
         const { priorities } = req.body; // [{_id, priority}]
         if (!Array.isArray(priorities)) return res.status(400).json({ error: 'priorities must be an array' });
-        const ids = priorities.map(item => item?._id).filter(Boolean);
-        await Promise.all(priorities.map(({ _id, priority }) =>
-            Project.findOneAndUpdate(
-                { _id, $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }] },
-                { priority, lastModified: new Date() }
-            )
-        ));
-        const updatedProjects = await Project.find({
+
+        const requested = priorities
+            .map(({ _id, priority }) => ({ _id, priority: Number(priority) }))
+            .filter(item => item._id && Number.isFinite(item.priority));
+
+        if (!requested.length) return res.json({ success: true, updated: 0 });
+
+        const ids = requested.map(item => item._id);
+        const projects = await Project.find({
             _id: { $in: ids },
             $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }]
         });
-        await Promise.all(updatedProjects.map(project => emitProjectUpsert(project, req.user)));
-        res.json({ success: true });
+
+        const byId = new Map(projects.map(project => [project._id.toString(), project]));
+        const now = new Date();
+        const changedProjects = [];
+
+        requested.forEach(({ _id, priority }) => {
+            const project = byId.get(String(_id));
+            if (!project || Number(project.priority) === priority) return;
+            project.priority = priority;
+            project.lastModified = now;
+            changedProjects.push(project);
+        });
+
+        if (changedProjects.length) {
+            await Promise.all(changedProjects.map(project => project.save()));
+            await Promise.all(changedProjects.map(project => emitProjectUpsert(project, req.user)));
+        }
+
+        res.json({ success: true, updated: changedProjects.length });
     } catch (err) {
         console.error('Error reordering projects:', err);
         res.status(500).json({ error: 'Failed to reorder', details: err?.message });
