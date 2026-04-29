@@ -3089,3 +3089,209 @@ body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
     box-shadow: none !important;
     outline: none !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: manual sort, card preview cleanup, Brave-style project modal tabs
+   ============================================================================ */
+.project-preview-task,
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="glass"] .project-preview-task,
+body[data-theme^="blueprint"] .project-preview-task {
+    grid-template-columns: 1rem minmax(0, 1fr) !important;
+}
+
+.project-preview-check,
+body[data-theme^="console"] .project-preview-check,
+body[data-theme^="glass"] .project-preview-check,
+body[data-theme^="blueprint"] .project-preview-check {
+    display: none !important;
+}
+
+.modal-tabs,
+body[data-theme^="console"] .modal-tabs,
+body[data-theme^="glass"] .modal-tabs,
+body[data-theme^="blueprint"] .modal-tabs {
+    --brave-tab-strip-bg: color-mix(in srgb, var(--surface, #f4f6f8) 76%, var(--panel, #fff));
+    --brave-tab-active-bg: var(--panel, #fff);
+    --brave-tab-inactive-bg: color-mix(in srgb, var(--surface, #f4f6f8) 86%, transparent);
+    --brave-tab-hover-bg: color-mix(in srgb, var(--surface-2, #e8edf3) 92%, var(--panel, #fff));
+    --brave-tab-border: color-mix(in srgb, var(--line, rgba(31, 36, 40, 0.16)) 90%, transparent);
+    --brave-tab-shadow: 0 -1px 0 rgba(255, 255, 255, 0.45) inset;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    margin: 0 0 18px !important;
+    padding: 0.45rem 0.55rem 0 !important;
+    border: 1px solid var(--brave-tab-border) !important;
+    border-bottom-color: var(--brave-tab-border) !important;
+    border-radius: 1rem 1rem 0 0 !important;
+    background: var(--brave-tab-strip-bg) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+.modal-tab,
+body[data-theme^="console"] .modal-tab,
+body[data-theme^="glass"] .modal-tab,
+body[data-theme^="blueprint"] .modal-tab {
+    position: relative !important;
+    bottom: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 8.5rem !important;
+    min-height: 2.55rem !important;
+    margin: 0 -1px -1px 0 !important;
+    padding: 0.65rem 1.25rem !important;
+    border: 1px solid var(--brave-tab-border) !important;
+    border-bottom-color: var(--brave-tab-border) !important;
+    border-radius: 0.95rem 0.95rem 0 0 !important;
+    background: var(--brave-tab-inactive-bg) !important;
+    color: var(--muted) !important;
+    box-shadow: var(--brave-tab-shadow) !important;
+    font-family: inherit !important;
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em !important;
+    line-height: 1 !important;
+    text-transform: none !important;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease !important;
+    z-index: 1 !important;
+}
+
+.modal-tab:hover,
+body[data-theme^="console"] .modal-tab:hover,
+body[data-theme^="glass"] .modal-tab:hover,
+body[data-theme^="blueprint"] .modal-tab:hover {
+    background: var(--brave-tab-hover-bg) !important;
+    color: var(--heading) !important;
+    transform: translateY(-1px) !important;
+}
+
+.modal-tab.active,
+.modal-tab[aria-selected="true"],
+body[data-theme^="console"] .modal-tab.active,
+body[data-theme^="console"] .modal-tab[aria-selected="true"],
+body[data-theme^="glass"] .modal-tab.active,
+body[data-theme^="glass"] .modal-tab[aria-selected="true"],
+body[data-theme^="blueprint"] .modal-tab.active,
+body[data-theme^="blueprint"] .modal-tab[aria-selected="true"] {
+    background: var(--brave-tab-active-bg) !important;
+    color: var(--heading) !important;
+    border-bottom-color: var(--brave-tab-active-bg) !important;
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.5) inset, 0 0 0 1px color-mix(in srgb, var(--accent, #4f8cff) 14%, transparent) !important;
+    transform: translateY(0) !important;
+    z-index: 3 !important;
+}
+
+.modal-tab::after,
+.modal-tab.active::after,
+.modal-tab[aria-selected="true"]::after,
+body[data-theme^="console"] .modal-tab::after,
+body[data-theme^="glass"] .modal-tab::after,
+body[data-theme^="blueprint"] .modal-tab::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 0.7rem !important;
+    right: 0.7rem !important;
+    bottom: -1px !important;
+    height: 1px !important;
+    background: transparent !important;
+    pointer-events: none !important;
+}
+
+.modal-tab.active::after,
+.modal-tab[aria-selected="true"]::after,
+body[data-theme^="console"] .modal-tab.active::after,
+body[data-theme^="console"] .modal-tab[aria-selected="true"]::after,
+body[data-theme^="glass"] .modal-tab.active::after,
+body[data-theme^="glass"] .modal-tab[aria-selected="true"]::after,
+body[data-theme^="blueprint"] .modal-tab.active::after,
+body[data-theme^="blueprint"] .modal-tab[aria-selected="true"]::after {
+    background: var(--brave-tab-active-bg) !important;
+}
+
+.task-category-tabs,
+body[data-theme^="console"] .task-category-tabs,
+body[data-theme^="glass"] .task-category-tabs,
+body[data-theme^="blueprint"] .task-category-tabs {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    flex-wrap: nowrap !important;
+    padding: 0.35rem 0.45rem 0 !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(31, 36, 40, 0.16)) 86%, transparent) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--line, rgba(31, 36, 40, 0.16)) 86%, transparent) !important;
+    border-radius: 0.9rem 0.9rem 0 0 !important;
+    background: color-mix(in srgb, var(--surface, #f4f6f8) 76%, transparent) !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+}
+
+.task-category-tab-wrap,
+body[data-theme^="console"] .task-category-tab-wrap,
+body[data-theme^="glass"] .task-category-tab-wrap,
+body[data-theme^="blueprint"] .task-category-tab-wrap {
+    flex: 0 0 auto !important;
+    margin: 0 -1px -1px 0 !important;
+}
+
+.task-category-tab-shell,
+body[data-theme^="console"] .task-category-tab-shell,
+body[data-theme^="glass"] .task-category-tab-shell,
+body[data-theme^="blueprint"] .task-category-tab-shell {
+    min-height: 2.3rem !important;
+    padding: 0 0.6rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(31, 36, 40, 0.16)) 90%, transparent) !important;
+    border-bottom-color: color-mix(in srgb, var(--line, rgba(31, 36, 40, 0.16)) 90%, transparent) !important;
+    border-radius: 0.82rem 0.82rem 0 0 !important;
+    background: color-mix(in srgb, var(--surface, #f4f6f8) 84%, transparent) !important;
+    color: var(--muted) !important;
+    box-shadow: none !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+}
+
+.task-category-tab-shell:hover,
+body[data-theme^="console"] .task-category-tab-shell:hover,
+body[data-theme^="glass"] .task-category-tab-shell:hover,
+body[data-theme^="blueprint"] .task-category-tab-shell:hover {
+    background: color-mix(in srgb, var(--surface-2, #e8edf3) 88%, var(--panel, #fff)) !important;
+    color: var(--heading) !important;
+}
+
+.task-category-tab-shell.is-active,
+.task-category-tab-wrap.is-active .task-category-tab-shell,
+body[data-theme^="console"] .task-category-tab-shell.is-active,
+body[data-theme^="console"] .task-category-tab-wrap.is-active .task-category-tab-shell,
+body[data-theme^="glass"] .task-category-tab-shell.is-active,
+body[data-theme^="glass"] .task-category-tab-wrap.is-active .task-category-tab-shell,
+body[data-theme^="blueprint"] .task-category-tab-shell.is-active,
+body[data-theme^="blueprint"] .task-category-tab-wrap.is-active .task-category-tab-shell {
+    background: var(--panel, #fff) !important;
+    color: var(--heading) !important;
+    border-bottom-color: var(--panel, #fff) !important;
+    z-index: 4 !important;
+}
+
+.task-category-tab-shell.is-active::after,
+.task-category-tab-wrap.is-active .task-category-tab-shell::after,
+body[data-theme^="console"] .task-category-tab-shell.is-active::after,
+body[data-theme^="console"] .task-category-tab-wrap.is-active .task-category-tab-shell::after,
+body[data-theme^="glass"] .task-category-tab-shell.is-active::after,
+body[data-theme^="glass"] .task-category-tab-wrap.is-active .task-category-tab-shell::after,
+body[data-theme^="blueprint"] .task-category-tab-shell.is-active::after,
+body[data-theme^="blueprint"] .task-category-tab-wrap.is-active .task-category-tab-shell::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    bottom: -1px !important;
+    height: 1px !important;
+    background: var(--panel, #fff) !important;
+    pointer-events: none !important;
+}

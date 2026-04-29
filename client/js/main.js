@@ -601,7 +601,7 @@ function persistSavedViews() {
     localStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS, JSON.stringify(uiState.savedViews));
 }
 
-const PROJECT_SORT_MODES = new Set(['recent', 'alpha', 'remaining', 'progress']);
+const PROJECT_SORT_MODES = new Set(['recent', 'manual', 'alpha', 'remaining', 'progress']);
 
 function normalizeProjectSortMode(sortMode) {
     const normalized = String(sortMode || '').trim();
@@ -4572,7 +4572,6 @@ function renderProjectCard(project) {
             <ul class="project-preview-list">
                 ${previewTasks.length ? previewTasks.map(task => `
                     <li class="project-preview-task ${task.completed ? 'is-completed' : ''}">
-                        <span class="project-preview-check" aria-hidden="true">${task.completed ? '✓' : ''}</span>
                         <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
                         <span>${escapeHtml(task.text || 'Untitled task')}</span>
                     </li>
