@@ -2469,3 +2469,52 @@ body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
 .new-project-description-input {
     background: var(--inset, rgba(0, 0, 0, 0.06)) !important;
 }
+
+/* ============================================================================
+   NEUTRAL PROJECT ARCHIVE/DELETE ACTIONS
+   ============================================================================ */
+
+.project-card .card-delete-button,
+body[data-theme^="console"] .project-card .card-delete-button,
+body[data-theme^="glass"] .project-card .card-delete-button,
+body[data-theme^="blueprint"] .project-card .card-delete-button {
+    color: var(--muted, var(--heading)) !important;
+    border-color: var(--line, rgba(0,0,0,0.12)) !important;
+}
+
+.project-card .card-delete-button:hover,
+.project-card .card-delete-button:focus-visible,
+body[data-theme^="console"] .project-card .card-delete-button:hover,
+body[data-theme^="console"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="glass"] .project-card .card-delete-button:hover,
+body[data-theme^="glass"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="blueprint"] .project-card .card-delete-button:hover,
+body[data-theme^="blueprint"] .project-card .card-delete-button:focus-visible {
+    color: var(--accent, var(--primary, var(--heading))) !important;
+    border-color: var(--accent, var(--primary, var(--line))) !important;
+}
+
+#projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="console"] #projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="glass"] #projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn {
+    background: var(--panel, var(--surface, transparent)) !important;
+    color: var(--heading, currentColor) !important;
+    border: 1px solid var(--line, rgba(0,0,0,0.12)) !important;
+    box-shadow: var(--card-shadow, none) !important;
+}
+
+#projectModal .modal-actions .modal-delete-btn:hover,
+#projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="console"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="console"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="glass"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth-of-type(2):hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth-of-type(2):focus-visible {
+    background: var(--surface, var(--panel, transparent)) !important;
+    color: var(--accent, var(--primary, var(--heading))) !important;
+    border-color: var(--accent, var(--primary, var(--line))) !important;
+}

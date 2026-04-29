@@ -8742,3 +8742,90 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 21.5rem), 1fr));
     }
 }
+
+/* ============================================================================
+   TASK PRIORITY + DRAG POLISH
+   ============================================================================ */
+
+.project-card[data-project-can-reorder="true"] {
+    cursor: grab;
+}
+
+.project-card[data-project-can-reorder="true"]:active,
+.project-card.dragging {
+    cursor: grabbing;
+}
+
+.drag-handle {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
+    touch-action: none;
+}
+
+.drag-handle .task-drag-handle {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.project-grid.is-reordering,
+.project-grid.is-reordering .project-card,
+.task-list .task-drag-handle {
+    user-select: none;
+}
+
+.task-item.dragging {
+    pointer-events: none;
+    z-index: 10050;
+}
+
+.project-preview-task {
+    gap: 7px;
+}
+
+.project-preview-priority {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: color-mix(in srgb, var(--muted) 72%, transparent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+}
+
+.project-preview-priority:hover {
+    background: var(--surface);
+    color: var(--accent);
+}
+
+.project-preview-priority--high,
+.project-preview-priority .task-tag-flag--high {
+    color: #ef4444;
+}
+
+.project-preview-priority--medium,
+.project-preview-priority .task-tag-flag--medium {
+    color: #f97316;
+}
+
+.project-preview-priority--low,
+.project-preview-priority .task-tag-flag--low {
+    color: #22c55e;
+}
+
+.project-preview-priority--none,
+.project-preview-priority .task-tag-flag--none {
+    color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+.project-preview-priority .task-tag-flag {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+}
