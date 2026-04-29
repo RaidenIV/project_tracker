@@ -97,6 +97,7 @@ const projectSchema = new mongoose.Schema({
     tasks:         [taskSchema],
     dateCreated:   String,
     priority:      { type: Number, default: 0 },
+    projectPriorityTag: { type: String, default: 'none' },
     completed:     { type: Boolean, default: false },
     completedDate: String,
     notes:         { type: String, default: '' },
@@ -293,6 +294,12 @@ function sanitizeProjectTags(tags = []) {
         .filter(tag => tag && tag.toLowerCase() !== 'all'))];
 }
 
+function sanitizeProjectPriorityTag(value) {
+    const raw = String(value || 'none').trim().toLowerCase();
+    const tag = raw === 'critical' ? 'high' : raw;
+    return ['none', 'high', 'medium', 'low'].includes(tag) ? tag : 'none';
+}
+
 
 function sanitizeIncomingProjectUpdate(body = {}) {
     const sanitized = {};
@@ -308,6 +315,9 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.priority !== undefined) {
         const numericPriority = Number(body.priority);
         sanitized.priority = Number.isFinite(numericPriority) ? numericPriority : 0;
+    }
+    if (body.projectPriorityTag !== undefined || body.projectPriority !== undefined || body.priorityTag !== undefined) {
+        sanitized.projectPriorityTag = sanitizeProjectPriorityTag(body.projectPriorityTag ?? body.projectPriority ?? body.priorityTag);
     }
     if (body.completed !== undefined) sanitized.completed = !!body.completed;
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
@@ -326,6 +336,10 @@ function summarizeProjectUpdate(existingProject, incomingBody) {
 
     if (typeof update.title === 'string' && update.title !== oldProject.title) {
         return { type: 'project_renamed', message: `renamed the project to “${update.title}”` };
+    }
+
+    if (typeof update.projectPriorityTag === 'string' && update.projectPriorityTag !== (oldProject.projectPriorityTag || 'none')) {
+        return { type: 'project_priority_updated', message: 'updated the project priority' };
     }
 
     if (typeof update.archived === 'boolean' && update.archived !== !!oldProject.archived) {
@@ -477,7 +491,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, tags, dateCreated, priority, completed, completedDate, notes, description } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, completed, completedDate, notes, description } = req.body;
         const sanitizedDescription = typeof description === 'string'
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
@@ -493,6 +507,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             tags:          sanitizeProjectTags(tags),
             dateCreated:   dateCreated  || new Date().toISOString(),
             priority:      priority     ?? 0,
+            projectPriorityTag: sanitizeProjectPriorityTag(projectPriorityTag ?? projectPriority ?? priorityTag),
             completed:     completed    || false,
             completedDate: completedDate || null,
             notes:         notes        || '',
@@ -521,7 +536,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'completed', 'completedDate', 'notes', 'description', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'completed', 'completedDate', 'notes', 'description', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);

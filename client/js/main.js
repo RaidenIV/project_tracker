@@ -211,14 +211,20 @@ function isTaskPriorityMenuOpen(projectId, taskId) {
     return uiState.openTaskPriorityMenu?.projectId === projectId && uiState.openTaskPriorityMenu?.taskId === taskId;
 }
 
+function isProjectPriorityMenuOpen(projectId, surface = 'modal') {
+    return uiState.openProjectPriorityMenu?.projectId === projectId && uiState.openProjectPriorityMenu?.surface === surface;
+}
+
 function isTaskCategoryMenuOpen(projectId, category) {
     return uiState.openTaskCategoryMenu?.projectId === projectId && uiState.openTaskCategoryMenu?.category === category;
 }
 
 function closeOpenTaskMenus({ rerender = true } = {}) {
     const priorityMenu = uiState.openTaskPriorityMenu;
+    const projectPriorityMenu = uiState.openProjectPriorityMenu;
     const categoryMenu = uiState.openTaskCategoryMenu;
     uiState.openTaskPriorityMenu = null;
+    uiState.openProjectPriorityMenu = null;
     uiState.openTaskCategoryMenu = null;
 
     if (!rerender) return;
@@ -230,17 +236,22 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
     }
     if (categoryMenu?.projectId && !rerenderedProjects.has(categoryMenu.projectId)) {
         renderTaskCategoryControls(categoryMenu.projectId);
+        rerenderedProjects.add(categoryMenu.projectId);
+    }
+    if (projectPriorityMenu?.projectId && !rerenderedProjects.has(projectPriorityMenu.projectId)) {
+        renderProjectPrioritySurface(projectPriorityMenu.projectId);
     }
 }
 
 function handleTaskFloatingMenuDocumentClick(event) {
     if (
         event.target.closest('.task-priority-control') ||
+        event.target.closest('.project-priority-control') ||
         event.target.closest('.task-category-menu-button') ||
         event.target.closest('.task-category-tab-wrap') ||
         event.target.closest('.task-category-menu-popover')
     ) return;
-    if (!uiState.openTaskPriorityMenu && !uiState.openTaskCategoryMenu) return;
+    if (!uiState.openTaskPriorityMenu && !uiState.openProjectPriorityMenu && !uiState.openTaskCategoryMenu) return;
     closeOpenTaskMenus();
 }
 
@@ -334,6 +345,7 @@ const uiState = {
         settings: true
     },
     openTaskPriorityMenu: null,
+    openProjectPriorityMenu: null,
     openTaskCategoryMenu: null,
     creatingTaskCategoryProjectId: null,
     creatingProjectTagProjectId: null,
@@ -1390,6 +1402,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
         dateCreated: createdAt,
         lastModified: createdAt,
         priority: state.getProjects().length,
+        projectPriorityTag: DEFAULT_TASK_TAG,
         completed: false,
         notes: '',
         description: requiredDescription,
@@ -1411,6 +1424,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
             lastModified: created.lastModified || createdAt,
             __syncedLastModified: created.lastModified || createdAt,
             description: typeof created.description === 'string' ? created.description : requiredDescription,
+            projectPriorityTag: getProjectPriorityTag(created),
             userRole: 'owner',
             ownerName: state.getCurrentUser()?.username || '',
             ownerEmail: state.getCurrentUser()?.email || '',
@@ -2622,6 +2636,48 @@ function getDisplayTasksForProject(project, options = {}) {
 }
 
 
+
+function renderProjectPriorityControlMarkup(projectId, project, surface = 'modal') {
+    const tag = getProjectPriorityTag(project);
+    const label = getProjectPriorityLabel(project);
+    const canEdit = state.canEdit(projectId);
+    const menuOpen = isProjectPriorityMenuOpen(projectId, surface);
+    const surfaceClass = surface === 'card' ? 'project-priority-control--card' : 'project-priority-control--modal';
+    const buttonClass = surface === 'card'
+        ? `project-priority-card-button project-priority-card-button--${tag}`
+        : `project-priority-button project-priority-button--${tag}`;
+    const indicatorClass = surface === 'card'
+        ? `project-priority-card-indicator project-priority-card-indicator--${tag}`
+        : `project-priority-indicator project-priority-indicator--${tag}`;
+    const buttonLabel = surface === 'card'
+        ? `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span>`
+        : `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span><span>Priority: ${escapeHtml(label)}</span>`;
+
+    return `
+        <div class="project-priority-control ${surfaceClass} ${menuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+            <button class="${buttonClass}"
+                    type="button"
+                    title="Project priority: ${escapeHtml(label)}"
+                    aria-label="Project priority: ${escapeHtml(label)}"
+                    ${canEdit ? `onclick="toggleProjectPriorityMenu('${projectId}', '${surface}', event)"` : 'disabled'}>
+                ${buttonLabel}
+            </button>
+            ${menuOpen ? `
+                <div class="task-priority-popover project-priority-popover" onclick="event.stopPropagation()">
+                    ${TASK_TAG_OPTIONS.map(option => `
+                        <button class="task-priority-option ${tag === option.value ? 'is-active' : ''}"
+                                type="button"
+                                onclick="selectProjectPriority('${projectId}', '${option.value}', '${surface}', event)">
+                            <span class="task-tag-flag task-tag-flag--${option.value}" aria-hidden="true"></span>
+                            <span>${option.label}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
 function renderTaskTagOptions(selectedValue) {
     return TASK_TAG_OPTIONS.map(option => `
         <option value="${option.value}" ${selectedValue === option.value ? 'selected' : ''}>${option.label}</option>
@@ -2833,49 +2889,141 @@ function renderProjectTagControls(projectId) {
     }
 }
 
-function startInlineProjectTagCreate(projectId, event) {
+function ensureProjectTagPickerModal() {
+    let modal = document.getElementById('projectTagPickerModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-tag-picker-overlay" id="projectTagPickerModal" aria-hidden="true">
+            <div class="modal-content project-tag-picker-content" role="dialog" aria-modal="true" aria-labelledby="projectTagPickerTitle">
+                <div class="project-tag-picker-header">
+                    <div>
+                        <h3 class="project-tag-picker-title" id="projectTagPickerTitle">Project Tags</h3>
+                        <p class="project-tag-picker-subtitle">Choose an existing tag or create a new one.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectTagPickerModal()" aria-label="Close project tag picker">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="project-tag-picker-body" id="projectTagPickerBody"></div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectTagPickerModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeProjectTagPickerModal();
+    });
+    return modal;
+}
+
+function renderProjectTagPickerModal(projectId) {
+    const project = state.findProject(projectId);
+    const body = document.getElementById('projectTagPickerBody');
+    if (!project || !body) return;
+
+    const currentTags = new Set(getProjectTags(project));
+    const availableTags = [...new Set(state.getProjects()
+        .flatMap(existingProject => getProjectTags(existingProject))
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b))
+        .filter(tag => !currentTags.has(tag));
+
+    body.innerHTML = `
+        <div class="project-tag-picker-existing">
+            <div class="project-tag-picker-label">Existing tags</div>
+            <div class="project-tag-picker-list">
+                ${availableTags.length ? availableTags.map(tag => {
+                    const tagLiteral = serializeInlineJsString(tag);
+                    return `<button class="project-tag-picker-chip" type="button" onclick="addProjectTagFromPicker('${projectId}', ${tagLiteral})">${escapeHtml(tag)}</button>`;
+                }).join('') : '<span class="project-tag-picker-empty">No unused tags yet</span>'}
+            </div>
+        </div>
+        <div class="project-tag-picker-new">
+            <label class="project-tag-picker-label" for="projectTagPickerInput">New tag</label>
+            <div class="project-tag-picker-input-row">
+                <input class="project-tag-picker-input" id="projectTagPickerInput" maxlength="${PROJECT_TAG_MAX_LENGTH}" placeholder="Type a new tag" autocomplete="off" onkeydown="handleProjectTagPickerKeydown('${projectId}', event)">
+                <button class="project-tag-picker-add" type="button" onclick="commitProjectTagPickerInput('${projectId}')">Add Tag</button>
+            </div>
+        </div>
+    `;
+}
+
+function openProjectTagPickerModal(projectId, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
     uiState.editingProjectTag = null;
     uiState.creatingProjectTagProjectId = projectId;
-    renderProjectTagControls(projectId);
+    const modal = ensureProjectTagPickerModal();
+    renderProjectTagPickerModal(projectId);
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => document.getElementById('projectTagPickerInput')?.focus({ preventScroll: true }), 0);
 }
 
-function cancelInlineProjectTagCreate(projectId) {
-    if (uiState.creatingProjectTagProjectId !== projectId) return;
+function closeProjectTagPickerModal() {
+    const projectId = uiState.creatingProjectTagProjectId;
     uiState.creatingProjectTagProjectId = null;
-    renderProjectTagControls(projectId);
-}
-
-function commitInlineProjectTagCreate(projectId, rawValue) {
-    if (uiState.creatingProjectTagProjectId !== projectId) return;
-    if (!state.canEdit(projectId)) return;
-    const project = state.findProject(projectId);
-    if (!project) return;
-
-    const nextTag = normalizeProjectTagName(rawValue);
-    uiState.creatingProjectTagProjectId = null;
-    if (!nextTag) {
-        renderProjectTagControls(projectId);
-        return;
+    const modal = document.getElementById('projectTagPickerModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
     }
+    if (projectId) renderProjectTagControls(projectId);
+}
+
+function addProjectTagFromPicker(projectId, rawValue) {
+    const project = state.findProject(projectId);
+    if (!project || !state.canEdit(projectId)) return;
+    const nextTag = normalizeProjectTagName(rawValue);
+    if (!nextTag) return;
 
     const nextTags = normalizeProjectTags([...getProjectTags(project), nextTag]);
     state.updateProject(projectId, projectUpdate({ tags: nextTags }));
     saveData();
-    renderProjectTagControls(projectId);
-    render();
+    closeProjectTagPickerModal();
+    const openProjectId = getOpenProjectModalId();
+    if (openProjectId && String(openProjectId) === String(projectId)) {
+        const modalState = captureProjectModalState(projectId);
+        openProjectModal(projectId, { restoreState: modalState });
+    } else {
+        render();
+    }
+}
+
+function commitProjectTagPickerInput(projectId) {
+    const input = document.getElementById('projectTagPickerInput');
+    addProjectTagFromPicker(projectId, input?.value || '');
+}
+
+function handleProjectTagPickerKeydown(projectId, event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        commitProjectTagPickerInput(projectId);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        closeProjectTagPickerModal();
+    }
+}
+
+function startInlineProjectTagCreate(projectId, event) {
+    openProjectTagPickerModal(projectId, event);
+}
+
+function cancelInlineProjectTagCreate(projectId) {
+    if (uiState.creatingProjectTagProjectId !== projectId) return;
+    closeProjectTagPickerModal();
+}
+
+function commitInlineProjectTagCreate(projectId, rawValue) {
+    addProjectTagFromPicker(projectId, rawValue);
 }
 
 function handleInlineProjectTagCreateKeydown(projectId, event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        commitInlineProjectTagCreate(projectId, event.currentTarget.value);
-    } else if (event.key === 'Escape') {
-        event.preventDefault();
-        cancelInlineProjectTagCreate(projectId);
-    }
+    handleProjectTagPickerKeydown(projectId, event);
 }
 
 function startInlineProjectTagEdit(projectId, tagName, event) {
@@ -3225,6 +3373,7 @@ function toggleTaskPriorityMenu(projectId, taskId, event) {
     event?.stopPropagation?.();
     const isOpen = isTaskPriorityMenuOpen(projectId, taskId);
     uiState.openTaskCategoryMenu = null;
+    uiState.openProjectPriorityMenu = null;
     uiState.openTaskPriorityMenu = isOpen ? null : { projectId, taskId };
     renderModalTaskList(projectId);
 }
@@ -3241,6 +3390,7 @@ function toggleTaskCategoryMenu(projectId, category, event) {
     event?.stopImmediatePropagation?.();
     const isOpen = isTaskCategoryMenuOpen(projectId, category);
     uiState.openTaskPriorityMenu = null;
+    uiState.openProjectPriorityMenu = null;
     uiState.openTaskCategoryMenu = isOpen ? null : { projectId, category };
     renderTaskCategoryControls(projectId);
 }
@@ -3342,6 +3492,7 @@ function updateProjectPriority(projectId, tagValue) {
     if (!project) return;
 
     const nextTag = normalizePriorityTagValue(tagValue);
+    uiState.openProjectPriorityMenu = null;
     state.updateProject(projectId, projectUpdate({ projectPriorityTag: nextTag }));
     saveData();
 
@@ -3352,6 +3503,35 @@ function updateProjectPriority(projectId, tagValue) {
     } else {
         render();
     }
+}
+
+function renderProjectPrioritySurface(projectId) {
+    const openProjectId = getOpenProjectModalId();
+    if (openProjectId && String(openProjectId) === String(projectId)) {
+        const modalState = captureProjectModalState(projectId);
+        openProjectModal(projectId, { restoreState: modalState });
+        return;
+    }
+    render();
+}
+
+function toggleProjectPriorityMenu(projectId, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const isOpen = isProjectPriorityMenuOpen(projectId, surface);
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+    uiState.openProjectPriorityMenu = isOpen ? null : { projectId, surface };
+    renderProjectPrioritySurface(projectId);
+}
+
+function selectProjectPriority(projectId, tagValue, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    uiState.openProjectPriorityMenu = null;
+    updateProjectPriority(projectId, tagValue);
 }
 
 function cycleProjectPriority(projectId, event) {
@@ -3492,14 +3672,7 @@ function openProjectModal(projectId, options = {}) {
                 </div>
                 ${buildProjectTagControlsMarkup(project.id, project)}
                 <div class="modal-project-priority-row">
-                    <span class="project-priority-indicator project-priority-indicator--${getProjectPriorityTag(project)}">${renderPriorityFlagMarkup(getProjectPriorityTag(project))}</span>
-                    <button class="project-priority-button project-priority-button--${getProjectPriorityTag(project)}"
-                            type="button"
-                            title="Project priority: ${escapeHtml(getProjectPriorityLabel(project))}"
-                            aria-label="Change project priority"
-                            ${state.canEdit(project.id) ? `onclick="cycleProjectPriority('${project.id}', event)"` : 'disabled'}>
-                        Priority: ${escapeHtml(getProjectPriorityLabel(project))}
-                    </button>
+                    ${renderProjectPriorityControlMarkup(project.id, project, 'modal')}
                 </div>
             </div>
             <div style="display: flex; gap: 4px;">
@@ -3544,14 +3717,6 @@ function openProjectModal(projectId, options = {}) {
         
         <!-- Tasks Section -->
         <div class="modal-section" id="tasks-section-${project.id}">
-            <!-- Add Task Button at Top -->
-            <button class="modal-add-task-top" onclick="addTaskToModal('${project.id}')">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Add Task
-            </button>
-            
             <div class="modal-tasks-card">
                 <div class="task-category-controls" id="task-category-controls-${project.id}">
                     ${buildTaskCategoryControlsMarkup(project.id, project, activeCategory)}
@@ -3566,6 +3731,12 @@ function openProjectModal(projectId, options = {}) {
                                        onchange="toggleHideCompleted()">
                                 <span class="toggle-slider"></span>
                             </label>
+                            <button class="modal-add-task-top modal-add-task-under-toggle" onclick="addTaskToModal('${project.id}')">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Add Task
+                            </button>
                         </div>
                         <div class="task-sort-control">
                             <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
@@ -4183,9 +4354,6 @@ function renderProjectCard(project) {
     const previewTasks = getProjectCardPreviewTasks(project);
     const projectTags = getProjectTags(project);
     const projectDescription = getProjectCardDescription(project);
-    const projectPriorityTag = getProjectPriorityTag(project);
-    const projectPriorityLabel = getProjectPriorityLabel(project);
-
     const accessLabel = isViewer || isEditor
         ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
         : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner: <strong>Me</strong>');
@@ -4227,13 +4395,7 @@ function renderProjectCard(project) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                     </button>` : ''}
-                    <button class="project-priority-card-button project-priority-card-button--${projectPriorityTag}"
-                            type="button"
-                            title="Project priority: ${escapeHtml(projectPriorityLabel)}"
-                            aria-label="Change project priority"
-                            ${canEditProject ? `onclick="cycleProjectPriority('${project.id}', event)"` : 'disabled'}>
-                        <span class="project-priority-card-indicator project-priority-card-indicator--${projectPriorityTag}">${renderPriorityFlagMarkup(projectPriorityTag)}</span>
-                    </button>
+                    ${renderProjectPriorityControlMarkup(project.id, project, 'card')}
                     ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -4848,6 +5010,8 @@ window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;
 window.cycleProjectCardTaskPriority = cycleProjectCardTaskPriority;
 window.cycleProjectPriority = cycleProjectPriority;
+window.toggleProjectPriorityMenu = toggleProjectPriorityMenu;
+window.selectProjectPriority = selectProjectPriority;
 window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
 window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
@@ -4870,6 +5034,11 @@ window.startInlineProjectTagCreate = startInlineProjectTagCreate;
 window.commitInlineProjectTagCreate = commitInlineProjectTagCreate;
 window.cancelInlineProjectTagCreate = cancelInlineProjectTagCreate;
 window.handleInlineProjectTagCreateKeydown = handleInlineProjectTagCreateKeydown;
+window.openProjectTagPickerModal = openProjectTagPickerModal;
+window.closeProjectTagPickerModal = closeProjectTagPickerModal;
+window.addProjectTagFromPicker = addProjectTagFromPicker;
+window.commitProjectTagPickerInput = commitProjectTagPickerInput;
+window.handleProjectTagPickerKeydown = handleProjectTagPickerKeydown;
 window.deleteProjectTag = deleteProjectTag;
 window.performUndo = performUndo;
 window.inviteCollaborator = inviteCollaborator;
