@@ -363,6 +363,7 @@ const uiState = {
 const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
     THEME: 'tracker_ui_theme_v1',
+    PROJECT_SORT: 'tracker_project_sort_mode_v1',
     PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
     PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
     PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1'
@@ -600,8 +601,43 @@ function persistSavedViews() {
     localStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS, JSON.stringify(uiState.savedViews));
 }
 
+const PROJECT_SORT_MODES = new Set(['recent', 'alpha', 'remaining', 'progress']);
+
+function normalizeProjectSortMode(sortMode) {
+    const normalized = String(sortMode || '').trim();
+    return PROJECT_SORT_MODES.has(normalized) ? normalized : 'recent';
+}
+
+function syncProjectSortSelect() {
+    const sortSelect = document.getElementById('projectSortSelect');
+    if (sortSelect) sortSelect.value = uiState.sortMode;
+}
+
+function loadProjectSortPreference() {
+    try {
+        uiState.sortMode = normalizeProjectSortMode(localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_SORT));
+    } catch (err) {
+        console.warn('Failed to load project sort preference:', err);
+        uiState.sortMode = 'recent';
+    }
+    syncProjectSortSelect();
+}
+
+function persistProjectSortPreference(sortMode) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_SORT, normalizeProjectSortMode(sortMode));
+    } catch (err) {
+        console.warn('Failed to save project sort preference:', err);
+    }
+}
+
 function loadThemePreference() {
-    uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
+    try {
+        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
+    } catch (err) {
+        console.warn('Failed to load UI preference:', err);
+        uiState.theme = 'blueprint-light';
+    }
     applyTheme(uiState.theme, false);
 }
 
@@ -609,7 +645,13 @@ function applyTheme(themeName, persist = true) {
     uiState.theme = normalizeThemeName(themeName);
     syncThemeBranding();
     syncColorModeToggle();
-    if (persist) localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
+    if (persist) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
+        } catch (err) {
+            console.warn('Failed to save UI preference:', err);
+        }
+    }
     const status = document.getElementById('uiOptionsStatus');
     if (status) {
         const meta = getThemeMeta(uiState.theme);
@@ -2008,10 +2050,10 @@ function switchProjectCategory(categoryValue) {
     }
 }
 
-function setProjectCardSortMode(sortMode) {
-    uiState.sortMode = sortMode || 'recent';
-    const sortSelect = document.getElementById('projectSortSelect');
-    if (sortSelect) sortSelect.value = uiState.sortMode;
+function setProjectCardSortMode(sortMode, persist = true) {
+    uiState.sortMode = normalizeProjectSortMode(sortMode);
+    syncProjectSortSelect();
+    if (persist) persistProjectSortPreference(uiState.sortMode);
     render();
 }
 
@@ -4902,9 +4944,8 @@ function initializeEventHandlers() {
         switchProjectCategory(e.target.value || 'active');
     });
     document.getElementById('projectSortSelect')?.addEventListener('change', (e) => {
-        uiState.sortMode = e.target.value || 'recent';
         uiState.activeSavedViewId = '';
-        render();
+        setProjectCardSortMode(e.target.value || 'recent');
     });
     document.querySelectorAll('[data-theme-family-option]').forEach(button => {
         button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
@@ -5356,6 +5397,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.setHideCompletedTasks(true);
     loadSavedViewsFromStorage();
     loadThemePreference();
+    loadProjectSortPreference();
     moveColorModeToggleToSidebarHeader();
     initAuthScreen();
 
