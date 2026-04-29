@@ -61,6 +61,7 @@ const TASK_CATEGORY_DROP_ALL = '__all__';
 const DEFAULT_TASK_SORT_MODE = 'default';
 const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
+const PROJECT_TITLE_MAX_LENGTH = 16;
 const TASK_TAG_PRIORITY = {
     high: 0,
     medium: 1,
@@ -1381,6 +1382,8 @@ async function addProject() {
         }
 
         const projectTitle = normalizeProjectTitleInput(nameInput?.value);
+        if (!validateProjectTitleInput(nameInput)) return;
+
         const requiredDescription = normalizeProjectDescription(descriptionInput.value);
         if (!requiredDescription) {
             showNewProjectDescriptionWarning(true);
@@ -1395,7 +1398,44 @@ async function addProject() {
 }
 
 function normalizeProjectTitleInput(value) {
-    return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    return String(value ?? '').trim().replace(/\s+/g, ' ');
+}
+
+function getProjectTitleWarningMessage(value) {
+    const title = normalizeProjectTitleInput(value) || 'New Project';
+    return title.length > PROJECT_TITLE_MAX_LENGTH
+        ? `Project title must be ${PROJECT_TITLE_MAX_LENGTH} characters or fewer.`
+        : '';
+}
+
+function showProjectTitleWarning(input, message = '') {
+    if (!input) return;
+    let warning = input.nextElementSibling;
+    if (!warning || !warning.classList?.contains('project-title-warning')) {
+        warning = document.createElement('div');
+        warning.className = 'project-title-warning hidden';
+        input.insertAdjacentElement('afterend', warning);
+    }
+    warning.textContent = message;
+    warning.classList.toggle('hidden', !message);
+    input.classList.toggle('has-error', Boolean(message));
+}
+
+function clearProjectTitleWarning(input) {
+    if (!input) return;
+    input.classList.remove('has-error');
+    const warning = input.nextElementSibling;
+    if (warning?.classList?.contains('project-title-warning')) {
+        warning.classList.add('hidden');
+        warning.textContent = '';
+    }
+}
+
+function validateProjectTitleInput(input) {
+    const message = getProjectTitleWarningMessage(input?.value);
+    showProjectTitleWarning(input, message);
+    if (message && input) input.focus({ preventScroll: true });
+    return !message;
 }
 
 async function createProjectWithDescription(requiredDescription, projectTitle = '') {
@@ -1454,6 +1494,12 @@ function showNewProjectCreatePanel() {
     if (!panel || !descriptionInput) return;
     panel.classList.remove('hidden');
     showNewProjectDescriptionWarning(false);
+    if (nameInput && !nameInput.__projectTitleWarningBound) {
+        nameInput.__projectTitleWarningBound = true;
+        nameInput.addEventListener('input', () => {
+            if (nameInput.value.length <= PROJECT_TITLE_MAX_LENGTH) clearProjectTitleWarning(nameInput);
+        });
+    }
     requestAnimationFrame(() => (nameInput || descriptionInput).focus({ preventScroll: true }));
 }
 
@@ -1463,6 +1509,7 @@ function resetNewProjectCreatePanel() {
     const descriptionInput = document.getElementById('newProjectDescriptionInput');
     if (nameInput) nameInput.value = '';
     if (descriptionInput) descriptionInput.value = '';
+    clearProjectTitleWarning(nameInput);
     if (panel) panel.classList.add('hidden');
     showNewProjectDescriptionWarning(false);
 }
@@ -1531,13 +1578,15 @@ function promptForRequiredProjectDescription() {
 }
 
 function updateProjectDetails(projectId, details = {}) {
-    if (!state.canEdit(projectId)) return;
-    const trimmedTitle = String(details.title ?? '').trim();
+    if (!state.canEdit(projectId)) return false;
+    const trimmedTitle = normalizeProjectTitleInput(details.title);
     const cleanTitle = trimmedTitle || 'New Project';
+    if (getProjectTitleWarningMessage(cleanTitle)) return false;
     const description = normalizeProjectDescription(details.description);
     state.updateProject(projectId, projectUpdate({ title: cleanTitle, description }));
     saveData();
     render();
+    return true;
 }
 
 function updateProjectTitle(projectId, newTitle) {
@@ -2046,12 +2095,8 @@ function setupProjectDragAndDrop() {
             if (e.button !== 0) return;
 
             const t = e.target;
-            const handle = t && t.closest ? t.closest('.drag-handle') : null;
-            if (handle?.classList.contains('drag-handle--inactive')) return;
-
-            const canDragFromCard = card.dataset.projectCanReorder === 'true';
-            if (t && t.closest && t.closest('button, input, textarea, select, a') && !handle) return;
-            if (!handle && !__projectEditMode && !canDragFromCard) return;
+            if (t && t.closest && t.closest('button, input, textarea, select, a, [contenteditable="true"], [role="textbox"]')) return;
+            if (card.dataset.projectCanReorder !== 'true') return;
 
             const projectId = card.getAttribute('data-project-id');
             if (!projectId) return;
@@ -2060,9 +2105,6 @@ function setupProjectDragAndDrop() {
             const startIndex = viewProjects.findIndex(p => String(p.id) === String(projectId));
             if (startIndex === -1) return;
 
-            e.preventDefault();
-            e.stopPropagation();
-            __suppressNextProjectGridClick = true;
             clearProjectLongPress();
 
             __projectDrag = {
@@ -2073,10 +2115,25 @@ function setupProjectDragAndDrop() {
                 grid:       projectGrid,
                 sourceCard: card,
                 active:     false,
+                pendingLongPress: true,
+                longPressReady: false,
                 snapshots:  null,
                 targetIndex:     startIndex,
                 lastTargetIndex: startIndex
             };
+
+            __projectPendingPress = __projectDrag;
+            card.classList.add('project-card--long-press-pending');
+
+            __projectLongPressTimer = window.setTimeout(() => {
+                if (!__projectDrag || __projectDrag.pointerId !== e.pointerId || __projectDrag.sourceCard !== card) return;
+                __projectDrag.longPressReady = true;
+                __projectPendingPress = null;
+                __suppressNextProjectGridClick = true;
+                setProjectEditMode(true);
+                card.classList.remove('project-card--long-press-pending');
+                card.classList.add('project-card--long-press-ready');
+            }, 280);
 
             try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
 
@@ -2193,13 +2250,20 @@ function autoScrollProjectDrag(clientY) {
 
 function onProjectPointerMove(e) {
     if (!__projectDrag || e.pointerId !== __projectDrag.pointerId) return;
+
+    const moved = Math.hypot(e.clientX - __projectDrag.startX, e.clientY - __projectDrag.startY);
+
+    if (__projectDrag.pendingLongPress && !__projectDrag.longPressReady) {
+        if (moved > 7) cleanupProjectDrag();
+        return;
+    }
+
     e.preventDefault();
 
-    // Small movement threshold before the slide actually begins
+    // Small movement threshold after the long-press has armed dragging.
     if (!__projectDrag.active) {
-        const THRESHOLD = __projectEditMode ? 2 : 8;
-        if (Math.hypot(e.clientX - __projectDrag.startX,
-                       e.clientY - __projectDrag.startY) < THRESHOLD) return;
+        const THRESHOLD = 2;
+        if (moved < THRESHOLD) return;
         startProjectSlide(e);
     }
 
@@ -2219,8 +2283,13 @@ function onProjectPointerMove(e) {
 function onProjectPointerUp(e) {
     if (!__projectDrag) return;
 
-    // Pointer released before the threshold was crossed — nothing to commit
+    // Pointer released before the threshold was crossed — nothing to commit.
+    // If the long press armed, suppress the click so the modal does not open.
     if (!__projectDrag.active) {
+        if (__projectDrag.longPressReady) {
+            e.preventDefault();
+            __suppressNextProjectGridClick = true;
+        }
         cleanupProjectDrag();
         return;
     }
@@ -2371,7 +2440,11 @@ function updateProjectSlideItems(clientX, clientY) {
 function resetProjectSlideVisuals() {
     const { snapshots, sourceCard, grid } = __projectDrag || {};
     if (grid)        grid.classList.remove('is-reordering');
-    if (sourceCard)  { sourceCard.classList.remove('dragging'); sourceCard.style.transform = ''; }
+    if (sourceCard)  {
+        sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
+        sourceCard.style.transform = '';
+        sourceCard.style.cursor = '';
+    }
     if (snapshots)   snapshots.forEach(s => {
         s.card.style.setProperty('--slide-x', '0px');
         s.card.style.setProperty('--slide-y', '0px');
@@ -2382,8 +2455,25 @@ function cleanupProjectDrag() {
     window.removeEventListener('pointermove',  onProjectPointerMove);
     window.removeEventListener('pointerup',    onProjectPointerUp);
     window.removeEventListener('pointercancel', onProjectPointerCancel);
+
+    if (__projectLongPressTimer) {
+        clearTimeout(__projectLongPressTimer);
+        __projectLongPressTimer = null;
+    }
+
+    const drag = __projectDrag;
+    if (drag?.sourceCard) {
+        drag.sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
+        drag.sourceCard.style.transform = '';
+        drag.sourceCard.style.cursor = '';
+        try { drag.sourceCard.releasePointerCapture(drag.pointerId); } catch { /* noop */ }
+    }
+
+    __projectPendingPress = null;
     __projectDrag = null;
     __projectDragScrollEl = null;
+    setProjectEditMode(false);
+    document.body.style.cursor = '';
 }
 
 
@@ -3667,7 +3757,7 @@ function openProjectModal(projectId, options = {}) {
                        value="${escapeHtml(project.title)}"
                        style="display: none;"
                        onblur="finishEditModalTitle('${project.id}')"
-                       onkeydown="if(event.key==='Enter') finishEditModalTitle('${project.id}')" >
+                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
                 <div class="modal-stats">
                     <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
                     <span>•</span>
@@ -3942,8 +4032,10 @@ function finishEditModalTitle(projectId) {
     const titleInput = document.getElementById(`modal-title-input-${projectId}`);
     if (!titleButton || !titleInput) return;
 
-    const nextTitle = String(titleInput.value || '').trim() || 'New Project';
+    const nextTitle = normalizeProjectTitleInput(titleInput.value) || 'New Project';
     titleInput.value = nextTitle;
+    if (!validateProjectTitleInput(titleInput)) return;
+    clearProjectTitleWarning(titleInput);
     titleButton.textContent = nextTitle;
     titleInput.style.display = 'none';
     titleButton.style.display = '';
@@ -4378,11 +4470,6 @@ function renderProjectCard(project) {
              onclick="openProjectModal('${project.id}')">
             <div class="project-header">
                 <div class="project-title-container">
-                    ${canShowReorderHandle ? `<button class="drag-handle ${canReorderProject ? '' : 'drag-handle--inactive'}" type="button" title="${canReorderProject ? 'Drag to reorder' : 'Switch to Manual Order to move cards'}" onclick="event.stopPropagation(); ${canReorderProject ? '' : "setProjectCardSortMode('manual');"}">
-                        <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                        </svg>
-                    </button>` : ''}
                     <div>
                         <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${escapeHtml(project.title)}</div>
                         <input type="text"
@@ -4392,7 +4479,7 @@ function renderProjectCard(project) {
                                style="display: none;"
                                onclick="event.stopPropagation();"
                                onblur="finishEditProjectTitleOnCard('${project.id}')"
-                               onkeydown="if(event.key==='Enter'){ finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ cancelEditProjectTitleOnCard('${project.id}'); }">
+                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); cancelEditProjectTitleOnCard('${project.id}'); }">
                         <p class="project-sync-text">${escapeHtml(formatProjectSyncText(project))}</p>
                     </div>
                 </div>
@@ -4402,7 +4489,6 @@ function renderProjectCard(project) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                     </button>` : ''}
-                    ${renderProjectPriorityControlMarkup(project.id, project, 'card')}
                     ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -4411,14 +4497,12 @@ function renderProjectCard(project) {
                 </div>
             </div>
 
-            ${projectTags.length ? `
-                <div class="project-card-tags">
-                    ${projectTags.slice(0, 4).map(tag => {
-                        const tagLiteral = serializeInlineJsString(tag);
-                        return `<button class="project-card-tag project-card-tag--editable" type="button" title="Edit ${escapeHtml(tag)} tag" onclick="openProjectTagEditFromCard('${project.id}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>`;
-                    }).join('')}
-                </div>
-            ` : ''}
+            <div class="project-card-tags ${projectTags.length ? '' : 'project-card-tags--empty'}" ${projectTags.length ? '' : 'aria-hidden="true"'}>
+                ${projectTags.length ? projectTags.slice(0, 4).map(tag => {
+                    const tagLiteral = serializeInlineJsString(tag);
+                    return `<button class="project-card-tag project-card-tag--editable" type="button" title="Edit ${escapeHtml(tag)} tag" onclick="openProjectTagEditFromCard('${project.id}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>`;
+                }).join('') : ''}
+            </div>
 
             <div class="project-card-progress">
                 <div class="project-card-description-row">
@@ -4441,7 +4525,10 @@ function renderProjectCard(project) {
             </ul>
 
             <div class="project-card-footer">
-                <span class="project-card-access">${accessLabel}</span>
+                <div class="project-card-footer-left">
+                    ${renderProjectPriorityControlMarkup(project.id, project, 'card')}
+                    <span class="project-card-access">${accessLabel}</span>
+                </div>
                 <span class="project-card-meta">
                     ${statusLabel}
                     ${project.completed ? `<button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">Activate</button>` : ''}
@@ -4578,8 +4665,12 @@ function finishEditProjectTitleOnCard(projectId) {
     const titleDiv = document.getElementById(`project-title-${projectId}`);
     const titleInput = document.getElementById(`project-title-input-${projectId}`);
     if (!titleDiv || !titleInput) return;
-    updateProjectTitle(projectId, titleInput.value);
-    titleDiv.textContent = (titleInput.value || '').trim() || 'New Project';
+    const nextTitle = normalizeProjectTitleInput(titleInput.value) || 'New Project';
+    titleInput.value = nextTitle;
+    if (!validateProjectTitleInput(titleInput)) return;
+    clearProjectTitleWarning(titleInput);
+    updateProjectTitle(projectId, nextTitle);
+    titleDiv.textContent = nextTitle;
     titleDiv.style.display = 'block';
     titleInput.style.display = 'none';
 }
@@ -4590,6 +4681,7 @@ function cancelEditProjectTitleOnCard(projectId) {
     const titleInput = document.getElementById(`project-title-input-${projectId}`);
     if (!titleDiv || !titleInput || !project) return;
     titleInput.value = project.title;
+    clearProjectTitleWarning(titleInput);
     titleDiv.style.display = 'block';
     titleInput.style.display = 'none';
 }
@@ -4885,7 +4977,7 @@ Task Features:
 
 Features:
 - Click on project cards to view/edit details
-- Use the card drag handle to reorder projects
+- Long-click and drag a project card to reorder projects
 - Drag tasks to reorder them faster
 - Use copy button (copies only incomplete tasks)
 - Click outside expanded cards to close them

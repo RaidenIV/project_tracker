@@ -2913,3 +2913,94 @@ body[data-theme^="blueprint"] .project-preview-priority .task-tag-flag {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: long-press project drag, title limits, priority placement
+   ============================================================================ */
+
+.sidebar-action-button--danger:hover,
+.sidebar-action-button--danger:focus-visible,
+body[data-theme^="console"] .sidebar-action-button--danger:hover,
+body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
+    color: var(--danger, #ef4444) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--danger, #ef4444) 70%, transparent),
+                 0 0 18px color-mix(in srgb, var(--danger, #ef4444) 45%, transparent) !important;
+}
+
+.project-card[data-project-can-reorder="true"] {
+    cursor: pointer !important;
+}
+
+.project-card.project-card--long-press-pending {
+    cursor: pointer !important;
+}
+
+.project-card.project-card--long-press-ready,
+.project-card.dragging {
+    cursor: grabbing !important;
+}
+
+.project-card .drag-handle {
+    display: none !important;
+}
+
+.project-card-tags.project-card-tags--empty {
+    display: flex !important;
+    min-height: 1.75rem !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.project-card-footer-left {
+    display: grid !important;
+    align-items: start !important;
+    justify-items: start !important;
+    gap: 0.35rem !important;
+    min-width: 0 !important;
+}
+
+.project-card-footer-left .project-priority-control--card {
+    justify-content: flex-start !important;
+}
+
+.project-card-footer-left .project-priority-card-button {
+    width: auto !important;
+    min-width: 2.05rem !important;
+    height: 1.75rem !important;
+    min-height: 1.75rem !important;
+    padding: 0 0.55rem !important;
+    border-radius: 999px !important;
+}
+
+.project-card-footer-left .project-priority-card-indicator .task-tag-flag {
+    width: 0.78rem !important;
+    height: 0.78rem !important;
+    flex-basis: 0.78rem !important;
+}
+
+.project-priority-control--card .project-priority-popover {
+    top: auto !important;
+    bottom: calc(100% + 8px) !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+}
+
+.project-title-warning {
+    margin-top: 0.35rem !important;
+    color: var(--danger, #ef4444) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+}
+
+.project-title-input.has-error,
+.modal-title-input.has-error,
+.new-project-name-input.has-error,
+#newProjectTitleInput.has-error {
+    border-color: var(--danger, #ef4444) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger, #ef4444) 18%, transparent) !important;
+}
