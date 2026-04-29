@@ -2518,3 +2518,210 @@ body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth
     color: var(--accent, var(--primary, var(--heading))) !important;
     border-color: var(--accent, var(--primary, var(--line))) !important;
 }
+
+/* ============================================================================
+   Targeted patch: compact card task preview, modal description display, project priority
+   ============================================================================ */
+.project-preview-task,
+.project-preview-empty,
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="console"] .project-preview-empty,
+body[data-theme^="glass"] .project-preview-task,
+body[data-theme^="glass"] .project-preview-empty,
+body[data-theme^="blueprint"] .project-preview-task,
+body[data-theme^="blueprint"] .project-preview-empty {
+    grid-template-columns: 0.85rem 1rem minmax(0, 1fr) !important;
+    min-height: 1.85rem !important;
+    padding: 0.34rem 0.48rem !important;
+    gap: 0.36rem !important;
+    border-radius: 0.55rem !important;
+    font-size: 0.76rem !important;
+    line-height: 1.2 !important;
+}
+
+.project-preview-empty,
+body[data-theme^="console"] .project-preview-empty,
+body[data-theme^="glass"] .project-preview-empty,
+body[data-theme^="blueprint"] .project-preview-empty {
+    display: block !important;
+}
+
+.project-preview-task span:last-child,
+body[data-theme^="console"] .project-preview-task span:last-child,
+body[data-theme^="glass"] .project-preview-task span:last-child,
+body[data-theme^="blueprint"] .project-preview-task span:last-child {
+    white-space: nowrap !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-preview-check,
+body[data-theme^="console"] .project-preview-check,
+body[data-theme^="glass"] .project-preview-check,
+body[data-theme^="blueprint"] .project-preview-check {
+    width: 0.82rem !important;
+    height: 0.82rem !important;
+    border-radius: 0.22rem !important;
+    font-size: 0.56rem !important;
+}
+
+.project-preview-priority,
+body[data-theme^="console"] .project-preview-priority,
+body[data-theme^="glass"] .project-preview-priority,
+body[data-theme^="blueprint"] .project-preview-priority {
+    width: 1rem !important;
+    height: 1rem !important;
+    flex-basis: 1rem !important;
+    border-radius: 0.32rem !important;
+}
+
+.project-preview-priority .task-tag-flag,
+body[data-theme^="console"] .project-preview-priority .task-tag-flag,
+body[data-theme^="glass"] .project-preview-priority .task-tag-flag,
+body[data-theme^="blueprint"] .project-preview-priority .task-tag-flag {
+    width: 0.66rem !important;
+    height: 0.66rem !important;
+    flex-basis: 0.66rem !important;
+}
+
+.modal-project-description-view {
+    width: min(100%, 54rem) !important;
+    margin: 0.15rem auto 1rem !important;
+    padding: 0.2rem 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 0.65rem !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+}
+
+.modal-project-description-view.is-empty .modal-project-description-text {
+    color: var(--muted, rgba(100, 116, 139, 0.9)) !important;
+    font-style: italic !important;
+}
+
+.modal-project-description-text {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+}
+
+.modal-project-description-edit {
+    flex: 0 0 auto !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--accent, currentColor) !important;
+    padding: 0.18rem 0.55rem !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+}
+
+.modal-project-description-edit:hover,
+.modal-project-description-edit:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.modal-project-priority-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.45rem !important;
+    margin-top: 0.55rem !important;
+}
+
+.project-priority-button,
+.project-priority-card-button {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--heading, currentColor) !important;
+    cursor: pointer !important;
+}
+
+.project-priority-button {
+    min-height: 1.85rem !important;
+    padding: 0.28rem 0.72rem !important;
+    border-radius: 999px !important;
+    font: inherit !important;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-priority-card-button {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    border-radius: 0.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+.project-priority-indicator,
+.project-priority-card-indicator {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.project-priority-indicator .task-tag-flag,
+.project-priority-card-indicator .task-tag-flag {
+    width: 0.88rem !important;
+    height: 0.88rem !important;
+    flex-basis: 0.88rem !important;
+}
+
+.project-priority-button:hover,
+.project-priority-button:focus-visible,
+.project-priority-card-button:hover,
+.project-priority-card-button:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-priority-button:disabled,
+.project-priority-card-button:disabled {
+    cursor: default !important;
+    opacity: 0.72 !important;
+}
+
+.project-priority-button--high,
+.project-priority-card-button--high,
+.project-priority-indicator--high,
+.project-priority-card-indicator--high {
+    color: #ef4444 !important;
+}
+
+.project-priority-button--medium,
+.project-priority-card-button--medium,
+.project-priority-indicator--medium,
+.project-priority-card-indicator--medium {
+    color: #f97316 !important;
+}
+
+.project-priority-button--low,
+.project-priority-card-button--low,
+.project-priority-indicator--low,
+.project-priority-card-indicator--low {
+    color: #22c55e !important;
+}
+
+.project-priority-button--none,
+.project-priority-card-button--none,
+.project-priority-indicator--none,
+.project-priority-card-indicator--none {
+    color: color-mix(in srgb, var(--muted, currentColor) 72%, transparent) !important;
+}
