@@ -2609,6 +2609,25 @@ body[data-theme^="blueprint"] .project-preview-priority .task-tag-flag {
     min-width: 0 !important;
     max-width: 100% !important;
     overflow-wrap: anywhere !important;
+    border-radius: 0.7rem !important;
+}
+
+.modal-project-description-text[tabindex] {
+    cursor: text !important;
+}
+
+.modal-project-description-text.is-editing {
+    min-width: min(100%, 28rem) !important;
+    padding: 0.28rem 0.55rem !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+    outline: none !important;
+    text-align: center !important;
+}
+
+.modal-project-description-view.is-editing {
+    align-items: center !important;
 }
 
 .modal-project-description-edit {

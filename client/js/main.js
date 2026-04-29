@@ -4,6 +4,7 @@ import { VIEWS, SHORTCUTS } from './modules/config.js';
 import { state } from './modules/state.js';
 import * as api from './modules/api.js';
 import * as auth from './modules/auth.js';
+import { connectRealtime } from './modules/realtime.js';
 
 const {
     loadDataFromServer,
@@ -1215,6 +1216,83 @@ export async function loadData() {
         render();
         setSaveStatus('error', 'Could not load projects');
     }
+}
+
+function getOpenProjectModalId() {
+    const modal = document.getElementById('projectModal');
+    if (!modal?.classList.contains('active')) return null;
+    const progressBar = document.querySelector('#modalContent [data-progress-bar]');
+    return progressBar?.getAttribute('data-progress-bar') || null;
+}
+
+function upsertRealtimeProject(projectPayload) {
+    const incoming = normalizeProject(projectPayload);
+    if (!incoming) return;
+
+    const existing = state.getProjects().find(project =>
+        String(project.id) === String(incoming.id) ||
+        String(project._id || '') === String(incoming._id || '')
+    );
+    const openProjectId = getOpenProjectModalId();
+    const shouldRestoreModal = openProjectId && existing && String(existing.id) === String(openProjectId);
+    const modalState = shouldRestoreModal ? captureProjectModalState(existing.id) : null;
+
+    if (existing) {
+        state.updateProject(existing.id, projectUpdate({
+            ...incoming,
+            __syncedLastModified: incoming.lastModified || incoming.__syncedLastModified || null
+        }, { skipTouch: true }));
+    } else {
+        state.addProject({
+            ...incoming,
+            __syncedLastModified: incoming.lastModified || incoming.__syncedLastModified || null
+        });
+    }
+
+    render();
+    updateTotalCompletion();
+
+    if (modalState) {
+        openProjectModal(incoming.id, { restoreState: modalState });
+    }
+}
+
+function removeRealtimeProject(projectId) {
+    const id = String(projectId || '');
+    if (!id) return;
+
+    const existing = state.getProjects().find(project =>
+        String(project.id) === id || String(project._id || '') === id
+    );
+    if (!existing) return;
+
+    const openProjectId = getOpenProjectModalId();
+    state.setProjects(state.getProjects().filter(project => project !== existing));
+
+    if (openProjectId && String(openProjectId) === String(existing.id)) {
+        closeProjectModal();
+    } else {
+        render();
+    }
+    updateTotalCompletion();
+}
+
+function isRealtimeFromCurrentUser(payload = {}) {
+    const sourceUserId = payload?.sourceUserId ? String(payload.sourceUserId) : '';
+    const currentUserId = String(state.getCurrentUser?.()?.id || getCurrentUser?.()?.id || '');
+    return !!sourceUserId && !!currentUserId && sourceUserId === currentUserId;
+}
+
+function startRealtimeSync() {
+    connectRealtime({
+        onProjectUpsert: (project, payload) => {
+            if (!isRealtimeFromCurrentUser(payload)) upsertRealtimeProject(project);
+        },
+        onProjectDelete: (projectId, payload) => {
+            if (!isRealtimeFromCurrentUser(payload)) removeRealtimeProject(projectId);
+        },
+        onError: (err) => console.warn('Realtime connection unavailable:', err?.message || err)
+    });
 }
 
 // Save queue: prevents overlapping saves and reduces race conditions.
@@ -3440,18 +3518,13 @@ function openProjectModal(projectId, options = {}) {
         
         <div class="modal-project-description-view ${getProjectModalDescription(project) ? '' : 'is-empty'}"
              id="modal-project-description-view-${project.id}">
-            <span class="modal-project-description-text">${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
+            <span class="modal-project-description-text"
+                  id="modal-project-description-${project.id}"
+                  data-placeholder="Add project description"
+                  role="textbox"
+                  ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
             ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
         </div>
-        <textarea class="modal-project-description-input ${getProjectModalDescription(project) ? '' : 'is-empty'}"
-                  id="modal-project-description-${project.id}"
-                  maxlength="280"
-                  placeholder="Add project description"
-                  title="Project description"
-                  style="display: none;"
-                  ${state.canEdit(project.id) ? '' : 'readonly'}
-                  onblur="finishEditProjectDescription('${project.id}')"
-                  onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter'){ event.preventDefault(); this.blur(); } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }">${escapeHtml(getProjectModalDescription(project))}</textarea>
 
         <div class="modal-progress">
             <div class="progress-bar-container">
@@ -3701,13 +3774,23 @@ function finishEditModalTitle(projectId) {
 
 function setProjectDescriptionViewState(projectId, description) {
     const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
-    const descriptionText = descriptionView?.querySelector('.modal-project-description-text');
-    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
     const cleanDescription = normalizeProjectDescription(description);
 
-    if (descriptionText) descriptionText.textContent = cleanDescription || 'Add project description';
+    if (descriptionText) {
+        descriptionText.textContent = cleanDescription || 'Add project description';
+        descriptionText.classList.toggle('is-empty', !cleanDescription);
+    }
     descriptionView?.classList.toggle('is-empty', !cleanDescription);
-    descriptionInput?.classList.toggle('is-empty', !cleanDescription);
+}
+
+function selectEditableText(element) {
+    if (!element) return;
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
 }
 
 function editProjectDescription(projectId, event) {
@@ -3717,42 +3800,51 @@ function editProjectDescription(projectId, event) {
 
     const project = state.findProject(projectId);
     const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
-    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
-    if (!descriptionView || !descriptionInput) return;
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionView || !descriptionText) return;
+    if (descriptionText.isContentEditable) return;
 
-    descriptionInput.value = getProjectModalDescription(project);
-    descriptionView.style.display = 'none';
-    descriptionInput.style.display = 'block';
+    const currentDescription = getProjectModalDescription(project);
+    descriptionText.textContent = currentDescription;
+    descriptionText.setAttribute('contenteditable', 'true');
+    descriptionText.classList.add('is-editing');
+    descriptionView.classList.add('is-editing');
+    descriptionView.querySelector('.modal-project-description-edit')?.classList.add('hidden');
+
     requestAnimationFrame(() => {
-        descriptionInput.focus({ preventScroll: true });
-        descriptionInput.select();
+        descriptionText.focus({ preventScroll: true });
+        selectEditableText(descriptionText);
     });
 }
 
 function cancelEditProjectDescription(projectId) {
     const project = state.findProject(projectId);
     const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
-    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
-    if (!descriptionView || !descriptionInput) return;
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionView || !descriptionText) return;
 
-    descriptionInput.value = getProjectModalDescription(project);
-    descriptionInput.style.display = 'none';
-    descriptionView.style.display = '';
-    setProjectDescriptionViewState(projectId, descriptionInput.value);
+    descriptionText.removeAttribute('contenteditable');
+    descriptionText.classList.remove('is-editing');
+    descriptionView.classList.remove('is-editing');
+    descriptionView.querySelector('.modal-project-description-edit')?.classList.remove('hidden');
+    setProjectDescriptionViewState(projectId, getProjectModalDescription(project));
 }
 
 function finishEditProjectDescription(projectId) {
-    const descriptionInput = document.getElementById(`modal-project-description-${projectId}`);
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
     const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
-    if (!descriptionInput) return;
-    const description = normalizeProjectDescription(descriptionInput.value);
-    descriptionInput.value = description;
-    descriptionInput.style.display = 'none';
-    if (descriptionView) descriptionView.style.display = '';
+    if (!descriptionText || !descriptionText.isContentEditable) return;
+
+    const description = normalizeProjectDescription(descriptionText.textContent);
+    descriptionText.removeAttribute('contenteditable');
+    descriptionText.classList.remove('is-editing');
+    if (descriptionView) {
+        descriptionView.classList.remove('is-editing');
+        descriptionView.querySelector('.modal-project-description-edit')?.classList.remove('hidden');
+    }
     setProjectDescriptionViewState(projectId, description);
     updateProjectDescription(projectId, description);
 }
-
 function editModalTask(taskId) {
     const taskText = document.getElementById(`modal-task-text-${taskId}`);
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
@@ -4968,6 +5060,7 @@ function onAuthSuccess(user) {
 
     Promise.resolve()
         .then(() => loadData())
+        .then(() => startRealtimeSync())
         .catch(err => {
             console.error('Initial data load failed:', err);
             setSaveStatus('error', 'Could not load user data');

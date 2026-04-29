@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
@@ -12,12 +13,39 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRES_IN = '30d';
 
+// Node's default maxHeaderSize is 8 KB, which trips a 431 when the browser
+// sends large accumulated cookies. 32 KB covers real-world usage while staying
+// well within safe limits.
+const server = http.createServer({ maxHeaderSize: 32 * 1024 }, app);
+const io = new Server(server, {
+    cors: { origin: true, credentials: true }
+});
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
 app.use(cors());
 app.use(express.json({ limit: '6mb' }));
 app.use(express.urlencoded({ extended: true, limit: '6mb' }));
 app.use(express.static(path.join(__dirname, '..', 'client')));
+
+// ─── Realtime Collaboration ─────────────────────────────────────────────────
+
+io.use((socket, next) => {
+    const token = socket.handshake.auth?.token || '';
+    if (!token) return next(new Error('No token provided'));
+    try {
+        socket.user = jwt.verify(token, JWT_SECRET);
+        next();
+    } catch {
+        next(new Error('Invalid or expired token'));
+    }
+});
+
+io.on('connection', (socket) => {
+    const userId = socket.user?.id;
+    if (!userId) return socket.disconnect(true);
+    socket.join(`user:${userId}`);
+});
 
 // ─── MongoDB ──────────────────────────────────────────────────────────────────
 
@@ -152,6 +180,45 @@ async function enrichProject(project, userId, accountMap) {
 async function buildAccountMap(ownerIds) {
     const accounts = await Account.find({ _id: { $in: ownerIds } }, 'username email profilePic');
     return Object.fromEntries(accounts.map(a => [a._id.toString(), a]));
+}
+
+function getProjectAudienceIds(project) {
+    const audience = new Set();
+    if (project?.owner) audience.add(String(project.owner));
+    (project?.collaborators || []).forEach(collaborator => {
+        if (collaborator?.userId) audience.add(String(collaborator.userId));
+    });
+    return Array.from(audience).filter(Boolean);
+}
+
+async function emitProjectUpsert(project, actor = {}) {
+    if (!project) return;
+    try {
+        const audienceIds = getProjectAudienceIds(project);
+        const accountMap = await buildAccountMap([project.owner]);
+        await Promise.all(audienceIds.map(async (userId) => {
+            const enriched = await enrichProject(project, userId, accountMap);
+            io.to(`user:${userId}`).emit('project:upsert', {
+                project: enriched,
+                sourceUserId: actor?.id || ''
+            });
+        }));
+    } catch (err) {
+        console.error('Realtime project upsert failed:', err);
+    }
+}
+
+function emitProjectDelete(project, actor = {}, explicitAudienceIds = null) {
+    const audienceIds = explicitAudienceIds || getProjectAudienceIds(project);
+    const projectId = project?._id ? project._id.toString() : (project?.id ? String(project.id) : '');
+    if (!projectId) return;
+    audienceIds.forEach(userId => {
+        if (!userId) return;
+        io.to(`user:${userId}`).emit('project:delete', {
+            projectId,
+            sourceUserId: actor?.id || ''
+        });
+    });
 }
 
 function appendProjectActivity(project, actor, type, message) {
@@ -442,6 +509,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
         pObj.userRole  = 'owner';
         pObj.ownerName = req.user.username;
         pObj.ownerEmail = req.user.email;
+        await emitProjectUpsert(project, req.user);
         res.status(201).json(pObj);
     } catch (err) {
         console.error('Error creating project:', err);
@@ -477,6 +545,7 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
             Object.assign(req.project, changedFields, { lastModified: new Date() });
             if (summary) appendProjectActivity(req.project, req.user, summary.type, summary.message);
             await req.project.save();
+            await emitProjectUpsert(req.project, req.user);
         }
         const updated = req.project;
 
@@ -494,12 +563,18 @@ app.patch('/api/projects/priorities', authenticateToken, async (req, res) => {
     try {
         const { priorities } = req.body; // [{_id, priority}]
         if (!Array.isArray(priorities)) return res.status(400).json({ error: 'priorities must be an array' });
+        const ids = priorities.map(item => item?._id).filter(Boolean);
         await Promise.all(priorities.map(({ _id, priority }) =>
             Project.findOneAndUpdate(
                 { _id, $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }] },
-                { priority }
+                { priority, lastModified: new Date() }
             )
         ));
+        const updatedProjects = await Project.find({
+            _id: { $in: ids },
+            $or: [{ owner: req.user.id }, { 'collaborators.userId': req.user.id }]
+        });
+        await Promise.all(updatedProjects.map(project => emitProjectUpsert(project, req.user)));
         res.json({ success: true });
     } catch (err) {
         console.error('Error reordering projects:', err);
@@ -510,7 +585,9 @@ app.patch('/api/projects/priorities', authenticateToken, async (req, res) => {
 // DELETE /api/projects/:id — delete (owner only)
 app.delete('/api/projects/:id', authenticateToken, requireRole('owner'), async (req, res) => {
     try {
+        const deletedProject = req.project;
         await Project.findByIdAndDelete(req.params.id);
+        emitProjectDelete(deletedProject, req.user);
         res.json({ success: true });
     } catch (err) {
         console.error('Error deleting project:', err);
@@ -546,6 +623,7 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
         project.lastModified = new Date();
         appendProjectActivity(project, req.user, 'project_shared', `shared “${project.title}” with ${invitee.username} as ${role}`);
         await project.save();
+        await emitProjectUpsert(project, req.user);
 
         const ownerMap = await buildAccountMap([project.owner]);
         const enriched = await enrichProject(project, req.user.id, ownerMap);
@@ -570,6 +648,7 @@ app.put('/api/projects/:id/collaborators/:userId', authenticateToken, requireRol
         req.project.lastModified = new Date();
         appendProjectActivity(req.project, req.user, 'role_changed', `changed ${collab.username}'s access to ${role}`);
         await req.project.save();
+        await emitProjectUpsert(req.project, req.user);
 
         const ownerMap = await buildAccountMap([req.project.owner]);
         const enriched = await enrichProject(req.project, req.user.id, ownerMap);
@@ -589,6 +668,8 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
         req.project.lastModified = new Date();
         if (removedCollaborator) appendProjectActivity(req.project, req.user, 'access_removed', `removed ${removedCollaborator.username}'s access`);
         await req.project.save();
+        if (removedCollaborator?.userId) emitProjectDelete(req.project, req.user, [removedCollaborator.userId]);
+        await emitProjectUpsert(req.project, req.user);
 
         const ownerMap = await buildAccountMap([req.project.owner]);
         const enriched = await enrichProject(req.project, req.user.id, ownerMap);
@@ -804,10 +885,6 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
 });
 
-// Node's default maxHeaderSize is 8 KB, which trips a 431 when the browser
-// sends large accumulated cookies. 32 KB covers real-world usage while staying
-// well within safe limits.
-const server = http.createServer({ maxHeaderSize: 32 * 1024 }, app);
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Serving frontend from: ${path.join(__dirname, '..', 'client')}`);
