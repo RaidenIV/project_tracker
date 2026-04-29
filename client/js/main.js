@@ -56,6 +56,7 @@ const TASK_TAG_OPTIONS = [
 const DEFAULT_TASK_TAG = 'none';
 const DEFAULT_TASK_CATEGORY = 'General';
 const DEFAULT_TASK_CATEGORY_FILTER = 'all';
+const TASK_CATEGORY_DROP_ALL = '__all__';
 const DEFAULT_TASK_SORT_MODE = 'default';
 const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
@@ -115,6 +116,13 @@ function getTaskTagLabel(task) {
 function getTaskTagPriority(task) {
     const normalized = normalizeTask(task);
     return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG];
+}
+
+function getNextTaskPriorityValue(task) {
+    const currentTag = normalizeTask(task).tag;
+    const priorityCycle = ['none', 'high', 'medium', 'low'];
+    const currentIndex = priorityCycle.indexOf(currentTag);
+    return priorityCycle[(currentIndex + 1) % priorityCycle.length] || DEFAULT_TASK_TAG;
 }
 
 function getTaskCategoryTabPositionClass(index, total) {
@@ -1887,18 +1895,21 @@ function setupProjectDragAndDrop() {
 
     bindProjectEditModeExitHandlers();
 
-    projectGrid.addEventListener('click', (e) => {
-        if (__suppressNextProjectGridClick) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            __suppressNextProjectGridClick = false;
-            return;
-        }
-        if (__projectEditMode) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-        }
-    }, true);
+    if (!projectGrid.__projectGridClickBound) {
+        projectGrid.addEventListener('click', (e) => {
+            if (__suppressNextProjectGridClick) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                __suppressNextProjectGridClick = false;
+                return;
+            }
+            if (__projectEditMode) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+        projectGrid.__projectGridClickBound = true;
+    }
 
     const cards = Array.from(projectGrid.querySelectorAll('.project-card'));
     cards.forEach((card) => {
@@ -1909,8 +1920,11 @@ function setupProjectDragAndDrop() {
 
             const t = e.target;
             const handle = t && t.closest ? t.closest('.drag-handle') : null;
+            if (handle?.classList.contains('drag-handle--inactive')) return;
+
+            const canDragFromCard = card.dataset.projectCanReorder === 'true';
             if (t && t.closest && t.closest('button, input, textarea, select, a') && !handle) return;
-            if (!handle && !__projectEditMode) return;
+            if (!handle && !__projectEditMode && !canDragFromCard) return;
 
             const projectId = card.getAttribute('data-project-id');
             if (!projectId) return;
@@ -2284,17 +2298,25 @@ function setupTaskDragAndDrop(projectId) {
         currentDropCategory = null;
     }
     function setCategoryDropTarget(category) {
-        const normalizedCategory = category ? sanitizeTaskCategoryName(category) : null;
-        currentDropCategory = normalizedCategory;
+        const dropCategory = category || null;
+        currentDropCategory = dropCategory;
         getCategoryDropTargets().forEach(el => {
-            el.classList.toggle('is-drop-target', !!normalizedCategory && el.dataset.taskCategoryDrop === normalizedCategory);
+            el.classList.toggle('is-drop-target', !!dropCategory && el.dataset.taskCategoryDrop === dropCategory);
         });
     }
     function getCategoryDropTargetAtPoint(x, y) {
-        const hit = document.elementFromPoint(x, y);
-        const target = hit?.closest?.('[data-task-category-drop]');
-        if (!target || target.dataset.taskCategoryDropProject !== projectId) return null;
-        return target.dataset.taskCategoryDrop || null;
+        const hits = typeof document.elementsFromPoint === 'function'
+            ? document.elementsFromPoint(x, y)
+            : [document.elementFromPoint(x, y)].filter(Boolean);
+
+        for (const hit of hits) {
+            if (!hit) continue;
+            if (draggableItem && (hit === draggableItem || draggableItem.contains(hit))) continue;
+            const target = hit.closest?.('[data-task-category-drop]');
+            if (!target || target.dataset.taskCategoryDropProject !== projectId) continue;
+            return target.dataset.taskCategoryDrop || null;
+        }
+        return null;
     }
 
     // ── drag start ──
@@ -2411,14 +2433,17 @@ function setupTaskDragAndDrop(projectId) {
         }
 
         const dropCategory = currentDropCategory || getCategoryDropTargetAtPoint(lastPointerX, lastPointerY);
+        const targetCategory = dropCategory === TASK_CATEGORY_DROP_ALL
+            ? DEFAULT_TASK_CATEGORY
+            : (dropCategory ? sanitizeTaskCategoryName(dropCategory) : null);
         const draggedTaskId = Number(draggableItem.dataset.taskId);
         const draggedTask = state.findProject(projectId)?.tasks
             ?.map((task, index) => normalizeTask(task, index))
             .find(task => task.id === draggedTaskId);
-        const shouldMoveToCategory = !!dropCategory &&
+        const shouldMoveToCategory = !!targetCategory &&
             Number.isFinite(draggedTaskId) &&
             draggedTask &&
-            draggedTask.category !== dropCategory;
+            draggedTask.category !== targetCategory;
 
         // wipe all visual state before committing (reorderTasks/updateTaskCategory re-renders the modal)
         draggableItem.classList.remove('dragging');
@@ -2432,7 +2457,7 @@ function setupTaskDragAndDrop(projectId) {
         reset();
 
         if (shouldMoveToCategory) {
-            updateTaskCategory(projectId, draggedTaskId, dropCategory);
+            updateTaskCategory(projectId, draggedTaskId, targetCategory);
             return;
         }
 
@@ -2552,8 +2577,11 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                         shellClasses.push('is-menu-open');
                         wrapClasses.push('is-menu-open');
                     }
-                    const dropAttributes = tab.kind === 'category'
-                        ? ` data-task-category-drop="${escapeHtml(tab.category)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
+                    const dropCategoryValue = tab.kind === 'all'
+                        ? TASK_CATEGORY_DROP_ALL
+                        : (tab.kind === 'category' ? tab.category : null);
+                    const dropAttributes = dropCategoryValue
+                        ? ` data-task-category-drop="${escapeHtml(dropCategoryValue)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
                         : '';
                     const shellClick = isInput
                         ? ''
@@ -3185,6 +3213,20 @@ function updateTaskTag(projectId, taskId, tagValue) {
     saveData();
     renderModalTaskList(projectId);
     render();
+}
+
+function cycleProjectCardTaskPriority(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    const task = project?.tasks
+        ?.map((item, index) => normalizeTask(item, index))
+        .find(item => item.id === taskId);
+    if (!task) return;
+
+    updateTaskTag(projectId, taskId, getNextTaskPriorityValue(task));
 }
 
 function updateTaskCategory(projectId, taskId, categoryValue) {
@@ -3946,6 +3988,7 @@ function renderProjectCard(project) {
     return `
         <div class="project-card stitch-project-card ${isViewer ? 'project-card--viewer' : ''}"
              data-project-id="${project.id}"
+             data-project-can-reorder="${canReorderProject ? 'true' : 'false'}"
              onclick="openProjectModal('${project.id}')">
             <div class="project-header">
                 <div class="project-title-container">
@@ -4004,6 +4047,15 @@ function renderProjectCard(project) {
                 ${previewTasks.length ? previewTasks.map(task => `
                     <li class="project-preview-task ${task.completed ? 'is-completed' : ''}">
                         <span class="project-preview-check" aria-hidden="true">${task.completed ? '✓' : ''}</span>
+                        ${canEditProject ? `
+                            <button class="project-preview-priority project-preview-priority--${task.tag}"
+                                    type="button"
+                                    title="Priority: ${escapeHtml(getTaskTagLabel(task))}"
+                                    aria-label="Change task priority for ${escapeHtml(task.text || 'Untitled task')}"
+                                    onclick="cycleProjectCardTaskPriority('${project.id}', ${task.id}, event)">
+                                <span class="task-tag-flag task-tag-flag--${task.tag}" aria-hidden="true"></span>
+                            </button>
+                        ` : `<span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>`}
                         <span>${escapeHtml(task.text || 'Untitled task')}</span>
                     </li>
                 `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
@@ -4574,6 +4626,7 @@ window.saveProjectNotes = saveProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;
+window.cycleProjectCardTaskPriority = cycleProjectCardTaskPriority;
 window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
 window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
