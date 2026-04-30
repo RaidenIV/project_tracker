@@ -3108,49 +3108,33 @@ body[data-theme^="blueprint"] .project-preview-check {
 }
 
 /* ============================================================================
-   Targeted patch: old Chrome 73/78-style task category tabs
+   Targeted patch: clean minimal task category tabs
    ============================================================================ */
 .task-category-tabs {
-    --chrome-old-tab-border: color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.34)) 82%, rgba(30, 41, 59, 0.35)) !important;
-    --chrome-old-tab-active-bg: linear-gradient(180deg,
-        color-mix(in srgb, var(--panel, #ffffff) 92%, #ffffff 8%) 0%,
-        color-mix(in srgb, var(--panel, #ffffff) 82%, #e5e7eb 18%) 100%) !important;
-    --chrome-old-tab-inactive-bg: linear-gradient(180deg,
-        color-mix(in srgb, var(--surface-2, #d8dee7) 72%, #f8fafc 28%) 0%,
-        color-mix(in srgb, var(--surface, #cbd5e1) 76%, #94a3b8 24%) 100%) !important;
-    --chrome-old-tab-hover-bg: linear-gradient(180deg,
-        color-mix(in srgb, var(--surface-2, #e2e8f0) 80%, #ffffff 20%) 0%,
-        color-mix(in srgb, var(--surface, #d4dce8) 82%, #cbd5e1 18%) 100%) !important;
-    align-items: flex-end !important;
-    gap: 0 !important;
-    padding: 8px 18px 0 14px !important;
-    border-bottom: 1px solid var(--chrome-old-tab-border) !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    padding: 0.55rem 0.65rem 0 !important;
+    border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
     background: transparent !important;
-    overflow: visible !important;
-    overflow-x: visible !important;
+    overflow-x: auto !important;
     overflow-y: visible !important;
+    scrollbar-width: thin !important;
 }
 
 .task-category-tab-wrap {
     position: relative !important;
     z-index: 1 !important;
-    margin: 0 -10px 0 0 !important;
-    padding: 0 10px !important;
-    isolation: isolate !important;
-}
-
-.task-category-tab-wrap--all {
-    margin-left: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    isolation: auto !important;
+    flex: 0 0 auto !important;
 }
 
 .task-category-tab-wrap:hover,
 .task-category-tab-wrap.is-menu-open,
-.task-category-tab-wrap.is-drop-target {
-    z-index: 20 !important;
-}
-
+.task-category-tab-wrap.is-drop-target,
 .task-category-tab-wrap.is-active {
-    z-index: 30 !important;
+    z-index: 2 !important;
 }
 
 .task-category-tab-shell {
@@ -3158,24 +3142,23 @@ body[data-theme^="blueprint"] .project-preview-check {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
-    min-height: 34px !important;
-    height: 34px !important;
-    min-width: 72px !important;
-    padding: 0 14px !important;
+    gap: 0.35rem !important;
+    min-height: 2.05rem !important;
+    height: 2.05rem !important;
+    min-width: 0 !important;
+    padding: 0 0.75rem !important;
     margin: 0 !important;
-    border: 1px solid var(--chrome-old-tab-border) !important;
-    border-bottom-color: var(--chrome-old-tab-border) !important;
-    border-left-color: transparent !important;
-    border-right-color: transparent !important;
-    border-radius: 11px 11px 0 0 !important;
-    background: var(--chrome-old-tab-inactive-bg) !important;
-    color: color-mix(in srgb, var(--muted, #64748b) 82%, var(--heading, #111827) 18%) !important;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.48),
-        0 -1px 0 rgba(15, 23, 42, 0.04) !important;
-    transform: translateY(1px) !important;
-    transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 140ms ease !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: var(--muted, rgba(100, 116, 139, 0.92)) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition:
+        background 140ms ease,
+        border-color 140ms ease,
+        color 140ms ease,
+        box-shadow 140ms ease !important;
     overflow: visible !important;
     -webkit-mask: none !important;
     mask: none !important;
@@ -3183,114 +3166,86 @@ body[data-theme^="blueprint"] .project-preview-check {
 
 .task-category-tab-shell::before,
 .task-category-tab-shell::after {
-    content: "" !important;
-    position: absolute !important;
-    bottom: -1px !important;
-    width: 24px !important;
-    height: calc(100% + 1px) !important;
-    background: inherit !important;
-    border: 1px solid var(--chrome-old-tab-border) !important;
-    pointer-events: none !important;
-    z-index: -1 !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    content: none !important;
+    display: none !important;
 }
 
-.task-category-tab-shell::before {
-    left: -13px !important;
-    border-right: 0 !important;
-    border-bottom-right-radius: 2px !important;
-    border-top-left-radius: 12px !important;
-    transform: skewX(-22deg) !important;
-    transform-origin: 100% 100% !important;
-}
-
-.task-category-tab-shell::after {
-    right: -13px !important;
-    border-left: 0 !important;
-    border-bottom-left-radius: 2px !important;
-    border-top-right-radius: 12px !important;
-    transform: skewX(22deg) !important;
-    transform-origin: 0 100% !important;
-}
-
-.task-category-tab-shell:hover {
-    background: var(--chrome-old-tab-hover-bg) !important;
+.task-category-tab-shell:hover,
+.task-category-tab-wrap.is-menu-open .task-category-tab-shell {
+    border-color: var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
     color: var(--heading, #111827) !important;
 }
 
 .task-category-tab-shell.is-active,
 .task-category-tab-wrap.is-active .task-category-tab-shell {
-    background: var(--chrome-old-tab-active-bg) !important;
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 12%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
     color: var(--heading, #111827) !important;
-    border-color: var(--chrome-old-tab-border) !important;
-    border-left-color: transparent !important;
-    border-right-color: transparent !important;
-    border-bottom-color: transparent !important;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.72),
-        0 -2px 6px rgba(15, 23, 42, 0.08),
-        0 1px 0 color-mix(in srgb, var(--panel, #ffffff) 92%, #ffffff 8%) !important;
-    transform: translateY(0) !important;
-}
-
-.task-category-tab-shell.is-active::before,
-.task-category-tab-shell.is-active::after,
-.task-category-tab-wrap.is-active .task-category-tab-shell::before,
-.task-category-tab-wrap.is-active .task-category-tab-shell::after {
-    border-bottom-color: transparent !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent) !important;
 }
 
 .task-category-tab,
 .task-category-tab-shell .task-category-tab {
     position: relative !important;
-    z-index: 2 !important;
-    min-height: 32px !important;
-    padding: 0 4px !important;
+    z-index: 1 !important;
+    min-height: 1.85rem !important;
+    padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
     color: inherit !important;
     box-shadow: none !important;
     white-space: nowrap !important;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+    text-shadow: none !important;
 }
 
 .task-category-menu-button {
     position: relative !important;
-    z-index: 2 !important;
-    align-self: stretch !important;
-    min-width: 26px !important;
-    min-height: 32px !important;
-    padding: 0 4px !important;
+    z-index: 1 !important;
+    align-self: center !important;
+    min-width: 1.55rem !important;
+    min-height: 1.55rem !important;
+    width: 1.55rem !important;
+    height: 1.55rem !important;
+    padding: 0 !important;
     border: 0 !important;
+    border-radius: 999px !important;
     background: transparent !important;
     box-shadow: none !important;
     color: inherit !important;
 }
 
+.task-category-menu-button:hover,
+.task-category-menu-button:focus-visible {
+    background: color-mix(in srgb, var(--accent, #3b82f6) 12%, transparent) !important;
+    color: var(--heading, #111827) !important;
+    outline: none !important;
+}
+
 .task-category-tab-shell--create {
-    min-width: 46px !important;
-    padding: 0 10px !important;
+    min-width: 2.05rem !important;
+    width: 2.05rem !important;
+    padding: 0 !important;
 }
 
 .task-category-tab-shell--create .task-category-tab {
-    min-width: 24px !important;
+    min-width: 0 !important;
     padding: 0 !important;
 }
 
 .task-category-inline-input {
     position: relative !important;
-    z-index: 2 !important;
-    height: 26px !important;
-    min-height: 26px !important;
-    border-radius: 7px !important;
-    background: color-mix(in srgb, var(--panel, #ffffff) 92%, #ffffff 8%) !important;
+    z-index: 1 !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    border-radius: 999px !important;
+    background: var(--panel, rgba(255, 255, 255, 0.9)) !important;
 }
 
 .task-category-tab-wrap.is-drop-target .task-category-tab-shell {
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 62%, var(--chrome-old-tab-border)) !important;
-    border-left-color: transparent !important;
-    border-right-color: transparent !important;
+    border-color: var(--accent, #3b82f6) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 16%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
     box-shadow:
-        inset 0 2px 0 color-mix(in srgb, var(--accent, #3b82f6) 76%, #ffffff 24%),
-        0 0 0 3px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent) !important;
+        0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent),
+        inset 0 -2px 0 var(--accent, #3b82f6) !important;
 }
