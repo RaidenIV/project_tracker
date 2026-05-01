@@ -103,6 +103,9 @@ app.use(express.static(path.join(__dirname, '..', 'client')));
 io.use((socket, next) => {
     const token = socket.handshake.auth?.token || '';
     if (!token) return next(new Error('No token provided'));
+    if (token.length > SAFE_JWT_MAX_CHARS || token.split('.').length !== 3) {
+        return next(new Error('Invalid or oversized token'));
+    }
     try {
         socket.user = jwt.verify(token, JWT_SECRET);
         next();
@@ -621,6 +624,31 @@ function summarizeProjectUpdate(existingProject, incomingBody) {
     return null;
 }
 
+// Keep JWTs small. Profile pictures can be large data URLs, so they must stay in
+// normal API response bodies and never be embedded in bearer tokens. Large JWTs
+// can trigger HTTP 431 and can also make the client reject a successful login.
+function createAuthToken(account) {
+    return jwt.sign(
+        {
+            id: account._id.toString(),
+            email: account.email,
+            username: account.username
+        },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+    );
+}
+
+function formatAuthUser(account) {
+    return {
+        id: account._id.toString(),
+        email: account.email,
+        username: account.username,
+        profilePic: account.profilePic || '',
+        createdAt: account.createdAt
+    };
+}
+
 // ─── Auth Routes ─────────────────────────────────────────────────────────────
 
 app.post('/api/auth/register', async (req, res) => {
@@ -641,11 +669,8 @@ app.post('/api/auth/register', async (req, res) => {
         await Project.updateMany({ owner: 'default' }, { $set: { owner: newUserId } });
         await claimPendingInvitationsForAccount(account);
 
-        const token = jwt.sign(
-            { id: newUserId, email: account.email, username: account.username, profilePic: account.profilePic || '' },
-            JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }
-        );
-        res.status(201).json({ token, user: { id: newUserId, email: account.email, username: account.username, profilePic: account.profilePic || '' } });
+        const token = createAuthToken(account);
+        res.status(201).json({ token, user: formatAuthUser(account) });
     } catch (err) {
         console.error('Register error:', err);
         res.status(500).json({ error: 'Registration failed', details: err?.message });
@@ -662,11 +687,8 @@ app.post('/api/auth/login', async (req, res) => {
         if (!account || !(await bcrypt.compare(password, account.passwordHash)))
             return res.status(401).json({ error: 'Invalid email or password' });
 
-        const token = jwt.sign(
-            { id: account._id.toString(), email: account.email, username: account.username, profilePic: account.profilePic || '' },
-            JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }
-        );
-        res.json({ token, user: { id: account._id, email: account.email, username: account.username, profilePic: account.profilePic || '' } });
+        const token = createAuthToken(account);
+        res.json({ token, user: formatAuthUser(account) });
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ error: 'Login failed', details: err?.message });
@@ -1070,20 +1092,11 @@ app.put('/api/account', authenticateToken, async (req, res) => {
             );
         }
 
-        const token = jwt.sign(
-            { id: account._id.toString(), email: account.email, username: account.username, profilePic: account.profilePic || '' },
-            JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }
-        );
+        const token = createAuthToken(account);
 
         res.json({
             token,
-            user: {
-                id: account._id.toString(),
-                email: account.email,
-                username: account.username,
-                profilePic: account.profilePic || '',
-                createdAt: account.createdAt
-            }
+            user: formatAuthUser(account)
         });
     } catch (err) {
         console.error('Error updating account:', err);
