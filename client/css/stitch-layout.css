@@ -4850,11 +4850,6 @@ body[data-theme^="console"] .task-select-all-control-inner {
    Targeted patch: accent task previews, centered due-date picker, no date text
    selection on picker open, and restored circular task bulk selectors
    ============================================================================ */
-.project-preview-task > span:last-child,
-body[data-theme^="console"] .project-preview-task > span:last-child {
-    color: var(--accent, #ff6a00) !important;
-}
-
 .task-due-date-control,
 body[data-theme^="console"] .task-due-date-control {
     user-select: none !important;
@@ -4920,4 +4915,55 @@ body[data-theme^="console"] .task-bulk-select {
 .task-bulk-select span,
 body[data-theme^="console"] .task-bulk-select span {
     border-radius: 999px !important;
+}
+
+
+/* ============================================================================
+   Targeted patch: overdue-first project preview, neutral task preview text,
+   and consistent task action hover treatment
+   ============================================================================ */
+.project-preview-task > span:last-child,
+body[data-theme^="console"] .project-preview-task > span:last-child {
+    color: inherit !important;
+}
+
+.task-priority-button,
+body[data-theme^="console"] .task-priority-button {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.task-note-button,
+.task-priority-button,
+.task-due-date-control,
+.delete-button,
+body[data-theme^="console"] .task-note-button,
+body[data-theme^="console"] .task-priority-button,
+body[data-theme^="console"] .task-due-date-control,
+body[data-theme^="console"] .delete-button {
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease !important;
+}
+
+.task-note-button:hover,
+.task-note-button:focus-visible,
+.task-priority-button:hover,
+.task-priority-button:focus-visible,
+.task-priority-control.is-open .task-priority-button,
+.task-due-date-control:hover,
+.task-due-date-control:focus-within,
+.delete-button:hover,
+.delete-button:focus-visible,
+body[data-theme^="console"] .task-note-button:hover,
+body[data-theme^="console"] .task-note-button:focus-visible,
+body[data-theme^="console"] .task-priority-button:hover,
+body[data-theme^="console"] .task-priority-button:focus-visible,
+body[data-theme^="console"] .task-priority-control.is-open .task-priority-button,
+body[data-theme^="console"] .task-due-date-control:hover,
+body[data-theme^="console"] .task-due-date-control:focus-within,
+body[data-theme^="console"] .delete-button:hover,
+body[data-theme^="console"] .delete-button:focus-visible {
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    border-color: var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    box-shadow: 0 0 14px color-mix(in srgb, currentColor 18%, transparent) !important;
 }

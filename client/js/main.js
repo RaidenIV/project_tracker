@@ -4230,10 +4230,22 @@ function setProjectTagFilter(tagName) {
 }
 
 function getProjectCardPreviewTasks(project) {
-    const tasks = Array.isArray(project?.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
-    const incomplete = tasks.filter(task => !task.completed);
-    const completed = tasks.filter(task => task.completed);
-    return [...incomplete, ...completed].slice(0, 2);
+    const tasks = Array.isArray(project?.tasks)
+        ? project.tasks.map((task, index) => ({ ...normalizeTask(task, index), __previewIndex: index }))
+        : [];
+    const byOriginalOrder = (a, b) => (a.__previewIndex || 0) - (b.__previewIndex || 0);
+    const byDueDateThenOrder = (a, b) => {
+        const aDate = normalizeTaskDueDate(a.dueDate);
+        const bDate = normalizeTaskDueDate(b.dueDate);
+        if (aDate && bDate && aDate !== bDate) return aDate.localeCompare(bDate);
+        if (aDate && !bDate) return -1;
+        if (!aDate && bDate) return 1;
+        return byOriginalOrder(a, b);
+    };
+    const overdue = tasks.filter(task => isTaskOverdue(task)).sort(byDueDateThenOrder);
+    const incomplete = tasks.filter(task => !task.completed && !isTaskOverdue(task)).sort(byOriginalOrder);
+    const completed = tasks.filter(task => task.completed).sort(byOriginalOrder);
+    return [...overdue, ...incomplete, ...completed].slice(0, 3);
 }
 
 function formatProjectSyncText(project) {
@@ -5699,7 +5711,7 @@ function renderProjectCard(project) {
 
             <ul class="project-preview-list">
                 ${previewTasks.length ? previewTasks.map(task => `
-                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''}">
+                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
                         <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
                         <span>${escapeHtml(task.text || 'Untitled task')}</span>
                     </li>
