@@ -1,0 +1,6227 @@
+// Main application entry point
+
+import { VIEWS, SHORTCUTS } from './modules/config.js';
+import { state } from './modules/state.js';
+import * as api from './modules/api.js';
+import * as auth from './modules/auth.js';
+import { connectRealtime } from './modules/realtime.js';
+
+const {
+    loadDataFromServer,
+    saveDataToServer,
+    createProjectOnServer,
+    deleteProjectFromServer,
+    reorderProjectsOnServer,
+    shareProjectOnServer,
+    updateCollaboratorRoleOnServer,
+    removeCollaboratorFromServer
+} = api;
+
+const loadAccountProfileFromServer = api.loadAccountProfileFromServer || (async () => ({ user: auth.getCurrentUser?.() || null, stats: {} }));
+const updateAccountProfileOnServer = api.updateAccountProfileOnServer || (async (payload = {}) => ({ user: { ...(auth.getCurrentUser?.() || {}), ...payload } }));
+const archiveProjectOnServer = api.archiveProjectOnServer || (async () => ({ success: false }));
+const restoreProjectOnServer = api.restoreProjectOnServer || (async () => ({ success: false }));
+
+const CHROME_EXTENSION_ASYNC_RESPONSE_NOISE = 'A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received';
+
+function isChromeExtensionAsyncResponseNoise(value) {
+    const message = String(value?.message || value || '');
+    return message.includes(CHROME_EXTENSION_ASYNC_RESPONSE_NOISE);
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('unhandledrejection', (event) => {
+        if (isChromeExtensionAsyncResponseNoise(event.reason)) {
+            event.preventDefault();
+        }
+    });
+}
+
+const isLoggedIn = auth.isLoggedIn;
+const getCurrentUser = auth.getCurrentUser;
+const login = auth.login;
+const register = auth.register;
+const logout = auth.logout;
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+// Capitalize first letter of first word
+function capitalizeFirstLetter(text) {
+    if (!text) return text;
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// Capitalize first letter of each word (Title Case)
+function toTitleCase(text) {
+    if (!text) return text;
+    return text.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
+
+const TASK_TAG_OPTIONS = [
+    { value: 'none', label: 'No priority' },
+    { value: 'high', label: 'High' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'low', label: 'Low' }
+];
+
+const DEFAULT_TASK_TAG = 'none';
+const DEFAULT_TASK_CATEGORY = 'General';
+const DEFAULT_TASK_CATEGORY_FILTER = 'all';
+const TASK_CATEGORY_DROP_ALL = '__all__';
+const DEFAULT_TASK_SORT_MODE = 'default';
+const PROJECT_TAG_ALL_FILTER = 'all';
+const PROJECT_TAG_MAX_LENGTH = 24;
+const PROJECT_TAG_MAX_COUNT = 5;
+const PROJECT_TITLE_MAX_LENGTH = 24;
+const PROJECT_NOTES_TAB_DATA_FLAG = '__projectNotesTabs';
+const PROJECT_NOTES_DEFAULT_TAB_ID = 'notes-general';
+const TASK_TAG_PRIORITY = {
+    high: 0,
+    medium: 1,
+    low: 2,
+    none: 3
+};
+
+function normalizePriorityTagValue(value) {
+    const rawValue = String(value ?? DEFAULT_TASK_TAG).trim().toLowerCase();
+    const tagValue = rawValue === 'critical' ? 'high' : rawValue;
+    return Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, tagValue) ? tagValue : DEFAULT_TASK_TAG;
+}
+
+function getPriorityTagLabel(value) {
+    const tag = normalizePriorityTagValue(value);
+    return TASK_TAG_OPTIONS.find(option => option.value === tag)?.label || 'No priority';
+}
+
+function getNextPriorityTagValue(value) {
+    const priorityCycle = ['none', 'high', 'medium', 'low'];
+    const currentIndex = priorityCycle.indexOf(normalizePriorityTagValue(value));
+    return priorityCycle[(currentIndex + 1) % priorityCycle.length] || DEFAULT_TASK_TAG;
+}
+
+function normalizeTaskDueDate(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnlyMatch) return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatTaskDueDate(value) {
+    const dueDate = normalizeTaskDueDate(value);
+    if (!dueDate) return 'No due date';
+    const [year, month, day] = dueDate.split('-').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (Number.isNaN(parsed.getTime())) return dueDate;
+    return parsed.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function sanitizeTaskCategoryName(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return DEFAULT_TASK_CATEGORY;
+    return raw
+        .replace(/\s+/g, ' ')
+        .slice(0, 32)
+        .split(' ')
+        .map(part => part ? part.charAt(0).toUpperCase() + part.slice(1) : '')
+        .join(' ');
+}
+
+function isDefaultTaskCategoryName(value) {
+    return String(value ?? '').trim().toLowerCase() === DEFAULT_TASK_CATEGORY.toLowerCase();
+}
+
+function getTaskCategoryListWith(valueList = []) {
+    return [...new Set((Array.isArray(valueList) ? valueList : [])
+        .map(sanitizeTaskCategoryName)
+        .filter(category => category && !isDefaultTaskCategoryName(category)))];
+}
+
+function normalizeTask(task = {}, index = 0) {
+    const numericId = Number(task?.id);
+    const fallbackId = Date.now() + index + Math.random();
+    const tag = normalizePriorityTagValue(task?.tag || task?.priorityTag || DEFAULT_TASK_TAG);
+    const category = sanitizeTaskCategoryName(task?.category || task?.taskCategory || DEFAULT_TASK_CATEGORY);
+
+    return {
+        ...task,
+        id: Number.isFinite(numericId) ? numericId : fallbackId,
+        text: typeof task?.text === 'string' ? task.text : '',
+        note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
+        completed: !!task?.completed,
+        completedDate: task?.completedDate ? String(task.completedDate) : null,
+        dueDate: normalizeTaskDueDate(task?.dueDate || task?.due_date || task?.deadline || ''),
+        tag,
+        category
+    };
+}
+
+function getTaskTagLabel(task) {
+    const normalized = normalizeTask(task);
+    return getPriorityTagLabel(normalized.tag);
+}
+
+function getTaskTagPriority(task) {
+    const normalized = normalizeTask(task);
+    return TASK_TAG_PRIORITY[normalized.tag] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG];
+}
+
+function getNextTaskPriorityValue(task) {
+    return getNextPriorityTagValue(normalizeTask(task).tag);
+}
+
+function isTypingTarget(target) {
+    if (!target) return false;
+    const element = target.closest?.('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"]');
+    return !!element;
+}
+
+function getTaskCategoryTabPositionClass(index, total) {
+    if (index <= 0) return 'task-category-tab-shell--left';
+    if (index >= total - 1) return 'task-category-tab-shell--right';
+    return 'task-category-tab-shell--center';
+}
+
+function getProjectTaskCategories(project) {
+    const explicit = Array.isArray(project?.taskCategories) ? project.taskCategories : [];
+    const fromTasks = Array.isArray(project?.tasks) ? project.tasks.map(task => normalizeTask(task).category) : [];
+    // General is the internal fallback category for uncategorized tasks. It should
+    // not create a visible custom tab by default; only user-created categories
+    // should appear next to All.
+    return getTaskCategoryListWith([...explicit, ...fromTasks]);
+}
+
+function getProjectPriorityTag(project = {}) {
+    return normalizePriorityTagValue(project?.projectPriorityTag || project?.projectPriority || (typeof project?.priorityTag === 'string' ? project.priorityTag : DEFAULT_TASK_TAG));
+}
+
+function getProjectPriorityLabel(project = {}) {
+    return getPriorityTagLabel(getProjectPriorityTag(project));
+}
+
+function getNextProjectPriorityValue(project = {}) {
+    return getNextPriorityTagValue(getProjectPriorityTag(project));
+}
+
+function renderPriorityFlagMarkup(tag) {
+    return `<span class="task-tag-flag task-tag-flag--${normalizePriorityTagValue(tag)}" aria-hidden="true"></span>`;
+}
+
+
+function normalizeProjectTagName(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const normalized = raw
+        .replace(/\s+/g, ' ')
+        .slice(0, PROJECT_TAG_MAX_LENGTH);
+    if (normalized.toLowerCase() === PROJECT_TAG_ALL_FILTER) return '';
+    return toTitleCase(normalized);
+}
+
+function normalizeProjectTags(valueList = []) {
+    return [...new Set((Array.isArray(valueList) ? valueList : [])
+        .map(normalizeProjectTagName)
+        .filter(Boolean))].slice(0, PROJECT_TAG_MAX_COUNT);
+}
+
+function getProjectTags(project) {
+    return normalizeProjectTags(project?.tags || project?.projectTags || []);
+}
+
+function getAllVisibleProjectTags() {
+    return [...new Set(getVisibleBaseProjects()
+        .flatMap(project => getProjectTags(project))
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+}
+
+function projectHasTag(project, tagName) {
+    const normalizedTag = normalizeProjectTagName(tagName);
+    if (!normalizedTag) return true;
+    return getProjectTags(project).includes(normalizedTag);
+}
+
+function serializeInlineJsString(value) {
+    return JSON.stringify(String(value ?? '')).replace(/"/g, '&quot;');
+}
+
+function isTaskPriorityMenuOpen(projectId, taskId) {
+    return uiState.openTaskPriorityMenu?.projectId === projectId && uiState.openTaskPriorityMenu?.taskId === taskId;
+}
+
+function isProjectPriorityMenuOpen(projectId, surface = 'modal') {
+    return uiState.openProjectPriorityMenu?.projectId === projectId && uiState.openProjectPriorityMenu?.surface === surface;
+}
+
+function isTaskCategoryMenuOpen(projectId, category) {
+    return uiState.openTaskCategoryMenu?.projectId === projectId && uiState.openTaskCategoryMenu?.category === category;
+}
+
+function closeOpenTaskMenus({ rerender = true } = {}) {
+    const priorityMenu = uiState.openTaskPriorityMenu;
+    const projectPriorityMenu = uiState.openProjectPriorityMenu;
+    const categoryMenu = uiState.openTaskCategoryMenu;
+    uiState.openTaskPriorityMenu = null;
+    uiState.openProjectPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+
+    if (!rerender) return;
+
+    const rerenderedProjects = new Set();
+    if (priorityMenu?.projectId) {
+        renderModalTaskList(priorityMenu.projectId);
+        rerenderedProjects.add(priorityMenu.projectId);
+    }
+    if (categoryMenu?.projectId && !rerenderedProjects.has(categoryMenu.projectId)) {
+        renderTaskCategoryControls(categoryMenu.projectId);
+        rerenderedProjects.add(categoryMenu.projectId);
+    }
+    if (projectPriorityMenu?.projectId && !rerenderedProjects.has(projectPriorityMenu.projectId)) {
+        renderProjectPrioritySurface(projectPriorityMenu.projectId);
+    }
+}
+
+function handleTaskFloatingMenuDocumentClick(event) {
+    if (
+        event.target.closest('.task-priority-control') ||
+        event.target.closest('.project-priority-control') ||
+        event.target.closest('.task-category-menu-button') ||
+        event.target.closest('.task-category-tab-wrap') ||
+        event.target.closest('.task-category-menu-popover')
+    ) return;
+    if (!uiState.openTaskPriorityMenu && !uiState.openProjectPriorityMenu && !uiState.openTaskCategoryMenu) return;
+    closeOpenTaskMenus();
+}
+
+function sortTasks(tasks) {
+    // Preserve natural creation/manual order: first task stays first; new tasks append below it.
+    return (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
+}
+
+function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
+    const baseOrder = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
+    if (mode !== 'tag-priority') return baseOrder;
+
+    return [...baseOrder].sort((a, b) => {
+        const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
+        if (priorityDiff !== 0) return priorityDiff;
+        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+        return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
+    });
+}
+
+
+const DEFAULT_PROFILE_ICON_SVG = `
+<svg viewBox="0 0 32 32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <g>
+        <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+        <path d="M26,27L26,27 c0-5.523-4.477-10-10-10h0c-5.523,0-10,4.477-10,10v0" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+        <circle cx="16" cy="11" r="6" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+    </g>
+</svg>`;
+
+const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w';
+const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
+
+const THEME_OPTIONS = {
+    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
+};
+
+const THEME_FAMILY_OPTIONS = {
+    console: { label: 'Console' }
+};
+
+const LEGACY_THEME_MAP = {
+    default: 'console-dark',
+    blueprint: 'console-dark',
+    glass: 'console-dark',
+    midnight: 'console-dark',
+    industrial: 'console-dark',
+    'industrial-light': 'console-dark',
+    'industrial-dark': 'console-dark',
+    'blueprint-light': 'console-dark',
+    'blueprint-dark': 'console-dark',
+    'glass-light': 'console-dark',
+    'glass-dark': 'console-dark',
+    'console-light': 'console-dark'
+};
+
+const accountState = {
+    user: null,
+    stats: {
+        completedTasks: 0,
+        completedProjects: 0,
+        ownedProjects: 0,
+        sharedProjects: 0,
+        activeProjects: 0
+    },
+    leaderboard: [],
+    currentLeaderboardRank: null,
+    currentLeaderboardEntry: null,
+    pendingProfilePic: null
+};
+
+const uiState = {
+    projectSearch: '',
+    ownerFilter: 'all',
+    sortMode: 'recent',
+    activeProjectTag: PROJECT_TAG_ALL_FILTER,
+    savedViews: [],
+    activeSavedViewId: '',
+    theme: 'console-dark',
+    saveStatus: 'idle',
+    saveMessage: 'All changes saved',
+    commandPaletteOpen: false,
+    commandQuery: '',
+    commandActiveIndex: 0,
+    sidebarSections: {
+        leaderboard: true,
+        settings: true
+    },
+    openTaskPriorityMenu: null,
+    openProjectPriorityMenu: null,
+    openTaskCategoryMenu: null,
+    newTaskDraft: null,
+    creatingTaskCategoryProjectId: null,
+    creatingProjectTagProjectId: null,
+    editingProjectTag: null
+};
+
+const LOCAL_STORAGE_KEYS = {
+    SAVED_VIEWS: 'tracker_saved_views_v1',
+    THEME: 'tracker_ui_theme_v1',
+    PROJECT_SORT: 'tracker_project_sort_mode_v1',
+    PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
+    PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
+    PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1'
+};
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+
+function loadProjectHideCompletedPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_HIDE_COMPLETED);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project hide-completed preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectHideCompletedPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_HIDE_COMPLETED, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project hide-completed preferences:', err);
+    }
+}
+
+function getProjectHideCompletedPreference(projectId) {
+    const preferences = loadProjectHideCompletedPreferences();
+    const key = String(projectId || '');
+    if (!key) return true;
+    if (Object.prototype.hasOwnProperty.call(preferences, key)) {
+        return preferences[key] !== false;
+    }
+    return true;
+}
+
+function setProjectHideCompletedPreference(projectId, hideCompleted) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectHideCompletedPreferences();
+    preferences[key] = !!hideCompleted;
+    saveProjectHideCompletedPreferences(preferences);
+}
+
+function loadProjectTaskSortPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_SORT);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project task sort preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectTaskSortPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_SORT, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project task sort preferences:', err);
+    }
+}
+
+function getProjectTaskSortPreference(projectId) {
+    const preferences = loadProjectTaskSortPreferences();
+    const key = String(projectId || '');
+    if (!key) return DEFAULT_TASK_SORT_MODE;
+    const value = preferences[key];
+    return value === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+}
+
+function setProjectTaskSortPreference(projectId, sortMode) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectTaskSortPreferences();
+    preferences[key] = sortMode === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+    saveProjectTaskSortPreferences(preferences);
+}
+
+
+function loadProjectTaskCategoryFilterPreferences() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_CATEGORY_FILTER);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+        console.warn('Failed to load project task category filter preferences:', err);
+        return {};
+    }
+}
+
+function saveProjectTaskCategoryFilterPreferences(preferences) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_TASK_CATEGORY_FILTER, JSON.stringify(preferences || {}));
+    } catch (err) {
+        console.warn('Failed to save project task category filter preferences:', err);
+    }
+}
+
+function getProjectTaskCategoryFilter(projectId) {
+    const key = String(projectId || '');
+    if (!key) return DEFAULT_TASK_CATEGORY_FILTER;
+    const preferences = loadProjectTaskCategoryFilterPreferences();
+    const value = preferences[key];
+    return typeof value === 'string' && value.trim() ? value : DEFAULT_TASK_CATEGORY_FILTER;
+}
+
+function setStoredProjectTaskCategoryFilter(projectId, categoryValue) {
+    const key = String(projectId || '');
+    if (!key) return;
+    const preferences = loadProjectTaskCategoryFilterPreferences();
+    preferences[key] = categoryValue || DEFAULT_TASK_CATEGORY_FILTER;
+    saveProjectTaskCategoryFilterPreferences(preferences);
+}
+
+function getLeaderboardUsername(entry) {
+    const rawUsername = String(entry?.username || entry?.name || entry?.displayName || 'User').trim();
+    if (!rawUsername) return 'User';
+    return rawUsername.includes('@') ? rawUsername.split('@')[0] : rawUsername;
+}
+
+function normalizeThemeName(themeName) {
+    return LEGACY_THEME_MAP[themeName] || 'console-dark';
+}
+
+function getThemeMeta(themeName) {
+    return THEME_OPTIONS[normalizeThemeName(themeName)];
+}
+
+function getThemeLabel(themeName) {
+    return getThemeMeta(themeName).label;
+}
+
+function buildThemeName(themeFamily, colorMode) {
+    return 'console-dark';
+}
+
+function getColorModeLabel(colorMode) {
+    return colorMode === 'dark' ? 'Dark Mode' : 'Light Mode';
+}
+
+function getThemeFamilyLabel(themeFamily) {
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Console';
+}
+
+
+function moveColorModeToggleToSidebarHeader() {
+    const toggle = document.getElementById('colorModeToggleBtn');
+    const header = document.querySelector('.control-panel .control-panel-header');
+    const panelMain = header?.querySelector('.panel-header-main');
+    if (!toggle || !header || !panelMain) return;
+
+    let wrapper = header.querySelector('.sidebar-header-theme-toggle');
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.className = 'sidebar-header-theme-toggle';
+        header.appendChild(wrapper);
+    }
+
+    if (toggle.parentElement !== wrapper) {
+        wrapper.appendChild(toggle);
+    }
+
+    let label = wrapper.querySelector('.sidebar-theme-toggle-label');
+    if (!label) {
+        label = document.createElement('span');
+        label.className = 'sidebar-theme-toggle-label';
+        wrapper.appendChild(label);
+    }
+
+    const oldRow = document.querySelector('.ui-options-mode-toggle-row');
+    if (oldRow && oldRow !== wrapper) {
+        oldRow.classList.add('ui-options-mode-toggle-row--relocated');
+    }
+}
+
+function syncColorModeToggle() {
+    const toggle = document.getElementById('colorModeToggleBtn');
+    if (!toggle) return;
+    const meta = getThemeMeta(uiState.theme);
+    const isConsole = meta.family === 'console';
+    const isDark = meta.mode === 'dark';
+    toggle.classList.toggle('is-dark', isDark);
+    toggle.hidden = isConsole;
+    toggle.setAttribute('aria-hidden', String(isConsole));
+    toggle.setAttribute('aria-pressed', String(isDark));
+    toggle.setAttribute('title', isConsole ? 'Console uses the fixed Stitch dark mode' : `Switch to ${isDark ? 'light' : 'dark'} mode`);
+    toggle.setAttribute('aria-label', isConsole ? 'Console uses the fixed Stitch dark mode' : `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
+    const label = document.querySelector('.sidebar-theme-toggle-label');
+    if (label) label.textContent = isConsole ? '' : (isDark ? 'Dark' : 'Light');
+}
+
+function syncThemeBranding() {
+    const meta = getThemeMeta(uiState.theme);
+    document.body.setAttribute('data-theme', uiState.theme);
+    document.body.setAttribute('data-theme-family', meta.family);
+    document.body.setAttribute('data-color-mode', meta.mode);
+
+    const panelLogo = document.querySelector('.panel-logo-img-inline');
+    if (panelLogo) {
+        panelLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
+
+    const topAppLogo = document.getElementById('topAppLogo');
+    if (topAppLogo) {
+        topAppLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
+}
+
+function loadSavedViewsFromStorage() {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
+}
+
+function persistSavedViews() {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS, JSON.stringify(uiState.savedViews));
+}
+
+const PROJECT_SORT_MODES = new Set(['recent', 'manual', 'alpha', 'remaining', 'progress', 'priority']);
+
+function normalizeProjectSortMode(sortMode) {
+    const normalized = String(sortMode || '').trim();
+    return PROJECT_SORT_MODES.has(normalized) ? normalized : 'recent';
+}
+
+function syncProjectSortSelect() {
+    const sortSelect = document.getElementById('projectSortSelect');
+    if (sortSelect) sortSelect.value = uiState.sortMode;
+}
+
+function loadProjectSortPreference() {
+    try {
+        uiState.sortMode = normalizeProjectSortMode(localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_SORT));
+    } catch (err) {
+        console.warn('Failed to load project sort preference:', err);
+        uiState.sortMode = 'recent';
+    }
+    syncProjectSortSelect();
+}
+
+function persistProjectSortPreference(sortMode) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_SORT, normalizeProjectSortMode(sortMode));
+    } catch (err) {
+        console.warn('Failed to save project sort preference:', err);
+    }
+}
+
+function loadThemePreference() {
+    try {
+        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
+    } catch (err) {
+        console.warn('Failed to load UI preference:', err);
+        uiState.theme = 'console-dark';
+    }
+    applyTheme(uiState.theme, false);
+}
+
+function applyTheme(themeName, persist = true) {
+    uiState.theme = normalizeThemeName(themeName);
+    syncThemeBranding();
+    syncColorModeToggle();
+    if (persist) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, uiState.theme);
+        } catch (err) {
+            console.warn('Failed to save UI preference:', err);
+        }
+    }
+    const status = document.getElementById('uiOptionsStatus');
+    if (status) {
+        const meta = getThemeMeta(uiState.theme);
+        status.textContent = meta.family === 'console'
+            ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
+            : `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    }
+    renderThemeOptions();
+}
+
+function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
+    applyTheme('console-dark', persist);
+}
+
+function renderThemeOptions() {
+    const activeFamily = getThemeMeta(uiState.theme).family;
+    document.querySelectorAll('[data-theme-family-option]').forEach(card => {
+        const isActive = card.getAttribute('data-theme-family-option') === activeFamily;
+        card.classList.toggle('is-active', isActive);
+    });
+}
+
+function openUiOptionsModal() {
+    renderThemeOptions();
+    const meta = getThemeMeta(uiState.theme);
+    document.getElementById('uiOptionsStatus').textContent = meta.family === 'console'
+        ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
+        : `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    document.getElementById('uiOptionsModal')?.classList.add('active');
+}
+
+function closeUiOptionsModal() {
+    document.getElementById('uiOptionsModal')?.classList.remove('active');
+}
+
+function setSaveStatus(status, message) {
+    const normalizedMessage = String(message ?? '');
+    uiState.saveStatus = status;
+    uiState.saveMessage = normalizedMessage;
+    const pill = document.getElementById('saveStatusPill');
+    if (!pill) return;
+    const visualStatus = status === 'idle' ? 'saved' : status;
+    const lengthClass = normalizedMessage.length > 86
+        ? ' save-status--extra-long'
+        : (normalizedMessage.length > 44 ? ' save-status--long' : '');
+    pill.className = `save-status save-status--inline save-status--${visualStatus}${lengthClass}`;
+    pill.textContent = normalizedMessage;
+    pill.title = normalizedMessage;
+}
+
+function projectUpdate(updates = {}, options = {}) {
+    const payload = { ...updates };
+    if (!options.skipTouch && !Object.prototype.hasOwnProperty.call(payload, 'lastModified')) {
+        payload.lastModified = new Date().toISOString();
+    }
+    return payload;
+}
+
+
+function normalizeProject(project) {
+    if (!project || typeof project !== 'object') return null;
+    const normalizedTasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+    const normalizedProject = {
+        ...project,
+        id: project.id || project._id || String(Date.now()),
+        _id: project._id || project.id,
+        title: project.title || 'Untitled Project',
+        notes: typeof project.notes === 'string' ? project.notes : '',
+        description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
+        projectPriorityTag: getProjectPriorityTag(project),
+        tags: normalizeProjectTags(project.tags || project.projectTags || []),
+        tasks: normalizedTasks,
+        taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
+        collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
+        activities: Array.isArray(project.activities) ? project.activities : [],
+        archived: isProjectArchived(project),
+        completed: isProjectCompleted(project),
+        dateCreated: project.dateCreated || new Date().toISOString(),
+        lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
+        __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
+    };
+    return normalizedProject;
+}
+
+function runRenderStep(stepName, fn) {
+    try {
+        fn();
+    } catch (err) {
+        console.error(`Render step failed: ${stepName}`, err);
+    }
+}
+
+function parseProjectBoolean(value) {
+    if (value === true || value === 1) return true;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        return ['true', '1', 'yes', 'completed'].includes(normalized);
+    }
+    return false;
+}
+
+function isProjectCompleted(project) {
+    return parseProjectBoolean(project?.completed);
+}
+
+function isProjectArchived(project) {
+    return parseProjectBoolean(project?.archived);
+}
+
+function getVisibleBaseProjects() {
+    return state.getProjects().filter(project => {
+        if (isProjectArchived(project)) return false;
+        return state.getView() === VIEWS.COMPLETED
+            ? isProjectCompleted(project)
+            : !isProjectCompleted(project);
+    });
+}
+
+function getArchivedProjects() {
+    return state.getProjects().filter(project => project.archived);
+}
+
+function matchesProjectSearch(project, query) {
+    if (!query) return true;
+    const haystack = [
+        project.title,
+        project.description,
+        project.notes,
+        ...getProjectTags(project),
+        ...(project.tasks || []).map(task => task.text)
+    ].join(' ').toLowerCase();
+    return haystack.includes(query.toLowerCase());
+}
+
+function getFilteredProjects() {
+    let projects = [...getVisibleBaseProjects()].map(normalizeProject).filter(Boolean);
+
+    if (uiState.ownerFilter === 'owned') projects = projects.filter(project => project.userRole === 'owner');
+    if (uiState.ownerFilter === 'shared') projects = projects.filter(project =>
+        project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
+    );
+    if (uiState.ownerFilter === 'collab') projects = projects.filter(project => (project.collaborators || []).length > 0);
+
+    if (uiState.projectSearch.trim()) {
+        const query = uiState.projectSearch.trim();
+        projects = projects.filter(project => matchesProjectSearch(project, query));
+    }
+
+    if (uiState.activeProjectTag && uiState.activeProjectTag !== PROJECT_TAG_ALL_FILTER) {
+        projects = projects.filter(project => projectHasTag(project, uiState.activeProjectTag));
+    }
+
+    if (uiState.sortMode === 'recent') {
+        projects.sort((a, b) => new Date(b.lastModified || b.dateCreated) - new Date(a.lastModified || a.dateCreated));
+    } else if (uiState.sortMode === 'alpha') {
+        projects.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (uiState.sortMode === 'remaining') {
+        projects.sort((a, b) => {
+            const aRemaining = (a.tasks || []).filter(task => !task.completed).length;
+            const bRemaining = (b.tasks || []).filter(task => !task.completed).length;
+            return bRemaining - aRemaining;
+        });
+    } else if (uiState.sortMode === 'progress') {
+        projects.sort((a, b) => {
+            const aTotal = a.tasks?.length || 0;
+            const bTotal = b.tasks?.length || 0;
+            const aDone = a.tasks?.filter(task => task.completed).length || 0;
+            const bDone = b.tasks?.filter(task => task.completed).length || 0;
+            const aProgress = aTotal ? aDone / aTotal : 0;
+            const bProgress = bTotal ? bDone / bTotal : 0;
+            return bProgress - aProgress;
+        });
+    } else if (uiState.sortMode === 'priority') {
+        projects.sort((a, b) => {
+            const priorityDiff = getTaskTagPriority({ tag: getProjectPriorityTag(a) }) - getTaskTagPriority({ tag: getProjectPriorityTag(b) });
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(b.lastModified || b.dateCreated) - new Date(a.lastModified || a.dateCreated);
+        });
+    }
+
+    return projects;
+}
+
+function renderActiveFilterChips() {
+    const container = document.getElementById('activeFilterChips');
+    if (!container) return;
+
+    const tags = [PROJECT_TAG_ALL_FILTER, ...getAllVisibleProjectTags()];
+    const activeTag = uiState.activeProjectTag || PROJECT_TAG_ALL_FILTER;
+
+    container.innerHTML = tags.map(tag => {
+        const label = tag === PROJECT_TAG_ALL_FILTER ? 'All' : tag;
+        const isActive = tag === activeTag;
+        return `<button class="filter-chip ${isActive ? 'is-active' : ''}" type="button" onclick="setProjectTagFilter(${serializeInlineJsString(tag)})">${escapeHtml(label)}</button>`;
+    }).join('');
+}
+
+
+function saveCurrentView() {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
+}
+
+function applySavedView(viewId) {
+    uiState.activeSavedViewId = '';
+}
+
+function deleteSavedView(viewId) {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
+}
+
+function clearSavedViews() {
+    uiState.savedViews = [];
+    uiState.activeSavedViewId = '';
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS);
+    } catch {}
+}
+
+function renderSavedViewsPanel() {
+    uiState.savedViews = Array.isArray(uiState.savedViews) ? uiState.savedViews : [];
+}
+
+function renderArchivedProjectsPanel() {
+    const list = document.getElementById('archivedProjectsList');
+    const count = document.getElementById('archivedProjectsCount');
+    const archivedProjects = getArchivedProjects();
+    if (count) count.textContent = String(archivedProjects.length);
+    if (!list) return;
+    if (!archivedProjects.length) {
+        list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
+        return;
+    }
+    list.innerHTML = archivedProjects.map(project => `
+        <div class="archived-project-card">
+            <div>
+                <div class="archived-project-title">${escapeHtml(project.title)}</div>
+                <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
+            </div>
+            <div class="archived-project-actions">
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getProjectActivities(project) {
+    return Array.isArray(project?.activities) ? project.activities : [];
+}
+
+function getUserInitials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'U';
+    return parts.slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('');
+}
+
+function setAvatarUI(imageEl, fallbackEl, profilePic, name) {
+    if (!imageEl || !fallbackEl) return;
+    const hasImage = Boolean(profilePic);
+    imageEl.src = hasImage ? profilePic : '';
+    imageEl.classList.toggle('hidden', !hasImage);
+    fallbackEl.classList.toggle('hidden', hasImage);
+    fallbackEl.innerHTML = hasImage ? '' : DEFAULT_PROFILE_ICON_SVG;
+    fallbackEl.setAttribute('aria-label', hasImage ? '' : `${name || 'User'} default profile icon`);
+}
+
+function applyAccountUI(user) {
+    if (!user) return;
+    accountState.user = { ...(accountState.user || {}), ...user };
+    state.setCurrentUser(accountState.user);
+
+    const panelUsername = document.getElementById('panelUsername');
+    if (panelUsername) panelUsername.textContent = accountState.user.username || 'User';
+
+    const panelUserInfo = document.getElementById('panelUserInfo');
+    if (panelUserInfo) panelUserInfo.classList.remove('hidden');
+
+    setAvatarUI(
+        document.getElementById('panelAvatarImg'),
+        document.getElementById('panelAvatarFallback'),
+        accountState.user.profilePic,
+        accountState.user.username
+    );
+
+    setAvatarUI(
+        document.getElementById('accountAvatarImg'),
+        document.getElementById('accountAvatarFallback'),
+        accountState.pendingProfilePic !== null ? accountState.pendingProfilePic : accountState.user.profilePic,
+        accountState.user.username
+    );
+
+    setAvatarUI(
+        document.getElementById('menuAccountAvatarImg'),
+        document.getElementById('menuAccountAvatarFallback'),
+        accountState.user.profilePic,
+        accountState.user.username
+    );
+
+    const accountDisplayName = document.getElementById('accountDisplayName');
+    if (accountDisplayName) accountDisplayName.textContent = accountState.user.username || 'User';
+
+    const accountEmailText = document.getElementById('accountEmailText');
+    if (accountEmailText) accountEmailText.textContent = accountState.user.email || '';
+
+    const accountUsernameInput = document.getElementById('accountUsernameInput');
+    if (accountUsernameInput && document.activeElement !== accountUsernameInput) {
+        accountUsernameInput.value = accountState.user.username || '';
+    }
+
+    const accountEmailInput = document.getElementById('accountEmailInput');
+    if (accountEmailInput) accountEmailInput.value = accountState.user.email || '';
+}
+
+function syncAccountStatsToModal() {
+    const derivedSharedProjects = state.getProjects().filter(project => project.userRole !== 'owner' && !project.archived).length;
+    const derivedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).length;
+    const stats = {
+        completedTasks: state.getStats().completedTasks || accountState.stats.completedTasks || 0,
+        completedProjects: state.getStats().completedProjects || accountState.stats.completedProjects || 0,
+        activeProjects: accountState.stats.activeProjects || derivedActiveProjects,
+        sharedProjects: accountState.stats.sharedProjects || derivedSharedProjects
+    };
+
+    const map = {
+        accountStatCompletedTasks: stats.completedTasks,
+        accountStatCompletedProjects: stats.completedProjects,
+        accountStatActiveProjects: stats.activeProjects || derivedActiveProjects,
+        accountStatSharedProjects: stats.sharedProjects || derivedSharedProjects
+    };
+
+    Object.entries(map).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(value ?? 0);
+    });
+}
+
+function setAccountStatus(message = '', type = '') {
+    const el = document.getElementById('accountSettingsStatus');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.toggle('is-error', type === 'error');
+    el.classList.toggle('is-success', type === 'success');
+}
+
+function renderLeaderboardPanel() {
+    const list = document.getElementById('leaderboardList');
+    if (!list) return;
+
+    const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
+    const rankedEntries = Array.isArray(accountState.leaderboard) ? [...accountState.leaderboard] : [];
+    let currentEntry = accountState.currentLeaderboardEntry || rankedEntries.find(entry => String(entry.userId) === currentUserId) || null;
+
+    if (!currentEntry && currentUserId) {
+        const ownProjects = state.getProjects().filter(project => String(project.ownerId || project.owner || '') === currentUserId || project.userRole === 'owner');
+        const liveCompletedTasks = ownProjects.reduce((sum, project) => sum + (Array.isArray(project.tasks) ? project.tasks.filter(task => task.completed).length : 0), 0);
+        const liveCompletedProjects = ownProjects.filter(project => isProjectCompleted(project) && !isProjectArchived(project)).length;
+        currentEntry = {
+            userId: currentUserId,
+            username: accountState.user?.username || 'User',
+            completedProjects: liveCompletedProjects,
+            completedTasks: liveCompletedTasks,
+            totalCompletionPercentage: ownProjects.length ? calculateTotalCompletion() : 0,
+            rank: accountState.currentLeaderboardRank || null
+        };
+    }
+
+    const visibleEntries = rankedEntries.slice(0, 10);
+    if (currentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
+        visibleEntries.push(currentEntry);
+    }
+
+    if (!visibleEntries.length) {
+        list.innerHTML = '<div class="side-panel-empty">No rankings yet</div>';
+        return;
+    }
+
+    list.innerHTML = visibleEntries.map(entry => {
+        const isCurrent = currentUserId && String(entry.userId) === currentUserId;
+        const username = getLeaderboardUsername(entry);
+        const completionPercentage = isCurrent
+            ? calculateTotalCompletion()
+            : Math.round(Number(entry.totalCompletionPercentage || 0));
+        const completedProjects = Number(entry.completedProjects || 0);
+        const completedTasks = Number(entry.completedTasks || 0);
+        const rank = String(entry.rank || '—').padStart(2, '0');
+        const meta = `${completionPercentage}% • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
+        const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
+        const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
+        const avatarMarkup = profilePic
+            ? `<img class="leaderboard-row-avatar-img" src="${escapeHtml(profilePic)}" alt="">`
+            : `<span class="leaderboard-row-avatar-fallback" aria-hidden="true"></span>`;
+        return `
+            <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
+                <span class="leaderboard-rank${rankClass}">${rank}</span>
+                <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
+                <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
+                <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function setSidebarSectionExpanded(sectionKey, expanded) {
+    const normalizedKey = String(sectionKey || '');
+    if (!normalizedKey) return;
+    uiState.sidebarSections[normalizedKey] = !!expanded;
+    const section = document.querySelector(`[data-sidebar-section="${normalizedKey}"]`);
+    if (!section) return;
+    section.classList.toggle('is-expanded', !!expanded);
+    const body = section.querySelector('.sidebar-section-body');
+    if (body) body.hidden = !expanded;
+    const toggle = section.querySelector('.sidebar-section-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+
+function toggleSidebarSection(sectionKey) {
+    setSidebarSectionExpanded(sectionKey, !uiState.sidebarSections[sectionKey]);
+}
+
+function initializeSidebarSections() {
+    ['leaderboard', 'settings'].forEach(sectionKey => {
+        setSidebarSectionExpanded(sectionKey, false);
+    });
+}
+
+
+function formatCompactDateTime(value) {
+    if (!value) return 'Unknown';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Unknown';
+    return date.toLocaleString([], {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+}
+
+async function imageFileToOptimizedDataUrl(file) {
+    const readUrl = () => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Unable to read the image file.'));
+        reader.readAsDataURL(file);
+    });
+
+    const rawDataUrl = await readUrl();
+    const sourceImage = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Unable to process the selected image.'));
+        img.src = rawDataUrl;
+    });
+
+    const avatarSize = 512;
+    const sourceWidth = Math.max(1, sourceImage.naturalWidth || sourceImage.width || 1);
+    const sourceHeight = Math.max(1, sourceImage.naturalHeight || sourceImage.height || 1);
+
+    const cropSize = Math.min(sourceWidth, sourceHeight);
+    const cropX = Math.max(0, Math.round((sourceWidth - cropSize) / 2));
+    const cropY = Math.max(0, Math.round((sourceHeight - cropSize) / 2));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = avatarSize;
+    canvas.height = avatarSize;
+
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return rawDataUrl;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#e1e3e5';
+    ctx.fillRect(0, 0, avatarSize, avatarSize);
+    ctx.drawImage(
+        sourceImage,
+        cropX,
+        cropY,
+        cropSize,
+        cropSize,
+        0,
+        0,
+        avatarSize,
+        avatarSize
+    );
+
+    let optimized = canvas.toDataURL('image/webp', 0.9);
+    if (!optimized || optimized === 'data:,') optimized = canvas.toDataURL('image/jpeg', 0.9);
+    return optimized || rawDataUrl;
+}
+
+
+async function refreshAccountProfile() {
+    try {
+        const response = await loadAccountProfileFromServer();
+        const fallbackUser = getCurrentUser?.() || accountState.user;
+        if (!response?.user && !fallbackUser) return;
+        accountState.user = response?.user || fallbackUser;
+        accountState.stats = response?.stats || accountState.stats;
+        accountState.leaderboard = Array.isArray(response?.leaderboard) ? response.leaderboard : [];
+        accountState.currentLeaderboardRank = response?.currentLeaderboardRank ?? null;
+        accountState.currentLeaderboardEntry = response?.currentLeaderboardEntry || null;
+        accountState.pendingProfilePic = null;
+        applyAccountUI(accountState.user);
+        syncAccountStatsToModal();
+        renderLeaderboardPanel();
+    } catch (err) {
+        console.error('Failed to load account profile:', err);
+        const fallbackUser = getCurrentUser?.() || accountState.user;
+        if (fallbackUser) {
+            accountState.user = fallbackUser;
+            applyAccountUI(accountState.user);
+            syncAccountStatsToModal();
+            renderLeaderboardPanel();
+        }
+    }
+}
+
+function openAccountSettingsModal() {
+    applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+    syncAccountStatsToModal();
+    setAccountStatus('');
+    document.getElementById('accountSettingsModal')?.classList.add('active');
+}
+
+function closeAccountSettingsModal() {
+    accountState.pendingProfilePic = null;
+    setAccountStatus('');
+    document.getElementById('accountSettingsModal')?.classList.remove('active');
+}
+
+function triggerProfilePicUpload() {
+    document.getElementById('accountProfilePicInput')?.click();
+}
+
+function removeProfilePicture() {
+    accountState.pendingProfilePic = '';
+    applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+}
+
+async function handleProfilePicSelected(event) {
+    const input = event?.target;
+    const file = input?.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        setAccountStatus('Please choose an image file.', 'error');
+        if (input) input.value = '';
+        return;
+    }
+
+    try {
+        const dataUrl = await imageFileToOptimizedDataUrl(file);
+        if (!dataUrl) return;
+        if (dataUrl.length > 1_500_000) {
+            setAccountStatus('Image is still too large. Please use a smaller photo.', 'error');
+            if (input) input.value = '';
+            return;
+        }
+        accountState.pendingProfilePic = dataUrl;
+        applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
+        setAccountStatus('Profile picture ready to save.', 'success');
+    } catch (err) {
+        setAccountStatus(err.message || 'Unable to process the selected image.', 'error');
+    } finally {
+        if (input) input.value = '';
+    }
+}
+
+async function saveAccountSettingsFromModal() {
+    const usernameInput = document.getElementById('accountUsernameInput');
+    if (!usernameInput) return;
+
+    const username = usernameInput.value.trim();
+    if (!username) {
+        setAccountStatus('User name is required.', 'error');
+        return;
+    }
+
+    const saveButton = document.getElementById('accountSettingsSaveBtn');
+    if (saveButton) saveButton.disabled = true;
+    setAccountStatus('Saving…');
+
+    try {
+        const payload = { username };
+        if (accountState.pendingProfilePic !== null) payload.profilePic = accountState.pendingProfilePic;
+        const response = await updateAccountProfileOnServer(payload);
+        if (response?.user) {
+            accountState.user = response.user;
+            accountState.pendingProfilePic = null;
+            applyAccountUI(response.user);
+            await loadData();
+            setAccountStatus('Changes saved.', 'success');
+            setTimeout(() => closeAccountSettingsModal(), 700);
+        }
+    } catch (err) {
+        console.error('Failed to save account settings:', err);
+        setAccountStatus(err.message || 'Unable to save account settings.', 'error');
+    } finally {
+        if (saveButton) saveButton.disabled = false;
+    }
+}
+
+function captureProjectModalState(projectId) {
+    const modal = document.getElementById('projectModal');
+    if (!modal?.classList.contains('active')) return null;
+    const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
+    const activeTab = document.querySelector(`#modalContent .modal-tab.active`);
+    if (!scrollEl) return null;
+    return {
+        projectId: String(projectId),
+        scrollTop: scrollEl.scrollTop,
+        activeTab: activeTab ? activeTab.id.replace(/-(.+)$/, '').split('-')[0] : 'tasks'
+    };
+}
+
+function restoreProjectModalState(projectId, modalState) {
+    if (!modalState || String(modalState.projectId) !== String(projectId)) return;
+    const tab = ['tasks', 'notes', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
+    switchModalTab(projectId, tab);
+    const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
+    if (!scrollEl) return;
+    requestAnimationFrame(() => {
+        scrollEl.scrollTop = modalState.scrollTop || 0;
+    });
+}
+
+// ============================================================================
+// DATA MANAGEMENT
+// ============================================================================
+
+export async function loadData() {
+    try {
+        if (typeof loadDataFromServer !== 'function') {
+            throw new Error('API module does not expose loadDataFromServer');
+        }
+        const data = await loadDataFromServer();
+        const projects = (Array.isArray(data?.projects) ? data.projects : [])
+            .map(normalizeProject)
+            .filter(Boolean);
+        state.setProjects(projects);
+        state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
+        render();
+    } catch (err) {
+        console.error('Failed to load project data:', err);
+        state.setProjects([]);
+        state.setStats({ completedTasks: 0, completedProjects: 0 });
+        render();
+        setSaveStatus('error', 'Could not load projects');
+    }
+}
+
+function getOpenProjectModalId() {
+    const modal = document.getElementById('projectModal');
+    if (!modal?.classList.contains('active')) return null;
+    const progressBar = document.querySelector('#modalContent [data-progress-bar]');
+    return progressBar?.getAttribute('data-progress-bar') || null;
+}
+
+function upsertRealtimeProject(projectPayload) {
+    const incoming = normalizeProject(projectPayload);
+    if (!incoming) return;
+
+    const existing = state.getProjects().find(project =>
+        String(project.id) === String(incoming.id) ||
+        String(project._id || '') === String(incoming._id || '')
+    );
+    const openProjectId = getOpenProjectModalId();
+    const shouldRestoreModal = openProjectId && existing && String(existing.id) === String(openProjectId);
+    const modalState = shouldRestoreModal ? captureProjectModalState(existing.id) : null;
+
+    if (existing) {
+        state.updateProject(existing.id, projectUpdate({
+            ...incoming,
+            __syncedLastModified: incoming.lastModified || incoming.__syncedLastModified || null
+        }, { skipTouch: true }));
+    } else {
+        state.addProject({
+            ...incoming,
+            __syncedLastModified: incoming.lastModified || incoming.__syncedLastModified || null
+        });
+    }
+
+    render();
+    updateTotalCompletion();
+
+    if (modalState) {
+        openProjectModal(incoming.id, { restoreState: modalState });
+    }
+}
+
+function removeRealtimeProject(projectId) {
+    const id = String(projectId || '');
+    if (!id) return;
+
+    const existing = state.getProjects().find(project =>
+        String(project.id) === id || String(project._id || '') === id
+    );
+    if (!existing) return;
+
+    const openProjectId = getOpenProjectModalId();
+    state.setProjects(state.getProjects().filter(project => project !== existing));
+
+    if (openProjectId && String(openProjectId) === String(existing.id)) {
+        closeProjectModal();
+    } else {
+        render();
+    }
+    updateTotalCompletion();
+}
+
+function isRealtimeFromCurrentUser(payload = {}) {
+    const sourceUserId = payload?.sourceUserId ? String(payload.sourceUserId) : '';
+    const currentUserId = String(state.getCurrentUser?.()?.id || getCurrentUser?.()?.id || '');
+    return !!sourceUserId && !!currentUserId && sourceUserId === currentUserId;
+}
+
+function startRealtimeSync() {
+    connectRealtime({
+        onProjectUpsert: (project, payload) => {
+            if (!isRealtimeFromCurrentUser(payload)) upsertRealtimeProject(project);
+        },
+        onProjectDelete: (projectId, payload) => {
+            if (!isRealtimeFromCurrentUser(payload)) removeRealtimeProject(projectId);
+        },
+        onError: (err) => console.warn('Realtime connection unavailable:', err?.message || err)
+    });
+}
+
+// Save queue: prevents overlapping saves and reduces race conditions.
+let __saveInFlight = false;
+let __saveQueued = false;
+
+async function saveData() {
+    if (__saveInFlight) { __saveQueued = true; return; }
+    __saveInFlight = true;
+    setSaveStatus('saving', 'Saving changes…');
+    try {
+        let finalResult = null;
+        do {
+            __saveQueued = false;
+            finalResult = await saveDataToServer(state.getProjects(), state.getStats());
+            if (!finalResult?.ok) {
+                if (finalResult?.conflicts?.length) {
+                    setSaveStatus('conflict', 'Conflict detected — refresh to sync');
+                } else {
+                    setSaveStatus('error', 'Save failed — retrying on next change');
+                }
+                break;
+            }
+            if (finalResult?.savedProjects?.length) {
+                finalResult.savedProjects.forEach(savedProject => {
+                    const projectId = savedProject.id || savedProject._id;
+                    if (!projectId) return;
+                    state.updateProject(projectId, projectUpdate({
+                        _id: savedProject._id || savedProject.id,
+                        id: savedProject.id || savedProject._id,
+                        lastModified: savedProject.lastModified,
+                        __syncedLastModified: savedProject.lastModified || state.findProject(projectId)?.__syncedLastModified || null,
+                        activities: savedProject.activities || state.findProject(projectId)?.activities || []
+                    }, { skipTouch: true }));
+                });
+            }
+            try {
+                await refreshAccountProfile();
+            } catch (err) {
+                console.error('Failed to refresh account profile after save:', err);
+            }
+            setSaveStatus('saved', __saveQueued ? 'Saving queued changes…' : 'All changes saved');
+        } while (__saveQueued);
+    } finally {
+        __saveInFlight = false;
+    }
+}
+
+// Save only stats (used after delete, since project deletion is handled separately)
+async function saveStatsOnly() {
+    const { saveStatsToServer } = await import('./modules/api.js');
+    await saveStatsToServer(state.getStats());
+}
+
+// ============================================================================
+// PROJECT OPERATIONS
+// ============================================================================
+
+async function addProject() {
+    const panel = document.getElementById('newProjectCreatePanel');
+    const nameInput = document.getElementById('newProjectTitleInput');
+    const descriptionInput = document.getElementById('newProjectDescriptionInput');
+
+    if (panel && descriptionInput) {
+        if (panel.classList.contains('hidden')) {
+            showNewProjectCreatePanel();
+            return;
+        }
+
+        const projectTitle = normalizeProjectTitleInput(nameInput?.value);
+        if (!validateProjectTitleInput(nameInput)) return;
+
+        const requiredDescription = normalizeProjectDescription(descriptionInput.value);
+        if (!requiredDescription) {
+            showNewProjectDescriptionWarning(true);
+            descriptionInput.focus({ preventScroll: true });
+            return;
+        }
+
+        await createProjectWithDescription(requiredDescription, projectTitle);
+        resetNewProjectCreatePanel();
+        return;
+    }
+}
+
+function normalizeProjectTitleInput(value) {
+    return String(value ?? '').trim().replace(/\s+/g, ' ');
+}
+
+function getProjectTitleWarningMessage(value) {
+    const title = normalizeProjectTitleInput(value) || 'New Project';
+    return title.length > PROJECT_TITLE_MAX_LENGTH
+        ? `Project title must be ${PROJECT_TITLE_MAX_LENGTH} characters or fewer.`
+        : '';
+}
+
+function showProjectTitleWarning(input, message = '') {
+    if (!input) return;
+    let warning = input.nextElementSibling;
+    if (!warning || !warning.classList?.contains('project-title-warning')) {
+        warning = document.createElement('div');
+        warning.className = 'project-title-warning hidden';
+        input.insertAdjacentElement('afterend', warning);
+    }
+    warning.textContent = message;
+    warning.classList.toggle('hidden', !message);
+    input.classList.toggle('has-error', Boolean(message));
+}
+
+function triggerProjectTitleShake(input) {
+    if (!input) return;
+    input.classList.remove('project-title-shake');
+    void input.offsetWidth;
+    input.classList.add('project-title-shake');
+}
+
+function handleProjectTitleInput(input) {
+    if (!input) return true;
+    const message = getProjectTitleWarningMessage(input.value);
+    if (message) {
+        showProjectTitleWarning(input, message);
+        triggerProjectTitleShake(input);
+        return false;
+    }
+    clearProjectTitleWarning(input);
+    return true;
+}
+
+function clearProjectTitleWarning(input) {
+    if (!input) return;
+    input.classList.remove('has-error');
+    const warning = input.nextElementSibling;
+    if (warning?.classList?.contains('project-title-warning')) {
+        warning.classList.add('hidden');
+        warning.textContent = '';
+    }
+}
+
+function validateProjectTitleInput(input) {
+    const message = getProjectTitleWarningMessage(input?.value);
+    showProjectTitleWarning(input, message);
+    if (message && input) {
+        triggerProjectTitleShake(input);
+        input.focus({ preventScroll: true });
+    }
+    return !message;
+}
+
+async function createProjectWithDescription(requiredDescription, projectTitle = '') {
+    const tempId = Date.now();
+    const createdAt = new Date().toISOString();
+    const newProject = {
+        id: tempId,
+        title: projectTitle || 'New Project',
+        tasks: [],
+        dateCreated: createdAt,
+        lastModified: createdAt,
+        priority: state.getProjects().length,
+        projectPriorityTag: DEFAULT_TASK_TAG,
+        completed: false,
+        notes: '',
+        description: requiredDescription,
+        tags: [],
+        taskCategories: [],
+        userRole: 'owner',
+        collaborators: []
+    };
+
+    state.addProject(newProject);
+    render();
+
+    // Create on server and get the MongoDB _id back
+    const created = await createProjectOnServer(newProject);
+    if (created) {
+        state.updateProject(tempId, projectUpdate({
+            _id: created._id || created.id,
+            id:  created.id  || created._id,
+            lastModified: created.lastModified || createdAt,
+            __syncedLastModified: created.lastModified || createdAt,
+            description: typeof created.description === 'string' ? created.description : requiredDescription,
+            projectPriorityTag: getProjectPriorityTag(created),
+            userRole: 'owner',
+            ownerName: state.getCurrentUser()?.username || '',
+            ownerEmail: state.getCurrentUser()?.email || '',
+            collaborators: []
+        }, { skipTouch: true }));
+    }
+
+    // Auto-open modal for new project (use the real id now)
+    const finalProject = state.findProject(created?.id || tempId);
+    const finalId = finalProject?.id || tempId;
+    setTimeout(() => {
+        openProjectModal(finalId);
+        setTimeout(() => editModalTitle(finalId), 100);
+    }, 150);
+}
+
+function showNewProjectCreatePanel() {
+    const panel = document.getElementById('newProjectCreatePanel');
+    const nameInput = document.getElementById('newProjectTitleInput');
+    const descriptionInput = document.getElementById('newProjectDescriptionInput');
+    if (!panel || !descriptionInput) return;
+    panel.classList.remove('hidden');
+    showNewProjectDescriptionWarning(false);
+    if (nameInput && !nameInput.__projectTitleWarningBound) {
+        nameInput.__projectTitleWarningBound = true;
+        nameInput.addEventListener('input', () => handleProjectTitleInput(nameInput));
+        nameInput.addEventListener('animationend', () => nameInput.classList.remove('project-title-shake'));
+    }
+    requestAnimationFrame(() => (nameInput || descriptionInput).focus({ preventScroll: true }));
+}
+
+function resetNewProjectCreatePanel() {
+    const panel = document.getElementById('newProjectCreatePanel');
+    const nameInput = document.getElementById('newProjectTitleInput');
+    const descriptionInput = document.getElementById('newProjectDescriptionInput');
+    if (nameInput) nameInput.value = '';
+    if (descriptionInput) descriptionInput.value = '';
+    clearProjectTitleWarning(nameInput);
+    if (panel) panel.classList.add('hidden');
+    showNewProjectDescriptionWarning(false);
+}
+
+function showNewProjectDescriptionWarning(show = true) {
+    const input = document.getElementById('newProjectDescriptionInput');
+    const warning = document.getElementById('newProjectDescriptionWarning');
+    input?.classList.toggle('has-error', Boolean(show));
+    warning?.classList.toggle('hidden', !show);
+}
+
+function deleteProject(projectId) {
+    if (!state.isOwner(projectId)) {
+        alert('Only the project owner can delete it.');
+        return;
+    }
+    const project = state.findProject(projectId);
+    const mongoId = project?._id;
+
+    if (isProjectCompleted(project)) state.decrementCompletedProjects();
+    const completedTasks = project?.tasks.filter(t => t.completed).length || 0;
+    for (let i = 0; i < completedTasks; i++) state.decrementCompletedTasks();
+
+    state.deleteProject(projectId);
+    if (mongoId) deleteProjectFromServer(mongoId);
+    saveStatsOnly();
+    render();
+    updateUndoButton();
+}
+
+function completeProject(projectId) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const newCompleted = !isProjectCompleted(project);
+    if (newCompleted) {
+        state.incrementCompletedProjects();
+    } else {
+        state.decrementCompletedProjects();
+    }
+    
+    state.updateProject(projectId, projectUpdate({
+        completed: newCompleted,
+        completedDate: newCompleted ? new Date().toISOString() : null
+    }));
+    
+    saveData();
+    render();
+}
+
+function normalizeProjectDescription(value) {
+    return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
+}
+
+function promptForRequiredProjectDescription() {
+    while (true) {
+        const value = window.prompt('Project description is required to create a project.');
+        if (value === null) return null;
+
+        const description = normalizeProjectDescription(value);
+        if (description) return description;
+
+        window.alert('Please enter a project description before creating the project.');
+    }
+}
+
+function updateProjectDetails(projectId, details = {}) {
+    if (!state.canEdit(projectId)) return false;
+    const trimmedTitle = normalizeProjectTitleInput(details.title);
+    const cleanTitle = trimmedTitle || 'New Project';
+    if (getProjectTitleWarningMessage(cleanTitle)) return false;
+    const description = normalizeProjectDescription(details.description);
+    state.updateProject(projectId, projectUpdate({ title: cleanTitle, description }));
+    saveData();
+    render();
+    return true;
+}
+
+function updateProjectTitle(projectId, newTitle) {
+    const project = state.findProject(projectId);
+    updateProjectDetails(projectId, {
+        title: newTitle,
+        description: project?.description || ''
+    });
+}
+
+function updateProjectDescription(projectId, descriptionValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const description = normalizeProjectDescription(descriptionValue);
+    if (description === (project.description || '')) return;
+    state.updateProject(projectId, projectUpdate({ description }));
+    saveData();
+}
+
+function getProjectNotesDataForProject(projectId) {
+    const project = state.findProject(projectId);
+    return normalizeProjectNotesData(project?.notes || '');
+}
+
+function saveProjectNotesData(projectId, data, options = {}) {
+    if (!state.canEdit(projectId)) return;
+    const serializedNotes = serializeProjectNotesData(data);
+    state.updateProject(projectId, projectUpdate({ notes: serializedNotes }));
+    saveData();
+    updateProjectNotesIndicators(projectId, serializedNotes);
+
+    if (options.renderSurface) {
+        renderProjectNotesSurface(projectId, options.renderSurface);
+    }
+}
+
+function updateProjectNotes(projectId, notes) {
+    const data = normalizeProjectNotesData(notes);
+    saveProjectNotesData(projectId, data);
+}
+
+function updateProjectNotesIndicators(projectId, notesValue = null) {
+    const project = state.findProject(projectId);
+    const notes = notesValue ?? project?.notes ?? '';
+    const hasNotes = projectHasNotes(notes);
+    const preview = formatProjectNotesPreview(notes);
+
+    document.querySelectorAll(`[data-project-notes-button="${projectId}"]`).forEach(button => {
+        button.classList.toggle('has-note', hasNotes);
+        button.setAttribute('title', hasNotes ? preview : 'Add project notes');
+        button.setAttribute('aria-label', hasNotes ? 'Edit project notes' : 'Add project notes');
+    });
+
+    const modalTab = document.getElementById(`notes-tab-${projectId}`);
+    if (modalTab) {
+        modalTab.classList.toggle('has-note', hasNotes);
+        modalTab.setAttribute('title', hasNotes ? preview : 'Project notes');
+    }
+}
+
+function updateProjectCardNotesPreview(projectId, notes) {
+    updateProjectNotesIndicators(projectId, notes);
+}
+
+function getProjectNotesActiveTab(projectId) {
+    const data = getProjectNotesDataForProject(projectId);
+    return data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
+}
+
+function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
+    const data = normalizeProjectNotesData(project?.notes || '');
+    const activeTab = data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
+    const canEdit = state.canEdit(projectId);
+    const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
+    const tabButtons = data.tabs.map(tab => {
+        const isActive = tab.id === activeTab.id;
+        const hasNote = String(tab.body || '').trim().length > 0;
+        return `<button class="project-notes-tab ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}"
+                        type="button"
+                        onclick="selectProjectNoteTab('${projectId}', '${tab.id}', '${safeSurface}', event)">
+                    <span>${escapeHtml(tab.title)}</span>
+                </button>`;
+    }).join('');
+
+    return `
+        <div class="project-notes-editor project-notes-editor--${safeSurface}" data-project-notes-editor="${safeSurface}" data-project-id="${projectId}">
+            <div class="project-notes-editor-header">
+                <div>
+                    <h4 class="modal-project-notes-title">Project Notes</h4>
+                    <p class="modal-project-notes-subtitle">Shared notes for this project.</p>
+                </div>
+                <svg class="modal-project-notes-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>
+            </div>
+            <div class="project-notes-tab-strip">
+                <div class="project-notes-tabs" role="tablist">${tabButtons}</div>
+                ${canEdit ? `<button class="project-notes-add-tab" type="button" onclick="addProjectNoteTab('${projectId}', '${safeSurface}', event)" title="Add note tab" aria-label="Add note tab">+</button>` : ''}
+            </div>
+            <div class="project-notes-active-panel">
+                <div class="project-notes-active-title-row">
+                    <input class="project-notes-title-input"
+                           id="project-notes-title-${safeSurface}"
+                           type="text"
+                           value="${escapeHtml(activeTab.title)}"
+                           maxlength="40"
+                           ${canEdit ? `onblur="updateProjectNoteTitle('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"` : 'readonly'}>
+                    ${canEdit && data.tabs.length > 1 ? `<button class="project-notes-delete-tab" type="button" onclick="deleteProjectNoteTab('${projectId}', '${activeTab.id}', '${safeSurface}', event)" title="Delete this note tab">Delete tab</button>` : ''}
+                </div>
+                <textarea class="project-notes-textarea"
+                          id="project-notes-body-${safeSurface}"
+                          placeholder="Write project notes here..."
+                          ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')"` : 'readonly'}>${escapeHtml(activeTab.body || '')}</textarea>
+                ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
+            </div>
+        </div>`;
+}
+
+function renderProjectNotesSurface(projectId, surface = 'modal') {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const safeSurface = String(surface || 'modal');
+    let target = null;
+    if (safeSurface === 'quick') {
+        target = document.getElementById('projectNotesModalBody');
+    } else {
+        target = document.getElementById(`notes-section-${projectId}`);
+    }
+    if (!target) return;
+    target.innerHTML = buildProjectNotesEditorMarkup(projectId, project, safeSurface);
+    updateProjectNotesIndicators(projectId);
+}
+
+function selectProjectNoteTab(projectId, tabId, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const data = getProjectNotesDataForProject(projectId);
+    if (!data.tabs.some(tab => tab.id === tabId)) return;
+    data.activeTabId = tabId;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function addProjectNoteTab(projectId, surface = 'quick', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const nextNumber = data.tabs.length + 1;
+    const nextTab = normalizeProjectNotesTab({
+        id: `notes-${Date.now()}`,
+        title: `Note ${nextNumber}`,
+        body: ''
+    }, nextNumber - 1);
+    data.tabs.push(nextTab);
+    data.activeTabId = nextTab.id;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+    requestAnimationFrame(() => document.getElementById(`project-notes-title-${surface}`)?.focus({ preventScroll: true }));
+}
+
+function deleteProjectNoteTab(projectId, tabId, surface = 'quick', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    if (data.tabs.length <= 1) return;
+    const nextTabs = data.tabs.filter(tab => tab.id !== tabId);
+    if (nextTabs.length === data.tabs.length) return;
+    data.tabs = nextTabs;
+    data.activeTabId = nextTabs[0].id;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function updateProjectNoteTitle(projectId, tabId, titleValue, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const nextTitle = String(titleValue ?? '').trim().replace(/\s+/g, ' ').slice(0, 40) || tab.title || 'Note';
+    if (nextTitle === tab.title) return;
+    tab.title = nextTitle;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function updateProjectNoteBody(projectId, tabId, bodyValue, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const nextBody = String(bodyValue ?? '').trim();
+    if (nextBody === String(tab.body || '')) return;
+    tab.body = nextBody;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const activeTab = getProjectNotesActiveTab(projectId);
+    const titleInput = document.getElementById(`project-notes-title-${surface}`);
+    const bodyTextarea = document.getElementById(`project-notes-body-${surface}`);
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === activeTab.id);
+    if (!tab) return;
+    if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
+    if (bodyTextarea) tab.body = String(bodyTextarea.value || '').trim();
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function ensureProjectNotesModal() {
+    let modal = document.getElementById('projectNotesModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-notes-modal-overlay" id="projectNotesModal" aria-hidden="true">
+            <div class="modal-content project-notes-modal-content" role="dialog" aria-modal="true" aria-labelledby="projectNotesModalTitle">
+                <div class="task-note-modal-header project-notes-modal-header">
+                    <div>
+                        <h3 class="task-note-modal-title" id="projectNotesModalTitle">Project Notes</h3>
+                        <p class="task-note-modal-subtitle" id="projectNotesModalSubtitle">Add notes for this project.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectNotesModal()" aria-label="Close project notes">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="projectNotesModalBody"></div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectNotesModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeProjectNotesModal();
+    });
+    return modal;
+}
+
+function openProjectNotes(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const modal = ensureProjectNotesModal();
+    modal.dataset.projectId = projectId;
+    const subtitle = modal.querySelector('#projectNotesModalSubtitle');
+    if (subtitle) subtitle.textContent = project.title ? `Notes for: ${project.title}` : 'Add notes for this project.';
+    renderProjectNotesSurface(projectId, 'quick');
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => document.getElementById('project-notes-body-quick')?.focus({ preventScroll: true }));
+}
+
+function closeProjectNotesModal() {
+    const modal = document.getElementById('projectNotesModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    if (projectId) saveActiveProjectNoteFromSurface(projectId, 'quick');
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
+}
+
+function copyProjectToClipboard(projectId, evt) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    // Only copy incomplete task text
+    const incompleteTasks = project.tasks.filter(t => !t.completed);
+    
+    let text = incompleteTasks.map(task => task.text).join('\n');
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show brief feedback with checkmark
+        const button = evt?.target?.closest('button');
+        if (button) {
+            const originalHTML = button.innerHTML;
+            
+            // Swap icon to checkmark, keep the existing accent-blue colour
+            button.innerHTML = `
+                <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            `;
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 1500);
+        }
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+// ============================================================================
+// TASK OPERATIONS
+// ============================================================================
+
+function toggleTask(projectId, taskId) {
+    if (!state.canEdit(projectId)) return; // viewers cannot toggle tasks
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const task = project.tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    const willBeCompleted = !task.completed;
+    const shouldAnimateAway = willBeCompleted && getProjectHideCompletedPreference(projectId);
+    
+    // Only use the fade-away animation when completed tasks are hidden from view.
+    // With "Hide completed tasks" off, completing a task should update in place.
+    if (shouldAnimateAway) {
+        const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskElement) {
+            const checkbox = taskElement.querySelector(`[data-task-checkbox="${taskId}"]`);
+            if (checkbox) {
+                checkbox.classList.add('checked', 'checkmark-pop');
+                checkbox.innerHTML = `
+                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+            }
+
+            const taskText = taskElement.querySelector(`[data-task-text="${taskId}"]`);
+            if (taskText) taskText.classList.add('completed');
+
+            taskElement.classList.add('completing');
+
+            setTimeout(() => {
+                taskElement.classList.add('fading-out');
+            }, 360);
+            
+            setTimeout(() => {
+                performTaskToggle(projectId, taskId);
+            }, 700);
+            return;
+        }
+    }
+    
+    // When completed tasks stay visible, update immediately with no going-away animation.
+    performTaskToggle(projectId, taskId);
+}
+
+function performTaskToggle(projectId, taskId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const updatedTasks = project.tasks.map(t => {
+        if (t.id === taskId) {
+            const newCompleted = !t.completed;
+            if (newCompleted) {
+                state.incrementCompletedTasks();
+            } else {
+                state.decrementCompletedTasks();
+            }
+            return { ...t, completed: newCompleted, completedDate: newCompleted ? new Date().toISOString() : null };
+        }
+        return t;
+    });
+    
+    // Sort tasks after toggling
+    const sortedTasks = sortTasks(updatedTasks);
+    state.updateProject(projectId, projectUpdate({ tasks: sortedTasks }));
+    saveData();
+    
+    // Re-render to show new order
+    const modalOpen = document.getElementById('projectModal').classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    if (modalOpen) {
+        openProjectModal(projectId, { restoreState: modalState });
+    } else {
+        render();
+    }
+    
+    // Update stats display
+    document.getElementById('completedTasksCount').textContent = state.getStats().completedTasks;
+    updateTotalCompletion();
+}
+
+function completeTaskBatch(projectId, shouldCompleteTask) {
+    if (!state.canEdit(projectId) || typeof shouldCompleteTask !== 'function') return;
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    let completedCount = 0;
+    const completedDate = new Date().toISOString();
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.completed || !shouldCompleteTask(normalizedTask)) return normalizedTask;
+        completedCount += 1;
+        return {
+            ...normalizedTask,
+            completed: true,
+            completedDate
+        };
+    });
+
+    if (completedCount <= 0) return;
+
+    for (let i = 0; i < completedCount; i++) state.incrementCompletedTasks();
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+
+    state.updateProject(projectId, projectUpdate({ tasks: sortTasks(updatedTasks) }));
+    saveData();
+
+    if (modalOpen) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalState(projectId, modalState);
+    }
+
+    render();
+    updateTotalCompletion();
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
+}
+
+function completeTasksByCategory(projectId, categoryValue, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const normalizedCategory = categoryValue === TASK_CATEGORY_DROP_ALL || categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? TASK_CATEGORY_DROP_ALL
+        : sanitizeTaskCategoryName(categoryValue);
+    uiState.openTaskCategoryMenu = null;
+    completeTaskBatch(projectId, (task) => {
+        if (normalizedCategory === TASK_CATEGORY_DROP_ALL) return true;
+        return task.category === normalizedCategory;
+    });
+}
+
+function completeTasksByPriority(projectId, tagValue, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const normalizedTag = normalizePriorityTagValue(tagValue);
+    uiState.openTaskPriorityMenu = null;
+    completeTaskBatch(projectId, (task) => task.tag === normalizedTag);
+}
+
+function updateProjectProgress(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const completedTasks = project.tasks.filter(t => t.completed).length;
+    const totalTasks = project.tasks.length;
+    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    
+    const progressBar = document.querySelector(`[data-progress-bar="${projectId}"]`);
+    const progressText = document.querySelector(`[data-progress-text="${projectId}"]`);
+    
+    if (progressBar) progressBar.style.width = percentage + '%';
+    if (progressText) progressText.textContent = percentage + '%';
+}
+
+function deleteTask(projectId, taskId) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    const taskList = modalOpen ? document.getElementById(`modal-task-list-${projectId}`) : null;
+    const taskListScrollTop = taskList?.scrollTop || 0;
+    
+    const taskToDelete = project.tasks.find(t => t.id === taskId);
+    if (taskToDelete?.completed) {
+        state.decrementCompletedTasks();
+    }
+    
+    // Save undo state for task deletion
+    state.saveUndoState('deleteTask', { projectId, task: { ...taskToDelete } });
+    
+    const updatedTasks = project.tasks.filter(t => t.id !== taskId);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+
+    if (modalOpen) {
+        render();
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalState(projectId, modalState);
+        requestAnimationFrame(() => {
+            if (taskList) taskList.scrollTop = taskListScrollTop;
+            window.scrollTo(pageScrollX, pageScrollY);
+        });
+    } else {
+        render();
+    }
+
+    updateUndoButton();
+    updateTotalCompletion();
+}
+
+function updateTaskText(projectId, taskId, newText) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const cleanText = String(newText ?? '').trim();
+    const updatedTasks = project.tasks.map(t => 
+        t.id === taskId ? { ...t, text: cleanText } : t
+    );
+    
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    render();
+}
+
+function updateTaskDueDate(projectId, taskId, dueDateValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const dueDate = normalizeTaskDueDate(dueDateValue);
+    const updatedTasks = (Array.isArray(project.tasks) ? project.tasks : []).map((task, index) => {
+        const normalized = normalizeTask(task, index);
+        return normalized.id === taskId ? { ...normalized, dueDate } : normalized;
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+
+    const dueInput = document.getElementById(`modal-task-due-${taskId}`);
+    const dueControl = dueInput?.closest?.('.task-due-date-control');
+    if (dueInput) dueInput.value = dueDate;
+    if (dueControl) {
+        dueControl.classList.toggle('has-due-date', !!dueDate);
+        dueControl.setAttribute('title', dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
+    }
+}
+
+function addTaskToProject(projectId) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
+    const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, category });
+    // Add new tasks below existing tasks so the first task created stays at the top.
+    const updatedTasks = sortTasks([...project.tasks, newTask]);
+    
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    saveData();
+    
+    return newTask.id;
+}
+
+function reorderTasks(projectId, oldIndex, newIndex, renderedTaskIds = []) {
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const visibleTaskIds = renderedTaskIds
+        .map(id => Number(id))
+        .filter(id => Number.isFinite(id));
+
+    const movedTaskId = visibleTaskIds[oldIndex];
+    if (!Number.isFinite(movedTaskId)) return;
+
+    const displayOrder = [...visibleTaskIds];
+    const [movedId] = displayOrder.splice(oldIndex, 1);
+    displayOrder.splice(newIndex, 0, movedId);
+
+    const displayIndexById = new Map(displayOrder.map((id, index) => [id, index]));
+    const originalTasks = project.tasks.map((task, index) => normalizeTask(task, index));
+    const visibleTasks = originalTasks.filter(task => displayIndexById.has(task.id));
+
+    if (visibleTasks.length !== displayOrder.length) return;
+
+    const reorderedVisibleTasks = [...visibleTasks].sort((a, b) => {
+        return displayIndexById.get(a.id) - displayIndexById.get(b.id);
+    });
+
+    let visibleCursor = 0;
+    const tasks = originalTasks.map(task => {
+        if (!displayIndexById.has(task.id)) return task;
+        return reorderedVisibleTasks[visibleCursor++] || task;
+    });
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalState = captureProjectModalState(projectId);
+
+    state.updateProject(projectId, projectUpdate({ tasks }));
+    saveData();
+
+    if (document.getElementById('projectModal')?.classList.contains('active')) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalState(projectId, modalState);
+    } else {
+        render();
+    }
+
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
+}
+
+function reorderProjects(oldIndex, newIndex) {
+    
+    
+    const currentViewProjects = state.getCurrentViewProjects();
+    const allProjects = state.getProjects();
+    
+    // Get the project being moved
+    const movedProject = currentViewProjects[oldIndex];
+    
+    // Find the indices in the full project list
+    const oldFullIndex = allProjects.findIndex(p => p.id === movedProject.id);
+    
+    // Remove from current position
+    const newProjects = [...allProjects];
+    newProjects.splice(oldFullIndex, 1);
+    
+    // Calculate new position in full list
+    let newFullIndex;
+    if (newIndex <= 0) {
+        newFullIndex = 0;
+    } else if (newIndex >= currentViewProjects.length) {
+        // Dropping past the last tile in the current view
+        newFullIndex = newProjects.length;
+    } else {
+        const targetProject = currentViewProjects[newIndex];
+        newFullIndex = newProjects.findIndex(p => p.id === targetProject.id);
+        if (newFullIndex === -1) newFullIndex = newProjects.length;
+    }
+    
+    // Insert at new position
+    newProjects.splice(newFullIndex, 0, movedProject);
+    
+    // Update priorities
+    newProjects.forEach((p, i) => p.priority = i);
+    
+    state.setProjects(newProjects);
+    reorderProjectsOnServer(newProjects);
+    render();
+}
+
+// ============================================================================
+// UNDO FUNCTIONALITY
+// ============================================================================
+
+function performUndo() {
+    
+    if (!state.hasUndo()) return;
+    
+    const undoEntry = state.getLastUndo();
+    if (!undoEntry) return;
+    
+    if (undoEntry.action === 'deleteProject') {
+        // Restore deleted project
+        const project = undoEntry.data.project;
+        state.addProject(project);
+        
+        // Restore stats
+        if (project.completed) {
+            state.incrementCompletedProjects();
+        }
+        const completedTasks = project.tasks.filter(t => t.completed).length;
+        for (let i = 0; i < completedTasks; i++) {
+            state.incrementCompletedTasks();
+        }
+        
+        saveData();
+        render();
+    } else if (undoEntry.action === 'deleteTask') {
+        // Restore deleted task
+        const { projectId, task } = undoEntry.data;
+        const project = state.findProject(projectId);
+        if (project) {
+            const updatedTasks = sortTasks([...project.tasks, task]);
+            state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+            
+            if (task.completed) {
+                state.incrementCompletedTasks();
+            }
+            
+            saveData();
+            render();
+        }
+    }
+    
+    updateUndoButton();
+    updateTotalCompletion();
+}
+
+function updateUndoButton() {
+    const undoButton = document.getElementById('undoButton');
+    if (state.hasUndo()) {
+        undoButton.classList.remove('hidden');
+    } else {
+        undoButton.classList.add('hidden');
+    }
+}
+
+// ============================================================================
+// TASK SELECTION (SHIFT-CLICK)
+// ============================================================================
+
+function handleTaskClick(projectId, taskId, event) {
+    
+    
+    if (event.shiftKey) {
+        const lastSelected = state.lastSelectedTask.get(projectId);
+        if (lastSelected) {
+            state.selectTaskRange(projectId, lastSelected, taskId);
+        } else {
+            state.selectTask(projectId, taskId, false);
+        }
+        openProjectModal(projectId);
+    } else if (event.ctrlKey || event.metaKey) {
+        state.toggleTaskSelection(projectId, taskId);
+        openProjectModal(projectId);
+    } else {
+        state.selectTask(projectId, taskId, false);
+    }
+}
+
+// ============================================================================
+// TOTAL COMPLETION CALCULATION
+// ============================================================================
+
+function calculateTotalCompletion() {
+    const allProjects = state.getProjects();
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    allProjects.forEach(project => {
+        totalTasks += project.tasks.length;
+        completedTasks += project.tasks.filter(t => t.completed).length;
+    });
+    
+    if (totalTasks === 0) return 0;
+    return Math.round((completedTasks / totalTasks) * 100);
+}
+
+function updateTotalCompletion() {
+    const percentage = calculateTotalCompletion();
+    const totalPercentageElement = document.getElementById('totalPercentage');
+    if (totalPercentageElement) {
+        totalPercentageElement.textContent = `${percentage}%`;
+    }
+}
+
+function setViewTitle(title) {
+    const viewportTitle = document.querySelector('.viewport-header h1');
+    if (viewportTitle) viewportTitle.textContent = title;
+    const appBarTitle = document.getElementById('topAppBarTitle');
+    if (appBarTitle) appBarTitle.textContent = title;
+    syncProjectCategorySelect();
+}
+
+function getCurrentProjectCategoryValue() {
+    if (state.getView() === VIEWS.COMPLETED) return 'completed';
+    if (uiState.ownerFilter === 'shared') return 'shared';
+    return 'active';
+}
+
+function syncProjectCategorySelect() {
+    const select = document.getElementById('projectCategorySelect');
+    if (select) select.value = getCurrentProjectCategoryValue();
+}
+
+function switchProjectCategory(categoryValue) {
+    if (categoryValue === 'shared') {
+        switchToSharedView();
+    } else if (categoryValue === 'completed') {
+        switchToCompletedView();
+    } else {
+        switchToActiveView();
+    }
+}
+
+function setProjectCardSortMode(sortMode, persist = true) {
+    uiState.sortMode = normalizeProjectSortMode(sortMode);
+    syncProjectSortSelect();
+    if (persist) persistProjectSortPreference(uiState.sortMode);
+    render();
+}
+
+function syncViewTitle() {
+    if (state.getView() === VIEWS.COMPLETED) {
+        setViewTitle('Completed Projects');
+    } else if (uiState.ownerFilter === 'shared') {
+        setViewTitle('Shared');
+    } else {
+        setViewTitle('Active Projects');
+    }
+}
+
+// ============================================================================
+// VIEW MANAGEMENT
+// ============================================================================
+
+function setSidebarProjectsNav(activeId) {
+    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard'].forEach(id => {
+        document.getElementById(id)?.classList.toggle('active', id === activeId);
+    });
+}
+
+function switchToActiveView() {
+    // Reset the internal view filter so clicking "Active" after "Shared"
+    // shows all active projects.
+    uiState.ownerFilter = 'all';
+    state.setView(VIEWS.ACTIVE);
+    setSidebarProjectsNav('activeProjectsCard');
+    setViewTitle('Active Projects');
+    render();
+}
+
+function switchToCompletedView() {
+    uiState.ownerFilter = 'all';
+    state.setView(VIEWS.COMPLETED);
+    setSidebarProjectsNav('completedProjectsCard');
+    setViewTitle('Completed Projects');
+    render();
+}
+
+// ============================================================================
+// DRAG AND DROP
+// ============================================================================
+
+// Project drag-to-reorder (iOS-style: long-press to enter edit mode + pointer-based slide)
+let __projectDrag = null;
+let __suppressNextProjectGridClick = false;
+let __projectEditMode = false;
+let __projectLongPressTimer = null;
+let __projectPendingPress = null;
+let __projectEditListenersBound = false;
+
+
+function setupProjectDragAndDrop() {
+    const projectGrid = document.getElementById('projectGrid');
+    if (!projectGrid) return;
+
+    bindProjectEditModeExitHandlers();
+
+    if (!projectGrid.__projectGridClickBound) {
+        projectGrid.addEventListener('click', (e) => {
+            if (__suppressNextProjectGridClick) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                __suppressNextProjectGridClick = false;
+                return;
+            }
+            if (__projectEditMode) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+        projectGrid.__projectGridClickBound = true;
+    }
+
+    const cards = Array.from(projectGrid.querySelectorAll('.project-card'));
+    cards.forEach((card) => {
+        card.setAttribute('draggable', 'false');
+
+        card.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
+
+            const t = e.target;
+            if (t && t.closest && t.closest('button, input, textarea, select, a, [contenteditable="true"], [role="textbox"]')) return;
+            if (card.dataset.projectCanReorder !== 'true') return;
+
+            const projectId = card.getAttribute('data-project-id');
+            if (!projectId) return;
+
+            const viewProjects = state.getCurrentViewProjects();
+            const startIndex = viewProjects.findIndex(p => String(p.id) === String(projectId));
+            if (startIndex === -1) return;
+
+            clearProjectLongPress();
+
+            __projectDrag = {
+                pointerId:  e.pointerId,
+                startIndex,
+                startX:     e.clientX,
+                startY:     e.clientY,
+                grid:       projectGrid,
+                sourceCard: card,
+                active:     false,
+                pendingLongPress: true,
+                longPressReady: false,
+                snapshots:  null,
+                targetIndex:     startIndex,
+                lastTargetIndex: startIndex
+            };
+
+            __projectPendingPress = __projectDrag;
+            card.classList.add('project-card--long-press-pending');
+
+            __projectLongPressTimer = window.setTimeout(() => {
+                if (!__projectDrag || __projectDrag.pointerId !== e.pointerId || __projectDrag.sourceCard !== card) return;
+                __projectDrag.longPressReady = true;
+                __projectPendingPress = null;
+                __suppressNextProjectGridClick = true;
+                setProjectEditMode(true);
+                card.classList.remove('project-card--long-press-pending');
+                card.classList.add('project-card--long-press-ready');
+            }, 280);
+
+            try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
+
+            window.addEventListener('pointermove',  onProjectPointerMove,   { passive: false });
+            window.addEventListener('pointerup',    onProjectPointerUp,     { passive: false, once: true });
+            window.addEventListener('pointercancel', onProjectPointerCancel, { passive: false, once: true });
+        });
+    });
+}
+
+function clearProjectLongPress() {
+    if (__projectLongPressTimer) {
+        clearTimeout(__projectLongPressTimer);
+        __projectLongPressTimer = null;
+    }
+    if (__projectPendingPress) {
+        __projectPendingPress.active = false;
+        __projectPendingPress = null;
+    }
+}
+
+function setProjectEditMode(enabled) {
+    __projectEditMode = !!enabled;
+    const grid = document.getElementById('projectGrid');
+    if (grid) grid.classList.toggle('is-editing', __projectEditMode);
+    if (!__projectEditMode) clearProjectLongPress();
+}
+
+function bindProjectEditModeExitHandlers() {
+    if (__projectEditListenersBound) return;
+    __projectEditListenersBound = true;
+
+    // Escape closes task-note modal first, then exits edit mode.
+    document.addEventListener('keydown', (e) => {
+        if (isTypingTarget(e.target)) return;
+        if (e.key === 'Escape' && document.getElementById('taskNoteModal')?.classList.contains('active')) {
+            closeTaskNoteModal();
+            return;
+        }
+        if (e.key === 'Escape' && __projectEditMode) setProjectEditMode(false);
+    });
+
+    // Click outside the grid (or on the modal) exits edit mode — iOS "Done" equivalent
+    document.addEventListener('pointerdown', (e) => {
+        if (!__projectEditMode) return;
+        if (__projectDrag && __projectDrag.active) return;
+
+        const grid  = document.getElementById('projectGrid');
+        const modal = document.getElementById('projectModal');
+        if (grid  && grid.contains(e.target))  return;
+        if (modal && modal.contains(e.target)) return;
+
+        setProjectEditMode(false);
+    }, true);
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Auto-scroll while dragging (important on mobile / small viewports)
+// ──────────────────────────────────────────────────────────────────────────────
+
+let __projectDragScrollEl = null;
+
+function getScrollParent(el) {
+    let node = el;
+    while (node && node !== document.body) {
+        const s = window.getComputedStyle(node);
+        const oy = s.overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight) return node;
+        node = node.parentElement;
+    }
+    return document.scrollingElement || document.documentElement;
+}
+
+function autoScrollProjectDrag(clientY) {
+    if (!__projectDrag || !__projectDrag.active) return;
+
+    // Cache the scroll container for this gesture
+    if (!__projectDragScrollEl) __projectDragScrollEl = getScrollParent(__projectDrag.grid);
+
+    const el = __projectDragScrollEl;
+    if (!el) return;
+
+    const rect = (el === document.scrollingElement || el === document.documentElement)
+        ? { top: 0, bottom: window.innerHeight }
+        : el.getBoundingClientRect();
+
+    const EDGE = 90;          // px from edge where scrolling starts
+    const MAX_STEP = 22;      // px per pointermove near the edge
+
+    const distTop = clientY - rect.top;
+    const distBot = rect.bottom - clientY;
+
+    let step = 0;
+    if (distTop < EDGE) {
+        const t = Math.max(0, Math.min(1, (EDGE - distTop) / EDGE));
+        step = -Math.round(6 + t * (MAX_STEP - 6));
+    } else if (distBot < EDGE) {
+        const t = Math.max(0, Math.min(1, (EDGE - distBot) / EDGE));
+        step = Math.round(6 + t * (MAX_STEP - 6));
+    }
+
+    if (!step) return;
+
+    if (el === document.scrollingElement || el === document.documentElement) {
+        window.scrollBy(0, step);
+    } else {
+        el.scrollTop += step;
+    }
+}
+// ──────────────────────────────────────────────────────────────────────────────
+// Pointer handlers
+// ──────────────────────────────────────────────────────────────────────────────
+
+function onProjectPointerMove(e) {
+    if (!__projectDrag || e.pointerId !== __projectDrag.pointerId) return;
+
+    const moved = Math.hypot(e.clientX - __projectDrag.startX, e.clientY - __projectDrag.startY);
+
+    if (__projectDrag.pendingLongPress && !__projectDrag.longPressReady) {
+        if (moved > 7) cleanupProjectDrag();
+        return;
+    }
+
+    e.preventDefault();
+
+    // Small movement threshold after the long-press has armed dragging.
+    if (!__projectDrag.active) {
+        const THRESHOLD = 2;
+        if (moved < THRESHOLD) return;
+        startProjectSlide(e);
+    }
+
+    // 1. Dragged card follows the pointer (zero-lag, no easing).
+    //    translate3d is relative to layout position, so we only need the delta
+    //    from where the pointer was when the press started.
+    const dx = e.clientX - __projectDrag.startX;
+    const dy = e.clientY - __projectDrag.startY;
+    __projectDrag.sourceCard.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+
+    // 2. Slide idle cards to make room / fill the gap
+    updateProjectSlideItems(e.clientX, e.clientY);
+    autoScrollProjectDrag(e.clientY);
+}
+
+
+function onProjectPointerUp(e) {
+    if (!__projectDrag) return;
+
+    // Pointer released before the threshold was crossed — nothing to commit.
+    // If the long press armed, suppress the click so the modal does not open.
+    if (!__projectDrag.active) {
+        if (__projectDrag.longPressReady) {
+            e.preventDefault();
+            __suppressNextProjectGridClick = true;
+        }
+        cleanupProjectDrag();
+        return;
+    }
+
+    e.preventDefault();
+    __suppressNextProjectGridClick = true;
+
+    const { startIndex, targetIndex } = __projectDrag;
+
+    // targetIndex was computed in "idle" space (dragged card excluded).
+    // reorderProjects uses the original full array, so shift forward-drags
+    // by +1 to land in the correct slot.
+    const fullTargetIndex = targetIndex > startIndex ? targetIndex + 1 : targetIndex;
+
+    // Wipe visuals before the state-driven re-render
+    resetProjectSlideVisuals();
+    cleanupProjectDrag();
+
+    if (startIndex !== fullTargetIndex) {
+        reorderProjects(startIndex, fullTargetIndex);
+    }
+}
+
+function onProjectPointerCancel() {
+    if (!__projectDrag) return;
+    if (__projectDrag.active) resetProjectSlideVisuals();
+    cleanupProjectDrag();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Slide engine  (CodePen pattern adapted for CSS grid)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/*
+ * startProjectSlide  – called once when the drag threshold is crossed.
+ *   • Snapshots every card's bounding-rect in current DOM (= reading) order.
+ *   • Marks the dragged card so CSS can kill its transition / float it up.
+ *   • Positions it immediately under the pointer.
+ */
+function startProjectSlide(e) {
+    const { sourceCard, grid } = __projectDrag;
+    __projectDrag.active = true;
+    grid.classList.add('is-reordering');
+
+    // Snapshot ALL cards (including dragged) in DOM order
+    const allCards = Array.from(grid.querySelectorAll('.project-card'));
+    __projectDrag.snapshots = allCards.map(card => ({
+        card,
+        rect: card.getBoundingClientRect()
+    }));
+
+    // Float the dragged card; its transform is now driven by inline style only.
+    // Use the same delta logic as onProjectPointerMove so there is no jump.
+    sourceCard.classList.add('dragging');
+
+    const dx = e.clientX - __projectDrag.startX;
+    const dy = e.clientY - __projectDrag.startY;
+    sourceCard.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+}
+
+/*
+ * updateProjectSlideItems  – called on every pointermove while active.
+ *   1. Computes an insertion index by comparing the dragged card's live centre
+ *      to every idle card's *snapshot* centre in grid reading order.
+ *   2. For each idle card, derives the slot it would occupy after the reorder
+ *      (adjustedI → finalI mapping, same algebra as the CodePen pattern).
+ *   3. Applies the slide offset as CSS custom-property values (--slide-x /
+ *      --slide-y) which feed into the card's transform via calc().
+ */
+function updateProjectSlideItems(clientX, clientY) {
+    const { snapshots, startIndex, sourceCard } = __projectDrag;
+    if (!snapshots) return;
+
+    // Live centre of the dragged card (it has moved since snapshot)
+    const dRect = sourceCard.getBoundingClientRect();
+    const dCX   = dRect.left  + dRect.width  / 2;
+    const dCY   = dRect.top   + dRect.height / 2;
+
+    // Idle cards in reading order (DOM order is already row-major for auto-flow grid)
+    const idleSnaps = snapshots.filter(s => s.card !== sourceCard);
+
+    // ── find insertion index among idle cards ──
+    // Improved heuristic:
+    //   1) Find the snapshot tile whose center is *closest* to the dragged tile center.
+    //   2) Insert before/after that tile based on which side of its center we are on.
+    // This is far less "jumpy" than a row-band scan on responsive grids.
+    let insertionIndex = idleSnaps.length; // default: end
+    if (idleSnaps.length) {
+        const rowBand = (idleSnaps[0]?.rect.height || 100) * 0.55;
+
+        let closestI = 0;
+        let bestD2 = Infinity;
+
+        for (let i = 0; i < idleSnaps.length; i++) {
+            const r = idleSnaps[i].rect;
+            const cx = r.left + r.width / 2;
+            const cy = r.top  + r.height / 2;
+            const dx = dCX - cx;
+            const dy = dCY - cy;
+
+            // weight Y a bit more to reduce accidental lateral swaps when scrolling
+            const d2 = (dx * dx) + (dy * dy * 1.35);
+            if (d2 < bestD2) {
+                bestD2 = d2;
+                closestI = i;
+            }
+        }
+
+        const r = idleSnaps[closestI].rect;
+        const cx = r.left + r.width / 2;
+        const cy = r.top  + r.height / 2;
+        const sameRow = Math.abs(dCY - cy) <= rowBand;
+
+        // Decide before vs after the closest tile
+        if (sameRow) insertionIndex = (dCX < cx) ? closestI : (closestI + 1);
+        else        insertionIndex = (dCY < cy) ? closestI : (closestI + 1);
+
+        insertionIndex = Math.max(0, Math.min(idleSnaps.length, insertionIndex));
+    }
+
+    // targetIndex in the full array == insertionIndex in the idle (reduced) array.
+    __projectDrag.targetIndex = insertionIndex;
+
+    // Nothing moved since the last update — let the current transition finish.
+    if (insertionIndex === __projectDrag.lastTargetIndex) return;
+    __projectDrag.lastTargetIndex = insertionIndex;
+
+    // ── slide every idle card to its destination slot ──
+    snapshots.forEach((snap, origI) => {
+        if (snap.card === sourceCard) return;
+
+        // Where does this card end up after we remove the dragged card and reinsert it?
+        const adjustedI = origI > startIndex ? origI - 1 : origI;   // index after removal
+        const finalI    = adjustedI >= insertionIndex ? adjustedI + 1 : adjustedI; // after reinsertion
+
+        // Slide vector: difference between the destination slot's original rect
+        // and this card's original rect (both from the snapshot — layout hasn't changed)
+        const fromRect = snapshots[origI].rect;
+        const toRect   = snapshots[finalI].rect;
+
+        snap.card.style.setProperty('--slide-x', `${toRect.left - fromRect.left}px`);
+        snap.card.style.setProperty('--slide-y', `${toRect.top  - fromRect.top}px`);
+    });
+}
+
+// ── tear-down helpers ──
+
+function resetProjectSlideVisuals() {
+    const { snapshots, sourceCard, grid } = __projectDrag || {};
+    if (grid)        grid.classList.remove('is-reordering');
+    if (sourceCard)  {
+        sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
+        sourceCard.style.transform = '';
+        sourceCard.style.cursor = '';
+    }
+    if (snapshots)   snapshots.forEach(s => {
+        s.card.style.setProperty('--slide-x', '0px');
+        s.card.style.setProperty('--slide-y', '0px');
+    });
+}
+
+function cleanupProjectDrag() {
+    window.removeEventListener('pointermove',  onProjectPointerMove);
+    window.removeEventListener('pointerup',    onProjectPointerUp);
+    window.removeEventListener('pointercancel', onProjectPointerCancel);
+
+    if (__projectLongPressTimer) {
+        clearTimeout(__projectLongPressTimer);
+        __projectLongPressTimer = null;
+    }
+
+    const drag = __projectDrag;
+    if (drag?.sourceCard) {
+        drag.sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
+        drag.sourceCard.style.transform = '';
+        drag.sourceCard.style.cursor = '';
+        try { drag.sourceCard.releasePointerCapture(drag.pointerId); } catch { /* noop */ }
+    }
+
+    __projectPendingPress = null;
+    __projectDrag = null;
+    __projectDragScrollEl = null;
+    setProjectEditMode(false);
+    document.body.style.cursor = '';
+}
+
+
+
+function setupTaskDragAndDrop(projectId) {
+    const taskList = document.getElementById(`modal-task-list-${projectId}`);
+    if (!taskList) return;
+
+    if (typeof taskList.__taskDragCleanup === 'function') {
+        taskList.__taskDragCleanup();
+    }
+
+    // ── per-gesture state (reset each drag) ──
+    let pendingDragItem = null;
+    let draggableItem = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let itemsGap = 0;
+    let cachedItems = [];          // lazily populated, cleared on release
+    let currentDropCategory = null;
+    let autoScrollFrame = null;
+    let autoScrollVelocity = 0;
+    let suppressClickAfterDrag = false;
+    let dragScrollContainer = null;
+    let dragStartScrollPosition = 0;
+
+    // ── helpers ──
+function suppressNextTaskClick(event) {
+    if (!suppressClickAfterDrag) return;
+    suppressClickAfterDrag = false;
+    document.removeEventListener('click', suppressNextTaskClick, true);
+
+    // Only suppress the synthetic click that follows a task drag inside the task list.
+    // Outside/backdrop clicks should still close the project modal with one click.
+    if (!taskList.contains(event.target)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+}
+    function getPoint(e) {
+        const touch = e.touches?.[0] || e.changedTouches?.[0];
+        return {
+            x: e.clientX ?? touch?.clientX ?? 0,
+            y: e.clientY ?? touch?.clientY ?? 0
+        };
+    }
+    function getAllItems() {
+        if (!cachedItems.length)
+            cachedItems = Array.from(taskList.querySelectorAll('[data-task-item]'));
+        return cachedItems;
+    }
+    function getIdleItems() {
+        return getAllItems().filter(el => !el.classList.contains('dragging'));
+    }
+    function isAbove(el)   { return el.hasAttribute('data-is-above'); }
+    function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
+    function isTaskDragIgnoredTarget(target) {
+        return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .task-meta-controls, .task-due-date-control, .task-due-date-input, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
+    }
+    function getTaskScrollContainer() {
+        const modalScroll = taskList.closest('.modal-scroll-inner');
+        if (modalScroll && modalScroll.scrollHeight > modalScroll.clientHeight) return modalScroll;
+        return document.scrollingElement || document.documentElement;
+    }
+    function getTaskScrollPosition(scrollEl = getTaskScrollContainer()) {
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            return window.scrollY || document.documentElement.scrollTop || 0;
+        }
+        return scrollEl?.scrollTop || 0;
+    }
+    function getCategoryDropTargets() {
+        return Array.from(document.querySelectorAll('[data-task-category-drop]'))
+            .filter(el => el.dataset.taskCategoryDropProject === projectId);
+    }
+    function clearCategoryDropTarget() {
+        getCategoryDropTargets().forEach(el => el.classList.remove('is-drop-target'));
+        currentDropCategory = null;
+    }
+    function setCategoryDropTarget(category) {
+        const dropCategory = category || null;
+        currentDropCategory = dropCategory;
+        getCategoryDropTargets().forEach(el => {
+            el.classList.toggle('is-drop-target', !!dropCategory && el.dataset.taskCategoryDrop === dropCategory);
+        });
+    }
+    function getCategoryDropTargetAtPoint(x, y) {
+        const hits = typeof document.elementsFromPoint === 'function'
+            ? document.elementsFromPoint(x, y)
+            : [document.elementFromPoint(x, y)].filter(Boolean);
+
+        for (const hit of hits) {
+            if (!hit) continue;
+            if (draggableItem && (hit === draggableItem || draggableItem.contains(hit))) continue;
+            const target = hit.closest?.('[data-task-category-drop]');
+            if (!target || target.dataset.taskCategoryDropProject !== projectId) continue;
+            return target.dataset.taskCategoryDrop || null;
+        }
+        return null;
+    }
+    function stopTaskAutoScroll() {
+        autoScrollVelocity = 0;
+        if (autoScrollFrame) {
+            cancelAnimationFrame(autoScrollFrame);
+            autoScrollFrame = null;
+        }
+    }
+    function runTaskAutoScroll() {
+        if (!draggableItem || !autoScrollVelocity) {
+            autoScrollFrame = null;
+            return;
+        }
+
+        const scrollEl = getTaskScrollContainer();
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            window.scrollBy(0, autoScrollVelocity);
+        } else {
+            scrollEl.scrollTop += autoScrollVelocity;
+        }
+
+        updateDraggedTaskPosition(lastPointerX, lastPointerY);
+        autoScrollFrame = requestAnimationFrame(runTaskAutoScroll);
+    }
+    function updateTaskAutoScroll(pointerY) {
+        const scrollEl = getTaskScrollContainer();
+        const rect = (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body)
+            ? { top: 0, bottom: window.innerHeight }
+            : scrollEl.getBoundingClientRect();
+        const edgeSize = 92;
+        const maxSpeed = 18;
+        let velocity = 0;
+
+        if (pointerY < rect.top + edgeSize) {
+            velocity = -Math.ceil(((rect.top + edgeSize - pointerY) / edgeSize) * maxSpeed);
+        } else if (pointerY > rect.bottom - edgeSize) {
+            velocity = Math.ceil(((pointerY - (rect.bottom - edgeSize)) / edgeSize) * maxSpeed);
+        }
+
+        autoScrollVelocity = velocity;
+        if (velocity && !autoScrollFrame) {
+            autoScrollFrame = requestAnimationFrame(runTaskAutoScroll);
+        } else if (!velocity) {
+            stopTaskAutoScroll();
+        }
+    }
+    function beginDrag() {
+        if (!pendingDragItem || draggableItem) return;
+        draggableItem = pendingDragItem;
+        clearCategoryDropTarget();
+
+        // measure the gap between the first two idle items (used to size the slide)
+        const idle = getIdleItems();
+        if (idle.length > 1) {
+            const r1 = idle[0].getBoundingClientRect();
+            const r2 = idle[1].getBoundingClientRect();
+            itemsGap = Math.abs(r1.bottom - r2.top);
+        } else {
+            itemsGap = 0;
+        }
+
+        // stamp every item that is currently above the dragged item
+        const dragIdx = getAllItems().indexOf(draggableItem);
+        getIdleItems().forEach(item => {
+            if (getAllItems().indexOf(item) < dragIdx) item.dataset.isAbove = '';
+        });
+
+        dragScrollContainer = getTaskScrollContainer();
+        dragStartScrollPosition = getTaskScrollPosition(dragScrollContainer);
+        draggableItem.classList.add('dragging');
+        suppressClickAfterDrag = true;
+        document.addEventListener('click', suppressNextTaskClick, true);
+        taskList.classList.add('is-task-dragging');
+        document.body.classList.add('is-task-dragging');
+
+        // Prevent text selection while dragging without hiding the page scrollbar.
+        document.body.style.userSelect = 'none';
+        document.body.style.touchAction = 'none';
+    }
+    function updateDraggedTaskPosition(cx, cy) {
+        if (!draggableItem) return;
+
+        lastPointerX = cx;
+        lastPointerY = cy;
+        setCategoryDropTarget(getCategoryDropTargetAtPoint(cx, cy));
+
+        // 1. follow the pointer, including scroll delta so the task stays attached while the modal/page auto-scrolls.
+        const scrollDelta = getTaskScrollPosition(dragScrollContainer || getTaskScrollContainer()) - dragStartScrollPosition;
+        draggableItem.style.transform =
+            `translate(${cx - pointerStartX}px, ${cy - pointerStartY + scrollDelta}px)`;
+
+        // 2. decide which idle items should slide out of the way
+        const dRect   = draggableItem.getBoundingClientRect();
+        const dCenter = dRect.top + dRect.height / 2;
+
+        getIdleItems().forEach(item => {
+            const iCenter = item.getBoundingClientRect().top +
+                            item.getBoundingClientRect().height / 2;
+
+            if (isAbove(item)) {
+                // item started above → it "toggles" (slides down) when the
+                // dragged item's centre passes above its centre
+                if (dCenter <= iCenter) item.dataset.isToggled = '';
+                else                    delete item.dataset.isToggled;
+            } else {
+                // item started below → slides up when dragged centre passes below
+                if (dCenter >= iCenter) item.dataset.isToggled = '';
+                else                    delete item.dataset.isToggled;
+            }
+        });
+
+        // 3. apply (or clear) the slide transform on every idle item
+        getIdleItems().forEach(item => {
+            if (isToggled(item)) {
+                const dir = isAbove(item) ? 1 : -1;   // above→slide down (+), below→slide up (-)
+                item.style.transform =
+                    `translateY(${dir * (dRect.height + itemsGap)}px)`;
+            } else {
+                item.style.transform = '';
+            }
+        });
+
+        updateTaskAutoScroll(cy);
+    }
+
+    // ── drag start ──
+    function onStart(e) {
+        const item = e.target.closest?.('[data-task-item]');
+        if (!item || !taskList.contains(item)) return;
+
+        const handle = e.target.closest?.('.task-drag-handle');
+        if (!handle && isTaskDragIgnoredTarget(e.target)) return;
+
+        const point = getPoint(e);
+        pendingDragItem = item;
+        pointerStartX = point.x;
+        pointerStartY = point.y;
+        lastPointerX = pointerStartX;
+        lastPointerY = pointerStartY;
+        cachedItems = [];
+        clearCategoryDropTarget();
+
+        // Make row dragging feel responsive while preventing accidental text selection.
+        document.body.style.userSelect = 'none';
+        taskList.classList.add('is-task-drag-pending');
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup',   onEnd);
+        document.addEventListener('touchend',  onEnd);
+        document.addEventListener('touchcancel', onEnd);
+    }
+
+    // ── drag move ──
+    function onMove(e) {
+        if (!pendingDragItem && !draggableItem) return;
+        const point = getPoint(e);
+        const dx = point.x - pointerStartX;
+        const dy = point.y - pointerStartY;
+        const distance = Math.hypot(dx, dy);
+
+        if (!draggableItem) {
+            if (distance < 3) return;
+            beginDrag();
+        }
+
+        if (!draggableItem) return;
+        e.preventDefault();
+        updateDraggedTaskPosition(point.x, point.y);
+    }
+
+    // ── drag end ──
+    function onEnd(e) {
+        if (!pendingDragItem && !draggableItem) return;
+
+        if (!draggableItem) {
+            reset();
+            return;
+        }
+
+        const all           = getAllItems();
+        const originalIndex = all.indexOf(draggableItem);
+
+        // Reconstruct the final order using the same sparse-array trick as the
+        // CodePen: each toggled item shifts its index by ±1; the dragged item
+        // fills the one slot that is left empty.
+        const reordered = [];
+        all.forEach((item, i) => {
+            if (item === draggableItem) return;                          // skip; placed below
+            if (!isToggled(item))       { reordered[i] = item; return; } // unmoved
+            reordered[isAbove(item) ? i + 1 : i - 1] = item;            // shifted
+        });
+
+        let newIndex = originalIndex;
+        for (let i = 0; i < all.length; i++) {
+            if (reordered[i] === undefined) { newIndex = i; break; }
+        }
+
+        const dropCategory = currentDropCategory || getCategoryDropTargetAtPoint(lastPointerX, lastPointerY);
+        const targetCategory = dropCategory === TASK_CATEGORY_DROP_ALL
+            ? DEFAULT_TASK_CATEGORY
+            : (dropCategory ? sanitizeTaskCategoryName(dropCategory) : null);
+        const draggedTaskId = Number(draggableItem.dataset.taskId);
+        const draggedTask = state.findProject(projectId)?.tasks
+            ?.map((task, index) => normalizeTask(task, index))
+            .find(task => task.id === draggedTaskId);
+        const shouldMoveToCategory = !!targetCategory &&
+            Number.isFinite(draggedTaskId) &&
+            draggedTask &&
+            draggedTask.category !== targetCategory;
+
+        // wipe all visual state before committing (reorderTasks/updateTaskCategory re-renders the modal)
+        draggableItem.classList.remove('dragging');
+        draggableItem.style.transform = '';
+        all.forEach(item => {
+            delete item.dataset.isAbove;
+            delete item.dataset.isToggled;
+            item.style.transform = '';
+        });
+
+        reset();
+
+        if (shouldMoveToCategory) {
+            updateTaskCategory(projectId, draggedTaskId, targetCategory);
+            return;
+        }
+
+        // persist the new order (updates state → saves to MongoDB → re-renders modal)
+        if (getProjectTaskSortPreference(projectId) === DEFAULT_TASK_SORT_MODE && originalIndex !== newIndex) {
+            const renderedTaskIds = all.map(item => item.dataset.taskId).filter(Boolean);
+            reorderTasks(projectId, originalIndex, newIndex, renderedTaskIds);
+        }
+    }
+
+    // ── cleanup ──
+    function reset() {
+        stopTaskAutoScroll();
+        cachedItems     = [];
+        pendingDragItem = null;
+        draggableItem   = null;
+        dragScrollContainer = null;
+        dragStartScrollPosition = 0;
+        clearCategoryDropTarget();
+        taskList.classList.remove('is-task-drag-pending', 'is-task-dragging');
+        document.body.classList.remove('is-task-dragging');
+        document.body.style.userSelect  = '';
+        document.body.style.touchAction = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup',   onEnd);
+        document.removeEventListener('touchend',  onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+    }
+
+    // ── attach ──
+    taskList.addEventListener('mousedown',  onStart);
+    taskList.addEventListener('touchstart', onStart, { passive: false });
+    taskList.__taskDragCleanup = () => {
+        taskList.removeEventListener('mousedown', onStart);
+        taskList.removeEventListener('touchstart', onStart);
+        reset();
+    };
+}
+
+// ============================================================================
+// MODAL MANAGEMENT
+// ============================================================================
+
+
+
+function getDisplayTasksForProject(project, options = {}) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const sortMode = options.sortMode || getProjectTaskSortPreference(project?.id);
+    const hideCompleted = options.hideCompleted !== undefined
+        ? !!options.hideCompleted
+        : getProjectHideCompletedPreference(project?.id);
+    const activeCategory = options.activeCategory !== undefined
+        ? options.activeCategory
+        : getProjectTaskCategoryFilter(project?.id);
+    const orderedTasks = sortTasksForDisplay(tasks, sortMode);
+    const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
+        ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
+        : orderedTasks;
+    const visibleTasks = hideCompleted ? categoryFilteredTasks.filter(task => !task.completed) : categoryFilteredTasks;
+    const draftTaskId = Number(uiState.newTaskDraft?.taskId);
+    const draftProjectId = String(uiState.newTaskDraft?.projectId || '');
+    if (draftProjectId && String(project?.id) === draftProjectId && Number.isFinite(draftTaskId)) {
+        const draftIndex = visibleTasks.findIndex(task => Number(task.id) === draftTaskId);
+        if (draftIndex > 0) {
+            const nextTasks = [...visibleTasks];
+            const [draftTask] = nextTasks.splice(draftIndex, 1);
+            nextTasks.unshift(draftTask);
+            return nextTasks;
+        }
+    }
+    return visibleTasks;
+}
+
+
+
+function renderProjectPriorityControlMarkup(projectId, project, surface = 'modal') {
+    const tag = getProjectPriorityTag(project);
+    const label = getProjectPriorityLabel(project);
+    const canEdit = state.canEdit(projectId);
+    const menuOpen = canEdit && isProjectPriorityMenuOpen(projectId, surface);
+    const surfaceClass = surface === 'card' ? 'project-priority-control--card' : 'project-priority-control--modal';
+    const buttonClass = surface === 'card'
+        ? `project-priority-card-button project-priority-card-button--${tag}`
+        : `project-priority-button project-priority-button--${tag}`;
+    const indicatorClass = surface === 'card'
+        ? `project-priority-card-indicator project-priority-card-indicator--${tag}`
+        : `project-priority-indicator project-priority-indicator--${tag}`;
+    const buttonLabel = surface === 'card'
+        ? `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span>`
+        : `<span class="${indicatorClass}">${renderPriorityFlagMarkup(tag)}</span><span>Priority: ${escapeHtml(label)}</span>`;
+    const clickHandler = canEdit
+        ? `onclick="toggleProjectPriorityMenu('${projectId}', '${surface}', event)"`
+        : `onclick="event.preventDefault(); event.stopPropagation();" aria-disabled="true"`;
+
+    return `
+        <div class="project-priority-control ${surfaceClass} ${menuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+            <button class="${buttonClass} ${canEdit ? '' : 'is-readonly'}"
+                    type="button"
+                    title="Project priority: ${escapeHtml(label)}"
+                    aria-label="Project priority: ${escapeHtml(label)}"
+                    ${clickHandler}>
+                ${buttonLabel}
+            </button>
+            ${menuOpen ? `
+                <div class="task-priority-popover project-priority-popover" onclick="event.stopPropagation()">
+                    ${TASK_TAG_OPTIONS.map(option => `
+                        <button class="task-priority-option ${tag === option.value ? 'is-active' : ''}"
+                                type="button"
+                                onclick="selectProjectPriority('${projectId}', '${option.value}', '${surface}', event)">
+                            <span class="task-tag-flag task-tag-flag--${option.value}" aria-hidden="true"></span>
+                            <span>${option.label}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function renderTaskTagOptions(selectedValue) {
+    return TASK_TAG_OPTIONS.map(option => `
+        <option value="${option.value}" ${selectedValue === option.value ? 'selected' : ''}>${option.label}</option>
+    `).join('');
+}
+
+function renderTaskCategoryOptions(project, selectedValue) {
+    return getProjectTaskCategories(project).map(category => `
+        <option value="${escapeHtml(category)}" ${selectedValue === category ? 'selected' : ''}>${escapeHtml(category)}</option>
+    `).join('');
+}
+
+function getIncompleteTaskCountForCategory(project, categoryValue) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const normalizedCategory = categoryValue === TASK_CATEGORY_DROP_ALL || categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? TASK_CATEGORY_DROP_ALL
+        : sanitizeTaskCategoryName(categoryValue);
+
+    return tasks.reduce((count, task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.completed) return count;
+        if (normalizedCategory === TASK_CATEGORY_DROP_ALL) return count + 1;
+        return normalizedTask.category === normalizedCategory ? count + 1 : count;
+    }, 0);
+}
+
+function getIncompleteTaskCountForPriority(project, tagValue) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const normalizedTag = normalizePriorityTagValue(tagValue);
+
+    return tasks.reduce((count, task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        return !normalizedTask.completed && normalizedTask.tag === normalizedTag ? count + 1 : count;
+    }, 0);
+}
+
+function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
+    const categories = getProjectTaskCategories(project);
+    const canEdit = state.canEdit(projectId);
+    const isCreating = uiState.creatingTaskCategoryProjectId === projectId;
+    const tabItems = [
+        { kind: 'all', label: 'All', category: DEFAULT_TASK_CATEGORY_FILTER }
+    ];
+
+    categories.forEach(category => {
+        tabItems.push({ kind: 'category', label: category, category });
+    });
+
+    if (canEdit) {
+        tabItems.push({ kind: isCreating ? 'create-input' : 'create', label: '+', category: null });
+    }
+
+    return `
+        <div class="task-category-toolbar">
+            <div class="task-category-tabs" role="tablist" aria-label="Task categories">
+                ${tabItems.map((tab, index) => {
+                    const positionClass = getTaskCategoryTabPositionClass(index, tabItems.length);
+                    const isAll = tab.kind === 'all';
+                    const isCategory = tab.kind === 'category';
+                    const isCreate = tab.kind === 'create' || tab.kind === 'create-input';
+                    const isInput = tab.kind === 'create-input';
+                    const isActive = !isCreate && activeCategory === tab.category;
+                    const categoryLiteral = tab.category ? serializeInlineJsString(tab.category) : null;
+                    const filterLiteral = serializeInlineJsString(tab.category || DEFAULT_TASK_CATEGORY_FILTER);
+                    const menuCategoryValue = isAll ? TASK_CATEGORY_DROP_ALL : (isCategory ? tab.category : null);
+                    const menuCategoryLiteral = menuCategoryValue ? serializeInlineJsString(menuCategoryValue) : null;
+                    const canShowTabMenu = canEdit && (isAll || isCategory);
+                    const menuOpen = canShowTabMenu && isTaskCategoryMenuOpen(projectId, menuCategoryValue);
+                    const incompleteInTab = canShowTabMenu ? getIncompleteTaskCountForCategory(project, menuCategoryValue) : 0;
+                    const shellClasses = ['task-category-tab-shell', positionClass];
+                    const wrapClasses = ['task-category-tab-wrap', positionClass.replace('shell', 'wrap')];
+                    if (isAll) {
+                        shellClasses.push('task-category-tab-shell--all');
+                        wrapClasses.push('task-category-tab-wrap--all');
+                    }
+                    if (isCreate) {
+                        shellClasses.push('task-category-tab-shell--create');
+                        wrapClasses.push('task-category-tab-wrap--create');
+                    }
+                    if (isInput) {
+                        shellClasses.push('is-editing');
+                        wrapClasses.push('is-editing');
+                    }
+                    if (isActive) {
+                        shellClasses.push('is-active');
+                        wrapClasses.push('is-active');
+                    }
+                    if (menuOpen) {
+                        shellClasses.push('is-menu-open');
+                        wrapClasses.push('is-menu-open');
+                    }
+                    const dropCategoryValue = tab.kind === 'all'
+                        ? TASK_CATEGORY_DROP_ALL
+                        : (tab.kind === 'category' ? tab.category : null);
+                    const dropAttributes = dropCategoryValue
+                        ? ` data-task-category-drop="${escapeHtml(dropCategoryValue)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
+                        : '';
+                    const shellClick = isInput
+                        ? ''
+                        : (tab.kind === 'create'
+                            ? ` onclick="startInlineTaskCategoryCreate('${projectId}', event)"`
+                            : ` onclick="setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})"`);
+                    const tabControl = isInput ? `
+                        <input class="task-category-inline-input"
+                               type="text"
+                               aria-label="New task category"
+                               placeholder="New tab"
+                               autocomplete="off"
+                               onkeydown="handleInlineTaskCategoryCreateKeydown('${projectId}', event)"
+                               onblur="commitInlineTaskCategoryCreate('${projectId}', this.value)">
+                    ` : `
+                        <button class="task-category-tab"
+                                type="button"
+                                ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
+                                onclick="event.stopPropagation(); ${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
+                    `;
+                    return `
+                        <div class="${wrapClasses.join(' ')}"${dropAttributes}>
+                            <div class="${shellClasses.join(' ')}"${shellClick}>
+                                ${tabControl}
+                                ${canShowTabMenu ? `
+                                    <button class="task-category-menu-button"
+                                            type="button"
+                                            aria-label="Tab options"
+                                            aria-expanded="${menuOpen ? 'true' : 'false'}"
+                                            onmousedown="event.stopPropagation();"
+                                            onpointerdown="event.stopPropagation();"
+                                            onclick="toggleTaskCategoryMenu('${projectId}', ${menuCategoryLiteral}, event)">
+                                        <span></span><span></span><span></span>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ${menuOpen ? `
+                                <div class="task-category-menu-popover" onclick="event.stopPropagation()">
+                                    <button class="task-category-menu-option task-category-menu-option--bulk"
+                                            type="button"
+                                            ${incompleteInTab > 0 ? '' : 'disabled'}
+                                            onclick="event.stopPropagation(); completeTasksByCategory('${projectId}', ${menuCategoryLiteral}, event)">
+                                        Mark ${isAll ? 'all tasks' : 'tab tasks'} complete${incompleteInTab > 0 ? ` (${incompleteInTab})` : ''}
+                                    </button>
+                                    ${isCategory ? `
+                                        <button class="task-category-menu-option" type="button" onclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
+                                        <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="event.stopPropagation(); deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderTaskCategoryControls(projectId) {
+    const project = state.findProject(projectId);
+    const container = document.getElementById(`task-category-controls-${projectId}`);
+    if (!project || !container) return;
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
+    if (uiState.creatingTaskCategoryProjectId === projectId) {
+        requestAnimationFrame(() => {
+            const input = container.querySelector('.task-category-inline-input');
+            if (input) input.focus();
+        });
+    }
+}
+
+
+function buildProjectTagControlsMarkup(projectId, project) {
+    const tags = getProjectTags(project);
+    const canEdit = state.canEdit(projectId);
+    const isCreating = uiState.creatingProjectTagProjectId === projectId;
+    const editingTag = uiState.editingProjectTag?.projectId === projectId
+        ? uiState.editingProjectTag.originalTag
+        : null;
+
+    return `
+        <div class="project-tag-controls" id="project-tag-controls-${projectId}">
+            <div class="project-tag-controls-label">Project Tags</div>
+            <div class="project-tag-chip-list">
+                ${tags.length ? tags.map(tag => {
+                    const tagLiteral = serializeInlineJsString(tag);
+                    const isEditing = canEdit && editingTag === tag;
+                    return `
+                        <span class="project-tag-chip ${isEditing ? 'is-editing' : ''}">
+                            ${isEditing ? `
+                                <input class="project-tag-inline-input project-tag-inline-input--edit"
+                                       type="text"
+                                       maxlength="${PROJECT_TAG_MAX_LENGTH}"
+                                       value="${escapeHtml(tag)}"
+                                       autocomplete="off"
+                                       aria-label="Edit ${escapeHtml(tag)} tag"
+                                       onclick="event.stopPropagation();"
+                                       onkeydown="handleInlineProjectTagEditKeydown('${projectId}', ${tagLiteral}, event)"
+                                       onblur="commitInlineProjectTagEdit('${projectId}', ${tagLiteral}, this.value)">
+                            ` : `
+                                <button class="project-tag-label"
+                                        type="button"
+                                        title="Edit ${escapeHtml(tag)} tag"
+                                        aria-label="Edit ${escapeHtml(tag)} tag"
+                                        onclick="startInlineProjectTagEdit('${projectId}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>
+                                ${canEdit ? `<button class="project-tag-remove" type="button" aria-label="Remove ${escapeHtml(tag)} tag" onclick="deleteProjectTag('${projectId}', ${tagLiteral}, event)">×</button>` : ''}
+                            `}
+                        </span>
+                    `;
+                }).join('') : ''}
+                ${canEdit ? (isCreating ? `
+                    <input class="project-tag-inline-input"
+                           type="text"
+                           maxlength="${PROJECT_TAG_MAX_LENGTH}"
+                           placeholder="New tag"
+                           autocomplete="off"
+                           onkeydown="handleInlineProjectTagCreateKeydown('${projectId}', event)"
+                           onblur="commitInlineProjectTagCreate('${projectId}', this.value)">
+                ` : `
+                    <button class="project-tag-add" type="button" onclick="startInlineProjectTagCreate('${projectId}', event)">+</button>
+                `) : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderProjectTagControls(projectId) {
+    const project = state.findProject(projectId);
+    const container = document.getElementById(`project-tag-controls-${projectId}`);
+    if (!project || !container) return;
+    container.outerHTML = buildProjectTagControlsMarkup(projectId, project);
+    if (uiState.creatingProjectTagProjectId === projectId) {
+        requestAnimationFrame(() => {
+            document.querySelector(`#project-tag-controls-${projectId} .project-tag-inline-input`)?.focus({ preventScroll: true });
+        });
+    }
+    if (uiState.editingProjectTag?.projectId === projectId) {
+        requestAnimationFrame(() => {
+            const input = document.querySelector(`#project-tag-controls-${projectId} .project-tag-inline-input--edit`);
+            if (input) {
+                input.focus({ preventScroll: true });
+                input.select?.();
+            }
+        });
+    }
+}
+
+function ensureProjectTagPickerModal() {
+    let modal = document.getElementById('projectTagPickerModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-tag-picker-overlay" id="projectTagPickerModal" aria-hidden="true">
+            <div class="modal-content project-tag-picker-content" role="dialog" aria-modal="true" aria-labelledby="projectTagPickerTitle">
+                <div class="project-tag-picker-header">
+                    <div>
+                        <h3 class="project-tag-picker-title" id="projectTagPickerTitle">Project Tags</h3>
+                        <p class="project-tag-picker-subtitle">Choose an existing tag or create a new one.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectTagPickerModal()" aria-label="Close project tag picker">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="project-tag-picker-body" id="projectTagPickerBody"></div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectTagPickerModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeProjectTagPickerModal();
+    });
+    return modal;
+}
+
+function renderProjectTagPickerModal(projectId) {
+    const project = state.findProject(projectId);
+    const body = document.getElementById('projectTagPickerBody');
+    if (!project || !body) return;
+
+    const currentTags = new Set(getProjectTags(project));
+    const tagLimitReached = currentTags.size >= PROJECT_TAG_MAX_COUNT;
+    const availableTags = [...new Set(state.getProjects()
+        .flatMap(existingProject => getProjectTags(existingProject))
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b))
+        .filter(tag => !currentTags.has(tag));
+
+    body.innerHTML = tagLimitReached ? `
+        <div class="project-tag-picker-limit">Projects can have up to ${PROJECT_TAG_MAX_COUNT} tags. Remove a tag before adding another.</div>
+    ` : `
+        <div class="project-tag-picker-existing">
+            <div class="project-tag-picker-label">Existing tags</div>
+            <div class="project-tag-picker-list">
+                ${availableTags.length ? availableTags.map(tag => {
+                    const tagLiteral = serializeInlineJsString(tag);
+                    return `<button class="project-tag-picker-chip" type="button" onclick="addProjectTagFromPicker('${projectId}', ${tagLiteral})">${escapeHtml(tag)}</button>`;
+                }).join('') : '<span class="project-tag-picker-empty">No unused tags yet</span>'}
+            </div>
+        </div>
+        <div class="project-tag-picker-new">
+            <label class="project-tag-picker-label" for="projectTagPickerInput">New tag</label>
+            <div class="project-tag-picker-input-row">
+                <input class="project-tag-picker-input" id="projectTagPickerInput" maxlength="${PROJECT_TAG_MAX_LENGTH}" placeholder="Type a new tag" autocomplete="off" onkeydown="handleProjectTagPickerKeydown('${projectId}', event)">
+                <button class="project-tag-picker-add" type="button" onclick="commitProjectTagPickerInput('${projectId}')">Add Tag</button>
+            </div>
+        </div>
+    `;
+}
+
+function openProjectTagPickerModal(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    uiState.editingProjectTag = null;
+    uiState.creatingProjectTagProjectId = projectId;
+    const modal = ensureProjectTagPickerModal();
+    renderProjectTagPickerModal(projectId);
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => document.getElementById('projectTagPickerInput')?.focus({ preventScroll: true }), 0);
+}
+
+function closeProjectTagPickerModal() {
+    const projectId = uiState.creatingProjectTagProjectId;
+    uiState.creatingProjectTagProjectId = null;
+    const modal = document.getElementById('projectTagPickerModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    if (projectId) renderProjectTagControls(projectId);
+}
+
+function addProjectTagFromPicker(projectId, rawValue) {
+    const project = state.findProject(projectId);
+    if (!project || !state.canEdit(projectId)) return;
+    const currentTags = getProjectTags(project);
+    if (currentTags.length >= PROJECT_TAG_MAX_COUNT) {
+        renderProjectTagPickerModal(projectId);
+        return;
+    }
+    const nextTag = normalizeProjectTagName(rawValue);
+    if (!nextTag) return;
+
+    const nextTags = normalizeProjectTags([...currentTags, nextTag]);
+    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+    saveData();
+    closeProjectTagPickerModal();
+    const openProjectId = getOpenProjectModalId();
+    if (openProjectId && String(openProjectId) === String(projectId)) {
+        const modalState = captureProjectModalState(projectId);
+        openProjectModal(projectId, { restoreState: modalState });
+    } else {
+        render();
+    }
+}
+
+function commitProjectTagPickerInput(projectId) {
+    const input = document.getElementById('projectTagPickerInput');
+    addProjectTagFromPicker(projectId, input?.value || '');
+}
+
+function handleProjectTagPickerKeydown(projectId, event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        commitProjectTagPickerInput(projectId);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        closeProjectTagPickerModal();
+    }
+}
+
+function startInlineProjectTagCreate(projectId, event) {
+    openProjectTagPickerModal(projectId, event);
+}
+
+function cancelInlineProjectTagCreate(projectId) {
+    if (uiState.creatingProjectTagProjectId !== projectId) return;
+    closeProjectTagPickerModal();
+}
+
+function commitInlineProjectTagCreate(projectId, rawValue) {
+    addProjectTagFromPicker(projectId, rawValue);
+}
+
+function handleInlineProjectTagCreateKeydown(projectId, event) {
+    handleProjectTagPickerKeydown(projectId, event);
+}
+
+function startInlineProjectTagEdit(projectId, tagName, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const normalizedTag = normalizeProjectTagName(tagName);
+    if (!getProjectTags(project).includes(normalizedTag)) return;
+    uiState.creatingProjectTagProjectId = null;
+    uiState.editingProjectTag = { projectId, originalTag: normalizedTag };
+    renderProjectTagControls(projectId);
+}
+
+function cancelInlineProjectTagEdit(projectId) {
+    if (uiState.editingProjectTag?.projectId !== projectId) return;
+    uiState.editingProjectTag = null;
+    renderProjectTagControls(projectId);
+}
+
+function commitInlineProjectTagEdit(projectId, originalTagName, rawValue) {
+    if (!state.canEdit(projectId)) return;
+    const editing = uiState.editingProjectTag;
+    if (!editing || editing.projectId !== projectId) return;
+
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const originalTag = normalizeProjectTagName(originalTagName || editing.originalTag);
+    const nextTag = normalizeProjectTagName(rawValue);
+    uiState.editingProjectTag = null;
+
+    if (!originalTag) {
+        renderProjectTagControls(projectId);
+        return;
+    }
+
+    let nextTags;
+    if (!nextTag) {
+        nextTags = getProjectTags(project).filter(tag => tag !== originalTag);
+        if (uiState.activeProjectTag === originalTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
+    } else {
+        nextTags = normalizeProjectTags(getProjectTags(project).map(tag => tag === originalTag ? nextTag : tag));
+        if (uiState.activeProjectTag === originalTag) uiState.activeProjectTag = nextTag;
+    }
+
+    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+    saveData();
+    renderProjectTagControls(projectId);
+    render();
+}
+
+function handleInlineProjectTagEditKeydown(projectId, originalTagName, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineProjectTagEdit(projectId, originalTagName, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineProjectTagEdit(projectId);
+    }
+}
+
+function openProjectTagEditFromCard(projectId, tagName, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const normalizedTag = normalizeProjectTagName(tagName);
+    uiState.creatingProjectTagProjectId = null;
+    uiState.editingProjectTag = { projectId, originalTag: normalizedTag };
+    openProjectModal(projectId);
+}
+
+function deleteProjectTag(projectId, tagName, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const normalizedTag = normalizeProjectTagName(tagName);
+    const nextTags = getProjectTags(project).filter(tag => tag !== normalizedTag);
+    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+    if (uiState.activeProjectTag === normalizedTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
+    if (uiState.editingProjectTag?.projectId === projectId && uiState.editingProjectTag.originalTag === normalizedTag) {
+        uiState.editingProjectTag = null;
+    }
+    saveData();
+    renderProjectTagControls(projectId);
+    render();
+}
+
+function setProjectTagFilter(tagName) {
+    const normalizedTag = tagName === PROJECT_TAG_ALL_FILTER ? PROJECT_TAG_ALL_FILTER : normalizeProjectTagName(tagName);
+    uiState.activeProjectTag = normalizedTag || PROJECT_TAG_ALL_FILTER;
+    uiState.activeSavedViewId = '';
+    render();
+}
+
+function getProjectCardPreviewTasks(project) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+    const incomplete = tasks.filter(task => !task.completed);
+    const completed = tasks.filter(task => task.completed);
+    return [...incomplete, ...completed].slice(0, 2);
+}
+
+function formatProjectSyncText(project) {
+    return `LAST SYNC: ${timeAgo(project?.lastModified || project?.dateCreated)}`;
+}
+
+function getProjectCardDescription(project) {
+    const rawDescription = String(project?.description || project?.summary || '').trim();
+    if (!rawDescription) return '';
+    return rawDescription.replace(/\s+/g, ' ').slice(0, 110);
+}
+
+function createDefaultProjectNotesTab(body = '') {
+    return {
+        id: PROJECT_NOTES_DEFAULT_TAB_ID,
+        title: 'Notes',
+        body: String(body ?? '')
+    };
+}
+
+function normalizeProjectNotesTab(tab, index = 0) {
+    const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-${Date.now()}-${index}`;
+    const id = String(tab?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+    const title = String(tab?.title || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
+    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? '');
+    return { id, title, body };
+}
+
+function normalizeProjectNotesData(notes) {
+    const raw = String(notes ?? '');
+    if (raw.trim()) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed[PROJECT_NOTES_TAB_DATA_FLAG] === true && Array.isArray(parsed.tabs)) {
+                const tabs = parsed.tabs.map(normalizeProjectNotesTab).filter(Boolean);
+                const safeTabs = tabs.length ? tabs : [createDefaultProjectNotesTab('')];
+                const activeTabId = safeTabs.some(tab => tab.id === parsed.activeTabId)
+                    ? parsed.activeTabId
+                    : safeTabs[0].id;
+                return { activeTabId, tabs: safeTabs };
+            }
+        } catch {
+            // Existing plain-text project notes are migrated into the first tab.
+        }
+    }
+    return {
+        activeTabId: PROJECT_NOTES_DEFAULT_TAB_ID,
+        tabs: [createDefaultProjectNotesTab(raw)]
+    };
+}
+
+function serializeProjectNotesData(data) {
+    const tabs = (Array.isArray(data?.tabs) ? data.tabs : [])
+        .map(normalizeProjectNotesTab)
+        .filter(Boolean);
+    const safeTabs = tabs.length ? tabs : [createDefaultProjectNotesTab('')];
+    const activeTabId = safeTabs.some(tab => tab.id === data?.activeTabId)
+        ? data.activeTabId
+        : safeTabs[0].id;
+    return JSON.stringify({
+        [PROJECT_NOTES_TAB_DATA_FLAG]: true,
+        activeTabId,
+        tabs: safeTabs
+    });
+}
+
+function getProjectNotesPlainText(notes) {
+    const data = normalizeProjectNotesData(notes);
+    return data.tabs
+        .map(tab => `${tab.title} ${tab.body}`.trim())
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+}
+
+function projectHasNotes(notes) {
+    const data = normalizeProjectNotesData(notes);
+    return data.tabs.some(tab => String(tab.body || '').trim().length > 0);
+}
+
+function formatProjectNotesPreview(notes) {
+    const rawNotes = getProjectNotesPlainText(notes).trim();
+    return rawNotes ? rawNotes.replace(/\s+/g, ' ').slice(0, 96) : '';
+}
+
+function getProjectModalDescription(project) {
+    const rawDescription = String(project?.description || project?.summary || '').trim();
+    return rawDescription.replace(/\s+/g, ' ').slice(0, 280);
+}
+
+function formatLeaderboardScore(entry, isCurrent = false) {
+    const percentage = isCurrent
+        ? calculateTotalCompletion()
+        : Math.round(Number(entry?.totalCompletionPercentage || 0));
+    return `${Number.isFinite(percentage) ? percentage : 0}%`;
+}
+
+function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
+    const normalizedTask = normalizeTask(task);
+    const project = state.findProject(projectId);
+    const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
+    const hasTaskNote = normalizedTask.note.trim().length > 0;
+    const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
+    const dueDateLabel = dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date';
+    const priorityBulkCount = getIncompleteTaskCountForPriority(project, normalizedTask.tag);
+    const priorityBulkLabel = getPriorityTagLabel(normalizedTask.tag);
+
+    return `
+        <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
+             data-task-item
+             data-task-id="${normalizedTask.id}"
+             onclick="handleTaskClick('${projectId}', ${normalizedTask.id}, event)">
+            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+            </svg>
+            <div class="task-checkbox ${normalizedTask.completed ? 'checked' : ''}"
+                 data-task-checkbox="${normalizedTask.id}"
+                 onclick="event.stopPropagation(); toggleTask('${projectId}', ${normalizedTask.id})">
+                ${normalizedTask.completed ? `
+                    <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                ` : ''}
+            </div>
+            <div class="task-main-content">
+                <span class="task-text ${normalizedTask.completed ? 'completed' : ''}"
+                      data-task-text="${normalizedTask.id}"
+                      id="modal-task-text-${normalizedTask.id}"
+                      onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${escapeHtml(normalizedTask.text)}</span>
+                <textarea class="task-input task-input--textarea"
+                          id="modal-task-input-${normalizedTask.id}"
+                          placeholder="New task"
+                          rows="1"
+                          style="display: none;"
+                          oninput="autoResizeModalTaskInput(this)"
+                          onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
+                          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(normalizedTask.text)}</textarea>
+            </div>
+            <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <label class="task-due-date-control ${dueDate ? 'has-due-date' : ''}"
+                       title="${escapeHtml(dueDateLabel)}"
+                       onclick="event.stopPropagation();"
+                       onpointerdown="event.stopPropagation();">
+                    <input class="task-due-date-input"
+                           id="modal-task-due-${normalizedTask.id}"
+                           type="date"
+                           value="${escapeHtml(dueDate)}"
+                           aria-label="Task due date"
+                           onchange="updateTaskDueDate('${projectId}', ${normalizedTask.id}, this.value)"
+                           onclick="event.stopPropagation();"
+                           onpointerdown="event.stopPropagation();">
+                </label>
+                <button class="task-note-button ${hasTaskNote ? 'has-note' : ''}"
+                        type="button"
+                        aria-label="${hasTaskNote ? 'Edit task note' : 'Add task note'}"
+                        title="${hasTaskNote ? 'Edit task note' : 'Add task note'}"
+                        onclick="openTaskNoteModal('${projectId}', ${normalizedTask.id}, event)">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                    </svg>
+                </button>
+                <div class="task-priority-control ${priorityMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+                    <button class="task-priority-button task-priority-button--${normalizedTask.tag}"
+                            type="button"
+                            aria-label="Task priority"
+                            onclick="toggleTaskPriorityMenu('${projectId}', ${normalizedTask.id}, event)">
+                        <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                    </button>
+                    ${priorityMenuOpen ? `
+                        <div class="task-priority-popover" onclick="event.stopPropagation()">
+                            ${TASK_TAG_OPTIONS.map(option => `
+                                <button class="task-priority-option ${normalizedTask.tag === option.value ? 'is-active' : ''}"
+                                        type="button"
+                                        onclick="selectTaskPriority('${projectId}', ${normalizedTask.id}, '${option.value}')">
+                                    <span class="task-tag-flag task-tag-flag--${option.value}" aria-hidden="true"></span>
+                                    <span>${option.label}</span>
+                                </button>
+                            `).join('')}
+                            <div class="task-priority-menu-divider" aria-hidden="true"></div>
+                            <button class="task-priority-option task-priority-option--bulk"
+                                    type="button"
+                                    ${priorityBulkCount > 0 ? '' : 'disabled'}
+                                    onclick="completeTasksByPriority('${projectId}', '${normalizedTask.tag}', event)">
+                                <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                                <span>Mark all ${escapeHtml(priorityBulkLabel)} complete${priorityBulkCount > 0 ? ` (${priorityBulkCount})` : ''}</span>
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="delete-button" onclick="event.stopPropagation(); deleteTaskFromModal('${projectId}', ${normalizedTask.id})" style="opacity: 1;">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function ensureTaskNoteModal() {
+    let modal = document.getElementById('taskNoteModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay task-note-modal-overlay" id="taskNoteModal" aria-hidden="true">
+            <div class="modal-content task-note-modal-content" role="dialog" aria-modal="true" aria-labelledby="taskNoteModalTitle">
+                <div class="task-note-modal-header">
+                    <div>
+                        <h3 class="task-note-modal-title" id="taskNoteModalTitle">Task Note</h3>
+                        <p class="task-note-modal-subtitle" id="taskNoteModalSubtitle">Add details for this task.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeTaskNoteModal()" aria-label="Close task note">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <textarea class="task-note-textarea" id="taskNoteTextarea" placeholder="Write a note for this task..."></textarea>
+                <div class="task-note-modal-actions">
+                    <button class="confirm-cancel" type="button" onclick="closeTaskNoteModal()">Cancel</button>
+                    <button class="modal-done-btn" type="button" onclick="saveTaskNoteFromModal()">Save Note</button>
+                </div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('taskNoteModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeTaskNoteModal();
+    });
+    return modal;
+}
+
+function openTaskNoteModal(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const task = (project.tasks || [])
+        .map((item, index) => normalizeTask(item, index))
+        .find(item => item.id === taskId);
+    if (!task) return;
+
+    const modal = ensureTaskNoteModal();
+    modal.dataset.projectId = projectId;
+    modal.dataset.taskId = String(taskId);
+
+    const subtitle = modal.querySelector('#taskNoteModalSubtitle');
+    if (subtitle) subtitle.textContent = task.text ? `Note for: ${task.text}` : 'Add details for this task.';
+
+    const textarea = modal.querySelector('#taskNoteTextarea');
+    if (textarea) textarea.value = task.note || '';
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => textarea?.focus({ preventScroll: true }));
+}
+
+function closeTaskNoteModal() {
+    const modal = document.getElementById('taskNoteModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
+    delete modal.dataset.taskId;
+}
+
+function saveTaskNoteFromModal() {
+    const modal = document.getElementById('taskNoteModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    const taskId = Number(modal.dataset.taskId);
+    const textarea = modal.querySelector('#taskNoteTextarea');
+    if (!projectId || !Number.isFinite(taskId) || !textarea) return;
+    updateTaskNote(projectId, taskId, textarea.value);
+    closeTaskNoteModal();
+}
+
+function updateTaskNote(projectId, taskId, noteValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            note: String(noteValue ?? '').trim()
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function renderModalTaskList(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const taskList = document.getElementById(`modal-task-list-${projectId}`);
+    if (!taskList) return;
+
+    const hideCompleted = getProjectHideCompletedPreference(projectId);
+    const sortMode = getProjectTaskSortPreference(projectId);
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory });
+    const selectedTasks = state.getSelectedTasks(projectId);
+
+    taskList.dataset.sortMode = sortMode;
+    taskList.dataset.activeCategory = activeCategory;
+    taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    renderTaskCategoryControls(projectId);
+
+    setTimeout(() => setupTaskDragAndDrop(projectId), 100);
+}
+
+
+function setProjectTaskSortMode(projectId, sortMode) {
+    setProjectTaskSortPreference(projectId, sortMode);
+    renderModalTaskList(projectId);
+}
+
+function setProjectTaskCategoryFilter(projectId, categoryValue) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const categories = getProjectTaskCategories(project);
+    const nextCategory = categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? DEFAULT_TASK_CATEGORY_FILTER
+        : (categories.includes(categoryValue) ? categoryValue : DEFAULT_TASK_CATEGORY_FILTER);
+    setStoredProjectTaskCategoryFilter(projectId, nextCategory);
+    renderModalTaskList(projectId);
+}
+
+function toggleTaskPriorityMenu(projectId, taskId, event) {
+    event?.stopPropagation?.();
+    const isOpen = isTaskPriorityMenuOpen(projectId, taskId);
+    uiState.openTaskCategoryMenu = null;
+    uiState.openProjectPriorityMenu = null;
+    uiState.openTaskPriorityMenu = isOpen ? null : { projectId, taskId };
+    renderModalTaskList(projectId);
+}
+
+function selectTaskPriority(projectId, taskId, tagValue) {
+    updateTaskTag(projectId, taskId, tagValue);
+    uiState.openTaskPriorityMenu = null;
+    renderModalTaskList(projectId);
+}
+
+function toggleTaskCategoryMenu(projectId, category, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    event?.stopImmediatePropagation?.();
+    const isOpen = isTaskCategoryMenuOpen(projectId, category);
+    uiState.openTaskPriorityMenu = null;
+    uiState.openProjectPriorityMenu = null;
+    uiState.openTaskCategoryMenu = isOpen ? null : { projectId, category };
+    renderTaskCategoryControls(projectId);
+}
+
+function renameTaskCategoryPrompt(projectId, currentCategory) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const nextNameRaw = window.prompt('Rename category', currentCategory);
+    if (nextNameRaw === null) return;
+    const nextCategory = sanitizeTaskCategoryName(nextNameRaw);
+    if (!nextCategory) return;
+    if (nextCategory === currentCategory) {
+        uiState.openTaskCategoryMenu = null;
+        renderTaskCategoryControls(projectId);
+        return;
+    }
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.category !== currentCategory) return normalizedTask;
+        return { ...normalizedTask, category: nextCategory };
+    });
+    const nextCategories = getTaskCategoryListWith(getProjectTaskCategories(project).map(category => category === currentCategory ? nextCategory : category));
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
+        setStoredProjectTaskCategoryFilter(projectId, nextCategory);
+    }
+    uiState.openTaskCategoryMenu = null;
+    saveData();
+    uiState.openTaskPriorityMenu = null;
+    renderModalTaskList(projectId);
+    render();
+}
+
+function deleteTaskCategory(projectId, currentCategory) {
+    if (!state.canEdit(projectId) || currentCategory === DEFAULT_TASK_CATEGORY) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    if (!window.confirm(`Delete "${currentCategory}"? Tasks in this category will move back to All.`)) return;
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.category !== currentCategory) return normalizedTask;
+        return { ...normalizedTask, category: DEFAULT_TASK_CATEGORY };
+    });
+    const nextCategories = getProjectTaskCategories(project).filter(category => category !== currentCategory);
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
+        setStoredProjectTaskCategoryFilter(projectId, DEFAULT_TASK_CATEGORY_FILTER);
+    }
+    uiState.openTaskCategoryMenu = null;
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function updateTaskTag(projectId, taskId, tagValue) {
+    if (!state.canEdit(projectId)) return;
+    const normalizedTagValue = String(tagValue ?? '').trim().toLowerCase();
+    const nextTag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, normalizedTagValue) ? normalizedTagValue : DEFAULT_TASK_TAG;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            tag: nextTag
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function cycleProjectCardTaskPriority(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    const task = project?.tasks
+        ?.map((item, index) => normalizeTask(item, index))
+        .find(item => item.id === taskId);
+    if (!task) return;
+
+    updateTaskTag(projectId, taskId, getNextTaskPriorityValue(task));
+}
+
+function updateProjectPriority(projectId, tagValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const nextTag = normalizePriorityTagValue(tagValue);
+    uiState.openProjectPriorityMenu = null;
+    state.updateProject(projectId, projectUpdate({ projectPriorityTag: nextTag }));
+    saveData();
+
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    if (modalOpen) {
+        openProjectModal(projectId, { restoreState: modalState });
+    } else {
+        render();
+    }
+}
+
+function renderProjectPrioritySurface(projectId) {
+    const openProjectId = getOpenProjectModalId();
+    if (openProjectId && String(openProjectId) === String(projectId)) {
+        const modalState = captureProjectModalState(projectId);
+        openProjectModal(projectId, { restoreState: modalState });
+        return;
+    }
+    render();
+}
+
+function toggleProjectPriorityMenu(projectId, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const isOpen = isProjectPriorityMenuOpen(projectId, surface);
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+    uiState.openProjectPriorityMenu = isOpen ? null : { projectId, surface };
+    renderProjectPrioritySurface(projectId);
+}
+
+function selectProjectPriority(projectId, tagValue, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    uiState.openProjectPriorityMenu = null;
+    updateProjectPriority(projectId, tagValue);
+}
+
+function cycleProjectPriority(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    updateProjectPriority(projectId, getNextProjectPriorityValue(project));
+}
+
+function updateTaskCategory(projectId, taskId, categoryValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const nextCategory = sanitizeTaskCategoryName(categoryValue || DEFAULT_TASK_CATEGORY);
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== taskId) return normalizedTask;
+        return {
+            ...normalizedTask,
+            category: nextCategory
+        };
+    });
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), nextCategory]);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function startInlineTaskCategoryCreate(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    uiState.openTaskPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+    uiState.creatingTaskCategoryProjectId = projectId;
+    renderTaskCategoryControls(projectId);
+}
+
+function cancelInlineTaskCategoryCreate(projectId) {
+    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
+    uiState.creatingTaskCategoryProjectId = null;
+    renderTaskCategoryControls(projectId);
+}
+
+function commitInlineTaskCategoryCreate(projectId, rawValue) {
+    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const rawText = String(rawValue ?? '').trim();
+    if (!rawText) {
+        cancelInlineTaskCategoryCreate(projectId);
+        return;
+    }
+
+    const nextCategory = sanitizeTaskCategoryName(rawText);
+    if (isDefaultTaskCategoryName(nextCategory)) {
+        cancelInlineTaskCategoryCreate(projectId);
+        return;
+    }
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), nextCategory]);
+    uiState.creatingTaskCategoryProjectId = null;
+    state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
+    saveData();
+    setProjectTaskCategoryFilter(projectId, nextCategory);
+    render();
+}
+
+function handleInlineTaskCategoryCreateKeydown(projectId, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineTaskCategoryCreate(projectId, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineTaskCategoryCreate(projectId);
+    }
+}
+
+function createTaskCategory(projectId, rawValue = '') {
+    if (rawValue) {
+        uiState.creatingTaskCategoryProjectId = projectId;
+        commitInlineTaskCategoryCreate(projectId, rawValue);
+        return;
+    }
+    startInlineTaskCategoryCreate(projectId);
+}
+
+function handleTaskCategoryCreateKeydown(event, projectId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        startInlineTaskCategoryCreate(projectId, event);
+    }
+}
+
+function openProjectModal(projectId, options = {}) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+    const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+    const hideCompleted = getProjectHideCompletedPreference(project.id);
+    const taskSortMode = getProjectTaskSortPreference(project.id);
+    const activeCategory = getProjectTaskCategoryFilter(project.id);
+    state.setHideCompletedTasks(hideCompleted);
+    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
+
+    const completedTasks = tasks.filter(t => t.completed).length;
+    const totalTasks = tasks.length;
+    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    
+    const modal = document.getElementById('projectModal');
+    const content = document.getElementById('modalContent');
+    
+    const selectedTasks = state.getSelectedTasks(projectId);
+    
+    content.innerHTML = `<div class="modal-scroll-inner">
+        <div class="modal-header-centered">
+            <div class="modal-title-container">
+                <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
+                <input type="text" 
+                       class="modal-title-input" 
+                       id="modal-title-input-${project.id}"
+                       value="${escapeHtml(project.title)}"
+                       style="display: none;"
+                       onblur="finishEditModalTitle('${project.id}')"
+                       oninput="handleProjectTitleInput(this)"
+                       onanimationend="this.classList.remove('project-title-shake')"
+                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
+                <div class="modal-stats">
+                    <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span>Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
+                    <span>•</span>
+                    <span>${totalTasks} tasks</span>
+                    <span>•</span>
+                    <span>${completedTasks} done</span>
+                </div>
+                ${buildProjectTagControlsMarkup(project.id, project)}
+                <div class="modal-project-priority-row">
+                    ${renderProjectPriorityControlMarkup(project.id, project, 'modal')}
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+                <button class="modal-copy-button" onclick="copyProjectToClipboard('${project.id}', event)">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
+                <button class="modal-close" onclick="closeProjectModal()">
+                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="modal-project-description-view ${getProjectModalDescription(project) ? '' : 'is-empty'}"
+             id="modal-project-description-view-${project.id}">
+            <span class="modal-project-description-text"
+                  id="modal-project-description-${project.id}"
+                  data-placeholder="Add project description"
+                  role="textbox"
+                  ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); return false; } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
+            ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
+        </div>
+
+        <div class="modal-progress">
+            <div class="progress-bar-container">
+                <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${percentage}%"></div>
+            </div>
+            <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
+        </div>
+        
+        <!-- Tabs for Tasks, Notes and Members -->
+        <div class="modal-tabs">
+            <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
+            <button class="modal-tab modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
+                <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>
+                Notes
+            </button>
+            <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
+                Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
+            </button>
+            <button class="modal-tab" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
+        </div>
+        
+        <!-- Tasks Section -->
+        <div class="modal-section" id="tasks-section-${project.id}">
+            <div class="modal-tasks-card">
+                <div class="task-category-controls" id="task-category-controls-${project.id}">
+                    ${buildTaskCategoryControlsMarkup(project.id, project, activeCategory)}
+                </div>
+
+                <div class="modal-tasks-card-body">
+                    <div class="modal-task-controls-row">
+                        <div class="hide-completed-toggle">
+                            <div class="toggle-label">Hide completed tasks</div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
+                                       onchange="toggleHideCompleted()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <button class="modal-add-task-top modal-add-task-under-toggle" type="button" onclick="addTaskToModal('${project.id}')">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Add Task
+                            </button>
+                        </div>
+                        <div class="task-sort-control">
+                            <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
+                            <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
+                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                                <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-tasks">
+                        <div class="task-list" id="modal-task-list-${project.id}">
+                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
+                        </div>
+                        
+                        <!-- Paste Tasks Section in Modal -->
+                        <div class="modal-paste-section">
+                            <h4 class="modal-paste-title">Tasks List</h4>
+                            <textarea 
+                                class="paste-box"
+                                id="modal-paste-box-${project.id}"
+                                placeholder="Enter tasks here"
+                                onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
+                            <button 
+                                class="paste-button"
+                                onclick="pasteTasksInModal('${project.id}')">
+                                Add Pasted Tasks
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Actions - Only in Tasks Tab -->
+            ${project.userRole === 'viewer' ? `
+            <div class="viewer-banner">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                You have viewer access ${project.ownerName ? '— shared by ' + project.ownerName : ''}
+            </div>` : `
+            <div class="modal-actions">
+                ${project.archived ? `<button class="modal-delete-btn" onclick="restoreArchivedProject('${project.id}')">Restore Project</button>` : `<button class="modal-delete-btn" onclick="archiveProject('${project.id}')">Archive Project</button>`}
+                ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
+                <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
+                    ${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}
+                </button>
+            </div>`}
+        </div>
+
+        <!-- Notes Section -->
+        <div class="modal-section hidden" id="notes-section-${project.id}">
+            ${buildProjectNotesEditorMarkup(project.id, project, 'modal')}
+        </div>
+        
+        <!-- Members Section -->
+        <div class="modal-section hidden" id="members-section-${project.id}">
+            <div class="members-panel">
+                <!-- Owner -->
+                <div class="members-list">
+                    <div class="member-row member-row--owner">
+                        <div class="member-info">
+                            <span class="member-avatar">${(project.ownerName || 'O')[0].toUpperCase()}</span>
+                            <div>
+                                <div class="member-name">${project.ownerName || 'Owner'}</div>
+                                <div class="member-email">${project.ownerEmail || ''}</div>
+                            </div>
+                        </div>
+                        <span class="member-role-badge member-role-badge--owner">owner</span>
+                    </div>
+                    ${(project.collaborators || []).map(c => `
+                    <div class="member-row">
+                        <div class="member-info">
+                            <span class="member-avatar">${c.username[0].toUpperCase()}</span>
+                            <div>
+                                <div class="member-name">${c.username}</div>
+                                <div class="member-email">${c.email}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            ${project.userRole === 'owner' ? `
+                            <select class="member-role-select" onchange="changeCollaboratorRole('${project.id}', '${c.userId}', this.value)">
+                                <option value="viewer" ${c.role === 'viewer' ? 'selected' : ''}>viewer</option>
+                                <option value="editor" ${c.role === 'editor' ? 'selected' : ''}>editor</option>
+                            </select>
+                            <button class="member-remove-btn" onclick="removeCollaborator('${project.id}', '${c.userId}')" title="Remove">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            ` : `<span class="member-role-badge member-role-badge--${c.role}">${c.role}</span>`}
+                        </div>
+                    </div>
+                    `).join('')}
+                </div>
+
+                ${project.userRole === 'owner' ? `
+                <!-- Invite form (owner only) -->
+                <div class="invite-form">
+                    <h4 class="invite-title">Invite someone</h4>
+                    <div class="invite-row">
+                        <input class="invite-email-input" id="invite-email-${project.id}"
+                               type="email" placeholder="their@email.com">
+                        <select class="invite-role-select" id="invite-role-${project.id}">
+                            <option value="editor">editor</option>
+                            <option value="viewer">viewer</option>
+                        </select>
+                    </div>
+                    <p class="invite-role-hint" id="invite-role-hint-${project.id}">
+                        <strong>Editor</strong> — can add, edit and complete tasks<br>
+                        <strong>Viewer</strong> — read-only access
+                    </p>
+                    <p class="invite-error hidden" id="invite-error-${project.id}"></p>
+                    <button class="invite-submit-btn" onclick="inviteCollaborator('${project.id}')">Send Invite</button>
+                </div>
+                ` : '<p class="viewer-note">Contact the project owner to change member settings.</p>'}
+            </div>
+        </div>
+
+
+        <div class="modal-section hidden" id="history-section-${project.id}">
+            <div class="project-activity-list">
+                ${getProjectActivities(project).length ? getProjectActivities(project).map(activity => `
+                    <div class="project-activity-item">
+                        <div class="project-activity-meta">
+                            <span>${escapeHtml(activity.actorName || 'System')}</span>
+                            <span>${escapeHtml(formatCompactDateTime(activity.createdAt))}</span>
+                        </div>
+                        <div class="project-activity-message">${escapeHtml(activity.message || 'Updated the project')}</div>
+                    </div>
+                `).join('') : '<div class="side-panel-empty">No activity yet</div>'}
+            </div>
+        </div>
+    </div>`;
+    
+    modal.classList.add('active');
+
+    if (options.restoreState) {
+        restoreProjectModalState(project.id, options.restoreState);
+    } else if (options.activeTab) {
+        switchModalTab(project.id, options.activeTab);
+    }
+    
+    // Setup task dragging for manual reordering and category-tab drops.
+    setTimeout(() => setupTaskDragAndDrop(project.id), 100);
+}
+
+
+function switchModalTab(projectId, tab) {
+    ['tasks', 'notes', 'members', 'history'].forEach(s => {
+        const sec = document.getElementById(`${s}-section-${projectId}`);
+        const btn = document.getElementById(`${s}-tab-${projectId}`);
+        if (!sec || !btn) return;
+        if (s === tab) { sec.classList.remove('hidden'); btn.classList.add('active'); }
+        else           { sec.classList.add('hidden');    btn.classList.remove('active'); }
+    });
+}
+
+function saveProjectNotes(projectId) {
+    saveActiveProjectNoteFromSurface(projectId, 'modal');
+}
+
+function toggleHideCompleted() {
+    const checkbox = document.getElementById('hide-completed-checkbox');
+    if (!checkbox) return;
+    state.setHideCompletedTasks(checkbox.checked);
+
+    const modalContent = document.getElementById('modalContent');
+    const progressBar = modalContent?.querySelector('[data-progress-bar]');
+    const projectId = progressBar?.getAttribute('data-progress-bar');
+    if (!projectId) return;
+
+    setProjectHideCompletedPreference(projectId, checkbox.checked);
+    renderModalTaskList(projectId);
+}
+
+function closeProjectModal() {
+    const modal = document.getElementById('projectModal');
+    modal.classList.remove('active');
+    state.clearAllTaskSelections();
+    render();
+}
+
+function editModalTitle(projectId) {
+    if (!state.canEdit(projectId)) return;
+    const titleButton = document.getElementById(`modal-title-${projectId}`);
+    const titleInput = document.getElementById(`modal-title-input-${projectId}`);
+    if (!titleButton || !titleInput) return;
+    titleButton.style.display = 'none';
+    titleInput.style.display = 'block';
+    titleInput.value = titleButton.textContent.trim() || 'New Project';
+    requestAnimationFrame(() => {
+        titleInput.focus({ preventScroll: true });
+        titleInput.select();
+    });
+}
+
+function finishEditModalTitle(projectId) {
+    const titleButton = document.getElementById(`modal-title-${projectId}`);
+    const titleInput = document.getElementById(`modal-title-input-${projectId}`);
+    if (!titleButton || !titleInput) return;
+
+    const nextTitle = normalizeProjectTitleInput(titleInput.value) || 'New Project';
+    titleInput.value = nextTitle;
+    if (!validateProjectTitleInput(titleInput)) return;
+    clearProjectTitleWarning(titleInput);
+    titleButton.textContent = nextTitle;
+    titleInput.style.display = 'none';
+    titleButton.style.display = '';
+    updateProjectTitle(projectId, nextTitle);
+}
+
+function setProjectDescriptionViewState(projectId, description) {
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
+    const cleanDescription = normalizeProjectDescription(description);
+
+    if (descriptionText) {
+        descriptionText.textContent = cleanDescription || 'Add project description';
+        descriptionText.classList.toggle('is-empty', !cleanDescription);
+    }
+    descriptionView?.classList.toggle('is-empty', !cleanDescription);
+}
+
+function selectEditableText(element) {
+    if (!element) return;
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+}
+
+function editProjectDescription(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionView || !descriptionText) return;
+    if (descriptionText.isContentEditable) return;
+
+    const currentDescription = getProjectModalDescription(project);
+    descriptionText.textContent = currentDescription;
+    descriptionText.setAttribute('contenteditable', 'true');
+    descriptionText.classList.add('is-editing');
+    descriptionView.classList.add('is-editing');
+    descriptionView.querySelector('.modal-project-description-edit')?.classList.add('hidden');
+
+    requestAnimationFrame(() => {
+        descriptionText.focus({ preventScroll: true });
+        selectEditableText(descriptionText);
+    });
+}
+
+function cancelEditProjectDescription(projectId) {
+    const project = state.findProject(projectId);
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
+    if (!descriptionView || !descriptionText) return;
+
+    descriptionText.removeAttribute('contenteditable');
+    descriptionText.classList.remove('is-editing');
+    descriptionView.classList.remove('is-editing');
+    descriptionView.querySelector('.modal-project-description-edit')?.classList.remove('hidden');
+    setProjectDescriptionViewState(projectId, getProjectModalDescription(project));
+}
+
+function finishEditProjectDescription(projectId) {
+    const descriptionText = document.getElementById(`modal-project-description-${projectId}`);
+    const descriptionView = document.getElementById(`modal-project-description-view-${projectId}`);
+    if (!descriptionText || !descriptionText.isContentEditable) return;
+
+    const description = normalizeProjectDescription(descriptionText.textContent);
+    descriptionText.removeAttribute('contenteditable');
+    descriptionText.classList.remove('is-editing');
+    if (descriptionView) {
+        descriptionView.classList.remove('is-editing');
+        descriptionView.querySelector('.modal-project-description-edit')?.classList.remove('hidden');
+    }
+    setProjectDescriptionViewState(projectId, description);
+    updateProjectDescription(projectId, description);
+}
+function autoResizeModalTaskInput(input) {
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = `${Math.max(input.scrollHeight, 44)}px`;
+}
+
+function editModalTask(taskId) {
+    const taskText = document.getElementById(`modal-task-text-${taskId}`);
+    const taskInput = document.getElementById(`modal-task-input-${taskId}`);
+    const taskItem = taskInput?.closest?.('[data-task-item]');
+    if (taskText && taskInput) {
+        taskItem?.classList.add('is-editing');
+        taskText.style.display = 'none';
+        taskInput.style.display = 'block';
+        autoResizeModalTaskInput(taskInput);
+        taskInput.focus({ preventScroll: true });
+        taskInput.select();
+    }
+}
+
+function finishEditModalTask(projectId, taskId) {
+    const taskText = document.getElementById(`modal-task-text-${taskId}`);
+    const taskInput = document.getElementById(`modal-task-input-${taskId}`);
+    const taskItem = taskInput?.closest?.('[data-task-item]');
+    if (taskText && taskInput) {
+        const trimmed = taskInput.value.trim();
+        const wasNewTaskDraft = String(uiState.newTaskDraft?.projectId || '') === String(projectId)
+            && Number(uiState.newTaskDraft?.taskId) === Number(taskId);
+        taskItem?.classList.remove('is-editing');
+        if (trimmed.length === 0) {
+            // Empty text — remove the task entirely, don't persist it
+            if (wasNewTaskDraft) uiState.newTaskDraft = null;
+            deleteTask(projectId, taskId);
+            openProjectModal(projectId);
+            return;
+        }
+        if (wasNewTaskDraft) uiState.newTaskDraft = null;
+        updateTaskText(projectId, taskId, trimmed);
+        taskText.textContent = trimmed;
+        taskText.style.display = 'block';
+        taskInput.style.display = 'none';
+        taskInput.style.height = '';
+        if (wasNewTaskDraft) {
+            requestAnimationFrame(() => renderModalTaskList(projectId));
+        }
+    }
+}
+
+function addTaskToModal(projectId) {
+    const newTaskId = addTaskToProject(projectId);
+    if (!newTaskId) return;
+
+    uiState.newTaskDraft = { projectId: String(projectId), taskId: Number(newTaskId) };
+
+    const modal = document.getElementById('projectModal');
+    const modalIsOpen = modal?.classList.contains('active');
+
+    if (modalIsOpen) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        updateTotalCompletion();
+        render();
+    } else {
+        render();
+        openProjectModal(projectId);
+    }
+
+    requestAnimationFrame(() => {
+        const taskItem = document.querySelector(`#modal-task-list-${projectId} [data-task-id="${newTaskId}"]`);
+        taskItem?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        editModalTask(newTaskId);
+    });
+}
+
+
+function deleteTaskFromModal(projectId, taskId) {
+    deleteTask(projectId, taskId);
+}
+
+function completeProjectFromModal(projectId) {
+    completeProject(projectId);
+    closeProjectModal();
+}
+
+// ============================================================================
+// CONFIRMATION DIALOGS
+// ============================================================================
+
+function confirmDeleteProject(projectId) {
+    const confirmDialog = document.getElementById('confirmDialog');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    confirmBtn.onclick = () => {
+        deleteProject(projectId);
+        closeConfirmDialog();
+        closeProjectModal();
+    };
+    
+    confirmDialog.classList.add('active');
+}
+
+function confirmDeleteProjectCard(projectId) {
+    const confirmDialog = document.getElementById('confirmDialog');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    confirmBtn.onclick = () => {
+        deleteProject(projectId);
+        closeConfirmDialog();
+    };
+    
+    confirmDialog.classList.add('active');
+}
+
+function closeConfirmDialog() {
+    const confirmDialog = document.getElementById('confirmDialog');
+    confirmDialog.classList.remove('active');
+}
+
+// ============================================================================
+// PASTE FUNCTIONALITY
+// ============================================================================
+
+function pasteTasks() {
+    
+    
+    const projectSelect = document.getElementById('pasteProjectSelect');
+    const pasteBox = document.getElementById('pasteBox');
+    const projectId = projectSelect.value;
+    const taskText = pasteBox.value.trim();
+    
+    if (!projectId || !taskText) return;
+    
+    const taskLines = taskText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+    
+    if (taskLines.length === 0) return;
+    
+    const project = state.findProject(projectId);
+    if (!project) return;
+    
+    const newTasks = taskLines.map(text => normalizeTask({
+        id: Date.now() + Math.random(),
+        text,
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        category: DEFAULT_TASK_CATEGORY
+    }));
+    const nextCategories = getProjectTaskCategories(project);
+    
+    const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    
+    pasteBox.value = '';
+    projectSelect.value = '';
+    document.getElementById('pasteButton').disabled = true;
+    
+    saveData();
+    render();
+}
+
+function pasteTasksInModal(projectId) {
+    const pasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+    if (!pasteBox) return;
+
+    const taskText = pasteBox.value.trim();
+    if (!taskText) return;
+
+    const taskLines = taskText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+    if (taskLines.length === 0) return;
+
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const modalScroll = pasteBox.closest('.modal-scroll-inner');
+    const previousScrollTop = modalScroll?.scrollTop ?? null;
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const newTasks = taskLines.map(text => normalizeTask({
+        id: Date.now() + Math.random(),
+        text,
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        category
+    }));
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
+
+    const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+
+    pasteBox.value = '';
+    saveData();
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+
+    requestAnimationFrame(() => {
+        if (modalScroll && previousScrollTop !== null) {
+            modalScroll.scrollTop = previousScrollTop;
+        }
+        const nextPasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+        if (nextPasteBox) nextPasteBox.focus({ preventScroll: true });
+    });
+}
+
+async function archiveProject(projectId) {
+    const project = state.findProject(projectId);
+    if (!project || !project._id) return;
+    state.updateProject(projectId, projectUpdate({ archived: true }));
+    await saveData();
+    closeProjectModal();
+    render();
+}
+
+async function restoreArchivedProject(projectId) {
+    const project = state.findProject(projectId);
+    if (!project || !project._id) return;
+    state.updateProject(projectId, projectUpdate({ archived: false }));
+    await saveData();
+    render();
+}
+
+function handleModalPasteKeydown(projectId, event) {
+    if (!event || event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    pasteTasksInModal(projectId);
+}
+
+function getCommandPaletteActions() {
+    const currentVisible = getFilteredProjects();
+    return [
+        { id: 'new-project', title: 'Create new project', copy: 'Add a project and open it immediately.', run: () => addProject() },
+        { id: 'view-active', title: 'Switch to Active Projects', copy: 'Show active projects.', run: () => switchToActiveView() },
+        { id: 'view-completed', title: 'Switch to Completed Projects', copy: 'Show completed projects.', run: () => switchToCompletedView() },
+        { id: 'toggle-panel', title: 'Toggle control panel', copy: 'Collapse or expand the side panel.', run: () => {
+            document.getElementById('panelEdgeToggle')?.click();
+        } },
+        { id: 'open-account', title: 'Open account settings', copy: 'Edit your profile and stats.', run: () => openAccountSettingsModal() },
+        { id: 'open-ui', title: 'Open UI options', copy: 'Change the current theme.', run: () => openUiOptionsModal() },
+        ...currentVisible.slice(0, 10).map(project => ({
+            id: `open-${project.id}`,
+            title: `Open ${project.title}`,
+            copy: `Open project details. Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}.`,
+            run: () => openProjectModal(project.id)
+        })),
+        ...getArchivedProjects().slice(0, 10).map(project => ({
+            id: `restore-${project.id}`,
+            title: `Restore ${project.title}`,
+            copy: 'Restore this archived project.',
+            run: () => restoreArchivedProject(project.id)
+        }))
+    ];
+}
+
+function renderCommandPalette() {
+    const list = document.getElementById('commandPaletteList');
+    const input = document.getElementById('commandPaletteInput');
+    if (!list || !input) return;
+    const query = uiState.commandQuery.trim().toLowerCase();
+    const actions = getCommandPaletteActions().filter(action => {
+        if (!query) return true;
+        return `${action.title} ${action.copy}`.toLowerCase().includes(query);
+    });
+    if (uiState.commandActiveIndex >= actions.length) uiState.commandActiveIndex = 0;
+    list.innerHTML = actions.length ? actions.map((action, index) => `
+        <button class="command-palette-item ${index === uiState.commandActiveIndex ? 'is-active' : ''}" type="button" data-command-id="${action.id}">
+            <span class="command-palette-title">${escapeHtml(action.title)}</span>
+            <span class="command-palette-copy">${escapeHtml(action.copy)}</span>
+        </button>
+    `).join('') : '<div class="side-panel-empty">No commands found</div>';
+
+    list.querySelectorAll('[data-command-id]').forEach((button, index) => {
+        button.addEventListener('click', () => {
+            actions[index]?.run();
+            closeCommandPalette();
+        });
+    });
+}
+
+function openCommandPalette() {
+    uiState.commandPaletteOpen = true;
+    uiState.commandQuery = '';
+    uiState.commandActiveIndex = 0;
+    const modal = document.getElementById('commandPaletteModal');
+    const input = document.getElementById('commandPaletteInput');
+    if (modal) modal.classList.add('active');
+    if (input) input.value = '';
+    renderCommandPalette();
+    setTimeout(() => input?.focus(), 20);
+}
+
+function closeCommandPalette() {
+    uiState.commandPaletteOpen = false;
+    document.getElementById('commandPaletteModal')?.classList.remove('active');
+}
+
+// ============================================================================
+// UI RENDERING
+// ============================================================================
+
+function render() {
+    const displayProjects = getFilteredProjects();
+    const projectGrid = document.getElementById('projectGrid');
+    const emptyState = document.getElementById('emptyState');
+    if (!projectGrid || !emptyState) return;
+
+    const stats = state.getStats() || { completedTasks: 0, completedProjects: 0 };
+    const activeProjectsCountEl = document.getElementById('activeProjectsCount');
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    const completedProjectsCountEl = document.getElementById('completedProjectsCount');
+
+    if (activeProjectsCountEl) activeProjectsCountEl.textContent = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project)).length;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = stats.completedTasks || 0;
+    if (completedProjectsCountEl) completedProjectsCountEl.textContent = stats.completedProjects || 0;
+
+    const incompleteTasks = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project))
+        .reduce((sum, p) => sum + (Array.isArray(p.tasks) ? p.tasks.filter(t => !t.completed).length : 0), 0);
+    const incompleteEl = document.getElementById('incompleteTasksCount');
+    if (incompleteEl) incompleteEl.textContent = incompleteTasks;
+
+    runRenderStep('total completion', updateTotalCompletion);
+    runRenderStep('view title', syncViewTitle);
+    runRenderStep('shared projects panel', renderSharedProjectsPanel);
+    runRenderStep('archived projects panel', renderArchivedProjectsPanel);
+    runRenderStep('leaderboard panel', renderLeaderboardPanel);
+    runRenderStep('saved views panel', renderSavedViewsPanel);
+    runRenderStep('active filter chips', renderActiveFilterChips);
+    runRenderStep('account stats', syncAccountStatsToModal);
+    runRenderStep('undo button', updateUndoButton);
+
+    if (displayProjects.length === 0) {
+        emptyState.style.display = 'flex';
+        projectGrid.innerHTML = '';
+        projectGrid.style.display = 'none';
+        const emptyTitle = emptyState.querySelector('.title');
+        const emptySubtitle = emptyState.querySelector('.subtitle');
+        if (emptyTitle) emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
+        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Only projects marked complete will appear here.';
+    } else {
+        emptyState.style.display = 'none';
+        projectGrid.style.display = 'grid';
+        projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
+
+        if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER) {
+            setTimeout(setupProjectDragAndDrop, 100);
+        }
+    }
+
+    runRenderStep('project select', updateProjectSelect);
+    runRenderStep('project category select', syncProjectCategorySelect);
+}
+
+
+function renderProjectCard(project) {
+    const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+    const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+    const completedTasksCount = tasks.filter(t => t.completed).length;
+    const totalTasks = tasks.length;
+    const remainingTasksCount = tasks.filter(t => !t.completed).length;
+    const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+    const isShared = collaborators.length > 0;
+    const isViewer = project.userRole === 'viewer';
+    const isEditor = project.userRole === 'editor';
+    const canEditProject = state.canEdit(project.id);
+    const canOwnerDelete = project.userRole === 'owner';
+    const canShowReorderHandle = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
+    const canReorderProject = canShowReorderHandle && uiState.sortMode === 'manual';
+    const previewTasks = getProjectCardPreviewTasks(project);
+    const projectTags = getProjectTags(project);
+    const projectDescription = getProjectCardDescription(project);
+    const accessLabel = isViewer || isEditor
+        ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
+        : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner: <strong>Me</strong>');
+
+    const statusLabel = isProjectCompleted(project)
+        ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
+        : (isViewer || isEditor
+            ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
+            : '<span class="project-card-status">ACTIVE</span>');
+
+    return `
+        <div class="project-card stitch-project-card ${isViewer ? 'project-card--viewer' : ''}"
+             data-project-id="${project.id}"
+             data-project-can-reorder="${canReorderProject ? 'true' : 'false'}"
+             onclick="openProjectModal('${project.id}')">
+            <div class="project-header">
+                <div class="project-title-container">
+                    <div>
+                        <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${escapeHtml(project.title)}</div>
+                        <input type="text"
+                               class="project-title-input project-title-input--card"
+                               id="project-title-input-${project.id}"
+                               value="${escapeHtml(project.title)}"
+                               style="display: none;"
+                               onclick="event.stopPropagation();"
+                               onblur="finishEditProjectTitleOnCard('${project.id}')"
+                               oninput="event.stopPropagation(); handleProjectTitleInput(this)"
+                               onanimationend="this.classList.remove('project-title-shake')"
+                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); cancelEditProjectTitleOnCard('${project.id}'); }">
+                        <p class="project-sync-text">${escapeHtml(formatProjectSyncText(project))}</p>
+                    </div>
+                </div>
+                <div class="project-actions">
+                    ${canEditProject ? `<button class="edit-button" type="button" title="Edit project name" onclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>` : ''}
+                    ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>` : ''}
+                </div>
+            </div>
+
+            <div class="project-card-tags ${projectTags.length ? '' : 'project-card-tags--empty'}">
+                ${projectTags.length ? projectTags.slice(0, PROJECT_TAG_MAX_COUNT).map(tag => {
+                    const tagLiteral = serializeInlineJsString(tag);
+                    return `<button class="project-card-tag project-card-tag--editable" type="button" title="Edit ${escapeHtml(tag)} tag" onclick="openProjectTagEditFromCard('${project.id}', ${tagLiteral}, event)">${escapeHtml(tag)}</button>`;
+                }).join('') : ''}
+                ${canEditProject && projectTags.length < PROJECT_TAG_MAX_COUNT ? `<button class="project-card-tag project-card-tag--add" type="button" title="Add a tag" aria-label="Add a tag" onclick="openProjectTagPickerModal('${project.id}', event)">+</button>` : ''}
+            </div>
+
+            <div class="project-card-progress">
+                <div class="project-card-description-row">
+                    <span class="project-card-description">${projectDescription ? escapeHtml(projectDescription) : ''}</span>
+                    <strong>${progressPercentage}%</strong>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
+                </div>
+                <div class="project-card-tasks-remaining">Tasks Remaining: ${remainingTasksCount}</div>
+            </div>
+
+            <ul class="project-preview-list">
+                ${previewTasks.length ? previewTasks.map(task => `
+                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''}">
+                        <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
+                        <span>${escapeHtml(task.text || 'Untitled task')}</span>
+                    </li>
+                `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
+            </ul>
+
+            <div class="project-card-notes-bar">
+                <button class="project-card-notes-button task-note-button ${projectHasNotes(project.notes) ? 'has-note' : ''}"
+                        type="button"
+                        data-project-notes-button="${project.id}"
+                        title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Add project notes')}"
+                        aria-label="${projectHasNotes(project.notes) ? 'Edit project notes' : 'Add project notes'}"
+                        onclick="openProjectNotes('${project.id}', event)">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="project-card-footer">
+                <div class="project-card-footer-left">
+                    ${renderProjectPriorityControlMarkup(project.id, project, 'card')}
+                    <span class="project-card-access">${accessLabel}</span>
+                </div>
+                <span class="project-card-meta">
+                    ${statusLabel}
+                    ${isProjectCompleted(project) ? `<button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">Activate</button>` : ''}
+                </span>
+            </div>
+        </div>
+    `;
+}
+function renderSharedProjectsPanel() {
+    const sharedProjectsList = document.getElementById('sharedProjectsList');
+    const sharedProjectsCount = document.getElementById('sharedProjectsCount');
+
+    const sharedActiveProjects = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project)).filter(project =>
+        project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
+    );
+
+    if (sharedProjectsCount) sharedProjectsCount.textContent = String(sharedActiveProjects.length);
+    if (!sharedProjectsList) return;
+
+    if (!sharedActiveProjects.length) {
+        sharedProjectsList.innerHTML = '<div class="side-panel-empty">No shared active projects</div>';
+        return;
+    }
+
+    sharedProjectsList.innerHTML = sharedActiveProjects.map(project => {
+        const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+        const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+        const completedTasksCount = tasks.filter(task => task.completed).length;
+        const totalTasks = tasks.length;
+        const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+        const accessLabel = project.userRole === 'owner'
+            ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`
+            : `${project.userRole} access`;
+        const ownerLabel = project.userRole === 'owner'
+            ? 'Owned by you'
+            : `Shared by ${project.ownerName || 'Unknown'}`;
+
+        return `
+            <button class="side-project-card" type="button" onclick="openProjectModal('${project.id}')">
+                <div class="side-project-card-header">
+                    <span class="side-project-card-title">${project.title}</span>
+                    <span class="side-project-role">${accessLabel}</span>
+                </div>
+                <div class="side-project-meta">${ownerLabel}</div>
+                <div class="mini-progress-track"><span style="width: ${progressPercentage}%"></span></div>
+            </button>
+        `;
+    }).join('');
+}
+
+function timeAgo(isoString) {
+    if (!isoString) return 'just now';
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const seconds = Math.max(1, Math.floor(diffMs / 1000));
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+    return `${Math.floor(months / 12)}y ago`;
+}
+
+function openShortcutsModal() {
+    document.getElementById('shortcutsModal')?.classList.add('active');
+}
+
+function closeShortcutsModal() {
+    document.getElementById('shortcutsModal')?.classList.remove('active');
+}
+
+function switchToSharedView() {
+    uiState.ownerFilter = 'shared';
+    uiState.activeSavedViewId = '';
+    state.setView(VIEWS.ACTIVE);
+    setSidebarProjectsNav('sharedProjectsCard');
+    setViewTitle('Shared');
+    render();
+}
+
+function renderArchivedProjectsModalList() {
+    const list = document.getElementById('archivedProjectsModalList');
+    if (!list) return;
+    const archivedProjects = getArchivedProjects();
+    if (!archivedProjects.length) {
+        list.innerHTML = '<div class="side-panel-empty">No archived projects</div>';
+        return;
+    }
+    list.innerHTML = archivedProjects.map(project => `
+        <div class="archived-project-card">
+            <div>
+                <div class="archived-project-title">${escapeHtml(project.title)}</div>
+                <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
+            </div>
+            <div class="archived-project-actions">
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openArchivedProjectsModal() {
+    renderArchivedProjectsModalList();
+    document.getElementById('archivedProjectsModal')?.classList.add('active');
+}
+
+function closeArchivedProjectsModal() {
+    document.getElementById('archivedProjectsModal')?.classList.remove('active');
+    if (uiState.ownerFilter === 'shared' && state.getView() === VIEWS.ACTIVE) {
+        setSidebarProjectsNav('sharedProjectsCard');
+    } else if (state.getView() === VIEWS.COMPLETED) {
+        setSidebarProjectsNav('completedProjectsCard');
+    } else {
+        setSidebarProjectsNav('activeProjectsCard');
+    }
+}
+
+
+function editProjectTitleOnCard(projectId) {
+    const titleDiv = document.getElementById(`project-title-${projectId}`);
+    const titleInput = document.getElementById(`project-title-input-${projectId}`);
+    if (!titleDiv || !titleInput) return;
+    titleDiv.style.display = 'none';
+    titleInput.style.display = 'block';
+    titleInput.focus();
+    titleInput.select();
+}
+
+function finishEditProjectTitleOnCard(projectId) {
+    const titleDiv = document.getElementById(`project-title-${projectId}`);
+    const titleInput = document.getElementById(`project-title-input-${projectId}`);
+    if (!titleDiv || !titleInput) return;
+    const nextTitle = normalizeProjectTitleInput(titleInput.value) || 'New Project';
+    titleInput.value = nextTitle;
+    if (!validateProjectTitleInput(titleInput)) return;
+    clearProjectTitleWarning(titleInput);
+    updateProjectTitle(projectId, nextTitle);
+    titleDiv.textContent = nextTitle;
+    titleDiv.style.display = 'block';
+    titleInput.style.display = 'none';
+}
+
+function cancelEditProjectTitleOnCard(projectId) {
+    const project = state.findProject(projectId);
+    const titleDiv = document.getElementById(`project-title-${projectId}`);
+    const titleInput = document.getElementById(`project-title-input-${projectId}`);
+    if (!titleDiv || !titleInput || !project) return;
+    titleInput.value = project.title;
+    clearProjectTitleWarning(titleInput);
+    titleDiv.style.display = 'block';
+    titleInput.style.display = 'none';
+}
+
+function updateProjectSelect() {
+    const activeProjects = state.getActiveProjects();
+    const projectSelect = document.getElementById('pasteProjectSelect');
+    const pasteButton = document.getElementById('pasteButton');
+    if (!projectSelect || !pasteButton) return;
+
+    projectSelect.innerHTML = '<option value="">Select a project...</option>' +
+        activeProjects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+
+    projectSelect.addEventListener('change', () => {
+        pasteButton.disabled = !projectSelect.value;
+    });
+}
+
+// ============================================================================
+// EVENT HANDLERS
+// ============================================================================
+
+function initializeEventHandlers() {
+    // Menu button
+    const menuButton = document.getElementById('menuButton');
+    const menuDropdown = document.getElementById('menuDropdown');
+    const menuContainer = document.getElementById('menuContainer');
+    let menuOpen = false;
+
+    if (menuButton && menuDropdown && menuContainer) menuButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (menuOpen) {
+            closeMenuDropdown();
+            return;
+        }
+        menuOpen = true;
+        menuDropdown.classList.remove('hidden');
+        menuButton.classList.add('active');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (menuOpen && menuContainer && !menuContainer.contains(e.target)) {
+            closeMenuDropdown();
+        }
+    });
+
+    function closeMenuDropdown() {
+        menuOpen = false;
+        menuDropdown?.classList.add('hidden');
+        menuButton?.classList.remove('active');
+        document.getElementById('shortcutsPanel')?.classList.add('hidden');
+        document.getElementById('shortcutsWrapper')?.classList.remove('menu-shortcuts-wrapper--open');
+        document.getElementById('shortcutsToggle')?.setAttribute('aria-expanded', 'false');
+    }
+
+    document.getElementById('menuSignOutBtn')?.addEventListener('click', () => {
+        closeMenuDropdown();
+        logout();
+    });
+
+    document.getElementById('menuAccountSettingsBtn')?.addEventListener('click', () => {
+        closeMenuDropdown();
+        openAccountSettingsModal();
+    });
+
+    document.getElementById('menuUiOptionsBtn')?.addEventListener('click', () => {
+        closeMenuDropdown();
+        openUiOptionsModal();
+    });
+
+    document.getElementById('panelUserPill')?.addEventListener('click', () => {
+        openAccountSettingsModal();
+    });
+
+    // Control panel toggle
+    const collapseButton = document.getElementById('collapseButton');
+    const expandButton = document.getElementById('expandButton');
+    const controlPanel = document.getElementById('controlPanel');
+    const viewport = document.getElementById('viewport');
+
+    const syncControlPanelState = () => {
+        const isCollapsed = !!controlPanel?.classList.contains('collapsed');
+        document.body.classList.toggle('control-panel-is-collapsed', isCollapsed);
+        collapseButton?.classList.toggle('hidden', isCollapsed);
+        expandButton?.classList.toggle('hidden', !isCollapsed);
+        collapseButton?.setAttribute('aria-expanded', String(!isCollapsed));
+        expandButton?.setAttribute('aria-expanded', String(isCollapsed));
+        const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+        panelEdgeToggle?.setAttribute('aria-expanded', String(!isCollapsed));
+        panelEdgeToggle?.setAttribute('aria-label', isCollapsed ? 'Open control panel' : 'Close control panel');
+    };
+
+    const collapseControlPanel = () => {
+        if (!controlPanel) return;
+        state.setControlPanelOpen(false);
+        controlPanel.classList.add('collapsed');
+        viewport?.classList.remove('full');
+        syncControlPanelState();
+    };
+
+    const expandControlPanel = () => {
+        if (!controlPanel) return;
+        state.setControlPanelOpen(true);
+        controlPanel.classList.remove('collapsed');
+        viewport?.classList.remove('full');
+        syncControlPanelState();
+    };
+
+    collapseButton?.addEventListener('click', collapseControlPanel);
+    expandButton?.addEventListener('click', expandControlPanel);
+
+    // Always-visible edge toggle — toggles between expand/collapse based on current state
+    const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+    panelEdgeToggle?.addEventListener('click', () => {
+        if (controlPanel?.classList.contains('collapsed')) {
+            expandControlPanel();
+        } else {
+            collapseControlPanel();
+        }
+    });
+
+    syncControlPanelState();
+
+    // Add project button
+    document.getElementById('addProjectButton')?.addEventListener('click', addProject);
+    document.getElementById('confirmNewProjectButton')?.addEventListener('click', addProject);
+    document.getElementById('cancelNewProjectButton')?.addEventListener('click', resetNewProjectCreatePanel);
+    document.getElementById('newProjectDescriptionInput')?.addEventListener('input', () => showNewProjectDescriptionWarning(false));
+    ['newProjectTitleInput', 'newProjectDescriptionInput'].forEach(inputId => {
+        document.getElementById(inputId)?.addEventListener('keydown', event => {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                addProject();
+            }
+            if (event.key === 'Escape') resetNewProjectCreatePanel();
+        });
+    });
+
+    // Undo button
+    document.getElementById('undoButton')?.addEventListener('click', performUndo);
+
+    // Paste button
+    document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
+
+    document.querySelectorAll('[data-sidebar-toggle]').forEach(button => {
+        button.addEventListener('click', () => toggleSidebarSection(button.dataset.sidebarToggle));
+    });
+    initializeSidebarSections();
+
+    document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
+    document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
+    document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
+    document.getElementById('sidebarSignOutBtn')?.addEventListener('click', logout);
+    document.getElementById('activeProjectsCard')?.addEventListener('click', switchToActiveView);
+    document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
+    document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
+    document.getElementById('archivedProjectsMoreBtn')?.addEventListener('click', openArchivedProjectsModal);
+
+    // Click outside modal to close
+    const projectModal = document.getElementById('projectModal');
+    projectModal?.addEventListener('click', (e) => {
+        if (e.target === projectModal) {
+            closeProjectModal();
+        }
+    });
+
+    const confirmDialog = document.getElementById('confirmDialog');
+    confirmDialog?.addEventListener('click', (e) => {
+        if (e.target === confirmDialog) {
+            closeConfirmDialog();
+        }
+    });
+
+    const accountSettingsModal = document.getElementById('accountSettingsModal');
+    accountSettingsModal?.addEventListener('click', (e) => {
+        if (e.target === accountSettingsModal) {
+            closeAccountSettingsModal();
+        }
+    });
+
+    document.getElementById('uiOptionsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'uiOptionsModal') closeUiOptionsModal();
+    });
+
+    document.getElementById('shortcutsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'shortcutsModal') closeShortcutsModal();
+    });
+    document.getElementById('closeShortcutsModalBtn')?.addEventListener('click', closeShortcutsModal);
+
+    document.getElementById('archivedProjectsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'archivedProjectsModal') closeArchivedProjectsModal();
+    });
+    document.getElementById('closeArchivedProjectsModalBtn')?.addEventListener('click', closeArchivedProjectsModal);
+
+    document.getElementById('commandPaletteModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'commandPaletteModal') closeCommandPalette();
+    });
+
+    document.getElementById('projectSearchInput')?.addEventListener('input', (e) => {
+        uiState.projectSearch = e.target.value || '';
+        uiState.activeSavedViewId = '';
+        render();
+    });
+    document.getElementById('projectCategorySelect')?.addEventListener('change', (e) => {
+        switchProjectCategory(e.target.value || 'active');
+    });
+    document.getElementById('projectSortSelect')?.addEventListener('change', (e) => {
+        uiState.activeSavedViewId = '';
+        setProjectCardSortMode(e.target.value || 'recent');
+    });
+    document.querySelectorAll('[data-theme-family-option]').forEach(button => {
+        button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
+    });
+    document.getElementById('colorModeToggleBtn')?.addEventListener('click', () => {
+        const meta = getThemeMeta(uiState.theme);
+        if (meta.family === 'console') return;
+        const nextMode = meta.mode === 'dark' ? 'light' : 'dark';
+        applyTheme(buildThemeName(meta.family, nextMode));
+    });
+    document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
+        uiState.commandQuery = e.target.value || '';
+        uiState.commandActiveIndex = 0;
+        renderCommandPalette();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        const isCommandPaletteInput = uiState.commandPaletteOpen && e.target?.id === 'commandPaletteInput';
+        if (isTypingTarget(e.target) && !isCommandPaletteInput) {
+            return;
+        }
+
+        if (!isTypingTarget(e.target) && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (uiState.commandPaletteOpen) closeCommandPalette();
+            else openCommandPalette();
+            return;
+        }
+
+        if (uiState.commandPaletteOpen) {
+            const actions = getCommandPaletteActions().filter(action => {
+                const query = uiState.commandQuery.trim().toLowerCase();
+                return !query || `${action.title} ${action.copy}`.toLowerCase().includes(query);
+            });
+            if (e.key === 'Escape') { closeCommandPalette(); return; }
+            if (e.key === 'ArrowDown') { e.preventDefault(); uiState.commandActiveIndex = Math.min(actions.length - 1, uiState.commandActiveIndex + 1); renderCommandPalette(); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); uiState.commandActiveIndex = Math.max(0, uiState.commandActiveIndex - 1); renderCommandPalette(); return; }
+            if (e.key === 'Enter') { e.preventDefault(); actions[uiState.commandActiveIndex]?.run(); closeCommandPalette(); return; }
+            if (isCommandPaletteInput) return;
+        }
+        
+        switch(e.key.toLowerCase()) {
+            case SHORTCUTS.NEW_PROJECT:
+                addProject();
+                break;
+            case SHORTCUTS.TOGGLE_PANEL:
+                document.getElementById('panelEdgeToggle')?.click();
+                break;
+            case SHORTCUTS.TOGGLE_MENU:
+                openShortcutsModal();
+                break;
+            case SHORTCUTS.VIEW_ACTIVE:
+                switchToActiveView();
+                break;
+            case SHORTCUTS.VIEW_COMPLETED:
+                switchToCompletedView();
+                break;
+            case 'z':
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    performUndo();
+                } else {
+                    performUndo();
+                }
+                break;
+            case SHORTCUTS.HELP:
+                alert(`Keyboard Shortcuts:
+
+N - New Project
+C - Toggle Control Panel
+M - Keyboard Shortcuts
+A - View Active Projects
+D - View Completed Projects
+Z - Undo (last deletion)
+? - Show this help
+
+Task Features:
+- Shift+Click - Select multiple tasks
+- Newest tasks appear first
+- Completed tasks move to bottom
+- Hide completed tasks toggle in modal
+
+Features:
+- Click on project cards to view/edit details
+- Long-click and drag a project card to reorder projects
+- Drag tasks to reorder them faster
+- Use copy button (copies only incomplete tasks)
+- Click outside expanded cards to close them
+- Use the paste box in modals for bulk task import
+- Stats are clickable to switch views
+- Use tabs in modal for Tasks, Notes, Members, and History
+- Ctrl/Cmd+K opens the command palette`);
+                break;
+        }
+    });
+}
+
+
+// ============================================================================
+// SHARING FUNCTIONS
+// ============================================================================
+
+async function inviteCollaborator(projectId) {
+    const emailEl = document.getElementById(`invite-email-${projectId}`);
+    const roleEl  = document.getElementById(`invite-role-${projectId}`);
+    const errEl   = document.getElementById(`invite-error-${projectId}`);
+    if (!emailEl || !roleEl) return;
+
+    const email = emailEl.value.trim();
+    const role  = roleEl.value;
+    if (errEl) {
+        errEl.textContent = '';
+        errEl.classList.add('hidden');
+        errEl.classList.remove('is-success');
+    }
+
+    if (!email) {
+        if (errEl) { errEl.textContent = 'Please enter an email address.'; errEl.classList.remove('hidden'); }
+        return;
+    }
+
+    const project = state.findProject(projectId);
+    if (!project?._id) return;
+
+    try {
+        const updated = await shareProjectOnServer(project._id, email, role);
+        if (updated) {
+            state.updateProject(projectId, projectUpdate({
+                collaborators: updated.collaborators || [],
+                lastModified: updated.lastModified || new Date().toISOString(),
+                __syncedLastModified: updated.lastModified || new Date().toISOString()
+            }, { skipTouch: true }));
+            emailEl.value = '';
+            const pendingMessage = updated.pendingInvitationMessage || '';
+            openProjectModal(projectId);
+            // Re-open on Members tab
+            setTimeout(() => {
+                switchModalTab(projectId, 'members');
+                if (pendingMessage) {
+                    const freshErrEl = document.getElementById(`invite-error-${projectId}`);
+                    if (freshErrEl) {
+                        freshErrEl.textContent = pendingMessage;
+                        freshErrEl.classList.remove('hidden');
+                        freshErrEl.classList.add('is-success');
+                    }
+                }
+            }, 50);
+        }
+    } catch (err) {
+        if (errEl) { errEl.textContent = err.message; errEl.classList.remove('hidden'); }
+    }
+}
+
+async function changeCollaboratorRole(projectId, userId, newRole) {
+    const project = state.findProject(projectId);
+    if (!project?._id) return;
+    try {
+        const updated = await updateCollaboratorRoleOnServer(project._id, userId, newRole);
+        if (updated) {
+            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString(), __syncedLastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
+        }
+    } catch (err) {
+        alert(`Failed to update role: ${err.message}`);
+        openProjectModal(projectId);
+        setTimeout(() => switchModalTab(projectId, 'members'), 50);
+    }
+}
+
+async function removeCollaborator(projectId, userId) {
+    const project = state.findProject(projectId);
+    if (!project?._id) return;
+    try {
+        const updated = await removeCollaboratorFromServer(project._id, userId);
+        if (updated) {
+            state.updateProject(projectId, projectUpdate({ collaborators: updated.collaborators || [], lastModified: updated.lastModified || new Date().toISOString(), __syncedLastModified: updated.lastModified || new Date().toISOString() }, { skipTouch: true }));
+            openProjectModal(projectId);
+            setTimeout(() => switchModalTab(projectId, 'members'), 50);
+        }
+    } catch (err) {
+        alert(`Failed to remove collaborator: ${err.message}`);
+    }
+}
+
+// ============================================================================
+// GLOBAL FUNCTIONS (for HTML onclick handlers)
+// ============================================================================
+
+window.addProject = addProject;
+window.deleteProject = deleteProject;
+window.completeProject = completeProject;
+window.toggleTask = toggleTask;
+window.copyProjectToClipboard = copyProjectToClipboard;
+window.switchToActiveView = switchToActiveView;
+window.switchToCompletedView = switchToCompletedView;
+window.openProjectModal = openProjectModal;
+window.openAccountSettingsModal = openAccountSettingsModal;
+window.closeAccountSettingsModal = closeAccountSettingsModal;
+window.triggerProfilePicUpload = triggerProfilePicUpload;
+window.removeProfilePicture = removeProfilePicture;
+window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
+window.closeProjectModal = closeProjectModal;
+window.editModalTitle = editModalTitle;
+window.finishEditModalTitle = finishEditModalTitle;
+window.handleProjectTitleInput = handleProjectTitleInput;
+window.editProjectDescription = editProjectDescription;
+window.cancelEditProjectDescription = cancelEditProjectDescription;
+window.finishEditProjectDescription = finishEditProjectDescription;
+window.editModalTask = editModalTask;
+window.finishEditModalTask = finishEditModalTask;
+window.autoResizeModalTaskInput = autoResizeModalTaskInput;
+window.addTaskToModal = addTaskToModal;
+window.updateTaskDueDate = updateTaskDueDate;
+window.deleteTaskFromModal = deleteTaskFromModal;
+window.completeProjectFromModal = completeProjectFromModal;
+window.confirmDeleteProject = confirmDeleteProject;
+window.confirmDeleteProjectCard = confirmDeleteProjectCard;
+window.closeConfirmDialog = closeConfirmDialog;
+window.pasteTasks = pasteTasks;
+window.pasteTasksInModal = pasteTasksInModal;
+window.handleTaskClick = handleTaskClick;
+window.switchModalTab = switchModalTab;
+window.saveProjectNotes = saveProjectNotes;
+window.openProjectNotes = openProjectNotes;
+window.closeProjectNotesModal = closeProjectNotesModal;
+window.selectProjectNoteTab = selectProjectNoteTab;
+window.addProjectNoteTab = addProjectNoteTab;
+window.deleteProjectNoteTab = deleteProjectNoteTab;
+window.updateProjectNoteTitle = updateProjectNoteTitle;
+window.updateProjectNoteBody = updateProjectNoteBody;
+window.saveActiveProjectNoteFromSurface = saveActiveProjectNoteFromSurface;
+window.toggleHideCompleted = toggleHideCompleted;
+window.setProjectTaskSortMode = setProjectTaskSortMode;
+window.updateTaskTag = updateTaskTag;
+window.cycleProjectCardTaskPriority = cycleProjectCardTaskPriority;
+window.cycleProjectPriority = cycleProjectPriority;
+window.toggleProjectPriorityMenu = toggleProjectPriorityMenu;
+window.selectProjectPriority = selectProjectPriority;
+window.updateTaskCategory = updateTaskCategory;
+window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
+window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
+window.selectTaskPriority = selectTaskPriority;
+window.completeTasksByCategory = completeTasksByCategory;
+window.completeTasksByPriority = completeTasksByPriority;
+window.openTaskNoteModal = openTaskNoteModal;
+window.closeTaskNoteModal = closeTaskNoteModal;
+window.saveTaskNoteFromModal = saveTaskNoteFromModal;
+window.updateTaskNote = updateTaskNote;
+window.toggleTaskCategoryMenu = toggleTaskCategoryMenu;
+window.renameTaskCategoryPrompt = renameTaskCategoryPrompt;
+window.deleteTaskCategory = deleteTaskCategory;
+window.createTaskCategory = createTaskCategory;
+window.startInlineTaskCategoryCreate = startInlineTaskCategoryCreate;
+window.commitInlineTaskCategoryCreate = commitInlineTaskCategoryCreate;
+window.cancelInlineTaskCategoryCreate = cancelInlineTaskCategoryCreate;
+window.handleInlineTaskCategoryCreateKeydown = handleInlineTaskCategoryCreateKeydown;
+window.handleTaskCategoryCreateKeydown = handleTaskCategoryCreateKeydown;
+window.setProjectTagFilter = setProjectTagFilter;
+window.startInlineProjectTagCreate = startInlineProjectTagCreate;
+window.commitInlineProjectTagCreate = commitInlineProjectTagCreate;
+window.cancelInlineProjectTagCreate = cancelInlineProjectTagCreate;
+window.handleInlineProjectTagCreateKeydown = handleInlineProjectTagCreateKeydown;
+window.openProjectTagPickerModal = openProjectTagPickerModal;
+window.closeProjectTagPickerModal = closeProjectTagPickerModal;
+window.addProjectTagFromPicker = addProjectTagFromPicker;
+window.commitProjectTagPickerInput = commitProjectTagPickerInput;
+window.handleProjectTagPickerKeydown = handleProjectTagPickerKeydown;
+window.deleteProjectTag = deleteProjectTag;
+window.performUndo = performUndo;
+window.inviteCollaborator = inviteCollaborator;
+window.changeCollaboratorRole = changeCollaboratorRole;
+window.removeCollaborator = removeCollaborator;
+window.editProjectTitleOnCard = editProjectTitleOnCard;
+window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
+window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
+window.toggleSidebarSection = toggleSidebarSection;
+window.handleModalPasteKeydown = handleModalPasteKeydown;
+window.openShortcutsModal = openShortcutsModal;
+window.closeShortcutsModal = closeShortcutsModal;
+window.switchToSharedView = switchToSharedView;
+window.openArchivedProjectsModal = openArchivedProjectsModal;
+window.closeArchivedProjectsModal = closeArchivedProjectsModal;
+
+window.applySavedView = applySavedView;
+window.deleteSavedView = deleteSavedView;
+window.restoreArchivedProject = restoreArchivedProject;
+window.archiveProject = archiveProject;
+window.closeUiOptionsModal = closeUiOptionsModal;
+window.openUiOptionsModal = openUiOptionsModal;
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// ============================================================================
+// AUTH SCREEN
+// ============================================================================
+
+function showAuthError(formId, message) {
+    const el = document.getElementById(formId + 'Error');
+    if (el) { el.textContent = message; el.classList.remove('hidden'); }
+}
+
+function hideAuthError(formId) {
+    const el = document.getElementById(formId + 'Error');
+    if (el) el.classList.add('hidden');
+}
+
+function setAuthLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Please wait…' : btn.dataset.label;
+}
+
+function switchAuthTab(tab) {
+    const loginTab  = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (tab === 'login') {
+        loginTab.classList.add('auth-tab-active');
+        registerTab.classList.remove('auth-tab-active');
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+    } else {
+        registerTab.classList.add('auth-tab-active');
+        loginTab.classList.remove('auth-tab-active');
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+    }
+    hideAuthError('login');
+    hideAuthError('register');
+}
+window.switchAuthTab = switchAuthTab;
+
+function initAuthScreen() {
+    // Tab switching
+    document.getElementById('loginTab')?.addEventListener('click', () => switchAuthTab('login'));
+    document.getElementById('registerTab')?.addEventListener('click', () => switchAuthTab('register'));
+
+    // Show / hide password toggles
+    document.querySelectorAll('.show-pw-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = document.getElementById(btn.dataset.target);
+            if (!input) return;
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.querySelector('.eye-show').classList.toggle('hidden', isHidden);
+            btn.querySelector('.eye-hide').classList.toggle('hidden', !isHidden);
+        });
+    });
+
+    // Login form
+    document.getElementById('loginSubmitBtn')?.addEventListener('click', async () => {
+        hideAuthError('login');
+        const email    = document.getElementById('loginEmail')?.value.trim();
+        const password = document.getElementById('loginPassword')?.value;
+        if (!email || !password) { showAuthError('login', 'Please fill in all fields.'); return; }
+
+        setAuthLoading('loginSubmitBtn', true);
+        try {
+            const user = await login(email, password);
+            // Save email for Remember Me
+            const rememberMe = document.getElementById('rememberMe')?.checked;
+            if (rememberMe) {
+                localStorage.setItem('tracker_remember_email', email);
+            } else {
+                localStorage.removeItem('tracker_remember_email');
+            }
+            onAuthSuccess(user);
+        } catch (err) {
+            showAuthError('login', err.message);
+        } finally {
+            setAuthLoading('loginSubmitBtn', false);
+        }
+    });
+
+    // Enter key on login fields
+    ['loginEmail', 'loginPassword'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('loginSubmitBtn')?.click();
+        });
+    });
+
+    // Register form
+    document.getElementById('registerSubmitBtn')?.addEventListener('click', async () => {
+        hideAuthError('register');
+        const email    = document.getElementById('registerEmail')?.value.trim();
+        const username = document.getElementById('registerUsername')?.value.trim();
+        const password = document.getElementById('registerPassword')?.value;
+        const confirm  = document.getElementById('registerConfirm')?.value;
+
+        if (!email || !username || !password || !confirm) {
+            showAuthError('register', 'Please fill in all fields.'); return;
+        }
+        if (password !== confirm) {
+            showAuthError('register', 'Passwords do not match.'); return;
+        }
+        if (password.length < 6) {
+            showAuthError('register', 'Password must be at least 6 characters.'); return;
+        }
+
+        setAuthLoading('registerSubmitBtn', true);
+        try {
+            const user = await register(email, username, password);
+            onAuthSuccess(user);
+        } catch (err) {
+            showAuthError('register', err.message);
+        } finally {
+            setAuthLoading('registerSubmitBtn', false);
+        }
+    });
+
+    // Enter key on register fields
+    ['registerEmail', 'registerUsername', 'registerPassword', 'registerConfirm'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('registerSubmitBtn')?.click();
+        });
+    });
+
+    // Logout buttons (panel)
+    document.getElementById('accountProfilePicInput')?.addEventListener('change', handleProfilePicSelected);
+
+    // Remember Me — restore saved email if present
+    const savedEmail = localStorage.getItem('tracker_remember_email');
+    if (savedEmail) {
+        const emailEl = document.getElementById('loginEmail');
+        if (emailEl) emailEl.value = savedEmail;
+        const rememberEl = document.getElementById('rememberMe');
+        if (rememberEl) rememberEl.checked = true;
+    }
+
+}
+
+function onAuthSuccess(user) {
+    state.setCurrentUser(user);
+
+    const overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    try {
+        applyAccountUI(user || getCurrentUser?.() || { username: 'User', email: '' });
+    } catch (err) {
+        console.error('Failed to apply account UI during auth success:', err);
+    }
+    setSaveStatus('saved', 'All changes saved');
+
+    try {
+        initializeEventHandlers();
+    } catch (err) {
+        console.error('Failed to initialize event handlers:', err);
+    }
+
+    Promise.resolve()
+        .then(() => loadData())
+        .then(() => startRealtimeSync())
+        .catch(err => {
+            console.error('Initial data load failed:', err);
+            setSaveStatus('error', 'Could not load user data');
+        });
+
+    Promise.resolve()
+        .then(() => refreshAccountProfile())
+        .catch(err => console.error('Initial account profile load failed:', err));
+
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
+
+document.addEventListener('DOMContentLoaded', () => {
+    state.setHideCompletedTasks(true);
+    loadSavedViewsFromStorage();
+    loadThemePreference();
+    loadProjectSortPreference();
+    moveColorModeToggleToSidebarHeader();
+    initAuthScreen();
+
+    if (isLoggedIn()) {
+        const user = getCurrentUser();
+        onAuthSuccess(user);
+    } else {
+        // Show the auth overlay; don't init the app yet
+        const overlay = document.getElementById('authOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+    }
+});
+
+window.setProjectCardSortMode = setProjectCardSortMode;

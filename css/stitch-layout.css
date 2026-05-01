@@ -1,0 +1,4412 @@
+/* ============================================================================
+   Stitch layout post-theme overrides
+   Loaded after all themes so the shared shell stays consistent.
+   ============================================================================ */
+
+body {
+    overflow: hidden !important;
+}
+
+.container {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100vh !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: 20rem minmax(0, 1fr) !important;
+    grid-template-rows: 5rem minmax(0, 1fr) !important;
+    gap: 0 !important;
+    align-items: stretch !important;
+    transition: grid-template-columns 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body.control-panel-is-collapsed .container {
+    grid-template-columns: 5rem minmax(0, 1fr) !important;
+    padding: 0 !important;
+}
+
+.control-panel {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    position: relative !important;
+    inset: auto !important;
+    width: 20rem !important;
+    max-width: none !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    z-index: 45 !important;
+    border-radius: 0 !important;
+    transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.control-panel.collapsed {
+    width: 5rem !important;
+    transform: none !important;
+    pointer-events: auto !important;
+}
+
+.control-panel-content,
+.control-panel-scroll-inner {
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+.control-panel-scroll-inner {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.top-app-bar {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: 5rem !important;
+    min-height: 5rem !important;
+    margin: 0 !important;
+    padding: 0 2rem !important;
+    border-radius: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(12rem, auto) minmax(0, 1fr) auto !important;
+    gap: 1.25rem !important;
+    align-items: center !important;
+}
+
+.top-view-toolbar {
+    width: min(100%, 44rem) !important;
+    max-width: 44rem !important;
+    justify-self: end !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin: 0 !important;
+}
+
+.view-toolbar-search-wrap {
+    width: min(100%, 28rem) !important;
+    max-width: 28rem !important;
+    flex: 1 1 18rem !important;
+}
+
+.top-app-logo {
+    width: clamp(4.25rem, 6vw, 6.5rem) !important;
+    max-width: 6.5rem !important;
+    height: auto !important;
+    object-fit: contain !important;
+    justify-self: end !important;
+}
+
+.viewport {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 1.75rem 2rem 2.5rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.viewport.full {
+    width: 100% !important;
+}
+
+.viewport-header {
+    display: none !important;
+}
+
+.panel-edge-toggle {
+    position: fixed !important;
+    top: 2.5rem !important;
+    left: 19rem !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 70 !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    border-radius: 999px !important;
+}
+
+body.control-panel-is-collapsed .panel-edge-toggle {
+    left: 5rem !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+body.control-panel-is-collapsed .control-panel-scroll-inner > *:not(.control-panel-header),
+body.control-panel-is-collapsed .panel-username,
+body.control-panel-is-collapsed .save-status,
+body.control-panel-is-collapsed .sidebar-section-label,
+body.control-panel-is-collapsed .add-project-button,
+body.control-panel-is-collapsed .sidebar-nav-list,
+body.control-panel-is-collapsed .total-completion-section,
+body.control-panel-is-collapsed .sidebar-collapsible {
+    display: none !important;
+}
+
+.view-filter-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin: 0 0 1.5rem !important;
+}
+
+.project-grid {
+    width: 100% !important;
+    max-width: none !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)) !important;
+    align-items: start !important;
+    justify-content: start !important;
+    place-content: start !important;
+    gap: 1.25rem !important;
+    margin: 0 !important;
+}
+
+.sidebar-more-group {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.5rem 0 0;
+}
+
+.sidebar-more-label {
+    color: var(--muted-2, var(--muted));
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sidebar-action-button--with-count {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.archived-projects-modal-content {
+    max-width: 760px;
+    width: min(92vw, 760px);
+}
+
+.archived-projects-modal-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (max-width: 980px) {
+    body {
+        overflow: auto !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        min-height: 100vh !important;
+        height: auto !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: 42vh !important;
+    }
+
+    .top-app-bar {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        height: auto !important;
+        min-height: 5rem !important;
+        grid-template-columns: 1fr !important;
+        padding: 1rem !important;
+    }
+
+    .top-view-toolbar {
+        justify-self: stretch !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .top-app-logo {
+        display: none !important;
+    }
+
+    .viewport {
+        grid-column: 1 !important;
+        grid-row: 3 !important;
+        height: auto !important;
+        min-height: 60vh !important;
+        padding: 1rem !important;
+    }
+
+    .panel-edge-toggle {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   Stitch menu refinement: project category + expanded search
+   ========================================================================== */
+.top-app-bar {
+    grid-template-columns: minmax(10rem, max-content) minmax(0, 1fr) auto !important;
+    gap: 1rem !important;
+}
+
+.top-view-toolbar {
+    width: 100% !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    justify-content: flex-end !important;
+}
+
+.view-toolbar-category-select {
+    flex: 0 0 8.75rem !important;
+    min-width: 8.75rem !important;
+}
+
+.view-toolbar-search-wrap {
+    width: auto !important;
+    max-width: none !important;
+    flex: 1 1 38rem !important;
+}
+
+#projectSortSelect {
+    flex: 0 0 11rem !important;
+    min-width: 11rem !important;
+}
+
+/* ============================================================================
+   Stitch refinement pass: sidebar separation, menu title, card proportions
+   ============================================================================ */
+.container {
+    display: grid !important;
+    grid-template-columns: 20rem minmax(0, 1fr) !important;
+    grid-template-rows: 5rem minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+body.control-panel-is-collapsed .container {
+    grid-template-columns: 5rem minmax(0, 1fr) !important;
+}
+
+.control-panel {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 3 !important;
+    width: 20rem !important;
+    min-width: 20rem !important;
+    max-width: 20rem !important;
+    position: relative !important;
+    z-index: 30 !important;
+    overflow: hidden !important;
+}
+
+.control-panel.collapsed {
+    width: 5rem !important;
+    min-width: 5rem !important;
+    max-width: 5rem !important;
+}
+
+.top-app-bar {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(13rem, max-content) minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    min-width: 0 !important;
+    z-index: 20 !important;
+}
+
+.viewport {
+    grid-column: 2 / 3 !important;
+    grid-row: 2 / 3 !important;
+    min-width: 0 !important;
+    z-index: 10 !important;
+    padding-left: 2.5rem !important;
+}
+
+.top-app-bar-title {
+    display: block !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+}
+
+.top-view-toolbar,
+.view-toolbar.top-view-toolbar {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    display: grid !important;
+    grid-template-columns: minmax(24rem, 1fr) 12rem !important;
+    align-items: center !important;
+    gap: 1rem !important;
+}
+
+.view-toolbar-search-wrap {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex: initial !important;
+}
+
+#projectSortSelect {
+    width: 12rem !important;
+    min-width: 12rem !important;
+    flex: initial !important;
+}
+
+body[data-theme^="console"] .top-app-logo {
+    display: none !important;
+}
+
+body[data-theme^="console"] .top-app-bar {
+    grid-template-columns: minmax(13rem, max-content) minmax(0, 1fr) !important;
+    border-left: 1px solid var(--line) !important;
+    border-bottom: 1px solid var(--line) !important;
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .top-app-bar-title {
+    color: var(--heading) !important;
+    font-size: 1.45rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.01em !important;
+}
+
+.panel-edge-toggle {
+    position: fixed !important;
+    top: 50vh !important;
+    left: 20rem !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 80 !important;
+}
+
+body.control-panel-is-collapsed .panel-edge-toggle {
+    left: 5rem !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+.project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21.75rem), 21.75rem)) !important;
+    justify-content: start !important;
+    align-content: start !important;
+    place-content: start !important;
+    gap: 1.5rem !important;
+}
+
+.stitch-project-card,
+body[data-theme^="console"] .stitch-project-card {
+    width: 100% !important;
+    min-height: 28rem !important;
+    height: auto !important;
+    padding: 1.55rem !important;
+    gap: 1.05rem !important;
+    overflow: hidden !important;
+}
+
+body[data-theme^="console"] .project-card {
+    border-radius: 1.35rem !important;
+}
+
+.stitch-project-card .project-title,
+body[data-theme^="console"] .stitch-project-card .project-title {
+    font-size: 1.18rem !important;
+    line-height: 1.35 !important;
+    font-weight: 900 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.project-card-description-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: end !important;
+    gap: 1rem !important;
+}
+
+.project-card-description {
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    min-height: 1.15rem !important;
+}
+
+.project-card-description:empty {
+    display: block !important;
+    min-height: 0 !important;
+}
+
+.project-preview-list {
+    gap: 0.75rem !important;
+}
+
+.project-preview-task,
+.project-preview-empty {
+    min-height: 3rem !important;
+    padding: 0.75rem 0.85rem !important;
+}
+
+.project-preview-task span:last-child {
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.project-card-tags:empty,
+.project-card-description:empty::before {
+    display: none !important;
+    content: "" !important;
+}
+
+@media (max-width: 1180px) {
+    .top-app-bar {
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+        min-height: 5rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        grid-template-columns: minmax(0, 1fr) 11rem !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    #projectSortSelect {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .project-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+/* ==========================================================================
+   Stitch polish pass: menu category, leaderboard, synced alignment, chips
+   ========================================================================== */
+
+.top-app-bar {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.top-view-toolbar,
+.view-toolbar.top-view-toolbar {
+    grid-template-columns: max-content minmax(32rem, 1fr) 12rem !important;
+    justify-content: stretch !important;
+    align-items: center !important;
+}
+
+.top-view-toolbar .top-app-bar-title {
+    grid-column: 1 !important;
+    min-width: max-content !important;
+    margin-right: 0.65rem !important;
+}
+
+.top-view-toolbar .view-toolbar-search-wrap {
+    grid-column: 2 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.top-view-toolbar #projectSortSelect {
+    grid-column: 3 !important;
+}
+
+body[data-theme^="console"] .control-panel .panel-user-info {
+    align-items: center !important;
+}
+
+body[data-theme^="console"] .panel-user-pill {
+    align-items: center !important;
+}
+
+body[data-theme^="console"] .save-status {
+    display: inline-flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    line-height: 1 !important;
+    transform: translateY(0) !important;
+}
+
+body[data-theme^="console"] .view-filter-chips {
+    gap: 0.75rem !important;
+    margin-bottom: 1.85rem !important;
+}
+
+body[data-theme^="console"] .filter-chip {
+    min-height: 2.25rem !important;
+    padding: 0.45rem 1rem !important;
+    border-radius: 999px !important;
+    border: 1.5px solid var(--line) !important;
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.01em !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .filter-chip:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: var(--surface-2) !important;
+}
+
+body[data-theme^="console"] .filter-chip.is-active {
+    background: var(--bg) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .add-project-button,
+body[data-theme^="console"] .add-project-button svg {
+    color: #ffffff !important;
+}
+
+body[data-theme^="console"] .leaderboard-panel-card {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+body[data-theme^="console"] .leaderboard-list {
+    display: grid !important;
+    gap: 0.8rem !important;
+}
+
+body[data-theme^="console"] .leaderboard-row {
+    display: grid !important;
+    grid-template-columns: 1.35rem 2rem minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    min-height: 3.25rem !important;
+    padding: 0.6rem 0.75rem !important;
+    border-radius: 0.7rem !important;
+    background: var(--inset) !important;
+    border: 1px solid var(--line-soft) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .leaderboard-rank {
+    color: var(--muted) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.02em !important;
+}
+
+body[data-theme^="console"] .leaderboard-rank--top {
+    color: var(--accent) !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.35rem !important;
+    background: var(--surface-2) !important;
+    border: 1px solid var(--line) !important;
+    color: transparent !important;
+}
+
+body[data-theme^="console"] .leaderboard-user {
+    display: block !important;
+    min-width: 0 !important;
+    color: var(--heading) !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body[data-theme^="console"] .leaderboard-meta,
+body[data-theme^="console"] .leaderboard-row-main {
+    display: none !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-score {
+    color: var(--text) !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 1180px) {
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        grid-template-columns: max-content minmax(0, 1fr) 11rem !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .top-view-toolbar .top-app-bar-title,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .top-view-toolbar #projectSortSelect {
+        grid-column: 1 !important;
+    }
+}
+
+/* ============================================================================
+   Stitch polish pass 2: title placement, card-color chips, avatar leaderboard, flat bg
+   ============================================================================ */
+body[data-theme^="console"],
+body[data-theme^="console"] .container,
+body[data-theme^="console"] .viewport {
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .bg-gradient,
+body[data-theme^="console"]::before,
+body[data-theme^="console"]::after {
+    display: none !important;
+    background: var(--bg) !important;
+}
+
+body[data-theme^="console"] .top-app-bar {
+    background: var(--bg) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.top-app-bar {
+    grid-template-columns: max-content minmax(0, 1fr) auto !important;
+    gap: 1.25rem !important;
+}
+
+.top-app-bar > .top-app-bar-title {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: max-content !important;
+    margin: 0 !important;
+    justify-self: start !important;
+    align-self: center !important;
+}
+
+.top-app-bar > .top-view-toolbar,
+.top-app-bar > .view-toolbar.top-view-toolbar {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: minmax(26rem, 1fr) 12rem !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.top-view-toolbar .view-toolbar-search-wrap {
+    grid-column: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.top-view-toolbar #projectSortSelect {
+    grid-column: 2 !important;
+    width: 12rem !important;
+    min-width: 12rem !important;
+}
+
+.top-view-toolbar .top-app-bar-title {
+    display: none !important;
+}
+
+body[data-theme^="console"] .filter-chip {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    border-color: var(--line) !important;
+    color: var(--text) !important;
+}
+
+body[data-theme^="console"] .filter-chip:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--line)) !important;
+    color: var(--accent) !important;
+}
+
+body[data-theme^="console"] .filter-chip.is-active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar {
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar-img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: inherit !important;
+}
+
+body[data-theme^="console"] .leaderboard-row-avatar-fallback {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: var(--surface-2) !important;
+}
+
+@media (max-width: 1180px) {
+    .top-app-bar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        grid-template-columns: minmax(0, 1fr) 11rem !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .top-view-toolbar #projectSortSelect {
+        grid-column: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* ============================================================================
+   Stitch polish pass 3: final menu order, movable cards, plain settings links
+   ============================================================================ */
+
+body[data-theme^="console"] .top-app-bar {
+    grid-template-columns: max-content minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}
+
+body[data-theme^="console"] .top-app-bar > .top-app-bar-title {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: center !important;
+    min-width: max-content !important;
+    margin: 0 0.75rem 0 0 !important;
+    text-align: left !important;
+}
+
+body[data-theme^="console"] .top-app-bar > .top-view-toolbar,
+body[data-theme^="console"] .top-app-bar > .view-toolbar.top-view-toolbar {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: minmax(24rem, 1fr) 12rem !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap {
+    grid-column: 1 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+body[data-theme^="console"] .top-view-toolbar #projectSortSelect {
+    grid-column: 2 !important;
+    width: 12rem !important;
+    min-width: 12rem !important;
+}
+
+body[data-theme^="console"] .top-app-logo {
+    display: block !important;
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    width: clamp(4.5rem, 6vw, 6.5rem) !important;
+    max-width: 6.5rem !important;
+    height: auto !important;
+}
+
+body[data-theme^="console"] .drag-handle {
+    cursor: grab !important;
+    opacity: 0.82 !important;
+}
+
+body[data-theme^="console"] .drag-handle:active {
+    cursor: grabbing !important;
+}
+
+body[data-theme^="console"] .drag-handle--inactive {
+    cursor: pointer !important;
+    opacity: 0.55 !important;
+}
+
+body[data-theme^="console"] .drag-handle--inactive:hover {
+    opacity: 1 !important;
+}
+
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle {
+    display: none !important;
+}
+
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"],
+body[data-theme^="console"] #settingsSectionBody,
+body[data-theme^="console"] .settings-panel-card {
+    display: block !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body[data-theme^="console"] .settings-actions {
+    display: grid !important;
+    gap: 1.65rem !important;
+    align-items: start !important;
+    padding: 0.25rem 0 0 !important;
+}
+
+body[data-theme^="console"] .sidebar-action-button,
+body[data-theme^="console"] .sidebar-action-button--more {
+    width: fit-content !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--muted) !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.02em !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+}
+
+body[data-theme^="console"] .sidebar-action-button:hover,
+body[data-theme^="console"] .sidebar-action-button--more:hover {
+    color: var(--heading) !important;
+    background: transparent !important;
+    border: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] .sidebar-action-button--danger,
+body[data-theme^="console"] .sidebar-action-button--danger:hover {
+    color: var(--danger) !important;
+}
+
+body[data-theme^="console"] .sidebar-more-group {
+    display: grid !important;
+    gap: 0.75rem !important;
+    padding: 0 !important;
+}
+
+body[data-theme^="console"] .sidebar-more-menu {
+    display: none !important;
+    gap: 0.75rem !important;
+    padding: 0 0 0 0.75rem !important;
+}
+
+body[data-theme^="console"] .sidebar-more-group:hover .sidebar-more-menu,
+body[data-theme^="console"] .sidebar-more-group:focus-within .sidebar-more-menu {
+    display: grid !important;
+}
+
+body[data-theme^="console"] .sidebar-more-menu .sidebar-action-button {
+    font-size: 0.78rem !important;
+    color: var(--muted-2, var(--muted)) !important;
+}
+
+body[data-theme^="console"] .sidebar-more-menu .section-count-pill {
+    margin-left: 0.5rem !important;
+}
+
+@media (max-width: 1180px) {
+    body[data-theme^="console"] .top-app-bar {
+        grid-template-columns: 1fr !important;
+    }
+
+    body[data-theme^="console"] .top-app-bar > .top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        grid-template-columns: minmax(0, 1fr) 11rem !important;
+    }
+
+    body[data-theme^="console"] .top-app-logo {
+        display: none !important;
+    }
+}
+
+
+/* ============================================================================
+   Targeted fixes: desktop card count, editable chips, task-note indicator, settings hover
+   ============================================================================ */
+
+.project-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+}
+
+body.control-panel-is-collapsed .project-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 1450px) {
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+.project-card-tag {
+    appearance: none !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    font: inherit !important;
+    line-height: 1.15 !important;
+    cursor: pointer !important;
+}
+
+.project-card-tag--editable:hover,
+.project-card-tag--editable:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-tag-chip {
+    min-width: 0 !important;
+}
+
+.project-tag-chip.is-editing {
+    padding: 0.15rem !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+.project-tag-label {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    letter-spacing: inherit !important;
+    line-height: 1.15 !important;
+    cursor: pointer !important;
+}
+
+.project-tag-label:hover,
+.project-tag-label:focus-visible {
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-tag-inline-input--edit {
+    min-width: 5.5rem !important;
+    max-width: 12rem !important;
+    height: 1.55rem !important;
+    padding: 0.2rem 0.45rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    background: var(--surface, rgba(255,255,255,0.1)) !important;
+    color: var(--heading, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    outline: none !important;
+}
+
+.task-note-button {
+    position: relative !important;
+}
+
+.task-note-button.has-note {
+    color: var(--accent, currentColor) !important;
+    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+}
+
+.task-note-button.has-note::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 999px !important;
+    background: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 2px var(--surface, rgba(255,255,255,0.9)) !important;
+}
+
+#sidebarAccountSettingsBtn:hover,
+#sidebarAccountSettingsBtn:focus-visible,
+#sidebarUiOptionsBtn:hover,
+#sidebarUiOptionsBtn:focus-visible,
+#sidebarMoreToggleBtn:hover,
+#sidebarMoreToggleBtn:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: transparent !important;
+    outline: none !important;
+}
+
+/* Targeted project modal + desktop density fixes */
+@media (min-width: 981px) {
+    .container {
+        grid-template-columns: 20% minmax(0, 1fr) !important;
+    }
+
+    .control-panel {
+        width: 100% !important;
+    }
+
+    .panel-edge-toggle {
+        left: 20% !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        left: 5rem !important;
+    }
+
+    .top-app-bar {
+        grid-template-columns: max-content minmax(18rem, 1fr) minmax(10rem, 12rem) auto !important;
+        gap: 0.85rem !important;
+    }
+
+    .top-app-bar-title {
+        grid-column: 1 !important;
+        justify-self: start !important;
+        white-space: nowrap !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        display: contents !important;
+        width: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar.top-view-toolbar .view-toolbar-search-wrap {
+        grid-column: 2 !important;
+        width: 100% !important;
+        max-width: none !important;
+        justify-self: stretch !important;
+    }
+
+    #projectSortSelect {
+        grid-column: 3 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-self: stretch !important;
+    }
+
+    .top-app-logo {
+        grid-column: 4 !important;
+        justify-self: end !important;
+    }
+
+    .viewport {
+        padding: 1.15rem 2rem 1.5rem !important;
+    }
+
+    .view-filter-chips {
+        margin: 0 0 0.85rem !important;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+    }
+
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+        padding: 1.2rem !important;
+        gap: 0.78rem !important;
+    }
+
+    .project-preview-list {
+        gap: 0.55rem !important;
+    }
+
+    .project-preview-task,
+    .project-preview-empty {
+        min-height: 2.55rem !important;
+        padding: 0.62rem 0.75rem !important;
+    }
+}
+
+.modal-title-edit-button {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+
+.modal-title-edit-button:hover,
+.modal-title-edit-button:focus-visible,
+.modal-project-description:hover,
+.modal-project-description:focus-visible {
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.modal-project-description {
+    appearance: none !important;
+    width: min(100%, 54rem) !important;
+    margin: 0.15rem auto 1rem !important;
+    padding: 0.85rem 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease !important;
+}
+
+.modal-project-description.is-empty {
+    color: var(--muted, rgba(100, 116, 139, 0.9)) !important;
+    font-style: italic !important;
+}
+
+.modal-project-description:hover,
+.modal-project-description:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+}
+
+.project-details-modal-content {
+    width: min(92vw, 520px) !important;
+    max-width: 520px !important;
+    padding: 1.5rem !important;
+}
+
+.project-details-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1.15rem !important;
+}
+
+.project-details-modal-title {
+    margin: 0 !important;
+    color: var(--heading, inherit) !important;
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+}
+
+.project-details-modal-subtitle {
+    margin: 0.25rem 0 0 !important;
+    color: var(--muted, inherit) !important;
+    font-size: 0.85rem !important;
+}
+
+.project-details-field {
+    display: grid !important;
+    gap: 0.45rem !important;
+    margin-bottom: 1rem !important;
+    color: var(--heading, inherit) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-details-input,
+.project-details-textarea {
+    width: 100% !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.3)) !important;
+    border-radius: 0.9rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    outline: none !important;
+}
+
+.project-details-input {
+    min-height: 2.75rem !important;
+    padding: 0 0.9rem !important;
+}
+
+.project-details-textarea {
+    min-height: 7rem !important;
+    resize: vertical !important;
+    padding: 0.85rem 0.9rem !important;
+    line-height: 1.45 !important;
+}
+
+.project-details-input:focus,
+.project-details-textarea:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+}
+
+.project-details-modal-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin-top: 1.2rem !important;
+}
+
+#sidebarAccountSettingsBtn:hover,
+#sidebarAccountSettingsBtn:focus-visible,
+#sidebarUiOptionsBtn:hover,
+#sidebarUiOptionsBtn:focus-visible,
+#sidebarMoreToggleBtn:hover,
+#sidebarMoreToggleBtn:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+
+/* ============================================================================
+   Follow-up patch: menu order, 4-card desktop grid, inline description editor
+   ============================================================================ */
+@media (min-width: 981px) {
+    .container {
+        grid-template-columns: 20% minmax(0, 1fr) !important;
+    }
+
+    .control-panel {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+
+    .panel-edge-toggle {
+        left: 20vw !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        left: 5rem !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    .top-app-bar {
+        grid-template-columns: max-content minmax(18rem, 1fr) minmax(10rem, 12rem) auto !important;
+        align-items: center !important;
+        gap: 0.85rem !important;
+    }
+
+    .top-app-bar > .top-app-bar-title {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: start !important;
+        align-self: center !important;
+        min-width: max-content !important;
+        margin: 0 !important;
+    }
+
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar {
+        display: contents !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar.top-view-toolbar .view-toolbar-search-wrap {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        justify-self: stretch !important;
+    }
+
+    #projectSortSelect {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-self: stretch !important;
+    }
+
+    .top-app-logo {
+        grid-column: 4 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(4, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+    }
+
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+    }
+}
+
+.modal-project-description-input {
+    appearance: none !important;
+    display: block !important;
+    width: min(100%, 54rem) !important;
+    min-height: 3.15rem !important;
+    max-height: 8rem !important;
+    margin: 0.15rem auto 1rem !important;
+    padding: 0.85rem 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+    resize: vertical !important;
+    outline: none !important;
+    cursor: text !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+}
+
+.modal-project-description-input::placeholder {
+    color: var(--muted, rgba(100, 116, 139, 0.9)) !important;
+    font-style: italic !important;
+}
+
+.modal-project-description-input:hover,
+.modal-project-description-input:focus {
+    border-color: var(--accent, currentColor) !important;
+}
+
+.modal-project-description-input:focus {
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+}
+
+.modal-project-description-input[readonly] {
+    cursor: default !important;
+    opacity: 0.82 !important;
+}
+
+/* ============================================================================
+   Follow-up patch: hard-separate menu category, search, sort, and logo
+   ============================================================================ */
+@media (min-width: 981px) {
+    .top-app-bar {
+        display: grid !important;
+        grid-template-columns: max-content minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 0.9rem !important;
+        padding-left: 1.75rem !important;
+        padding-right: 1.75rem !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title {
+        display: block !important;
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: start !important;
+        align-self: center !important;
+        min-width: max-content !important;
+        width: max-content !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        white-space: nowrap !important;
+        position: static !important;
+        transform: none !important;
+        z-index: 2 !important;
+        pointer-events: auto !important;
+    }
+
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        display: grid !important;
+        grid-template-columns: minmax(12rem, 1fr) minmax(8.75rem, 10.5rem) !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        justify-self: stretch !important;
+        overflow: hidden !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar.top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        justify-self: stretch !important;
+        position: relative !important;
+    }
+
+    .top-view-toolbar #projectSortSelect,
+    .view-toolbar.top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 10.5rem !important;
+        justify-self: stretch !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    .top-app-bar > .top-app-logo,
+    body[data-theme^="console"] .top-app-logo {
+        display: block !important;
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
+        align-self: center !important;
+        width: clamp(4.25rem, 5vw, 5.75rem) !important;
+        max-width: 5.75rem !important;
+        height: auto !important;
+        margin: 0 !important;
+        position: static !important;
+        transform: none !important;
+    }
+}
+
+
+/* v5 sidebar/avatar, danger hover, and shared label polish */
+.control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas:
+        "avatar username"
+        "status status" !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0.55rem !important;
+    align-items: center !important;
+}
+
+.control-panel .panel-avatar-button {
+    grid-area: avatar !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar {
+    transition: box-shadow 0.18s ease, outline-color 0.18s ease, transform 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar {
+    outline: 2px solid color-mix(in srgb, var(--accent) 72%, transparent) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 42%, transparent) !important;
+    transform: translateY(-1px) !important;
+}
+
+.control-panel .panel-avatar-button:focus-visible {
+    outline: none !important;
+}
+
+.control-panel .panel-username {
+    grid-area: username !important;
+    min-width: 0 !important;
+}
+
+.control-panel .save-status--inline {
+    grid-area: status !important;
+    justify-self: start !important;
+}
+
+.sidebar-action-button--danger:hover,
+.sidebar-action-button--danger:focus-visible,
+body[data-theme^="console"] .sidebar-action-button--danger:hover,
+body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
+    color: var(--heading, currentColor) !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* ============================================================================
+   v6 targeted patch: account chip, restored sync placement, safe minimized sidebar
+   ============================================================================ */
+.control-panel .panel-user-info {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.65rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.control-panel .panel-user-pill.panel-account-chip,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.6rem !important;
+    width: auto !important;
+    max-width: min(100%, 13.5rem) !important;
+    min-width: 0 !important;
+    min-height: 2.35rem !important;
+    padding: 0.28rem 0.78rem 0.28rem 0.34rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, #3b82f6) 32%, var(--line, rgba(148, 163, 184, 0.32))) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 9%, var(--surface, rgba(255, 255, 255, 0.78))) !important;
+    color: var(--text, inherit) !important;
+    box-shadow: 0 8px 20px color-mix(in srgb, #000 8%, transparent) !important;
+    backdrop-filter: blur(12px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease !important;
+}
+
+.control-panel .panel-user-pill.panel-account-chip:hover,
+.control-panel .panel-user-pill.panel-account-chip:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 15%, var(--surface, rgba(255, 255, 255, 0.82))) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 35%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent) !important;
+    transform: translateY(-1px) !important;
+    outline: none !important;
+}
+
+.control-panel .panel-user-pill .panel-avatar,
+.control-panel .panel-account-chip .panel-avatar {
+    flex: 0 0 1.85rem !important;
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    min-width: 1.85rem !important;
+    min-height: 1.85rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-user-pill:hover .panel-avatar,
+.control-panel .panel-user-pill:focus-visible .panel-avatar,
+.control-panel .panel-account-chip:hover .panel-avatar,
+.control-panel .panel-account-chip:focus-visible .panel-avatar {
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-user-pill .panel-username,
+.control-panel .panel-account-chip .panel-username {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: inherit !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .container {
+    grid-template-columns: 5rem minmax(0, 1fr) !important;
+}
+
+body.control-panel-is-collapsed .control-panel,
+body.control-panel-is-collapsed .control-panel.collapsed {
+    width: 5rem !important;
+    min-width: 5rem !important;
+    max-width: 5rem !important;
+    overflow: hidden !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .control-panel-header,
+body.control-panel-is-collapsed .panel-header-main,
+body.control-panel-is-collapsed .panel-user-info {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-user-pill,
+body.control-panel-is-collapsed .control-panel .panel-user-pill.panel-account-chip {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    min-height: 2.65rem !important;
+    height: 2.65rem !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body.control-panel-is-collapsed .control-panel .panel-account-chip .panel-username,
+body.control-panel-is-collapsed .control-panel .save-status,
+body.control-panel-is-collapsed .control-panel .save-status--inline {
+    display: none !important;
+}
+
+body.control-panel-is-collapsed .viewport,
+body.control-panel-is-collapsed .top-app-bar {
+    min-width: 0 !important;
+}
+
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        left: 5rem !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+
+/* ============================================================================
+   v7 targeted patch: restore username placement and invisible avatar button
+   ============================================================================ */
+.control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas:
+        "avatar username"
+        "status status" !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0.55rem !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-avatar-button {
+    grid-area: avatar !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    overflow: visible !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar {
+    flex: 0 0 auto !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    outline: 0 solid transparent !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: box-shadow 0.18s ease, outline-color 0.18s ease, outline-offset 0.18s ease, transform 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar {
+    outline: 2px solid color-mix(in srgb, var(--accent, #3b82f6) 72%, transparent) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    transform: translateY(-1px) !important;
+}
+
+.control-panel .panel-username,
+body[data-theme^="console"] .control-panel .panel-username {
+    grid-area: username !important;
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: inherit !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    grid-area: status !important;
+    justify-self: start !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .control-panel-header,
+body.control-panel-is-collapsed .panel-header-main,
+body.control-panel-is-collapsed .panel-user-info {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    height: 2.65rem !important;
+    min-height: 2.65rem !important;
+    padding: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-avatar {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-width: 2.35rem !important;
+    min-height: 2.35rem !important;
+}
+
+
+/* ============================================================================
+   v8 targeted patch: keep SYNC placement, include username in invisible avatar button
+   ============================================================================ */
+.control-panel .panel-user-info,
+body[data-theme^="console"] .control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas:
+        "avatar username"
+        "status status" !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0.55rem !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    grid-area: auto !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas: "avatar username" !important;
+    column-gap: 0.75rem !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.5rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    overflow: visible !important;
+    transform: none !important;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 22%, transparent) !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-avatar {
+    grid-area: avatar !important;
+    flex: 0 0 auto !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    outline: 0 solid transparent !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: box-shadow 0.18s ease, outline-color 0.18s ease, outline-offset 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar,
+.control-panel .panel-user-pill:hover .panel-avatar,
+.control-panel .panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible .panel-avatar {
+    outline: 2px solid color-mix(in srgb, var(--accent, #3b82f6) 72%, transparent) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-username,
+.control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-username {
+    grid-area: username !important;
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: inherit !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    grid-area: auto !important;
+    justify-self: start !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+}
+
+body.control-panel-is-collapsed .control-panel-header,
+body.control-panel-is-collapsed .panel-header-main,
+body.control-panel-is-collapsed .panel-user-info,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel-header,
+body[data-theme^="console"].control-panel-is-collapsed .panel-header-main,
+body[data-theme^="console"].control-panel-is-collapsed .panel-user-info {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button,
+body.control-panel-is-collapsed .control-panel .panel-user-pill,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    height: 2.65rem !important;
+    min-height: 2.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-avatar,
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill .panel-avatar {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-width: 2.35rem !important;
+    min-height: 2.35rem !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body.control-panel-is-collapsed .control-panel .save-status,
+body.control-panel-is-collapsed .control-panel .save-status--inline,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status--inline {
+    display: none !important;
+}
+
+/* ============================================================================
+   v9 targeted patch: account chip, sync placement, tag section, create warning
+   ============================================================================ */
+.control-panel .panel-user-info,
+body[data-theme^="console"] .control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "account status" !important;
+    align-items: center !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    grid-area: account !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-grid !important;
+    grid-template-columns: auto minmax(0, max-content) !important;
+    grid-template-areas: "avatar username" !important;
+    align-items: center !important;
+    justify-content: start !important;
+    gap: 0.65rem !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.55rem !important;
+    margin: 0 !important;
+    padding: 0.22rem 0.85rem 0.22rem 0.22rem !important;
+    border-radius: 999px !important;
+    border: 1.5px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: none !important;
+    color: var(--text, inherit) !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    transform: none !important;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, currentColor) 22%, transparent) !important;
+    outline: none !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-avatar {
+    grid-area: avatar !important;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-width: 2.1rem !important;
+    min-height: 2.1rem !important;
+    align-self: center !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar,
+.control-panel .panel-user-pill:hover .panel-avatar,
+.control-panel .panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible .panel-avatar {
+    box-shadow: none !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+}
+
+.control-panel .panel-avatar-button .panel-username,
+.control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-username {
+    grid-area: username !important;
+    display: block !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    max-width: 9.5rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+    color: inherit !important;
+    transform: translateY(0) !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    grid-area: status !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: translateY(0) !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    text-align: right !important;
+}
+
+body.control-panel-is-collapsed .panel-user-info,
+body[data-theme^="console"].control-panel-is-collapsed .panel-user-info {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button,
+body.control-panel-is-collapsed .control-panel .panel-user-pill,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill {
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    max-width: 2.65rem !important;
+    height: 2.65rem !important;
+    min-height: 2.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.2rem !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body.control-panel-is-collapsed .control-panel .save-status,
+body.control-panel-is-collapsed .control-panel .save-status--inline,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status,
+body[data-theme^="console"].control-panel-is-collapsed .control-panel .save-status--inline {
+    display: none !important;
+}
+
+.project-tag-controls,
+body[data-theme^="console"] .project-tag-controls {
+    margin: 0.8rem 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.project-tag-controls-label,
+body[data-theme^="console"] .project-tag-controls-label {
+    margin-bottom: 0.45rem !important;
+}
+
+.new-project-create-panel {
+    display: grid !important;
+    gap: 0.55rem !important;
+    margin: 0.75rem 0 1rem !important;
+    padding: 0.85rem !important;
+    border-radius: 1rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+}
+
+.new-project-create-panel.hidden {
+    display: none !important;
+}
+
+.new-project-create-label {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.new-project-description-input {
+    width: 100% !important;
+    min-height: 5rem !important;
+    padding: 0.7rem 0.75rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--inset, rgba(0, 0, 0, 0.06)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.86rem !important;
+    line-height: 1.4 !important;
+    resize: vertical !important;
+    outline: none !important;
+}
+
+.new-project-description-input:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.new-project-description-input.has-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
+}
+
+.new-project-description-warning {
+    color: #ef4444 !important;
+    font-size: 0.76rem !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+}
+
+.new-project-description-warning.hidden {
+    display: none !important;
+}
+
+.new-project-create-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.new-project-confirm-button,
+.new-project-cancel-button {
+    appearance: none !important;
+    min-height: 2.1rem !important;
+    padding: 0.45rem 0.75rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+}
+
+.new-project-confirm-button:hover,
+.new-project-confirm-button:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.new-project-cancel-button:hover,
+.new-project-cancel-button:focus-visible {
+    border-color: var(--muted, currentColor) !important;
+    outline: none !important;
+}
+
+/* ============================================================================
+   v10 targeted patch: account chip alignment and inline project name creation
+   ============================================================================ */
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.65rem !important;
+    line-height: 1 !important;
+}
+
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-avatar {
+    flex: 0 0 2.1rem !important;
+}
+
+.control-panel .panel-avatar-button .panel-username,
+.control-panel .panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button .panel-username,
+body[data-theme^="console"] .control-panel .panel-user-pill .panel-username {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 2.1rem !important;
+    line-height: 1.1 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    transform: none !important;
+}
+
+.new-project-name-input,
+.new-project-description-input {
+    width: 100% !important;
+    padding: 0.7rem 0.75rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--inset, rgba(0, 0, 0, 0.06)) !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.86rem !important;
+    line-height: 1.4 !important;
+    outline: none !important;
+}
+
+.new-project-name-input {
+    min-height: 2.45rem !important;
+}
+
+.new-project-name-input:focus,
+.new-project-description-input:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+/* ============================================================================
+   v11 targeted patch: invisible account-chip chrome and matching create inputs
+   ============================================================================ */
+.control-panel .panel-avatar-button,
+.control-panel .panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-user-pill {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+.control-panel .panel-user-pill:hover,
+.control-panel .panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, currentColor) 22%, transparent) !important;
+}
+
+.new-project-name-input,
+.new-project-description-input {
+    background: var(--inset, rgba(0, 0, 0, 0.06)) !important;
+}
+
+/* ============================================================================
+   NEUTRAL PROJECT ARCHIVE/DELETE ACTIONS
+   ============================================================================ */
+
+.project-card .card-delete-button,
+body[data-theme^="console"] .project-card .card-delete-button,
+body[data-theme^="glass"] .project-card .card-delete-button,
+body[data-theme^="blueprint"] .project-card .card-delete-button {
+    color: var(--muted, var(--heading)) !important;
+    border-color: var(--line, rgba(0,0,0,0.12)) !important;
+}
+
+.project-card .card-delete-button:hover,
+.project-card .card-delete-button:focus-visible,
+body[data-theme^="console"] .project-card .card-delete-button:hover,
+body[data-theme^="console"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="glass"] .project-card .card-delete-button:hover,
+body[data-theme^="glass"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="blueprint"] .project-card .card-delete-button:hover,
+body[data-theme^="blueprint"] .project-card .card-delete-button:focus-visible {
+    color: var(--accent, var(--primary, var(--heading))) !important;
+    border-color: var(--accent, var(--primary, var(--line))) !important;
+}
+
+#projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="console"] #projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="glass"] #projectModal .modal-actions .modal-delete-btn,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn {
+    background: var(--panel, var(--surface, transparent)) !important;
+    color: var(--heading, currentColor) !important;
+    border: 1px solid var(--line, rgba(0,0,0,0.12)) !important;
+    box-shadow: var(--card-shadow, none) !important;
+}
+
+#projectModal .modal-actions .modal-delete-btn:hover,
+#projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="console"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="console"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="glass"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth-of-type(2):hover,
+body[data-theme^="blueprint"] #projectModal .modal-actions .modal-delete-btn:nth-of-type(2):focus-visible {
+    background: var(--surface, var(--panel, transparent)) !important;
+    color: var(--accent, var(--primary, var(--heading))) !important;
+    border-color: var(--accent, var(--primary, var(--line))) !important;
+}
+
+/* ============================================================================
+   Targeted patch: compact card task preview, modal description display, project priority
+   ============================================================================ */
+.project-preview-task,
+.project-preview-empty,
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="console"] .project-preview-empty,
+body[data-theme^="glass"] .project-preview-task,
+body[data-theme^="glass"] .project-preview-empty,
+body[data-theme^="blueprint"] .project-preview-task,
+body[data-theme^="blueprint"] .project-preview-empty {
+    grid-template-columns: 0.85rem 1rem minmax(0, 1fr) !important;
+    min-height: 1.85rem !important;
+    padding: 0.34rem 0.48rem !important;
+    gap: 0.36rem !important;
+    border-radius: 0.55rem !important;
+    font-size: 0.76rem !important;
+    line-height: 1.2 !important;
+}
+
+.project-preview-empty,
+body[data-theme^="console"] .project-preview-empty,
+body[data-theme^="glass"] .project-preview-empty,
+body[data-theme^="blueprint"] .project-preview-empty {
+    display: block !important;
+}
+
+.project-preview-task span:last-child,
+body[data-theme^="console"] .project-preview-task span:last-child,
+body[data-theme^="glass"] .project-preview-task span:last-child,
+body[data-theme^="blueprint"] .project-preview-task span:last-child {
+    white-space: nowrap !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-preview-check,
+body[data-theme^="console"] .project-preview-check,
+body[data-theme^="glass"] .project-preview-check,
+body[data-theme^="blueprint"] .project-preview-check {
+    width: 0.82rem !important;
+    height: 0.82rem !important;
+    border-radius: 0.22rem !important;
+    font-size: 0.56rem !important;
+}
+
+.project-preview-priority,
+body[data-theme^="console"] .project-preview-priority,
+body[data-theme^="glass"] .project-preview-priority,
+body[data-theme^="blueprint"] .project-preview-priority {
+    width: 1rem !important;
+    height: 1rem !important;
+    flex-basis: 1rem !important;
+    border-radius: 0.32rem !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+.project-preview-priority .task-tag-flag,
+body[data-theme^="console"] .project-preview-priority .task-tag-flag,
+body[data-theme^="glass"] .project-preview-priority .task-tag-flag,
+body[data-theme^="blueprint"] .project-preview-priority .task-tag-flag {
+    width: 0.66rem !important;
+    height: 0.66rem !important;
+    flex-basis: 0.66rem !important;
+}
+
+.modal-project-description-view {
+    width: min(100%, 54rem) !important;
+    margin: 0.15rem auto 1rem !important;
+    padding: 0.2rem 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 0.65rem !important;
+    color: var(--text, inherit) !important;
+    font: inherit !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+}
+
+.modal-project-description-view.is-empty .modal-project-description-text {
+    color: var(--muted, rgba(100, 116, 139, 0.9)) !important;
+    font-style: italic !important;
+}
+
+.modal-project-description-text {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    border-radius: 0.7rem !important;
+}
+
+.modal-project-description-text[tabindex] {
+    cursor: text !important;
+}
+
+.modal-project-description-text.is-editing {
+    min-width: min(100%, 28rem) !important;
+    padding: 0.28rem 0.55rem !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+    outline: none !important;
+    text-align: center !important;
+}
+
+.modal-project-description-view.is-editing {
+    align-items: center !important;
+}
+
+.modal-project-description-edit {
+    flex: 0 0 auto !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--accent, currentColor) !important;
+    padding: 0.18rem 0.55rem !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+}
+
+.modal-project-description-edit:hover,
+.modal-project-description-edit:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.modal-project-priority-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.45rem !important;
+    margin-top: 0.55rem !important;
+}
+
+.project-priority-button,
+.project-priority-card-button {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--heading, currentColor) !important;
+    cursor: pointer !important;
+}
+
+.project-priority-button {
+    min-height: 1.85rem !important;
+    padding: 0.28rem 0.72rem !important;
+    border-radius: 999px !important;
+    font: inherit !important;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-priority-card-button {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    border-radius: 0.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+.project-priority-indicator,
+.project-priority-card-indicator {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.project-priority-indicator .task-tag-flag,
+.project-priority-card-indicator .task-tag-flag {
+    width: 0.88rem !important;
+    height: 0.88rem !important;
+    flex-basis: 0.88rem !important;
+}
+
+.project-priority-button:hover,
+.project-priority-button:focus-visible,
+.project-priority-card-button:hover,
+.project-priority-card-button:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-priority-button:disabled,
+.project-priority-card-button:disabled {
+    cursor: default !important;
+    opacity: 0.72 !important;
+}
+
+.project-priority-button--high,
+.project-priority-card-button--high,
+.project-priority-indicator--high,
+.project-priority-card-indicator--high {
+    color: #ef4444 !important;
+}
+
+.project-priority-button--medium,
+.project-priority-card-button--medium,
+.project-priority-indicator--medium,
+.project-priority-card-indicator--medium {
+    color: #f97316 !important;
+}
+
+.project-priority-button--low,
+.project-priority-card-button--low,
+.project-priority-indicator--low,
+.project-priority-card-indicator--low {
+    color: #22c55e !important;
+}
+
+.project-priority-button--none,
+.project-priority-card-button--none,
+.project-priority-indicator--none,
+.project-priority-card-indicator--none {
+    color: color-mix(in srgb, var(--muted, currentColor) 72%, transparent) !important;
+}
+
+
+/* Request: priority popovers, compact task controls, tag picker, and one-line card descriptions */
+.project-card-description {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: initial !important;
+    min-width: 0 !important;
+    min-height: 1.15rem !important;
+}
+
+.project-priority-control {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+}
+
+.project-priority-control--modal .project-priority-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+}
+
+.project-priority-control--card .project-priority-popover {
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+}
+
+.project-priority-control--modal .project-priority-popover {
+    top: calc(100% + 8px) !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+}
+
+.project-actions,
+.project-header,
+.modal-project-priority-row {
+    overflow: visible !important;
+}
+
+.modal-add-task-under-toggle {
+    width: auto !important;
+    min-width: 8.75rem !important;
+    margin: 0.35rem 0 0 !important;
+    padding: 0.55rem 0.8rem !important;
+    align-self: flex-start !important;
+    border-radius: 0.65rem !important;
+    font-size: 0.78rem !important;
+}
+
+.project-tag-picker-content {
+    width: min(92vw, 31rem) !important;
+    padding: 1.25rem !important;
+    border-radius: 1.1rem !important;
+    overflow: visible !important;
+}
+
+.project-tag-picker-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.project-tag-picker-title {
+    margin: 0 !important;
+    color: var(--heading, currentColor) !important;
+    font-size: 1.05rem !important;
+    font-weight: 900 !important;
+}
+
+.project-tag-picker-subtitle {
+    margin: 0.25rem 0 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+}
+
+.project-tag-picker-body {
+    display: grid !important;
+    gap: 1rem !important;
+}
+
+.project-tag-picker-label {
+    display: block !important;
+    margin-bottom: 0.45rem !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-tag-picker-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    min-height: 2rem !important;
+}
+
+.project-tag-picker-chip,
+.project-tag-picker-add {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--heading, currentColor) !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+}
+
+.project-tag-picker-chip {
+    padding: 0.45rem 0.7rem !important;
+}
+
+.project-tag-picker-chip:hover,
+.project-tag-picker-add:hover {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+}
+
+.project-tag-picker-empty {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.8rem !important;
+}
+
+.project-tag-picker-input-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 0.55rem !important;
+    align-items: center !important;
+}
+
+.project-tag-picker-input {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 2.35rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--heading, currentColor) !important;
+    padding: 0 0.75rem !important;
+    font: inherit !important;
+    outline: none !important;
+}
+
+.project-tag-picker-input:focus {
+    border-color: var(--accent, currentColor) !important;
+}
+
+.project-tag-picker-add {
+    min-height: 2.35rem !important;
+    padding: 0 0.85rem !important;
+}
+
+@media (max-width: 640px) {
+    .project-tag-picker-input-row {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: long-press project drag, title limits, priority placement
+   ============================================================================ */
+
+.sidebar-action-button--danger:hover,
+.sidebar-action-button--danger:focus-visible,
+body[data-theme^="console"] .sidebar-action-button--danger:hover,
+body[data-theme^="console"] .sidebar-action-button--danger:focus-visible {
+    color: var(--danger, #ef4444) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--danger, #ef4444) 70%, transparent),
+                 0 0 18px color-mix(in srgb, var(--danger, #ef4444) 45%, transparent) !important;
+}
+
+.project-card[data-project-can-reorder="true"] {
+    cursor: pointer !important;
+}
+
+.project-card.project-card--long-press-pending {
+    cursor: pointer !important;
+}
+
+.project-card.project-card--long-press-ready,
+.project-card.dragging {
+    cursor: grabbing !important;
+}
+
+.project-card .drag-handle {
+    display: none !important;
+}
+
+.project-card-tags.project-card-tags--empty {
+    display: flex !important;
+    min-height: 1.75rem !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.project-card-footer-left {
+    display: grid !important;
+    align-items: start !important;
+    justify-items: start !important;
+    gap: 0.35rem !important;
+    min-width: 0 !important;
+}
+
+.project-card-footer-left .project-priority-control--card {
+    justify-content: flex-start !important;
+}
+
+.project-card-footer-left .project-priority-card-button {
+    width: auto !important;
+    min-width: 2.05rem !important;
+    height: 1.75rem !important;
+    min-height: 1.75rem !important;
+    padding: 0 0.55rem !important;
+    border-radius: 999px !important;
+}
+
+.project-card-footer-left .project-priority-card-indicator .task-tag-flag {
+    width: 0.78rem !important;
+    height: 0.78rem !important;
+    flex-basis: 0.78rem !important;
+}
+
+.project-priority-control--card .project-priority-popover {
+    top: auto !important;
+    bottom: calc(100% + 8px) !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+}
+
+.project-title-warning {
+    margin-top: 0.35rem !important;
+    color: var(--danger, #ef4444) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+}
+
+.project-title-input.has-error,
+.modal-title-input.has-error,
+.new-project-name-input.has-error,
+#newProjectTitleInput.has-error {
+    border-color: var(--danger, #ef4444) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger, #ef4444) 18%, transparent) !important;
+}
+
+
+@keyframes project-title-input-shake {
+    0%, 100% { transform: translateX(0); }
+    18%, 54%, 90% { transform: translateX(-6px); }
+    36%, 72% { transform: translateX(6px); }
+}
+
+.project-title-shake {
+    animation: project-title-input-shake 0.28s ease-in-out !important;
+}
+
+
+/* ============================================================================
+   Targeted patch: favicon/sync/priority/tag card fixes
+   ============================================================================ */
+
+.project-priority-button.is-readonly,
+.project-priority-card-button.is-readonly {
+    cursor: default !important;
+    opacity: 1 !important;
+}
+
+.project-priority-button.is-readonly:hover,
+.project-priority-button.is-readonly:focus-visible,
+.project-priority-card-button.is-readonly:hover,
+.project-priority-card-button.is-readonly:focus-visible {
+    color: var(--heading, currentColor) !important;
+    border-color: var(--line, rgba(148, 163, 184, 0.28)) !important;
+}
+
+.project-priority-card-label {
+    display: inline-block !important;
+    max-width: 5.75rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-card-tags.project-card-tags--empty {
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.project-card-tag--add {
+    border-style: dashed !important;
+    background: transparent !important;
+    color: var(--muted, currentColor) !important;
+}
+
+.project-card-tag--add:hover,
+.project-card-tag--add:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-tag-picker-limit {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    padding: 0.9rem 1rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+}
+
+/* ============================================================================
+   Targeted patch: uploaded favicon, compact tag add, icon-only priority, plain description edit
+   ============================================================================ */
+.project-card-tag--add {
+    min-width: 1.75rem !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.project-priority-card-label {
+    display: none !important;
+}
+
+.modal-project-description-text.is-editing,
+.modal-project-description-text.is-editing:focus,
+.modal-project-description-text.is-editing:focus-visible {
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* ============================================================================
+   Targeted patch: card preview cleanup
+   ============================================================================ */
+.project-preview-task,
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="glass"] .project-preview-task,
+body[data-theme^="blueprint"] .project-preview-task {
+    grid-template-columns: 1rem minmax(0, 1fr) !important;
+}
+
+.project-preview-check,
+body[data-theme^="console"] .project-preview-check,
+body[data-theme^="glass"] .project-preview-check,
+body[data-theme^="blueprint"] .project-preview-check {
+    display: none !important;
+}
+
+/* ============================================================================
+   Targeted patch: clean minimal task category tabs
+   ============================================================================ */
+.task-category-tabs {
+    align-items: center !important;
+    gap: 0.45rem !important;
+    padding: 0.55rem 0.65rem 0 !important;
+    border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    background: transparent !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    scrollbar-width: thin !important;
+}
+
+.task-category-tab-wrap {
+    position: relative !important;
+    z-index: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    isolation: auto !important;
+    flex: 0 0 auto !important;
+}
+
+.task-category-tab-wrap:hover,
+.task-category-tab-wrap.is-menu-open,
+.task-category-tab-wrap.is-drop-target,
+.task-category-tab-wrap.is-active {
+    z-index: 2 !important;
+}
+
+.task-category-tab-shell {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    min-height: 2.05rem !important;
+    height: 2.05rem !important;
+    min-width: 0 !important;
+    padding: 0 0.75rem !important;
+    margin: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: var(--muted, rgba(100, 116, 139, 0.92)) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition:
+        background 140ms ease,
+        border-color 140ms ease,
+        color 140ms ease,
+        box-shadow 140ms ease !important;
+    overflow: visible !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+}
+
+.task-category-tab-shell::before,
+.task-category-tab-shell::after {
+    content: none !important;
+    display: none !important;
+}
+
+.task-category-tab-shell:hover,
+.task-category-tab-wrap.is-menu-open .task-category-tab-shell {
+    border-color: var(--line, rgba(148, 163, 184, 0.28)) !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--heading, #111827) !important;
+}
+
+.task-category-tab-shell.is-active,
+.task-category-tab-wrap.is-active .task-category-tab-shell {
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 12%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
+    color: var(--heading, #111827) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent) !important;
+}
+
+.task-category-tab,
+.task-category-tab-shell .task-category-tab {
+    position: relative !important;
+    z-index: 1 !important;
+    min-height: 1.85rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+    text-shadow: none !important;
+}
+
+.task-category-menu-button {
+    position: relative !important;
+    z-index: 1 !important;
+    align-self: center !important;
+    min-width: 1.55rem !important;
+    min-height: 1.55rem !important;
+    width: 1.55rem !important;
+    height: 1.55rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+}
+
+.task-category-menu-button:hover,
+.task-category-menu-button:focus-visible {
+    background: color-mix(in srgb, var(--accent, #3b82f6) 12%, transparent) !important;
+    color: var(--heading, #111827) !important;
+    outline: none !important;
+}
+
+.task-category-tab-shell--create {
+    min-width: 2.05rem !important;
+    width: 2.05rem !important;
+    padding: 0 !important;
+}
+
+.task-category-tab-shell--create .task-category-tab {
+    min-width: 0 !important;
+    padding: 0 !important;
+}
+
+.task-category-inline-input {
+    position: relative !important;
+    z-index: 1 !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    border-radius: 999px !important;
+    background: var(--panel, rgba(255, 255, 255, 0.9)) !important;
+}
+
+.task-category-tab-wrap.is-drop-target .task-category-tab-shell {
+    border-color: var(--accent, #3b82f6) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 16%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
+    box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent),
+        inset 0 -2px 0 var(--accent, #3b82f6) !important;
+}
+
+/* ========================================================================== 
+   Targeted patch: resilient sync text and pending invite confirmation
+   ========================================================================== */
+.control-panel .save-status--inline {
+    max-width: min(15rem, 48%) !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+}
+
+.control-panel .save-status--inline.save-status--long {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.045em !important;
+    line-height: 1.15 !important;
+}
+
+.control-panel .save-status--inline.save-status--extra-long {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    font-size: 0.54rem !important;
+    letter-spacing: 0.025em !important;
+    line-height: 1.12 !important;
+}
+
+.control-panel .save-status--inline.save-status--long::before,
+.control-panel .save-status--inline.save-status--extra-long::before {
+    flex: 0 0 auto !important;
+}
+
+.invite-error.is-success {
+    color: var(--success, #2d8a57) !important;
+}
+
+
+/* Project notes surfaces */
+.modal-tab-note-icon {
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+    margin-right: 0.35rem !important;
+    vertical-align: -0.16rem !important;
+}
+
+.modal-project-notes-panel {
+    display: grid !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--surface, rgba(255,255,255,0.08)) !important;
+}
+
+.modal-project-notes-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.modal-project-notes-title {
+    margin: 0 0 0.25rem !important;
+    color: var(--heading, currentColor) !important;
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+}
+
+.modal-project-notes-subtitle {
+    margin: 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+}
+
+.modal-project-notes-icon {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    color: var(--accent, currentColor) !important;
+    flex: 0 0 auto !important;
+}
+
+.project-notes-textarea {
+    width: 100% !important;
+    min-height: 14rem !important;
+    resize: vertical !important;
+    padding: 0.9rem !important;
+    border-radius: 0.9rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--panel, var(--surface)) !important;
+    color: var(--heading, currentColor) !important;
+    font: inherit !important;
+    line-height: 1.5 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.project-notes-textarea:focus {
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent) !important;
+}
+
+.project-notes-textarea[readonly] {
+    cursor: default !important;
+    opacity: 0.86 !important;
+}
+
+.project-notes-save-button {
+    justify-self: end !important;
+}
+
+.project-card-notes-row {
+    display: grid !important;
+    grid-template-columns: 1.1rem minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    width: 100% !important;
+    min-height: 2.35rem !important;
+    padding: 0.55rem 0.65rem !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--inset, rgba(0,0,0,0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+.project-card-notes-row:hover,
+.project-card-notes-row:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    outline: none !important;
+}
+
+.project-card-notes-row.has-note {
+    color: var(--text, currentColor) !important;
+}
+
+.project-card-notes-row.has-note svg {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-card-notes-row svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.project-card-notes-text {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+
+/* ==========================================================================
+   Targeted patch: icon-only project notes, tabbed notes modal, and sync wrap
+   ========================================================================== */
+
+.project-card-notes-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-height: 1.65rem !important;
+    margin-top: 0.2rem !important;
+}
+
+.project-card-notes-button {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.9rem !important;
+    height: 1.9rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0.55rem !important;
+    background: transparent !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.project-card-notes-button:hover,
+.project-card-notes-button:focus-visible {
+    color: var(--accent, currentColor) !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.project-card-notes-button.task-note-button.has-note {
+    color: var(--accent, currentColor) !important;
+    background: transparent !important;
+}
+
+.project-card-notes-button .icon {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.modal-tab--notes {
+    position: relative !important;
+}
+
+.modal-tab--notes.has-note::after,
+.project-notes-tab.has-note::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 999px !important;
+    background: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 2px var(--surface, rgba(255,255,255,0.9)) !important;
+}
+
+.project-notes-modal-content {
+    width: min(38rem, calc(100vw - 2rem)) !important;
+    max-width: 38rem !important;
+    max-height: min(42rem, calc(100vh - 2rem)) !important;
+    overflow: auto !important;
+}
+
+.project-notes-editor {
+    display: grid !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--surface, rgba(255,255,255,0.08)) !important;
+}
+
+.project-notes-modal-content .project-notes-editor {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.project-notes-editor-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.project-notes-tab-strip {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    min-width: 0 !important;
+}
+
+.project-notes-tabs {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    scrollbar-width: thin !important;
+}
+
+.project-notes-tab {
+    position: relative !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    flex: 0 0 auto !important;
+    max-width: 9rem !important;
+    padding: 0.48rem 0.8rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--panel, rgba(255,255,255,0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 850 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-tab span {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.project-notes-tab.is-active,
+.project-notes-tab:hover,
+.project-notes-tab:focus-visible {
+    color: var(--heading, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 52%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    background: color-mix(in srgb, var(--accent, #3b82f6) 10%, var(--panel, rgba(255,255,255,0.08))) !important;
+    outline: none !important;
+}
+
+.project-notes-add-tab {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    flex: 0 0 auto !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: transparent !important;
+    color: var(--accent, currentColor) !important;
+    font: inherit !important;
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-active-panel {
+    display: grid !important;
+    gap: 0.65rem !important;
+}
+
+.project-notes-active-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.project-notes-title-input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 2.15rem !important;
+    padding: 0.45rem 0.65rem !important;
+    border-radius: 0.65rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--panel, var(--surface)) !important;
+    color: var(--heading, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.85rem !important;
+    font-weight: 850 !important;
+    outline: none !important;
+}
+
+.project-notes-title-input:focus,
+.project-notes-textarea:focus {
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent) !important;
+}
+
+.project-notes-delete-tab {
+    flex: 0 0 auto !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--danger, #dc2626) !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 850 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+}
+
+/* Keep sync text from clipping or covering the avatar/account details. */
+.control-panel .panel-user-info,
+body[data-theme^="console"] .control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(5rem, max-content) !important;
+    grid-template-areas:
+        "account sync"
+        "synclong synclong" !important;
+    align-items: center !important;
+    column-gap: 0.5rem !important;
+    row-gap: 0.28rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.control-panel .panel-avatar-button,
+body[data-theme^="console"] .control-panel .panel-avatar-button {
+    grid-area: account !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+.control-panel .save-status--inline,
+body[data-theme^="console"] .control-panel .save-status--inline {
+    grid-area: sync !important;
+    justify-self: end !important;
+    align-self: center !important;
+    max-width: min(9rem, 100%) !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+}
+
+.control-panel .save-status--inline.save-status--long,
+.control-panel .save-status--inline.save-status--extra-long,
+body[data-theme^="console"] .control-panel .save-status--inline.save-status--long,
+body[data-theme^="console"] .control-panel .save-status--inline.save-status--extra-long {
+    grid-area: synclong !important;
+    justify-self: stretch !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: left !important;
+}
+
+/* Request: make task dragging easier, prevent accidental text selection, auto-scroll cleanly, and expand long task edits */
+.task-list.is-task-drag-pending,
+.task-list.is-task-dragging,
+.task-list.is-task-drag-pending .task-item,
+.task-list.is-task-dragging .task-item,
+.task-list.is-task-drag-pending .task-text,
+.task-list.is-task-dragging .task-text,
+body.is-task-dragging {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.task-item {
+    touch-action: manipulation !important;
+}
+
+.task-item:not(.is-editing) .task-main-content,
+.task-item:not(.is-editing) .task-text {
+    cursor: grab !important;
+}
+
+.task-item.dragging,
+.task-item.dragging .task-main-content,
+.task-item.dragging .task-text,
+.task-drag-handle:active {
+    cursor: grabbing !important;
+}
+
+.task-drag-handle {
+    flex: 0 0 auto !important;
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-width: 1.65rem !important;
+    padding: 0.28rem !important;
+    border-radius: 0.5rem !important;
+    cursor: grab !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: none !important;
+}
+
+.task-drag-handle:hover,
+.task-drag-handle:focus-visible {
+    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.task-item.is-editing {
+    align-items: flex-start !important;
+}
+
+.task-item.is-editing .task-main-content {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.task-input--textarea {
+    width: 100% !important;
+    min-height: 2.75rem !important;
+    max-height: min(16rem, 45vh) !important;
+    resize: none !important;
+    overflow-y: auto !important;
+    white-space: pre-wrap !important;
+    line-height: 1.35 !important;
+    box-sizing: border-box !important;
+}
+
+.task-item.is-editing .task-input--textarea {
+    display: block !important;
+}
+
+/* ============================================================================
+   Targeted patch: project notes padding, mobile optimization, console-only UI,
+   and safer sync/cookie-recovery layout
+   ============================================================================ */
+
+.theme-grid--single {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.project-notes-modal-overlay {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+}
+
+.project-notes-modal-content {
+    padding: 1.25rem !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+}
+
+.project-notes-modal-header {
+    margin-bottom: 1rem !important;
+}
+
+#projectNotesModalBody {
+    min-width: 0 !important;
+}
+
+.project-notes-modal-content .project-notes-editor {
+    min-width: 0 !important;
+}
+
+@media (max-width: 760px) {
+    html,
+    body {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
+    }
+
+    .control-panel .panel-user-info,
+    body[data-theme^="console"] .control-panel .panel-user-info {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-areas:
+            "account"
+            "sync" !important;
+        row-gap: 0.4rem !important;
+    }
+
+    .control-panel .panel-avatar-button,
+    body[data-theme^="console"] .control-panel .panel-avatar-button,
+    .control-panel .save-status--inline,
+    body[data-theme^="console"] .control-panel .save-status--inline,
+    .control-panel .save-status--inline.save-status--long,
+    .control-panel .save-status--inline.save-status--extra-long,
+    body[data-theme^="console"] .control-panel .save-status--inline.save-status--long,
+    body[data-theme^="console"] .control-panel .save-status--inline.save-status--extra-long {
+        justify-self: start !important;
+        max-width: 100% !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.75rem !important;
+        padding: 0.85rem !important;
+        min-height: 0 !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-column: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.6rem !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect {
+        width: 100% !important;
+        min-width: 0 !important;
+        grid-column: 1 !important;
+    }
+
+    .viewport {
+        padding: 0.75rem !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.85rem !important;
+        width: 100% !important;
+    }
+
+    .project-card,
+    .stitch-project-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .modal-overlay {
+        align-items: flex-start !important;
+        justify-content: center !important;
+        padding: 0.5rem !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-content,
+    .account-modal-content,
+    .archived-projects-modal-content,
+    .ui-options-modal-content,
+    .project-notes-modal-content {
+        width: calc(100vw - 1rem) !important;
+        max-width: calc(100vw - 1rem) !important;
+        max-height: calc(100dvh - 1rem) !important;
+        border-radius: 1rem !important;
+    }
+
+    .account-modal-scroll {
+        max-height: calc(100dvh - 1rem) !important;
+        padding: 1rem !important;
+    }
+
+    .project-notes-modal-content {
+        padding: 1rem !important;
+    }
+
+    .project-notes-editor-header,
+    .modal-project-notes-header {
+        gap: 0.75rem !important;
+    }
+
+    .project-notes-tab-strip {
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+    }
+
+    .project-notes-tabs {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .project-notes-tab {
+        max-width: 7.5rem !important;
+        padding-inline: 0.68rem !important;
+    }
+
+    .project-notes-active-title-row {
+        flex-wrap: wrap !important;
+    }
+
+    .project-notes-title-input {
+        flex-basis: 100% !important;
+    }
+
+    .project-notes-delete-tab {
+        margin-left: auto !important;
+    }
+
+    .project-notes-textarea {
+        min-height: 12rem !important;
+        max-height: 42vh !important;
+    }
+
+    .project-actions,
+    .modal-actions,
+    .account-modal-actions,
+    .task-note-modal-actions,
+    .project-notes-actions {
+        flex-wrap: wrap !important;
+        gap: 0.6rem !important;
+    }
+
+    .modal-done-btn,
+    .task-note-modal-actions .modal-done-btn,
+    .project-notes-save-button {
+        min-width: 0 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: 1920x1200 project-card visibility
+   ============================================================================ */
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid {
+        grid-auto-rows: auto !important;
+        align-items: start !important;
+    }
+
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 0.9rem !important;
+        gap: 0.52rem !important;
+        overflow: visible !important;
+    }
+
+    .stitch-project-card .project-header,
+    body[data-theme^="console"] .stitch-project-card .project-header {
+        gap: 0.55rem !important;
+    }
+
+    .stitch-project-card .project-title,
+    body[data-theme^="console"] .stitch-project-card .project-title {
+        font-size: 1.05rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .project-sync-text,
+    body[data-theme^="console"] .project-sync-text {
+        margin-top: 0.22rem !important;
+        font-size: 0.62rem !important;
+        line-height: 1.12 !important;
+    }
+
+    .project-card-tags,
+    body[data-theme^="console"] .project-card-tags {
+        gap: 0.32rem !important;
+        min-height: 1.25rem !important;
+    }
+
+    .project-card-tags.project-card-tags--empty,
+    body[data-theme^="console"] .project-card-tags.project-card-tags--empty {
+        min-height: 1.25rem !important;
+    }
+
+    .project-card-tag,
+    body[data-theme^="console"] .project-card-tag {
+        min-height: 1.32rem !important;
+        padding: 0.16rem 0.48rem !important;
+        font-size: 0.66rem !important;
+        line-height: 1.1 !important;
+    }
+
+    .project-card-description-row,
+    body[data-theme^="console"] .project-card-description-row {
+        gap: 0.55rem !important;
+        align-items: center !important;
+    }
+
+    .project-card-description,
+    body[data-theme^="console"] .project-card-description {
+        min-height: 0.95rem !important;
+        font-size: 0.74rem !important;
+        line-height: 1.18 !important;
+    }
+
+    .project-card-progress,
+    body[data-theme^="console"] .project-card-progress {
+        gap: 0.38rem !important;
+    }
+
+    .project-preview-list,
+    body[data-theme^="console"] .project-preview-list {
+        gap: 0.34rem !important;
+    }
+
+    .project-preview-task,
+    .project-preview-empty,
+    body[data-theme^="console"] .project-preview-task,
+    body[data-theme^="console"] .project-preview-empty {
+        min-height: 1.58rem !important;
+        padding: 0.26rem 0.42rem !important;
+        font-size: 0.72rem !important;
+        line-height: 1.14 !important;
+    }
+
+    .project-card-notes-bar,
+    body[data-theme^="console"] .project-card-notes-bar {
+        min-height: 1.1rem !important;
+        margin-top: 0 !important;
+    }
+
+    .project-card-notes-button,
+    body[data-theme^="console"] .project-card-notes-button {
+        width: 1.4rem !important;
+        height: 1.4rem !important;
+    }
+
+    .project-card-footer,
+    body[data-theme^="console"] .project-card-footer {
+        padding-top: 0.25rem !important;
+        gap: 0.55rem !important;
+        margin-top: auto !important;
+    }
+
+    .project-card-footer-left,
+    body[data-theme^="console"] .project-card-footer-left {
+        gap: 0.22rem !important;
+    }
+
+    .project-card-footer-left .project-priority-card-button,
+    body[data-theme^="console"] .project-card-footer-left .project-priority-card-button {
+        min-height: 1.5rem !important;
+        height: 1.5rem !important;
+        min-width: 1.75rem !important;
+        padding-inline: 0.45rem !important;
+    }
+
+    .project-card-access,
+    body[data-theme^="console"] .project-card-access {
+        font-size: 0.7rem !important;
+        line-height: 1.22 !important;
+    }
+
+    .project-card-meta,
+    body[data-theme^="console"] .project-card-meta {
+        align-items: flex-end !important;
+        gap: 0.34rem !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: 1920x1200 three-card project grid
+   ============================================================================ */
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+        justify-content: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: project-card task count, red delete hover, sticky task tabs
+   ============================================================================ */
+.project-card-tasks-remaining,
+body[data-theme^="console"] .project-card-tasks-remaining {
+    margin-top: 0.15rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.01em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-card .card-delete-button:hover,
+.project-card .card-delete-button:focus-visible,
+body[data-theme^="console"] .project-card .card-delete-button:hover,
+body[data-theme^="console"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="glass"] .project-card .card-delete-button:hover,
+body[data-theme^="glass"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="blueprint"] .project-card .card-delete-button:hover,
+body[data-theme^="blueprint"] .project-card .card-delete-button:focus-visible {
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.24) !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10070 !important;
+    padding: 0.35rem 0 0.25rem !important;
+    margin-bottom: 0.75rem !important;
+    background: linear-gradient(
+        to bottom,
+        var(--panel, rgba(18, 18, 24, 0.96)) 0%,
+        var(--panel, rgba(18, 18, 24, 0.96)) 84%,
+        transparent 100%
+    ) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-card-tasks-remaining,
+    body[data-theme^="console"] .project-card-tasks-remaining {
+        margin-top: 0.05rem !important;
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+    }
+}
+
+
+/* ============================================================================
+   Targeted patch: larger project-note indicators, viewport-sticky task tabs,
+   cursor-attached task dragging, and task due dates
+   ============================================================================ */
+
+.project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="console"] .project-card-notes-button.task-note-button.has-note::after {
+    width: 14px !important;
+    height: 14px !important;
+    top: 0 !important;
+    right: 0 !important;
+    box-shadow: 0 0 0 2px var(--panel, rgba(18, 18, 24, 0.96)) !important;
+}
+
+.modal-tab--notes.has-note::after,
+.project-notes-tab.has-note::after,
+body[data-theme^="console"] .modal-tab--notes.has-note::after,
+body[data-theme^="console"] .project-notes-tab.has-note::after {
+    width: 14px !important;
+    height: 14px !important;
+    top: 1px !important;
+    right: 1px !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls {
+    top: calc(var(--modal-padding, 32px) * -1) !important;
+    margin-left: calc(var(--modal-padding, 32px) * -1) !important;
+    margin-right: calc((var(--modal-padding, 32px) - 4px + var(--modal-scrollbar-width, 10px) + var(--modal-scrollbar-gap, 10px)) * -1) !important;
+    padding: 0.55rem var(--modal-padding, 32px) 0.35rem !important;
+    background: linear-gradient(
+        to bottom,
+        var(--panel, rgba(18, 18, 24, 0.98)) 0%,
+        var(--panel, rgba(18, 18, 24, 0.98)) 88%,
+        transparent 100%
+    ) !important;
+}
+
+.task-item.dragging,
+body[data-theme^="console"] .task-item.dragging {
+    z-index: 10090 !important;
+    will-change: transform !important;
+}
+
+.task-due-date-control {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.28rem !important;
+    min-width: 0 !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 0.42rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: var(--muted, currentColor) !important;
+    cursor: pointer !important;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease !important;
+}
+
+.task-due-date-control:hover,
+.task-due-date-control:focus-within {
+    color: var(--accent, currentColor) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    border-color: var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+}
+
+.task-due-date-control.has-due-date {
+    color: var(--accent, currentColor) !important;
+    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+}
+
+.task-due-date-icon {
+    flex: 0 0 auto !important;
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+}
+
+.task-due-date-input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 7.05rem !important;
+    min-width: 0 !important;
+    height: 1.5rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    color-scheme: dark !important;
+}
+
+.task-due-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer !important;
+    opacity: 0.75 !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input {
+    width: 1.35rem !important;
+    color: transparent !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-fields-wrapper,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-text,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-month-field,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-day-field,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-year-field {
+    color: transparent !important;
+}
+
+@media (max-width: 720px) {
+    .task-due-date-control {
+        flex: 1 1 100% !important;
+        justify-content: flex-start !important;
+    }
+
+    .task-due-date-control:not(.has-due-date) .task-due-date-input,
+    .task-due-date-input {
+        width: 100% !important;
+        color: inherit !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: project notes icon size, standard note indicators,
+   single-icon due dates, and one-click modal exit after task drag
+   ============================================================================ */
+
+.project-card-notes-bar,
+body[data-theme^="console"] .project-card-notes-bar {
+    min-height: 2.8rem !important;
+}
+
+.project-card-notes-button,
+body[data-theme^="console"] .project-card-notes-button {
+    width: 2.8rem !important;
+    height: 2.8rem !important;
+}
+
+.project-card-notes-button .icon,
+body[data-theme^="console"] .project-card-notes-button .icon {
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+.project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="console"] .project-card-notes-button.task-note-button.has-note::after,
+.modal-tab--notes.has-note::after,
+.project-notes-tab.has-note::after,
+body[data-theme^="console"] .modal-tab--notes.has-note::after,
+body[data-theme^="console"] .project-notes-tab.has-note::after {
+    width: 7px !important;
+    height: 7px !important;
+    top: 5px !important;
+    right: 5px !important;
+}
+
+.task-due-date-icon {
+    display: none !important;
+}
+
+.task-due-date-control,
+body[data-theme^="console"] .task-due-date-control {
+    gap: 0 !important;
+    min-width: 2.1rem !important;
+}
+
+.task-due-date-control:not(.has-due-date),
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) {
+    width: 2.1rem !important;
+    padding-inline: 0.35rem !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) .task-due-date-input {
+    width: 1.35rem !important;
+    color: transparent !important;
+}
+
+.task-due-date-input::-webkit-calendar-picker-indicator {
+    opacity: 0.9 !important;
+    margin: 0 !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-card-notes-bar,
+    body[data-theme^="console"] .project-card-notes-bar {
+        min-height: 2.8rem !important;
+    }
+
+    .project-card-notes-button,
+    body[data-theme^="console"] .project-card-notes-button {
+        width: 2.8rem !important;
+        height: 2.8rem !important;
+    }
+
+    .project-card-notes-button .icon,
+    body[data-theme^="console"] .project-card-notes-button .icon {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+}
+
+/* ========================================================================== 
+   Targeted patch: bulk task completion actions for tabs and priority menus
+   ========================================================================== */
+.task-category-menu-option--bulk,
+.task-priority-option--bulk {
+    font-weight: 700 !important;
+    color: var(--accent, #ff6a00) !important;
+}
+
+.task-category-menu-option:disabled,
+.task-priority-option:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.task-priority-menu-divider {
+    width: 100% !important;
+    height: 1px !important;
+    margin: 0.35rem 0 !important;
+    background: var(--line, rgba(148, 163, 184, 0.22)) !important;
+}
