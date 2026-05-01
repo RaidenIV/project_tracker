@@ -599,7 +599,7 @@ function persistSavedViews() {
     localStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_VIEWS, JSON.stringify(uiState.savedViews));
 }
 
-const PROJECT_SORT_MODES = new Set(['recent', 'manual', 'alpha', 'remaining', 'progress']);
+const PROJECT_SORT_MODES = new Set(['recent', 'manual', 'alpha', 'remaining', 'progress', 'priority']);
 
 function normalizeProjectSortMode(sortMode) {
     const normalized = String(sortMode || '').trim();
@@ -801,6 +801,12 @@ function getFilteredProjects() {
             const aProgress = aTotal ? aDone / aTotal : 0;
             const bProgress = bTotal ? bDone / bTotal : 0;
             return bProgress - aProgress;
+        });
+    } else if (uiState.sortMode === 'priority') {
+        projects.sort((a, b) => {
+            const priorityDiff = getTaskTagPriority({ tag: getProjectPriorityTag(a) }) - getTaskTagPriority({ tag: getProjectPriorityTag(b) });
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(b.lastModified || b.dateCreated) - new Date(a.lastModified || a.dateCreated);
         });
     }
 
@@ -1249,7 +1255,7 @@ function captureProjectModalState(projectId) {
 
 function restoreProjectModalState(projectId, modalState) {
     if (!modalState || String(modalState.projectId) !== String(projectId)) return;
-    const tab = ['tasks', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
+    const tab = ['tasks', 'notes', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
     switchModalTab(projectId, tab);
     const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
     if (!scrollEl) return;
@@ -1655,8 +1661,20 @@ function updateProjectDescription(projectId, descriptionValue) {
 
 function updateProjectNotes(projectId, notes) {
     if (!state.canEdit(projectId)) return;
-    state.updateProject(projectId, projectUpdate({ notes }));
+    const cleanNotes = String(notes ?? '').trim();
+    state.updateProject(projectId, projectUpdate({ notes: cleanNotes }));
     saveData();
+    updateProjectCardNotesPreview(projectId, cleanNotes);
+}
+
+function updateProjectCardNotesPreview(projectId, notes) {
+    const row = document.querySelector(`[data-project-notes-row="${projectId}"]`);
+    if (!row) return;
+    const text = row.querySelector('.project-card-notes-text');
+    const hasNotes = String(notes || '').trim().length > 0;
+    row.classList.toggle('has-note', hasNotes);
+    row.setAttribute('title', hasNotes ? String(notes).trim() : 'Add project notes');
+    if (text) text.textContent = hasNotes ? formatProjectNotesPreview(notes) : 'Add project notes';
 }
 
 function copyProjectToClipboard(projectId, evt) {
@@ -3304,6 +3322,11 @@ function getProjectCardDescription(project) {
     return rawDescription.replace(/\s+/g, ' ').slice(0, 110);
 }
 
+function formatProjectNotesPreview(notes) {
+    const rawNotes = String(notes || '').trim();
+    return rawNotes ? rawNotes.replace(/\s+/g, ' ').slice(0, 96) : '';
+}
+
 function getProjectModalDescription(project) {
     const rawDescription = String(project?.description || project?.summary || '').trim();
     return rawDescription.replace(/\s+/g, ' ').slice(0, 280);
@@ -3875,6 +3898,13 @@ function openProjectModal(projectId, options = {}) {
         <!-- Tabs for Tasks, Notes and Members -->
         <div class="modal-tabs">
             <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
+            <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')">
+                <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>
+                Notes
+            </button>
             <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
                 Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
@@ -3951,6 +3981,27 @@ function openProjectModal(projectId, options = {}) {
                     ${project.completed ? 'Mark as Active' : 'Mark as Complete'}
                 </button>
             </div>`}
+        </div>
+
+        <!-- Notes Section -->
+        <div class="modal-section hidden" id="notes-section-${project.id}">
+            <div class="modal-project-notes-panel">
+                <div class="modal-project-notes-header">
+                    <div>
+                        <h4 class="modal-project-notes-title">Project Notes</h4>
+                        <p class="modal-project-notes-subtitle">Shared notes for this project.</p>
+                    </div>
+                    <svg class="modal-project-notes-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                    </svg>
+                </div>
+                <textarea class="project-notes-textarea"
+                          id="notes-textarea-${project.id}"
+                          placeholder="Write project notes here..."
+                          ${state.canEdit(project.id) ? `onblur="saveProjectNotes('${project.id}')"` : 'readonly'}>${escapeHtml(project.notes || '')}</textarea>
+                ${state.canEdit(project.id) ? `<button class="modal-done-btn project-notes-save-button" type="button" onclick="saveProjectNotes('${project.id}')">Save Notes</button>` : ''}
+            </div>
         </div>
         
         <!-- Members Section -->
@@ -4037,6 +4088,8 @@ function openProjectModal(projectId, options = {}) {
 
     if (options.restoreState) {
         restoreProjectModalState(project.id, options.restoreState);
+    } else if (options.activeTab) {
+        switchModalTab(project.id, options.activeTab);
     }
     
     // Setup task dragging for manual reordering and category-tab drops.
@@ -4045,7 +4098,7 @@ function openProjectModal(projectId, options = {}) {
 
 
 function switchModalTab(projectId, tab) {
-    ['tasks', 'members', 'history'].forEach(s => {
+    ['tasks', 'notes', 'members', 'history'].forEach(s => {
         const sec = document.getElementById(`${s}-section-${projectId}`);
         const btn = document.getElementById(`${s}-tab-${projectId}`);
         if (!sec || !btn) return;
@@ -4056,9 +4109,14 @@ function switchModalTab(projectId, tab) {
 
 function saveProjectNotes(projectId) {
     const textarea = document.getElementById(`notes-textarea-${projectId}`);
-    if (textarea) {
-        updateProjectNotes(projectId, textarea.value);
-    }
+    if (!textarea) return;
+    updateProjectNotes(projectId, textarea.value);
+}
+
+function openProjectNotes(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    openProjectModal(projectId, { activeTab: 'notes' });
 }
 
 function toggleHideCompleted() {
@@ -4592,6 +4650,18 @@ function renderProjectCard(project) {
                     </li>
                 `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
             </ul>
+
+            <button class="project-card-notes-row ${formatProjectNotesPreview(project.notes) ? 'has-note' : ''}"
+                    type="button"
+                    data-project-notes-row="${project.id}"
+                    title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Add project notes')}"
+                    onclick="openProjectNotes('${project.id}', event)">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>
+                <span class="project-card-notes-text">${escapeHtml(formatProjectNotesPreview(project.notes) || 'Add project notes')}</span>
+            </button>
 
             <div class="project-card-footer">
                 <div class="project-card-footer-left">
@@ -5180,6 +5250,7 @@ window.pasteTasksInModal = pasteTasksInModal;
 window.handleTaskClick = handleTaskClick;
 window.switchModalTab = switchModalTab;
 window.saveProjectNotes = saveProjectNotes;
+window.openProjectNotes = openProjectNotes;
 window.toggleHideCompleted = toggleHideCompleted;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;

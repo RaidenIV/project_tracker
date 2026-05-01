@@ -3284,3 +3284,123 @@ body[data-theme^="blueprint"] .project-preview-check {
 .invite-error.is-success {
     color: var(--success, #2d8a57) !important;
 }
+
+
+/* Project notes surfaces */
+.modal-tab-note-icon {
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+    margin-right: 0.35rem !important;
+    vertical-align: -0.16rem !important;
+}
+
+.modal-project-notes-panel {
+    display: grid !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--surface, rgba(255,255,255,0.08)) !important;
+}
+
+.modal-project-notes-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.modal-project-notes-title {
+    margin: 0 0 0.25rem !important;
+    color: var(--heading, currentColor) !important;
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+}
+
+.modal-project-notes-subtitle {
+    margin: 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+}
+
+.modal-project-notes-icon {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    color: var(--accent, currentColor) !important;
+    flex: 0 0 auto !important;
+}
+
+.project-notes-textarea {
+    width: 100% !important;
+    min-height: 14rem !important;
+    resize: vertical !important;
+    padding: 0.9rem !important;
+    border-radius: 0.9rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--panel, var(--surface)) !important;
+    color: var(--heading, currentColor) !important;
+    font: inherit !important;
+    line-height: 1.5 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.project-notes-textarea:focus {
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent) !important;
+}
+
+.project-notes-textarea[readonly] {
+    cursor: default !important;
+    opacity: 0.86 !important;
+}
+
+.project-notes-save-button {
+    justify-self: end !important;
+}
+
+.project-card-notes-row {
+    display: grid !important;
+    grid-template-columns: 1.1rem minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    width: 100% !important;
+    min-height: 2.35rem !important;
+    padding: 0.55rem 0.65rem !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    background: var(--inset, rgba(0,0,0,0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+.project-card-notes-row:hover,
+.project-card-notes-row:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    outline: none !important;
+}
+
+.project-card-notes-row.has-note {
+    color: var(--text, currentColor) !important;
+}
+
+.project-card-notes-row.has-note svg {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-card-notes-row svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.project-card-notes-text {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
