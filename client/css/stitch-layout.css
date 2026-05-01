@@ -3948,3 +3948,17 @@ body.is-task-dragging {
         min-width: 0 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Add Task reliability and 1920x1200 card visibility
+   ============================================================================ */
+
+@media (min-width: 1800px) and (min-height: 1100px) {
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        min-height: 28rem !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: hidden !important;
+    }
+}
