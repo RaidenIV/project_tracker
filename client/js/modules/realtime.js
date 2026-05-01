@@ -1,18 +1,15 @@
 // Realtime collaboration layer for shared project updates.
 
-import { TOKEN_KEY } from './config.js';
+import { getToken } from './auth.js';
 
 let socket = null;
 let callbacks = {};
 
-function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
-}
-
 export function connectRealtime(nextCallbacks = {}) {
     callbacks = { ...callbacks, ...nextCallbacks };
 
-    if (!getToken()) return null;
+    const token = getToken();
+    if (!token) return null;
     if (socket?.connected) return socket;
     if (typeof window.io !== 'function') {
         console.warn('Realtime client unavailable: /socket.io/socket.io.js was not loaded.');
@@ -25,7 +22,7 @@ export function connectRealtime(nextCallbacks = {}) {
     }
 
     socket = window.io({
-        auth: { token: getToken() },
+        auth: { token },
         transports: ['websocket', 'polling'],
         withCredentials: false,
         reconnection: true,

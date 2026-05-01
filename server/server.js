@@ -15,6 +15,8 @@ const PORT = process.env.PORT || 3000;
 const PROJECT_TAG_MAX_COUNT = 5;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRES_IN = '30d';
+const SAFE_AUTH_HEADER_MAX_CHARS = 8192;
+const SAFE_JWT_MAX_CHARS = 4096;
 
 // Node's default maxHeaderSize is 8 KB, which can trip a 431 when Chrome sends
 // accumulated cookies from the app origin. Auth uses bearer tokens, not cookies,
@@ -72,6 +74,18 @@ function clearLegacyAppCookies(req, res, next) {
     next();
 }
 
+function rejectOversizedAppHeaders(req, res, next) {
+    const authorization = String(req.headers.authorization || '');
+    if (authorization.length > SAFE_AUTH_HEADER_MAX_CHARS) {
+        return res.status(431).json({
+            error: 'Request headers too large',
+            code: 'HEADER_TOO_LARGE',
+            details: 'Authorization header is too large. Reset the browser session and log in again.'
+        });
+    }
+    next();
+}
+
 app.use(cors({
     origin: true,
     credentials: false,
@@ -79,6 +93,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
 app.use(clearLegacyAppCookies);
+app.use(rejectOversizedAppHeaders);
 app.use(express.json({ limit: '6mb' }));
 app.use(express.urlencoded({ extended: true, limit: '6mb' }));
 app.use(express.static(path.join(__dirname, '..', 'client')));
@@ -193,6 +208,9 @@ const Stats = mongoose.model('Stats', statsSchema);
 function authenticateToken(req, res, next) {
     const token = (req.headers['authorization'] || '').split(' ')[1];
     if (!token) return res.status(401).json({ error: 'No token provided' });
+    if (token.length > SAFE_JWT_MAX_CHARS || token.split('.').length !== 3) {
+        return res.status(401).json({ error: 'Invalid or oversized token' });
+    }
     try {
         req.user = jwt.verify(token, JWT_SECRET);
         next();

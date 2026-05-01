@@ -3,17 +3,19 @@
 // A 401 response forces a logout.
 
 import { API_ENDPOINTS } from './config.js';
-import { clearAppCookies, getToken, logout } from './auth.js';
+import { clearAppCookies, clearOversizedAuthStorage, getToken, logout, redirectToSessionReset } from './auth.js';
 
 // ─── Internals ────────────────────────────────────────────────────────────────
 
 function authHeaders(extra) {
+    clearOversizedAuthStorage();
     const token = getToken();
-    return {
+    const headers = {
         'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...extra
     };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
 }
 
 async function request(method, url, body) {
@@ -31,22 +33,13 @@ async function request(method, url, body) {
 
     if (res.status === 401) { logout(); return null; }
 
-    // 431 means the browser is sending headers that are too large (usually
-    // accumulated cookies). Surface a clear message instead of a cryptic code.
+    // 431 means the browser is sending headers that are too large. At this
+    // point cookies have already been omitted from fetch requests, so reset
+    // local/session auth storage before any more API calls can repeat the error.
     if (res.status === 431) {
         clearAppCookies();
-        try {
-            const reloadKey = 'tracker_431_cookie_cleanup_reload_v1';
-            if (typeof window !== 'undefined' && !sessionStorage.getItem(reloadKey)) {
-                sessionStorage.setItem(reloadKey, String(Date.now()));
-                window.location.reload();
-                return new Promise(() => {});
-            }
-        } catch {}
-        throw new Error(
-            'Request headers too large (HTTP 431). ' +
-            'The app cleared legacy cookies from this browser; reload and try again.'
-        );
+        redirectToSessionReset('http-431-api');
+        return new Promise(() => {});
     }
 
     try {

@@ -5,6 +5,18 @@ import { API_ENDPOINTS, TOKEN_KEY } from './config.js';
 
 
 const COOKIE_EXPIRY = 'Thu, 01 Jan 1970 00:00:00 GMT';
+const SAFE_AUTH_TOKEN_MAX_CHARS = 4096;
+const RESET_PAGE_PATH = '/reset-session.html';
+const LEGACY_AUTH_STORAGE_KEYS = [
+    TOKEN_KEY,
+    'authToken',
+    'token',
+    'jwt',
+    'session',
+    'tracker_auth',
+    'tracker_session',
+    'project_tracker_token'
+];
 
 function getCookieClearDomains() {
     if (typeof window === 'undefined') return [null];
@@ -41,20 +53,139 @@ export function clearAppCookies() {
     return true;
 }
 
+function getStorageItem(storage, key) {
+    try { return storage?.getItem?.(key) || ''; }
+    catch { return ''; }
+}
+
+function removeStorageItem(storage, key) {
+    try { storage?.removeItem?.(key); }
+    catch {}
+}
+
+function getStoredToken() {
+    return getStorageItem(localStorage, TOKEN_KEY) || getStorageItem(sessionStorage, TOKEN_KEY);
+}
+
+function isJwtShaped(token) {
+    return typeof token === 'string'
+        && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token);
+}
+
+export function isSafeAuthToken(token) {
+    if (!token || typeof token !== 'string') return false;
+    if (token.length > SAFE_AUTH_TOKEN_MAX_CHARS) return false;
+    return isJwtShaped(token);
+}
+
+export function clearToken() {
+    removeStorageItem(localStorage, TOKEN_KEY);
+    removeStorageItem(sessionStorage, TOKEN_KEY);
+}
+
+export function clearLegacyAuthStorage() {
+    let cleared = false;
+    [localStorage, sessionStorage].forEach(storage => {
+        LEGACY_AUTH_STORAGE_KEYS.forEach(key => {
+            const value = getStorageItem(storage, key);
+            if (value) {
+                removeStorageItem(storage, key);
+                cleared = true;
+            }
+        });
+    });
+    return cleared;
+}
+
+export function clearOversizedAuthStorage() {
+    let cleared = false;
+    [localStorage, sessionStorage].forEach(storage => {
+        LEGACY_AUTH_STORAGE_KEYS.forEach(key => {
+            const value = getStorageItem(storage, key);
+            if (!value) return;
+            const isTrackerToken = key === TOKEN_KEY;
+            const isOversized = value.length > SAFE_AUTH_TOKEN_MAX_CHARS;
+            const isMalformedTrackerToken = isTrackerToken && !isJwtShaped(value);
+            if (isOversized || isMalformedTrackerToken) {
+                removeStorageItem(storage, key);
+                cleared = true;
+            }
+        });
+    });
+    return cleared;
+}
+
+export function clearClientSessionData() {
+    clearLegacyAuthStorage();
+    clearAppCookies();
+    try { sessionStorage.removeItem('tracker_431_cookie_cleanup_reload_v1'); } catch {}
+    try { sessionStorage.removeItem('tracker_session_reset_redirecting_v1'); } catch {}
+}
+
+export function redirectToSessionReset(reason = 'session-reset') {
+    clearClientSessionData();
+    if (typeof window === 'undefined') return;
+
+    try {
+        const resetUrl = new URL(RESET_PAGE_PATH, window.location.origin);
+        resetUrl.searchParams.set('reason', reason);
+        resetUrl.searchParams.set('return', '/');
+        window.location.replace(resetUrl.toString());
+    } catch {
+        window.location.href = RESET_PAGE_PATH;
+    }
+}
+
+function decodeJwtPayload(token) {
+    const payload = token.split('.')[1];
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    return JSON.parse(atob(padded));
+}
+
+async function readJson(response) {
+    try { return await response.json(); }
+    catch { return {}; }
+}
+
+async function handleAuthResponse(response, fallbackMessage) {
+    if (response.status === 431) {
+        redirectToSessionReset('http-431-auth');
+        return new Promise(() => {});
+    }
+
+    const data = await readJson(response);
+
+    if (!response.ok) {
+        throw new Error(data.error || fallbackMessage);
+    }
+
+    if (!isSafeAuthToken(data.token)) {
+        throw new Error('The server returned an invalid login token. Please try again.');
+    }
+
+    setToken(data.token);
+    return data.user;
+}
+
 clearAppCookies();
+clearOversizedAuthStorage();
 
 // ─── Token Helpers ────────────────────────────────────────────────────────────
 
 export function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
+    const token = getStoredToken();
+    if (!token) return null;
+    if (!isSafeAuthToken(token)) {
+        clearToken();
+        return null;
+    }
+    return token;
 }
 
 function setToken(token) {
+    clearOversizedAuthStorage();
     localStorage.setItem(TOKEN_KEY, token);
-}
-
-function clearToken() {
-    localStorage.removeItem(TOKEN_KEY);
 }
 
 export function isLoggedIn() {
@@ -62,9 +193,10 @@ export function isLoggedIn() {
     if (!token) return false;
     try {
         // Decode payload (not a security check — server validates the signature)
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const payload = decodeJwtPayload(token);
         return payload.exp * 1000 > Date.now();
     } catch {
+        clearToken();
         return false;
     }
 }
@@ -73,9 +205,10 @@ export function getCurrentUser() {
     const token = getToken();
     if (!token) return null;
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const payload = decodeJwtPayload(token);
         return { id: payload.id, email: payload.email, username: payload.username };
     } catch {
+        clearToken();
         return null;
     }
 }
@@ -84,6 +217,7 @@ export function getCurrentUser() {
 
 export async function register(email, username, password) {
     clearAppCookies();
+    clearOversizedAuthStorage();
     const response = await fetch(API_ENDPOINTS.AUTH_REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,18 +226,12 @@ export async function register(email, username, password) {
         body: JSON.stringify({ email, username, password })
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-    }
-
-    setToken(data.token);
-    return data.user;
+    return handleAuthResponse(response, 'Registration failed');
 }
 
 export async function login(email, password) {
     clearAppCookies();
+    clearOversizedAuthStorage();
     const response = await fetch(API_ENDPOINTS.AUTH_LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -112,18 +240,12 @@ export async function login(email, password) {
         body: JSON.stringify({ email, password })
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-    }
-
-    setToken(data.token);
-    return data.user;
+    return handleAuthResponse(response, 'Login failed');
 }
 
 export function logout() {
     clearToken();
+    clearAppCookies();
     // Reload so the auth screen is shown cleanly
     window.location.reload();
 }
