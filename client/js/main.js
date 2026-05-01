@@ -1527,6 +1527,25 @@ function showProjectTitleWarning(input, message = '') {
     input.classList.toggle('has-error', Boolean(message));
 }
 
+function triggerProjectTitleShake(input) {
+    if (!input) return;
+    input.classList.remove('project-title-shake');
+    void input.offsetWidth;
+    input.classList.add('project-title-shake');
+}
+
+function handleProjectTitleInput(input) {
+    if (!input) return true;
+    const message = getProjectTitleWarningMessage(input.value);
+    if (message) {
+        showProjectTitleWarning(input, message);
+        triggerProjectTitleShake(input);
+        return false;
+    }
+    clearProjectTitleWarning(input);
+    return true;
+}
+
 function clearProjectTitleWarning(input) {
     if (!input) return;
     input.classList.remove('has-error');
@@ -1540,7 +1559,10 @@ function clearProjectTitleWarning(input) {
 function validateProjectTitleInput(input) {
     const message = getProjectTitleWarningMessage(input?.value);
     showProjectTitleWarning(input, message);
-    if (message && input) input.focus({ preventScroll: true });
+    if (message && input) {
+        triggerProjectTitleShake(input);
+        input.focus({ preventScroll: true });
+    }
     return !message;
 }
 
@@ -1602,9 +1624,8 @@ function showNewProjectCreatePanel() {
     showNewProjectDescriptionWarning(false);
     if (nameInput && !nameInput.__projectTitleWarningBound) {
         nameInput.__projectTitleWarningBound = true;
-        nameInput.addEventListener('input', () => {
-            if (nameInput.value.length <= PROJECT_TITLE_MAX_LENGTH) clearProjectTitleWarning(nameInput);
-        });
+        nameInput.addEventListener('input', () => handleProjectTitleInput(nameInput));
+        nameInput.addEventListener('animationend', () => nameInput.classList.remove('project-title-shake'));
     }
     requestAnimationFrame(() => (nameInput || descriptionInput).focus({ preventScroll: true }));
 }
@@ -2072,6 +2093,268 @@ function performTaskToggle(projectId, taskId) {
     // Update stats display
     document.getElementById('completedTasksCount').textContent = state.getStats().completedTasks;
     updateTotalCompletion();
+}
+
+function completeTaskBatch(projectId, shouldCompleteTask) {
+    if (!state.canEdit(projectId) || typeof shouldCompleteTask !== 'function') return;
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    let completedCount = 0;
+    const completedDate = new Date().toISOString();
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.completed || !shouldCompleteTask(normalizedTask)) return normalizedTask;
+        completedCount += 1;
+        return {
+            ...normalizedTask,
+            completed: true,
+            completedDate
+        };
+    });
+
+    if (completedCount <= 0) return;
+
+    for (let i = 0; i < completedCount; i++) state.incrementCompletedTasks();
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+
+    state.updateProject(projectId, projectUpdate({ tasks: sortTasks(updatedTasks) }));
+    saveData();
+
+    if (modalOpen) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalState(projectId, modalState);
+    }
+
+    render();
+    updateTotalCompletion();
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
+}
+
+function completeTasksByCategory(projectId, categoryValue, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const normalizedCategory = categoryValue === TASK_CATEGORY_DROP_ALL || categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? TASK_CATEGORY_DROP_ALL
+        : sanitizeTaskCategoryName(categoryValue);
+    uiState.openTaskCategoryMenu = null;
+    completeTaskBatch(projectId, (task) => {
+        if (normalizedCategory === TASK_CATEGORY_DROP_ALL) return true;
+        return task.category === normalizedCategory;
+    });
+}
+
+function completeTasksByPriority(projectId, tagValue, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const normalizedTag = normalizePriorityTagValue(tagValue);
+    uiState.openTaskPriorityMenu = null;
+    completeTaskBatch(projectId, (task) => task.tag === normalizedTag);
+}
+
+function getSelectedTaskIdsForProject(projectId) {
+    const project = state.findProject(projectId);
+    const selectedTasks = state.getSelectedTasks(projectId);
+    if (!project || !selectedTasks || selectedTasks.size === 0) return [];
+
+    const existingIds = new Set((Array.isArray(project.tasks) ? project.tasks : [])
+        .map((task, index) => normalizeTask(task, index).id));
+
+    return [...selectedTasks]
+        .map(taskId => Number(taskId))
+        .filter(taskId => Number.isFinite(taskId) && existingIds.has(taskId));
+}
+
+function getSelectedTaskCountForProject(projectId) {
+    return getSelectedTaskIdsForProject(projectId).length;
+}
+
+function updateCompletedTaskStatBy(delta) {
+    const amount = Number(delta) || 0;
+    if (amount > 0) {
+        for (let i = 0; i < amount; i++) state.incrementCompletedTasks();
+    } else if (amount < 0) {
+        for (let i = 0; i < Math.abs(amount); i++) state.decrementCompletedTasks();
+    }
+}
+
+function refreshModalTaskUi(projectId, options = {}) {
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? (options.modalState || captureProjectModalState(projectId)) : null;
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+
+    if (modalOpen) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        if (modalState) restoreProjectModalState(projectId, modalState);
+    }
+
+    render();
+    updateTotalCompletion();
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
+}
+
+function buildTaskBulkActionsMarkup(projectId, project, selectedTasks) {
+    const selectedCount = selectedTasks?.size ? getSelectedTaskCountForProject(projectId) : 0;
+    if (!state.canEdit(projectId) || selectedCount <= 0) return '';
+
+    const categories = [DEFAULT_TASK_CATEGORY, ...getProjectTaskCategories(project)]
+        .filter((category, index, list) => list.indexOf(category) === index);
+
+    return `
+        <div class="task-bulk-actions" id="task-bulk-actions-inner-${projectId}" aria-label="Bulk task actions">
+            <span class="task-bulk-actions-count">${selectedCount} selected</span>
+            <select class="task-bulk-action-select" aria-label="Move selected tasks to tab" onchange="moveSelectedTasksToCategory('${projectId}', this.value); this.value='';">
+                <option value="">MOVE TO...</option>
+                ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('')}
+            </select>
+            <label class="task-bulk-date-control" title="Set due date for selected tasks">
+                <span>SET DUE DATE</span>
+                <input type="date" aria-label="Set due date for selected tasks" onchange="setSelectedTasksDueDate('${projectId}', this.value); this.value='';">
+            </label>
+            <select class="task-bulk-action-select" aria-label="Set priority for selected tasks" onchange="setSelectedTasksPriority('${projectId}', this.value); this.value='';">
+                <option value="">SET PRIORITY LEVEL</option>
+                ${TASK_TAG_OPTIONS.map(option => `<option value="${option.value}">${option.label}</option>`).join('')}
+            </select>
+            <button class="task-bulk-action-button" type="button" onclick="completeSelectedTasks('${projectId}', event)">MARK COMPLETED</button>
+            <button class="task-bulk-action-button task-bulk-action-button--danger" type="button" onclick="deleteSelectedTasks('${projectId}', event)">DELETE</button>
+        </div>
+    `;
+}
+
+function renderTaskBulkActions(projectId) {
+    const project = state.findProject(projectId);
+    const container = document.getElementById(`task-bulk-actions-${projectId}`);
+    if (!project || !container) return;
+    container.innerHTML = buildTaskBulkActionsMarkup(projectId, project, state.getSelectedTasks(projectId));
+}
+
+function toggleTaskBulkSelection(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    state.toggleTaskSelection(projectId, Number(taskId));
+    renderModalTaskList(projectId);
+}
+
+function clearSelectedTasksForProject(projectId, shouldRender = true) {
+    state.clearTaskSelection(projectId);
+    if (shouldRender) renderModalTaskList(projectId);
+}
+
+function updateSelectedTasks(projectId, updater) {
+    if (!state.canEdit(projectId) || typeof updater !== 'function') return false;
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return false;
+
+    const selectedIds = new Set(getSelectedTaskIdsForProject(projectId));
+    if (selectedIds.size <= 0) return false;
+
+    let changed = false;
+    let completedStatDelta = 0;
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (!selectedIds.has(normalizedTask.id)) return normalizedTask;
+
+        const beforeCompleted = !!normalizedTask.completed;
+        const nextTask = normalizeTask(updater(normalizedTask) || normalizedTask, index);
+        if (JSON.stringify(nextTask) !== JSON.stringify(normalizedTask)) changed = true;
+        if (!beforeCompleted && nextTask.completed) completedStatDelta += 1;
+        if (beforeCompleted && !nextTask.completed) completedStatDelta -= 1;
+        return nextTask;
+    });
+
+    if (!changed) return false;
+
+    updateCompletedTaskStatBy(completedStatDelta);
+    state.updateProject(projectId, projectUpdate({ tasks: sortTasks(updatedTasks) }));
+    saveData();
+    return true;
+}
+
+function moveSelectedTasksToCategory(projectId, categoryValue) {
+    const nextCategory = sanitizeTaskCategoryName(categoryValue || '');
+    if (!nextCategory) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const modalState = captureProjectModalState(projectId);
+    const changed = updateSelectedTasks(projectId, task => ({ ...task, category: nextCategory }));
+    if (!changed) return;
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), nextCategory]);
+    state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
+    saveData();
+    clearSelectedTasksForProject(projectId, false);
+    refreshModalTaskUi(projectId, { modalState });
+}
+
+function setSelectedTasksDueDate(projectId, dueDateValue) {
+    const dueDate = normalizeTaskDueDate(dueDateValue);
+    if (!dueDate) return;
+    const modalState = captureProjectModalState(projectId);
+    const changed = updateSelectedTasks(projectId, task => ({ ...task, dueDate }));
+    if (!changed) return;
+    clearSelectedTasksForProject(projectId, false);
+    refreshModalTaskUi(projectId, { modalState });
+}
+
+function setSelectedTasksPriority(projectId, tagValue) {
+    const nextTag = normalizePriorityTagValue(tagValue);
+    const modalState = captureProjectModalState(projectId);
+    const changed = updateSelectedTasks(projectId, task => ({ ...task, tag: nextTag }));
+    if (!changed) return;
+    uiState.openTaskPriorityMenu = null;
+    clearSelectedTasksForProject(projectId, false);
+    refreshModalTaskUi(projectId, { modalState });
+}
+
+function completeSelectedTasks(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const completedDate = new Date().toISOString();
+    const modalState = captureProjectModalState(projectId);
+    const changed = updateSelectedTasks(projectId, task => task.completed
+        ? task
+        : { ...task, completed: true, completedDate });
+    if (!changed) return;
+    clearSelectedTasksForProject(projectId, false);
+    refreshModalTaskUi(projectId, { modalState });
+}
+
+function deleteSelectedTasks(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const selectedIds = new Set(getSelectedTaskIdsForProject(projectId));
+    if (selectedIds.size <= 0) return;
+
+    const modalState = captureProjectModalState(projectId);
+    const deletedTasks = project.tasks
+        .map((task, index) => normalizeTask(task, index))
+        .filter(task => selectedIds.has(task.id));
+    const completedDeletedCount = deletedTasks.filter(task => task.completed).length;
+    const updatedTasks = project.tasks
+        .map((task, index) => normalizeTask(task, index))
+        .filter(task => !selectedIds.has(task.id));
+
+    updateCompletedTaskStatBy(-completedDeletedCount);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    clearSelectedTasksForProject(projectId, false);
+    saveData();
+    refreshModalTaskUi(projectId, { modalState });
 }
 
 function updateProjectProgress(projectId) {
@@ -2936,7 +3219,7 @@ function suppressNextTaskClick(event) {
     function isAbove(el)   { return el.hasAttribute('data-is-above'); }
     function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
     function isTaskDragIgnoredTarget(target) {
-        return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .task-meta-controls, .task-due-date-control, .task-due-date-input, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
+        return !!target.closest?.('button, input, textarea, select, a, .task-bulk-select, .task-checkbox, .task-meta-controls, .task-due-date-control, .task-due-date-input, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
     }
     function getTaskScrollContainer() {
         const modalScroll = taskList.closest('.modal-scroll-inner');
@@ -3333,6 +3616,30 @@ function renderTaskCategoryOptions(project, selectedValue) {
     `).join('');
 }
 
+function getIncompleteTaskCountForCategory(project, categoryValue) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const normalizedCategory = categoryValue === TASK_CATEGORY_DROP_ALL || categoryValue === DEFAULT_TASK_CATEGORY_FILTER
+        ? TASK_CATEGORY_DROP_ALL
+        : sanitizeTaskCategoryName(categoryValue);
+
+    return tasks.reduce((count, task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.completed) return count;
+        if (normalizedCategory === TASK_CATEGORY_DROP_ALL) return count + 1;
+        return normalizedTask.category === normalizedCategory ? count + 1 : count;
+    }, 0);
+}
+
+function getIncompleteTaskCountForPriority(project, tagValue) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const normalizedTag = normalizePriorityTagValue(tagValue);
+
+    return tasks.reduce((count, task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        return !normalizedTask.completed && normalizedTask.tag === normalizedTag ? count + 1 : count;
+    }, 0);
+}
+
 function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
     const categories = getProjectTaskCategories(project);
     const canEdit = state.canEdit(projectId);
@@ -3355,12 +3662,17 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                 ${tabItems.map((tab, index) => {
                     const positionClass = getTaskCategoryTabPositionClass(index, tabItems.length);
                     const isAll = tab.kind === 'all';
+                    const isCategory = tab.kind === 'category';
                     const isCreate = tab.kind === 'create' || tab.kind === 'create-input';
                     const isInput = tab.kind === 'create-input';
                     const isActive = !isCreate && activeCategory === tab.category;
                     const categoryLiteral = tab.category ? serializeInlineJsString(tab.category) : null;
                     const filterLiteral = serializeInlineJsString(tab.category || DEFAULT_TASK_CATEGORY_FILTER);
-                    const menuOpen = tab.kind === 'category' && canEdit && isTaskCategoryMenuOpen(projectId, tab.category);
+                    const menuCategoryValue = isAll ? TASK_CATEGORY_DROP_ALL : (isCategory ? tab.category : null);
+                    const menuCategoryLiteral = menuCategoryValue ? serializeInlineJsString(menuCategoryValue) : null;
+                    const canShowTabMenu = canEdit && (isAll || isCategory);
+                    const menuOpen = canShowTabMenu && isTaskCategoryMenuOpen(projectId, menuCategoryValue);
+                    const incompleteInTab = canShowTabMenu ? getIncompleteTaskCountForCategory(project, menuCategoryValue) : 0;
                     const shellClasses = ['task-category-tab-shell', positionClass];
                     const wrapClasses = ['task-category-tab-wrap', positionClass.replace('shell', 'wrap')];
                     if (isAll) {
@@ -3412,22 +3724,30 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                         <div class="${wrapClasses.join(' ')}"${dropAttributes}>
                             <div class="${shellClasses.join(' ')}"${shellClick}>
                                 ${tabControl}
-                                ${tab.kind === 'category' && canEdit ? `
+                                ${canShowTabMenu ? `
                                     <button class="task-category-menu-button"
                                             type="button"
-                                            aria-label="Category options"
+                                            aria-label="Tab options"
                                             aria-expanded="${menuOpen ? 'true' : 'false'}"
                                             onmousedown="event.stopPropagation();"
                                             onpointerdown="event.stopPropagation();"
-                                            onclick="toggleTaskCategoryMenu('${projectId}', ${categoryLiteral}, event)">
+                                            onclick="toggleTaskCategoryMenu('${projectId}', ${menuCategoryLiteral}, event)">
                                         <span></span><span></span><span></span>
                                     </button>
                                 ` : ''}
                             </div>
                             ${menuOpen ? `
                                 <div class="task-category-menu-popover" onclick="event.stopPropagation()">
-                                    <button class="task-category-menu-option" type="button" onclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
-                                    <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="event.stopPropagation(); deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
+                                    <button class="task-category-menu-option task-category-menu-option--bulk"
+                                            type="button"
+                                            ${incompleteInTab > 0 ? '' : 'disabled'}
+                                            onclick="event.stopPropagation(); completeTasksByCategory('${projectId}', ${menuCategoryLiteral}, event)">
+                                        Mark ${isAll ? 'all tasks' : 'tab tasks'} complete${incompleteInTab > 0 ? ` (${incompleteInTab})` : ''}
+                                    </button>
+                                    ${isCategory ? `
+                                        <button class="task-category-menu-option" type="button" onclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})">Edit</button>
+                                        <button class="task-category-menu-option task-category-menu-option--danger" type="button" onclick="event.stopPropagation(); deleteTaskCategory('${projectId}', ${categoryLiteral})">Delete</button>
+                                    ` : ''}
                                 </div>
                             ` : ''}
                         </div>`;
@@ -3877,16 +4197,28 @@ function formatLeaderboardScore(entry, isCurrent = false) {
 
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
+    const project = state.findProject(projectId);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
     const hasTaskNote = normalizedTask.note.trim().length > 0;
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
     const dueDateLabel = dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date';
+    const priorityBulkCount = getIncompleteTaskCountForPriority(project, normalizedTask.tag);
+    const priorityBulkLabel = getPriorityTagLabel(normalizedTask.tag);
 
     return `
         <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
              data-task-item
              data-task-id="${normalizedTask.id}"
              onclick="handleTaskClick('${projectId}', ${normalizedTask.id}, event)">
+            ${state.canEdit(projectId) ? `
+                <button class="task-bulk-select ${selectedTasks.has(normalizedTask.id) ? 'is-selected' : ''}"
+                        type="button"
+                        aria-label="${selectedTasks.has(normalizedTask.id) ? 'Remove task from bulk edit selection' : 'Select task for bulk editing'}"
+                        aria-pressed="${selectedTasks.has(normalizedTask.id) ? 'true' : 'false'}"
+                        onclick="toggleTaskBulkSelection('${projectId}', ${normalizedTask.id}, event)">
+                    <span aria-hidden="true"></span>
+                </button>
+            ` : ''}
             <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
             </svg>
@@ -3954,6 +4286,14 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                                     <span>${option.label}</span>
                                 </button>
                             `).join('')}
+                            <div class="task-priority-menu-divider" aria-hidden="true"></div>
+                            <button class="task-priority-option task-priority-option--bulk"
+                                    type="button"
+                                    ${priorityBulkCount > 0 ? '' : 'disabled'}
+                                    onclick="completeTasksByPriority('${projectId}', '${normalizedTask.tag}', event)">
+                                <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                                <span>Mark all ${escapeHtml(priorityBulkLabel)} complete${priorityBulkCount > 0 ? ` (${priorityBulkCount})` : ''}</span>
+                            </button>
                         </div>
                     ` : ''}
                 </div>
@@ -4087,6 +4427,7 @@ function renderModalTaskList(projectId) {
     taskList.dataset.sortMode = sortMode;
     taskList.dataset.activeCategory = activeCategory;
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    renderTaskBulkActions(projectId);
     renderTaskCategoryControls(projectId);
 
     setTimeout(() => setupTaskDragAndDrop(projectId), 100);
@@ -4400,6 +4741,8 @@ function openProjectModal(projectId, options = {}) {
                        value="${escapeHtml(project.title)}"
                        style="display: none;"
                        onblur="finishEditModalTitle('${project.id}')"
+                       oninput="handleProjectTitleInput(this)"
+                       onanimationend="this.classList.remove('project-title-shake')"
                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
                 <div class="modal-stats">
                     <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
@@ -4495,6 +4838,9 @@ function openProjectModal(projectId, options = {}) {
                     </div>
                     
                     <div class="modal-tasks">
+                        <div class="task-bulk-actions-shell" id="task-bulk-actions-${project.id}">
+                            ${buildTaskBulkActionsMarkup(project.id, project, selectedTasks)}
+                        </div>
                         <div class="task-list" id="modal-task-list-${project.id}">
                             ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
                         </div>
@@ -5167,6 +5513,8 @@ function renderProjectCard(project) {
                                style="display: none;"
                                onclick="event.stopPropagation();"
                                onblur="finishEditProjectTitleOnCard('${project.id}')"
+                               oninput="event.stopPropagation(); handleProjectTitleInput(this)"
+                               onanimationend="this.classList.remove('project-title-shake')"
                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); cancelEditProjectTitleOnCard('${project.id}'); }">
                         <p class="project-sync-text">${escapeHtml(formatProjectSyncText(project))}</p>
                     </div>
@@ -5798,6 +6146,7 @@ window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
 window.closeProjectModal = closeProjectModal;
 window.editModalTitle = editModalTitle;
 window.finishEditModalTitle = finishEditModalTitle;
+window.handleProjectTitleInput = handleProjectTitleInput;
 window.editProjectDescription = editProjectDescription;
 window.cancelEditProjectDescription = cancelEditProjectDescription;
 window.finishEditProjectDescription = finishEditProjectDescription;
@@ -5835,6 +6184,14 @@ window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
 window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
 window.selectTaskPriority = selectTaskPriority;
+window.completeTasksByCategory = completeTasksByCategory;
+window.completeTasksByPriority = completeTasksByPriority;
+window.toggleTaskBulkSelection = toggleTaskBulkSelection;
+window.moveSelectedTasksToCategory = moveSelectedTasksToCategory;
+window.setSelectedTasksDueDate = setSelectedTasksDueDate;
+window.setSelectedTasksPriority = setSelectedTasksPriority;
+window.completeSelectedTasks = completeSelectedTasks;
+window.deleteSelectedTasks = deleteSelectedTasks;
 window.openTaskNoteModal = openTaskNoteModal;
 window.closeTaskNoteModal = closeTaskNoteModal;
 window.saveTaskNoteFromModal = saveTaskNoteFromModal;
