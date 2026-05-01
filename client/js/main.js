@@ -2451,6 +2451,25 @@ function updateTaskDueDate(projectId, taskId, dueDateValue) {
     }
 }
 
+function openTaskDueDatePicker(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    const dueInput = document.getElementById(`modal-task-due-${taskId}`);
+    if (!dueInput || dueInput.disabled) return;
+
+    dueInput.focus({ preventScroll: true });
+    try {
+        if (typeof dueInput.showPicker === 'function') {
+            dueInput.showPicker();
+        } else {
+            dueInput.click();
+        }
+    } catch (error) {
+        dueInput.focus({ preventScroll: true });
+    }
+}
+
 function addTaskToProject(projectId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
@@ -2619,21 +2638,17 @@ function updateUndoButton() {
 // ============================================================================
 
 function handleTaskClick(projectId, taskId, event) {
-    
-    
-    if (event.shiftKey) {
+    if (event?.shiftKey) {
         const lastSelected = state.lastSelectedTask.get(projectId);
         if (lastSelected) {
             state.selectTaskRange(projectId, lastSelected, taskId);
         } else {
             state.selectTask(projectId, taskId, false);
         }
-        openProjectModal(projectId);
-    } else if (event.ctrlKey || event.metaKey) {
+        renderModalTaskList(projectId);
+    } else if (event?.ctrlKey || event?.metaKey) {
         state.toggleTaskSelection(projectId, taskId);
-        openProjectModal(projectId);
-    } else {
-        state.selectTask(projectId, taskId, false);
+        renderModalTaskList(projectId);
     }
 }
 
@@ -4248,7 +4263,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
             <div class="task-meta-controls" onclick="event.stopPropagation();">
                 <label class="task-due-date-control ${dueDate ? 'has-due-date' : ''}"
                        title="${escapeHtml(dueDateLabel)}"
-                       onclick="event.stopPropagation();"
+                       onclick="openTaskDueDatePicker('${projectId}', ${normalizedTask.id}, event)"
                        onpointerdown="event.stopPropagation();">
                     <input class="task-due-date-input"
                            id="modal-task-due-${normalizedTask.id}"
@@ -4256,7 +4271,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                            value="${escapeHtml(dueDate)}"
                            aria-label="Task due date"
                            onchange="updateTaskDueDate('${projectId}', ${normalizedTask.id}, this.value)"
-                           onclick="event.stopPropagation();"
+                           onclick="openTaskDueDatePicker('${projectId}', ${normalizedTask.id}, event)"
                            onpointerdown="event.stopPropagation();">
                 </label>
                 <button class="task-note-button ${hasTaskNote ? 'has-note' : ''}"
@@ -6192,6 +6207,7 @@ window.setSelectedTasksDueDate = setSelectedTasksDueDate;
 window.setSelectedTasksPriority = setSelectedTasksPriority;
 window.completeSelectedTasks = completeSelectedTasks;
 window.deleteSelectedTasks = deleteSelectedTasks;
+window.openTaskDueDatePicker = openTaskDueDatePicker;
 window.openTaskNoteModal = openTaskNoteModal;
 window.closeTaskNoteModal = closeTaskNoteModal;
 window.saveTaskNoteFromModal = saveTaskNoteFromModal;

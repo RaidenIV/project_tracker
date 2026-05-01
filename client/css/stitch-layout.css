@@ -4645,3 +4645,39 @@ body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-i
         flex-basis: 100% !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: due-date picker reliability and square bulk selectors
+   ============================================================================ */
+.task-bulk-select,
+body[data-theme^="console"] .task-bulk-select {
+    border-radius: 4px !important;
+}
+
+.task-bulk-select span,
+body[data-theme^="console"] .task-bulk-select span {
+    border-radius: 2px !important;
+    pointer-events: none !important;
+}
+
+.task-due-date-control.has-due-date,
+.task-due-date-control.has-due-date:hover,
+.task-due-date-control.has-due-date:focus-within,
+body[data-theme^="console"] .task-due-date-control.has-due-date,
+body[data-theme^="console"] .task-due-date-control.has-due-date:hover,
+body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within {
+    color: var(--accent, #ff6a00) !important;
+    background: color-mix(in srgb, var(--accent, #ff6a00) 8%, transparent) !important;
+    border-color: transparent !important;
+    cursor: pointer !important;
+}
+
+.task-due-date-control.has-due-date .task-due-date-input,
+.task-due-date-control.has-due-date:hover .task-due-date-input,
+.task-due-date-control.has-due-date:focus-within .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.has-due-date:hover .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within .task-due-date-input {
+    color: var(--accent, #ff6a00) !important;
+    cursor: pointer !important;
+}
