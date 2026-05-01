@@ -3731,3 +3731,220 @@ body.is-task-dragging {
 .task-item.is-editing .task-input--textarea {
     display: block !important;
 }
+
+/* ============================================================================
+   Targeted patch: project notes padding, mobile optimization, console-only UI,
+   and safer sync/cookie-recovery layout
+   ============================================================================ */
+
+.theme-grid--single {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.project-notes-modal-overlay {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+}
+
+.project-notes-modal-content {
+    padding: 1.25rem !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+}
+
+.project-notes-modal-header {
+    margin-bottom: 1rem !important;
+}
+
+#projectNotesModalBody {
+    min-width: 0 !important;
+}
+
+.project-notes-modal-content .project-notes-editor {
+    min-width: 0 !important;
+}
+
+@media (max-width: 760px) {
+    html,
+    body {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
+    }
+
+    .control-panel .panel-user-info,
+    body[data-theme^="console"] .control-panel .panel-user-info {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-areas:
+            "account"
+            "sync" !important;
+        row-gap: 0.4rem !important;
+    }
+
+    .control-panel .panel-avatar-button,
+    body[data-theme^="console"] .control-panel .panel-avatar-button,
+    .control-panel .save-status--inline,
+    body[data-theme^="console"] .control-panel .save-status--inline,
+    .control-panel .save-status--inline.save-status--long,
+    .control-panel .save-status--inline.save-status--extra-long,
+    body[data-theme^="console"] .control-panel .save-status--inline.save-status--long,
+    body[data-theme^="console"] .control-panel .save-status--inline.save-status--extra-long {
+        justify-self: start !important;
+        max-width: 100% !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.75rem !important;
+        padding: 0.85rem !important;
+        min-height: 0 !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    .top-app-bar > .top-view-toolbar,
+    .top-app-bar > .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .top-view-toolbar,
+    body[data-theme^="console"] .top-app-bar > .view-toolbar.top-view-toolbar {
+        grid-column: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.6rem !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect {
+        width: 100% !important;
+        min-width: 0 !important;
+        grid-column: 1 !important;
+    }
+
+    .viewport {
+        padding: 0.75rem !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.85rem !important;
+        width: 100% !important;
+    }
+
+    .project-card,
+    .stitch-project-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .modal-overlay {
+        align-items: flex-start !important;
+        justify-content: center !important;
+        padding: 0.5rem !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-content,
+    .account-modal-content,
+    .archived-projects-modal-content,
+    .ui-options-modal-content,
+    .project-notes-modal-content {
+        width: calc(100vw - 1rem) !important;
+        max-width: calc(100vw - 1rem) !important;
+        max-height: calc(100dvh - 1rem) !important;
+        border-radius: 1rem !important;
+    }
+
+    .account-modal-scroll {
+        max-height: calc(100dvh - 1rem) !important;
+        padding: 1rem !important;
+    }
+
+    .project-notes-modal-content {
+        padding: 1rem !important;
+    }
+
+    .project-notes-editor-header,
+    .modal-project-notes-header {
+        gap: 0.75rem !important;
+    }
+
+    .project-notes-tab-strip {
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+    }
+
+    .project-notes-tabs {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .project-notes-tab {
+        max-width: 7.5rem !important;
+        padding-inline: 0.68rem !important;
+    }
+
+    .project-notes-active-title-row {
+        flex-wrap: wrap !important;
+    }
+
+    .project-notes-title-input {
+        flex-basis: 100% !important;
+    }
+
+    .project-notes-delete-tab {
+        margin-left: auto !important;
+    }
+
+    .project-notes-textarea {
+        min-height: 12rem !important;
+        max-height: 42vh !important;
+    }
+
+    .project-actions,
+    .modal-actions,
+    .account-modal-actions,
+    .task-note-modal-actions,
+    .project-notes-actions {
+        flex-wrap: wrap !important;
+        gap: 0.6rem !important;
+    }
+
+    .modal-done-btn,
+    .task-note-modal-actions .modal-done-btn,
+    .project-notes-save-button {
+        min-width: 0 !important;
+    }
+}

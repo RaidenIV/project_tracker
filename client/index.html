@@ -6,11 +6,33 @@
     <title>Code Project Tracker</title>
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <script data-purpose="legacy-cookie-cleanup">
+        (() => {
+            try {
+                if (!document.cookie) return;
+                const host = window.location.hostname;
+                const domains = [null];
+                if (host && host !== 'localhost' && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+                    domains.push(host, `.${host}`);
+                    const parts = host.split('.').filter(Boolean);
+                    if (parts.length > 2) {
+                        const rootDomain = parts.slice(-2).join('.');
+                        domains.push(rootDomain, `.${rootDomain}`);
+                    }
+                }
+                [...new Set(document.cookie.split(';').map(part => part.split('=')[0].trim()).filter(Boolean))]
+                    .forEach(name => {
+                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; path=/; SameSite=Lax`;
+                        [...new Set(domains)].forEach(domain => {
+                            if (domain) document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; path=/; domain=${domain}; SameSite=Lax`;
+                        });
+                    });
+            } catch {}
+        })();
+    </script>
 
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/themes/theme-console.css">
-    <link rel="stylesheet" href="css/themes/theme-nebula.css">
-    <link rel="stylesheet" href="css/themes/theme-duplex.css">
     <link rel="stylesheet" href="css/stitch-layout.css">
 </head>
 <body>
@@ -357,7 +379,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Choose a visual theme and toggle light/dark mode.</p>
+                        <p class="account-modal-subtitle">Console UI is currently locked as the only available interface.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,49 +388,12 @@
                     </button>
                 </div>
 
-                <div class="ui-options-section">
-                    <div class="ui-options-section-label">Appearance Mode</div>
-                    <div class="sidebar-mode-toggle-row ui-options-mode-toggle-row">
-                        <button class="color-mode-toggle" id="colorModeToggleBtn" type="button" aria-pressed="false" title="Toggle light and dark mode">
-                            <span class="color-mode-toggle-track">
-                                <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
-                                <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
-                                <span class="color-mode-toggle-thumb" aria-hidden="true">
-                                    <svg class="color-mode-toggle-icon color-mode-toggle-icon--moon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
-                                    </svg>
-                                    <svg class="color-mode-toggle-icon color-mode-toggle-icon--sun" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="12" cy="12" r="5"></circle>
-                                        <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                    </svg>
-                                </span>
-
-                            </span>
-                        </button>
-                    </div>
-                </div>
-
                 <div class="ui-options-section-label">Theme</div>
 
-                <div class="theme-grid" id="themeGrid">
-                    <button class="theme-card" type="button" data-theme-family-option="blueprint">
-                        <span class="theme-card-title">Blueprint</span>
-                        <span class="theme-card-copy">Steel-blue surfaces, stronger hierarchy, and a crisp admin-style workspace.</span>
-                    </button>
-                    <button class="theme-card" type="button" data-theme-family-option="glass">
-                        <span class="theme-card-title">Glassmorphism</span>
-                        <span class="theme-card-copy">Flat translucent panels, unified accent highlights, and a cleaner glass workspace.</span>
-                    </button>
-                    <button class="theme-card" type="button" data-theme-family-option="console">
+                <div class="theme-grid theme-grid--single" id="themeGrid">
+                    <button class="theme-card is-active" type="button" data-theme-family-option="console">
                         <span class="theme-card-title">Console</span>
-                        <span class="theme-card-copy">Terminal-inspired admin aesthetic with darker surfaces, Stitch orange accents, and monospace details.</span>
+                        <span class="theme-card-copy">Console is the only active UI option for now.</span>
                     </button>
                 </div>
 

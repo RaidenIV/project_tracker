@@ -18,13 +18,59 @@ const JWT_EXPIRES_IN = '30d';
 
 // Node's default maxHeaderSize is 8 KB, which can trip a 431 when Chrome sends
 // accumulated cookies from the app origin. Auth uses bearer tokens, not cookies,
-// so client API calls now omit cookies; this larger cap protects initial loads.
-const server = http.createServer({ maxHeaderSize: 64 * 1024 }, app);
+// so client API calls omit cookies and the server clears legacy app cookies.
+// The larger cap lets the cleanup response reach users who already have bloated
+// cookies stored in Chrome.
+const server = http.createServer({ maxHeaderSize: 512 * 1024 }, app);
 const io = new Server(server, {
     cors: { origin: true, credentials: false }
 });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+
+
+function getCookieClearDomains(hostname = '') {
+    const cleanHost = String(hostname || '').split(':')[0].toLowerCase();
+    if (!cleanHost || cleanHost === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(cleanHost)) {
+        return [null];
+    }
+
+    const domains = [null, cleanHost, `.${cleanHost}`];
+    const parts = cleanHost.split('.').filter(Boolean);
+    if (parts.length > 2) {
+        const rootDomain = parts.slice(-2).join('.');
+        domains.push(rootDomain, `.${rootDomain}`);
+    }
+    return [...new Set(domains)];
+}
+
+function getLegacyCookieNames(cookieHeader = '') {
+    return String(cookieHeader || '')
+        .split(';')
+        .map(part => part.split('=')[0]?.trim())
+        .filter(name => name && /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(name))
+        .filter((name, index, names) => names.indexOf(name) === index)
+        .slice(0, 60);
+}
+
+function clearLegacyAppCookies(req, res, next) {
+    const cookieNames = getLegacyCookieNames(req.headers.cookie || '');
+    if (!cookieNames.length) return next();
+
+    const domains = getCookieClearDomains(req.hostname);
+    const secure = req.secure || req.get('x-forwarded-proto') === 'https';
+    const expires = 'Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    const baseAttrs = `Max-Age=0; ${expires}; Path=/; SameSite=Lax${secure ? '; Secure' : ''}`;
+
+    cookieNames.forEach(name => {
+        domains.forEach(domain => {
+            const domainAttr = domain ? `; Domain=${domain}` : '';
+            res.append('Set-Cookie', `${name}=; ${baseAttrs}${domainAttr}`);
+        });
+    });
+
+    next();
+}
 
 app.use(cors({
     origin: true,
@@ -32,6 +78,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
+app.use(clearLegacyAppCookies);
 app.use(express.json({ limit: '6mb' }));
 app.use(express.urlencoded({ extended: true, limit: '6mb' }));
 app.use(express.static(path.join(__dirname, '..', 'client')));

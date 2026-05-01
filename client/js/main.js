@@ -311,28 +311,26 @@ const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea
 const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'blueprint-light': { label: 'Blueprint Light', family: 'blueprint', mode: 'light' },
-    'blueprint-dark': { label: 'Blueprint Dark', family: 'blueprint', mode: 'dark' },
-    'glass-light': { label: 'Glassmorphism Light', family: 'glass', mode: 'light' },
-    'glass-dark': { label: 'Glassmorphism Dark', family: 'glass', mode: 'dark' },
-    'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
     'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
 };
 
 const THEME_FAMILY_OPTIONS = {
-    blueprint: { label: 'Blueprint' },
-    glass: { label: 'Glassmorphism' },
     console: { label: 'Console' }
 };
 
 const LEGACY_THEME_MAP = {
-    default: 'blueprint-light',
-    blueprint: 'blueprint-light',
-    glass: 'glass-light',
+    default: 'console-dark',
+    blueprint: 'console-dark',
+    glass: 'console-dark',
     midnight: 'console-dark',
-    industrial: 'blueprint-light',
-    'industrial-light': 'blueprint-light',
-    'industrial-dark': 'blueprint-dark'
+    industrial: 'console-dark',
+    'industrial-light': 'console-dark',
+    'industrial-dark': 'console-dark',
+    'blueprint-light': 'console-dark',
+    'blueprint-dark': 'console-dark',
+    'glass-light': 'console-dark',
+    'glass-dark': 'console-dark',
+    'console-light': 'console-dark'
 };
 
 const accountState = {
@@ -357,7 +355,7 @@ const uiState = {
     activeProjectTag: PROJECT_TAG_ALL_FILTER,
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'blueprint-light',
+    theme: 'console-dark',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -512,9 +510,7 @@ function getLeaderboardUsername(entry) {
 }
 
 function normalizeThemeName(themeName) {
-    const resolved = LEGACY_THEME_MAP[themeName] || themeName;
-    if (resolved === 'console-light') return 'console-dark';
-    return THEME_OPTIONS[resolved] ? resolved : 'blueprint-light';
+    return LEGACY_THEME_MAP[themeName] || 'console-dark';
 }
 
 function getThemeMeta(themeName) {
@@ -526,10 +522,7 @@ function getThemeLabel(themeName) {
 }
 
 function buildThemeName(themeFamily, colorMode) {
-    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'blueprint';
-    const mode = family === 'console' ? 'dark' : (colorMode === 'dark' ? 'dark' : 'light');
-    const candidate = `${family}-${mode}`;
-    return THEME_OPTIONS[candidate] ? candidate : 'blueprint-light';
+    return 'console-dark';
 }
 
 function getColorModeLabel(colorMode) {
@@ -537,7 +530,7 @@ function getColorModeLabel(colorMode) {
 }
 
 function getThemeFamilyLabel(themeFamily) {
-    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Blueprint';
+    return THEME_FAMILY_OPTIONS[themeFamily]?.label || 'Console';
 }
 
 
@@ -648,10 +641,10 @@ function persistProjectSortPreference(sortMode) {
 
 function loadThemePreference() {
     try {
-        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-light');
+        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
     } catch (err) {
         console.warn('Failed to load UI preference:', err);
-        uiState.theme = 'blueprint-light';
+        uiState.theme = 'console-dark';
     }
     applyTheme(uiState.theme, false);
 }
@@ -678,9 +671,7 @@ function applyTheme(themeName, persist = true) {
 }
 
 function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
-    const currentMeta = getThemeMeta(uiState.theme);
-    const nextMode = themeFamily === 'console' ? 'dark' : (preferredMode || currentMeta.mode || 'light');
-    applyTheme(buildThemeName(themeFamily, nextMode), persist);
+    applyTheme('console-dark', persist);
 }
 
 function renderThemeOptions() {

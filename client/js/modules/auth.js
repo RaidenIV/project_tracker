@@ -3,6 +3,46 @@
 
 import { API_ENDPOINTS, TOKEN_KEY } from './config.js';
 
+
+const COOKIE_EXPIRY = 'Thu, 01 Jan 1970 00:00:00 GMT';
+
+function getCookieClearDomains() {
+    if (typeof window === 'undefined') return [null];
+    const host = window.location.hostname;
+    if (!host || host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return [null];
+    const domains = [null, host, `.${host}`];
+    const parts = host.split('.').filter(Boolean);
+    if (parts.length > 2) {
+        const rootDomain = parts.slice(-2).join('.');
+        domains.push(rootDomain, `.${rootDomain}`);
+    }
+    return [...new Set(domains)];
+}
+
+export function clearAppCookies() {
+    if (typeof document === 'undefined' || !document.cookie) return false;
+    const names = document.cookie
+        .split(';')
+        .map(part => part.split('=')[0]?.trim())
+        .filter(Boolean)
+        .filter((name, index, names) => names.indexOf(name) === index);
+
+    if (!names.length) return false;
+
+    const domains = getCookieClearDomains();
+    names.forEach(name => {
+        document.cookie = `${name}=; expires=${COOKIE_EXPIRY}; max-age=0; path=/; SameSite=Lax`;
+        domains.forEach(domain => {
+            if (domain) {
+                document.cookie = `${name}=; expires=${COOKIE_EXPIRY}; max-age=0; path=/; domain=${domain}; SameSite=Lax`;
+            }
+        });
+    });
+    return true;
+}
+
+clearAppCookies();
+
 // ─── Token Helpers ────────────────────────────────────────────────────────────
 
 export function getToken() {
@@ -43,6 +83,7 @@ export function getCurrentUser() {
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 export async function register(email, username, password) {
+    clearAppCookies();
     const response = await fetch(API_ENDPOINTS.AUTH_REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,6 +103,7 @@ export async function register(email, username, password) {
 }
 
 export async function login(email, password) {
+    clearAppCookies();
     const response = await fetch(API_ENDPOINTS.AUTH_LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
