@@ -4084,3 +4084,27 @@ body.is-task-dragging {
         gap: 0.34rem !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: 1920x1200 three-card project grid
+   ============================================================================ */
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+        justify-content: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
