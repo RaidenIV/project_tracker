@@ -46,6 +46,8 @@ export async function register(email, username, password) {
     const response = await fetch(API_ENDPOINTS.AUTH_REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        cache: 'no-store',
         body: JSON.stringify({ email, username, password })
     });
 
@@ -63,6 +65,8 @@ export async function login(email, password) {
     const response = await fetch(API_ENDPOINTS.AUTH_LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        cache: 'no-store',
         body: JSON.stringify({ email, password })
     });
 

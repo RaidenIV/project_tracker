@@ -63,6 +63,8 @@ const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
 const PROJECT_TAG_MAX_COUNT = 5;
 const PROJECT_TITLE_MAX_LENGTH = 16;
+const PROJECT_NOTES_TAB_DATA_FLAG = '__projectNotesTabs';
+const PROJECT_NOTES_DEFAULT_TAB_ID = 'notes-general';
 const TASK_TAG_PRIORITY = {
     high: 0,
     medium: 1,
@@ -1659,22 +1661,248 @@ function updateProjectDescription(projectId, descriptionValue) {
     saveData();
 }
 
-function updateProjectNotes(projectId, notes) {
+function getProjectNotesDataForProject(projectId) {
+    const project = state.findProject(projectId);
+    return normalizeProjectNotesData(project?.notes || '');
+}
+
+function saveProjectNotesData(projectId, data, options = {}) {
     if (!state.canEdit(projectId)) return;
-    const cleanNotes = String(notes ?? '').trim();
-    state.updateProject(projectId, projectUpdate({ notes: cleanNotes }));
+    const serializedNotes = serializeProjectNotesData(data);
+    state.updateProject(projectId, projectUpdate({ notes: serializedNotes }));
     saveData();
-    updateProjectCardNotesPreview(projectId, cleanNotes);
+    updateProjectNotesIndicators(projectId, serializedNotes);
+
+    if (options.renderSurface) {
+        renderProjectNotesSurface(projectId, options.renderSurface);
+    }
+}
+
+function updateProjectNotes(projectId, notes) {
+    const data = normalizeProjectNotesData(notes);
+    saveProjectNotesData(projectId, data);
+}
+
+function updateProjectNotesIndicators(projectId, notesValue = null) {
+    const project = state.findProject(projectId);
+    const notes = notesValue ?? project?.notes ?? '';
+    const hasNotes = projectHasNotes(notes);
+    const preview = formatProjectNotesPreview(notes);
+
+    document.querySelectorAll(`[data-project-notes-button="${projectId}"]`).forEach(button => {
+        button.classList.toggle('has-note', hasNotes);
+        button.setAttribute('title', hasNotes ? preview : 'Add project notes');
+        button.setAttribute('aria-label', hasNotes ? 'Edit project notes' : 'Add project notes');
+    });
+
+    const modalTab = document.getElementById(`notes-tab-${projectId}`);
+    if (modalTab) {
+        modalTab.classList.toggle('has-note', hasNotes);
+        modalTab.setAttribute('title', hasNotes ? preview : 'Project notes');
+    }
 }
 
 function updateProjectCardNotesPreview(projectId, notes) {
-    const row = document.querySelector(`[data-project-notes-row="${projectId}"]`);
-    if (!row) return;
-    const text = row.querySelector('.project-card-notes-text');
-    const hasNotes = String(notes || '').trim().length > 0;
-    row.classList.toggle('has-note', hasNotes);
-    row.setAttribute('title', hasNotes ? String(notes).trim() : 'Add project notes');
-    if (text) text.textContent = hasNotes ? formatProjectNotesPreview(notes) : 'Add project notes';
+    updateProjectNotesIndicators(projectId, notes);
+}
+
+function getProjectNotesActiveTab(projectId) {
+    const data = getProjectNotesDataForProject(projectId);
+    return data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
+}
+
+function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
+    const data = normalizeProjectNotesData(project?.notes || '');
+    const activeTab = data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
+    const canEdit = state.canEdit(projectId);
+    const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
+    const tabButtons = data.tabs.map(tab => {
+        const isActive = tab.id === activeTab.id;
+        const hasNote = String(tab.body || '').trim().length > 0;
+        return `<button class="project-notes-tab ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}"
+                        type="button"
+                        onclick="selectProjectNoteTab('${projectId}', '${tab.id}', '${safeSurface}', event)">
+                    <span>${escapeHtml(tab.title)}</span>
+                </button>`;
+    }).join('');
+
+    return `
+        <div class="project-notes-editor project-notes-editor--${safeSurface}" data-project-notes-editor="${safeSurface}" data-project-id="${projectId}">
+            <div class="project-notes-editor-header">
+                <div>
+                    <h4 class="modal-project-notes-title">Project Notes</h4>
+                    <p class="modal-project-notes-subtitle">Shared notes for this project.</p>
+                </div>
+                <svg class="modal-project-notes-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>
+            </div>
+            <div class="project-notes-tab-strip">
+                <div class="project-notes-tabs" role="tablist">${tabButtons}</div>
+                ${canEdit ? `<button class="project-notes-add-tab" type="button" onclick="addProjectNoteTab('${projectId}', '${safeSurface}', event)" title="Add note tab" aria-label="Add note tab">+</button>` : ''}
+            </div>
+            <div class="project-notes-active-panel">
+                <div class="project-notes-active-title-row">
+                    <input class="project-notes-title-input"
+                           id="project-notes-title-${safeSurface}"
+                           type="text"
+                           value="${escapeHtml(activeTab.title)}"
+                           maxlength="40"
+                           ${canEdit ? `onblur="updateProjectNoteTitle('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"` : 'readonly'}>
+                    ${canEdit && data.tabs.length > 1 ? `<button class="project-notes-delete-tab" type="button" onclick="deleteProjectNoteTab('${projectId}', '${activeTab.id}', '${safeSurface}', event)" title="Delete this note tab">Delete tab</button>` : ''}
+                </div>
+                <textarea class="project-notes-textarea"
+                          id="project-notes-body-${safeSurface}"
+                          placeholder="Write project notes here..."
+                          ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')"` : 'readonly'}>${escapeHtml(activeTab.body || '')}</textarea>
+                ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
+            </div>
+        </div>`;
+}
+
+function renderProjectNotesSurface(projectId, surface = 'modal') {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const safeSurface = String(surface || 'modal');
+    let target = null;
+    if (safeSurface === 'quick') {
+        target = document.getElementById('projectNotesModalBody');
+    } else {
+        target = document.getElementById(`notes-section-${projectId}`);
+    }
+    if (!target) return;
+    target.innerHTML = buildProjectNotesEditorMarkup(projectId, project, safeSurface);
+    updateProjectNotesIndicators(projectId);
+}
+
+function selectProjectNoteTab(projectId, tabId, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const data = getProjectNotesDataForProject(projectId);
+    if (!data.tabs.some(tab => tab.id === tabId)) return;
+    data.activeTabId = tabId;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function addProjectNoteTab(projectId, surface = 'quick', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const nextNumber = data.tabs.length + 1;
+    const nextTab = normalizeProjectNotesTab({
+        id: `notes-${Date.now()}`,
+        title: `Note ${nextNumber}`,
+        body: ''
+    }, nextNumber - 1);
+    data.tabs.push(nextTab);
+    data.activeTabId = nextTab.id;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+    requestAnimationFrame(() => document.getElementById(`project-notes-title-${surface}`)?.focus({ preventScroll: true }));
+}
+
+function deleteProjectNoteTab(projectId, tabId, surface = 'quick', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    if (data.tabs.length <= 1) return;
+    const nextTabs = data.tabs.filter(tab => tab.id !== tabId);
+    if (nextTabs.length === data.tabs.length) return;
+    data.tabs = nextTabs;
+    data.activeTabId = nextTabs[0].id;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function updateProjectNoteTitle(projectId, tabId, titleValue, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const nextTitle = String(titleValue ?? '').trim().replace(/\s+/g, ' ').slice(0, 40) || tab.title || 'Note';
+    if (nextTitle === tab.title) return;
+    tab.title = nextTitle;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function updateProjectNoteBody(projectId, tabId, bodyValue, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const nextBody = String(bodyValue ?? '').trim();
+    if (nextBody === String(tab.body || '')) return;
+    tab.body = nextBody;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const activeTab = getProjectNotesActiveTab(projectId);
+    const titleInput = document.getElementById(`project-notes-title-${surface}`);
+    const bodyTextarea = document.getElementById(`project-notes-body-${surface}`);
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === activeTab.id);
+    if (!tab) return;
+    if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
+    if (bodyTextarea) tab.body = String(bodyTextarea.value || '').trim();
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function ensureProjectNotesModal() {
+    let modal = document.getElementById('projectNotesModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-notes-modal-overlay" id="projectNotesModal" aria-hidden="true">
+            <div class="modal-content project-notes-modal-content" role="dialog" aria-modal="true" aria-labelledby="projectNotesModalTitle">
+                <div class="task-note-modal-header project-notes-modal-header">
+                    <div>
+                        <h3 class="task-note-modal-title" id="projectNotesModalTitle">Project Notes</h3>
+                        <p class="task-note-modal-subtitle" id="projectNotesModalSubtitle">Add notes for this project.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectNotesModal()" aria-label="Close project notes">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="projectNotesModalBody"></div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectNotesModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeProjectNotesModal();
+    });
+    return modal;
+}
+
+function openProjectNotes(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const modal = ensureProjectNotesModal();
+    modal.dataset.projectId = projectId;
+    const subtitle = modal.querySelector('#projectNotesModalSubtitle');
+    if (subtitle) subtitle.textContent = project.title ? `Notes for: ${project.title}` : 'Add notes for this project.';
+    renderProjectNotesSurface(projectId, 'quick');
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => document.getElementById('project-notes-body-quick')?.focus({ preventScroll: true }));
+}
+
+function closeProjectNotesModal() {
+    const modal = document.getElementById('projectNotesModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    if (projectId) saveActiveProjectNoteFromSurface(projectId, 'quick');
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
 }
 
 function copyProjectToClipboard(projectId, evt) {
@@ -3322,8 +3550,76 @@ function getProjectCardDescription(project) {
     return rawDescription.replace(/\s+/g, ' ').slice(0, 110);
 }
 
+function createDefaultProjectNotesTab(body = '') {
+    return {
+        id: PROJECT_NOTES_DEFAULT_TAB_ID,
+        title: 'Notes',
+        body: String(body ?? '')
+    };
+}
+
+function normalizeProjectNotesTab(tab, index = 0) {
+    const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-${Date.now()}-${index}`;
+    const id = String(tab?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+    const title = String(tab?.title || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
+    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? '');
+    return { id, title, body };
+}
+
+function normalizeProjectNotesData(notes) {
+    const raw = String(notes ?? '');
+    if (raw.trim()) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed[PROJECT_NOTES_TAB_DATA_FLAG] === true && Array.isArray(parsed.tabs)) {
+                const tabs = parsed.tabs.map(normalizeProjectNotesTab).filter(Boolean);
+                const safeTabs = tabs.length ? tabs : [createDefaultProjectNotesTab('')];
+                const activeTabId = safeTabs.some(tab => tab.id === parsed.activeTabId)
+                    ? parsed.activeTabId
+                    : safeTabs[0].id;
+                return { activeTabId, tabs: safeTabs };
+            }
+        } catch {
+            // Existing plain-text project notes are migrated into the first tab.
+        }
+    }
+    return {
+        activeTabId: PROJECT_NOTES_DEFAULT_TAB_ID,
+        tabs: [createDefaultProjectNotesTab(raw)]
+    };
+}
+
+function serializeProjectNotesData(data) {
+    const tabs = (Array.isArray(data?.tabs) ? data.tabs : [])
+        .map(normalizeProjectNotesTab)
+        .filter(Boolean);
+    const safeTabs = tabs.length ? tabs : [createDefaultProjectNotesTab('')];
+    const activeTabId = safeTabs.some(tab => tab.id === data?.activeTabId)
+        ? data.activeTabId
+        : safeTabs[0].id;
+    return JSON.stringify({
+        [PROJECT_NOTES_TAB_DATA_FLAG]: true,
+        activeTabId,
+        tabs: safeTabs
+    });
+}
+
+function getProjectNotesPlainText(notes) {
+    const data = normalizeProjectNotesData(notes);
+    return data.tabs
+        .map(tab => `${tab.title} ${tab.body}`.trim())
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+}
+
+function projectHasNotes(notes) {
+    const data = normalizeProjectNotesData(notes);
+    return data.tabs.some(tab => String(tab.body || '').trim().length > 0);
+}
+
 function formatProjectNotesPreview(notes) {
-    const rawNotes = String(notes || '').trim();
+    const rawNotes = getProjectNotesPlainText(notes).trim();
     return rawNotes ? rawNotes.replace(/\s+/g, ' ').slice(0, 96) : '';
 }
 
@@ -3898,7 +4194,7 @@ function openProjectModal(projectId, options = {}) {
         <!-- Tabs for Tasks, Notes and Members -->
         <div class="modal-tabs">
             <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
-            <button class="modal-tab" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')">
+            <button class="modal-tab modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
                 <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
@@ -3985,23 +4281,7 @@ function openProjectModal(projectId, options = {}) {
 
         <!-- Notes Section -->
         <div class="modal-section hidden" id="notes-section-${project.id}">
-            <div class="modal-project-notes-panel">
-                <div class="modal-project-notes-header">
-                    <div>
-                        <h4 class="modal-project-notes-title">Project Notes</h4>
-                        <p class="modal-project-notes-subtitle">Shared notes for this project.</p>
-                    </div>
-                    <svg class="modal-project-notes-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
-                    </svg>
-                </div>
-                <textarea class="project-notes-textarea"
-                          id="notes-textarea-${project.id}"
-                          placeholder="Write project notes here..."
-                          ${state.canEdit(project.id) ? `onblur="saveProjectNotes('${project.id}')"` : 'readonly'}>${escapeHtml(project.notes || '')}</textarea>
-                ${state.canEdit(project.id) ? `<button class="modal-done-btn project-notes-save-button" type="button" onclick="saveProjectNotes('${project.id}')">Save Notes</button>` : ''}
-            </div>
+            ${buildProjectNotesEditorMarkup(project.id, project, 'modal')}
         </div>
         
         <!-- Members Section -->
@@ -4108,15 +4388,7 @@ function switchModalTab(projectId, tab) {
 }
 
 function saveProjectNotes(projectId) {
-    const textarea = document.getElementById(`notes-textarea-${projectId}`);
-    if (!textarea) return;
-    updateProjectNotes(projectId, textarea.value);
-}
-
-function openProjectNotes(projectId, event) {
-    event?.preventDefault?.();
-    event?.stopPropagation?.();
-    openProjectModal(projectId, { activeTab: 'notes' });
+    saveActiveProjectNoteFromSurface(projectId, 'modal');
 }
 
 function toggleHideCompleted() {
@@ -4651,17 +4923,19 @@ function renderProjectCard(project) {
                 `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
             </ul>
 
-            <button class="project-card-notes-row ${formatProjectNotesPreview(project.notes) ? 'has-note' : ''}"
-                    type="button"
-                    data-project-notes-row="${project.id}"
-                    title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Add project notes')}"
-                    onclick="openProjectNotes('${project.id}', event)">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
-                </svg>
-                <span class="project-card-notes-text">${escapeHtml(formatProjectNotesPreview(project.notes) || 'Add project notes')}</span>
-            </button>
+            <div class="project-card-notes-bar">
+                <button class="project-card-notes-button task-note-button ${projectHasNotes(project.notes) ? 'has-note' : ''}"
+                        type="button"
+                        data-project-notes-button="${project.id}"
+                        title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Add project notes')}"
+                        aria-label="${projectHasNotes(project.notes) ? 'Edit project notes' : 'Add project notes'}"
+                        onclick="openProjectNotes('${project.id}', event)">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                    </svg>
+                </button>
+            </div>
 
             <div class="project-card-footer">
                 <div class="project-card-footer-left">
@@ -5251,6 +5525,13 @@ window.handleTaskClick = handleTaskClick;
 window.switchModalTab = switchModalTab;
 window.saveProjectNotes = saveProjectNotes;
 window.openProjectNotes = openProjectNotes;
+window.closeProjectNotesModal = closeProjectNotesModal;
+window.selectProjectNoteTab = selectProjectNoteTab;
+window.addProjectNoteTab = addProjectNoteTab;
+window.deleteProjectNoteTab = deleteProjectNoteTab;
+window.updateProjectNoteTitle = updateProjectNoteTitle;
+window.updateProjectNoteBody = updateProjectNoteBody;
+window.saveActiveProjectNoteFromSurface = saveActiveProjectNoteFromSurface;
 window.toggleHideCompleted = toggleHideCompleted;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;

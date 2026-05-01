@@ -17,7 +17,12 @@ function authHeaders(extra) {
 }
 
 async function request(method, url, body) {
-    const opts = { method, headers: authHeaders() };
+    const opts = {
+        method,
+        headers: authHeaders(),
+        credentials: 'omit',
+        cache: 'no-store'
+    };
     if (body !== undefined) opts.body = JSON.stringify(body);
 
     let res;
@@ -31,7 +36,7 @@ async function request(method, url, body) {
     if (res.status === 431) {
         throw new Error(
             'Request headers too large (HTTP 431). ' +
-            'Try clearing your cookies for this site, then reload.'
+            'The app now avoids sending cookies to API requests; reload and try again.'
         );
     }
 

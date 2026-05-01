@@ -27,6 +27,7 @@ export function connectRealtime(nextCallbacks = {}) {
     socket = window.io({
         auth: { token: getToken() },
         transports: ['websocket', 'polling'],
+        withCredentials: false,
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 800,

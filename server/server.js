@@ -16,17 +16,22 @@ const PROJECT_TAG_MAX_COUNT = 5;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRES_IN = '30d';
 
-// Node's default maxHeaderSize is 8 KB, which trips a 431 when the browser
-// sends large accumulated cookies. 32 KB covers real-world usage while staying
-// well within safe limits.
-const server = http.createServer({ maxHeaderSize: 32 * 1024 }, app);
+// Node's default maxHeaderSize is 8 KB, which can trip a 431 when Chrome sends
+// accumulated cookies from the app origin. Auth uses bearer tokens, not cookies,
+// so client API calls now omit cookies; this larger cap protects initial loads.
+const server = http.createServer({ maxHeaderSize: 64 * 1024 }, app);
 const io = new Server(server, {
-    cors: { origin: true, credentials: true }
+    cors: { origin: true, credentials: false }
 });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: false,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+}));
 app.use(express.json({ limit: '6mb' }));
 app.use(express.urlencoded({ extended: true, limit: '6mb' }));
 app.use(express.static(path.join(__dirname, '..', 'client')));
