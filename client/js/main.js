@@ -2579,11 +2579,11 @@ function openTaskDueDatePicker(projectId, taskId, event) {
     const dueInput = document.getElementById(`modal-task-due-${taskId}`);
     if (!dueInput || dueInput.disabled) return;
 
-    dueInput.focus({ preventScroll: true });
     try {
         if (typeof dueInput.showPicker === 'function') {
             dueInput.showPicker();
         } else {
+            dueInput.focus({ preventScroll: true });
             dueInput.click();
         }
     } catch (error) {

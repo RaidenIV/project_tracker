@@ -4845,3 +4845,79 @@ body[data-theme^="console"] .task-due-date-control.has-due-date.is-overdue {
 body[data-theme^="console"] .task-select-all-control-inner {
     position: relative !important;
 }
+
+/* ============================================================================
+   Targeted patch: accent task previews, centered due-date picker, no date text
+   selection on picker open, and restored circular task bulk selectors
+   ============================================================================ */
+.project-preview-task > span:last-child,
+body[data-theme^="console"] .project-preview-task > span:last-child {
+    color: var(--accent, #ff6a00) !important;
+}
+
+.task-due-date-control,
+body[data-theme^="console"] .task-due-date-control {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.task-due-date-control:not(.has-due-date),
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) {
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-width: 2.1rem !important;
+    min-height: 2.1rem !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) .task-due-date-input {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    min-width: 1.2rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    text-align: center !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-calendar-picker-indicator {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    min-width: 1.2rem !important;
+    min-height: 1.2rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+.task-due-date-control.has-due-date .task-due-date-input,
+.task-due-date-control.has-due-date:hover .task-due-date-input,
+.task-due-date-control.has-due-date:focus-within .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.has-due-date:hover .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within .task-due-date-input {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    caret-color: transparent !important;
+}
+
+.task-due-date-control.has-due-date .task-due-date-input::selection,
+body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-input::selection {
+    background: transparent !important;
+    color: var(--accent, #ff6a00) !important;
+}
+
+.task-bulk-select,
+body[data-theme^="console"] .task-bulk-select {
+    border-radius: 999px !important;
+}
+
+.task-bulk-select span,
+body[data-theme^="console"] .task-bulk-select span {
+    border-radius: 999px !important;
+}
