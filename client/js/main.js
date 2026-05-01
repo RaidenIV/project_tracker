@@ -126,6 +126,29 @@ function formatTaskDueDate(value) {
     return parsed.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function getTodayDateKey() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function isTaskOverdue(task) {
+    const normalizedTask = normalizeTask(task);
+    const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
+    return Boolean(dueDate && !normalizedTask.completed && dueDate < getTodayDateKey());
+}
+
+function projectHasOverdueTasks(project) {
+    return (Array.isArray(project?.tasks) ? project.tasks : []).some((task, index) => isTaskOverdue(normalizeTask(task, index)));
+}
+
+function renderWarningTriangleIcon(className = '') {
+    const safeClass = className ? ` ${className}` : '';
+    return `<svg class="warning-triangle-icon${safeClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 3.25 22 20.5H2L12 3.25z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v5"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8" d="M12 17.4h.01"></path></svg>`;
+}
+
 function sanitizeTaskCategoryName(value) {
     const raw = String(value ?? '').trim();
     if (!raw) return DEFAULT_TASK_CATEGORY;
@@ -310,14 +333,28 @@ function sortTasks(tasks) {
 
 function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
     const baseOrder = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
-    if (mode !== 'tag-priority') return baseOrder;
+    if (mode === 'tag-priority') {
+        return [...baseOrder].sort((a, b) => {
+            const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
+            if (priorityDiff !== 0) return priorityDiff;
+            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+            return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
+        });
+    }
 
-    return [...baseOrder].sort((a, b) => {
-        const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
-        if (priorityDiff !== 0) return priorityDiff;
-        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
-        return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
-    });
+    if (mode === 'due-date') {
+        return [...baseOrder].sort((a, b) => {
+            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+            const aDue = normalizeTaskDueDate(a.dueDate);
+            const bDue = normalizeTaskDueDate(b.dueDate);
+            if (aDue && bDue && aDue !== bDue) return aDue.localeCompare(bDue);
+            if (aDue && !bDue) return -1;
+            if (!aDue && bDue) return 1;
+            return Number(a.id) - Number(b.id);
+        });
+    }
+
+    return baseOrder;
 }
 
 
@@ -479,14 +516,14 @@ function getProjectTaskSortPreference(projectId) {
     const key = String(projectId || '');
     if (!key) return DEFAULT_TASK_SORT_MODE;
     const value = preferences[key];
-    return value === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+    return ['tag-priority', 'due-date'].includes(value) ? value : DEFAULT_TASK_SORT_MODE;
 }
 
 function setProjectTaskSortPreference(projectId, sortMode) {
     const key = String(projectId || '');
     if (!key) return;
     const preferences = loadProjectTaskSortPreferences();
-    preferences[key] = sortMode === 'tag-priority' ? 'tag-priority' : DEFAULT_TASK_SORT_MODE;
+    preferences[key] = ['tag-priority', 'due-date'].includes(sortMode) ? sortMode : DEFAULT_TASK_SORT_MODE;
     saveProjectTaskSortPreferences(preferences);
 }
 
@@ -1536,6 +1573,18 @@ function triggerProjectTitleShake(input) {
 
 function handleProjectTitleInput(input) {
     if (!input) return true;
+    const rawValue = String(input.value ?? '');
+    const normalizedValue = normalizeProjectTitleInput(rawValue);
+    if (normalizedValue.length > PROJECT_TITLE_MAX_LENGTH) {
+        const caretPosition = input.selectionStart || rawValue.length;
+        input.value = rawValue.slice(0, Math.max(0, PROJECT_TITLE_MAX_LENGTH));
+        const nextCaret = Math.min(input.value.length, caretPosition - 1);
+        try { input.setSelectionRange(nextCaret, nextCaret); } catch { /* noop */ }
+        const message = `Project title must be ${PROJECT_TITLE_MAX_LENGTH} characters or fewer.`;
+        showProjectTitleWarning(input, message);
+        triggerProjectTitleShake(input);
+        return false;
+    }
     const message = getProjectTitleWarningMessage(input.value);
     if (message) {
         showProjectTitleWarning(input, message);
@@ -2176,6 +2225,70 @@ function getSelectedTaskCountForProject(projectId) {
     return getSelectedTaskIdsForProject(projectId).length;
 }
 
+function getVisibleSelectableTaskIds(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return [];
+    const hideCompleted = getProjectHideCompletedPreference(projectId);
+    const sortMode = getProjectTaskSortPreference(projectId);
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    return getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory })
+        .map(task => normalizeTask(task).id)
+        .filter(taskId => Number.isFinite(Number(taskId)));
+}
+
+function areAllVisibleTasksSelected(projectId, visibleTaskIds = null) {
+    const ids = Array.isArray(visibleTaskIds) ? visibleTaskIds : getVisibleSelectableTaskIds(projectId);
+    if (!ids.length) return false;
+    const selectedIds = new Set(getSelectedTaskIdsForProject(projectId));
+    return ids.every(taskId => selectedIds.has(Number(taskId)));
+}
+
+function buildTaskSelectAllControlMarkup(projectId, displayTasks = [], selectedTasks = new Set()) {
+    if (!state.canEdit(projectId)) return '';
+    const visibleTaskIds = (Array.isArray(displayTasks) ? displayTasks : [])
+        .map(task => normalizeTask(task).id)
+        .filter(taskId => Number.isFinite(Number(taskId)));
+    const selectedIds = new Set([...selectedTasks].map(taskId => Number(taskId)));
+    const allSelected = visibleTaskIds.length > 0 && visibleTaskIds.every(taskId => selectedIds.has(Number(taskId)));
+    const disabled = visibleTaskIds.length <= 0;
+    return `
+        <label class="task-select-all-control-inner ${allSelected ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}">
+            <input type="checkbox"
+                   ${allSelected ? 'checked' : ''}
+                   ${disabled ? 'disabled' : ''}
+                   aria-label="Select all visible tasks"
+                   onchange="toggleSelectAllVisibleTasks('${projectId}', this.checked)">
+            <span class="task-select-all-box" aria-hidden="true"></span>
+            <span>Select all tasks</span>
+        </label>
+    `;
+}
+
+function renderTaskSelectAllControl(projectId, displayTasks = null) {
+    const container = document.getElementById(`task-select-all-control-${projectId}`);
+    if (!container) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const tasksForControl = Array.isArray(displayTasks)
+        ? displayTasks
+        : getDisplayTasksForProject(project, {
+            hideCompleted: getProjectHideCompletedPreference(projectId),
+            sortMode: getProjectTaskSortPreference(projectId),
+            activeCategory: getProjectTaskCategoryFilter(projectId)
+        });
+    container.innerHTML = buildTaskSelectAllControlMarkup(projectId, tasksForControl, state.getSelectedTasks(projectId));
+}
+
+function toggleSelectAllVisibleTasks(projectId, shouldSelect) {
+    if (!state.canEdit(projectId)) return;
+    const visibleTaskIds = getVisibleSelectableTaskIds(projectId);
+    state.clearTaskSelection(projectId);
+    if (shouldSelect) {
+        visibleTaskIds.forEach(taskId => state.selectTask(projectId, Number(taskId), true));
+    }
+    renderModalTaskList(projectId);
+}
+
 function updateCompletedTaskStatBy(delta) {
     const amount = Number(delta) || 0;
     if (amount > 0) {
@@ -2446,8 +2559,16 @@ function updateTaskDueDate(projectId, taskId, dueDateValue) {
     const dueControl = dueInput?.closest?.('.task-due-date-control');
     if (dueInput) dueInput.value = dueDate;
     if (dueControl) {
+        const normalizedTask = updatedTasks.find(task => normalizeTask(task).id === taskId);
+        const overdue = isTaskOverdue(normalizedTask);
         dueControl.classList.toggle('has-due-date', !!dueDate);
-        dueControl.setAttribute('title', dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
+        dueControl.classList.toggle('is-overdue', overdue);
+        dueControl.setAttribute('title', overdue ? `Overdue: ${formatTaskDueDate(dueDate)}` : (dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date'));
+        if (overdue && !dueControl.querySelector('.task-due-overdue-icon')) {
+            dueControl.insertAdjacentHTML('afterbegin', renderWarningTriangleIcon('task-due-overdue-icon'));
+        } else if (!overdue) {
+            dueControl.querySelector('.task-due-overdue-icon')?.remove();
+        }
     }
 }
 
@@ -4216,7 +4337,8 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
     const hasTaskNote = normalizedTask.note.trim().length > 0;
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
-    const dueDateLabel = dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date';
+    const taskOverdue = isTaskOverdue(normalizedTask);
+    const dueDateLabel = taskOverdue ? `Overdue: ${formatTaskDueDate(dueDate)}` : (dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
     const priorityBulkCount = getIncompleteTaskCountForPriority(project, normalizedTask.tag);
     const priorityBulkLabel = getPriorityTagLabel(normalizedTask.tag);
 
@@ -4261,10 +4383,11 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                           onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(normalizedTask.text)}</textarea>
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
-                <label class="task-due-date-control ${dueDate ? 'has-due-date' : ''}"
+                <label class="task-due-date-control ${dueDate ? 'has-due-date' : ''} ${taskOverdue ? 'is-overdue' : ''}"
                        title="${escapeHtml(dueDateLabel)}"
                        onclick="openTaskDueDatePicker('${projectId}', ${normalizedTask.id}, event)"
                        onpointerdown="event.stopPropagation();">
+                    ${taskOverdue ? renderWarningTriangleIcon('task-due-overdue-icon') : ''}
                     <input class="task-due-date-input"
                            id="modal-task-due-${normalizedTask.id}"
                            type="date"
@@ -4442,6 +4565,7 @@ function renderModalTaskList(projectId) {
     taskList.dataset.sortMode = sortMode;
     taskList.dataset.activeCategory = activeCategory;
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    renderTaskSelectAllControl(projectId, displayTasks);
     renderTaskBulkActions(projectId);
     renderTaskCategoryControls(projectId);
 
@@ -4842,11 +4966,15 @@ function openProjectModal(projectId, options = {}) {
                                 </svg>
                                 Add Task
                             </button>
+                            <div class="task-select-all-control" id="task-select-all-control-${project.id}">
+                                ${buildTaskSelectAllControlMarkup(project.id, displayTasks, selectedTasks)}
+                            </div>
                         </div>
                         <div class="task-sort-control">
                             <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
                             <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
                                 <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                                <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
                                 <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
                             </select>
                         </div>
@@ -5492,6 +5620,7 @@ function renderProjectCard(project) {
     const totalTasks = tasks.length;
     const remainingTasksCount = tasks.filter(t => !t.completed).length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+    const hasOverdueTasks = projectHasOverdueTasks(project);
     const isShared = collaborators.length > 0;
     const isViewer = project.userRole === 'viewer';
     const isEditor = project.userRole === 'editor';
@@ -5565,6 +5694,7 @@ function renderProjectCard(project) {
                     <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
                 </div>
                 <div class="project-card-tasks-remaining">Tasks Remaining: ${remainingTasksCount}</div>
+                ${hasOverdueTasks ? `<div class="project-card-overdue-warning">${renderWarningTriangleIcon('project-card-overdue-icon')}<span>OVERDUE TASKS</span></div>` : ''}
             </div>
 
             <ul class="project-preview-list">
@@ -6207,6 +6337,7 @@ window.setSelectedTasksDueDate = setSelectedTasksDueDate;
 window.setSelectedTasksPriority = setSelectedTasksPriority;
 window.completeSelectedTasks = completeSelectedTasks;
 window.deleteSelectedTasks = deleteSelectedTasks;
+window.toggleSelectAllVisibleTasks = toggleSelectAllVisibleTasks;
 window.openTaskDueDatePicker = openTaskDueDatePicker;
 window.openTaskNoteModal = openTaskNoteModal;
 window.closeTaskNoteModal = closeTaskNoteModal;

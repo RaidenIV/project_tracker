@@ -4681,3 +4681,167 @@ body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within .ta
     color: var(--accent, #ff6a00) !important;
     cursor: pointer !important;
 }
+
+/* ============================================================================
+   Targeted patch: task select-all, overdue indicators, due-date sorting support,
+   and hard project-title input limit feedback
+   ============================================================================ */
+.task-select-all-control,
+body[data-theme^="console"] .task-select-all-control {
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 0.45rem !important;
+}
+
+.task-select-all-control-inner,
+body[data-theme^="console"] .task-select-all-control-inner {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.9)) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.task-select-all-control-inner input,
+body[data-theme^="console"] .task-select-all-control-inner input {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.task-select-all-box,
+body[data-theme^="console"] .task-select-all-box {
+    position: relative !important;
+    width: 14px !important;
+    height: 14px !important;
+    flex: 0 0 14px !important;
+    border: 1.5px solid var(--muted, rgba(148, 163, 184, 0.72)) !important;
+    border-radius: 3px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.task-select-all-box::after,
+body[data-theme^="console"] .task-select-all-box::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 3px !important;
+    border-radius: 1px !important;
+    background: var(--accent, #ff6a00) !important;
+    transform: scale(0) !important;
+    transition: transform 140ms ease !important;
+}
+
+.task-select-all-control-inner.is-selected,
+.task-select-all-control-inner:hover,
+.task-select-all-control-inner:focus-within,
+body[data-theme^="console"] .task-select-all-control-inner.is-selected,
+body[data-theme^="console"] .task-select-all-control-inner:hover,
+body[data-theme^="console"] .task-select-all-control-inner:focus-within {
+    color: var(--accent, #ff6a00) !important;
+}
+
+.task-select-all-control-inner.is-selected .task-select-all-box,
+.task-select-all-control-inner:hover .task-select-all-box,
+.task-select-all-control-inner:focus-within .task-select-all-box,
+body[data-theme^="console"] .task-select-all-control-inner.is-selected .task-select-all-box,
+body[data-theme^="console"] .task-select-all-control-inner:hover .task-select-all-box,
+body[data-theme^="console"] .task-select-all-control-inner:focus-within .task-select-all-box {
+    border-color: var(--accent, #ff6a00) !important;
+}
+
+.task-select-all-control-inner.is-selected .task-select-all-box::after,
+body[data-theme^="console"] .task-select-all-control-inner.is-selected .task-select-all-box::after {
+    transform: scale(1) !important;
+}
+
+.task-select-all-control-inner.is-disabled,
+body[data-theme^="console"] .task-select-all-control-inner.is-disabled {
+    cursor: default !important;
+    opacity: 0.45 !important;
+}
+
+.warning-triangle-icon,
+body[data-theme^="console"] .warning-triangle-icon {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    width: 1em !important;
+    height: 1em !important;
+    color: var(--accent, #ff6a00) !important;
+}
+
+.project-card-overdue-warning,
+body[data-theme^="console"] .project-card-overdue-warning {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    margin-top: 0.35rem !important;
+    color: var(--accent, #ff6a00) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.055em !important;
+    text-transform: uppercase !important;
+    line-height: 1.1 !important;
+}
+
+.project-card-overdue-icon,
+body[data-theme^="console"] .project-card-overdue-icon {
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+}
+
+.task-due-date-control.is-overdue,
+.task-due-date-control.is-overdue:hover,
+.task-due-date-control.is-overdue:focus-within,
+body[data-theme^="console"] .task-due-date-control.is-overdue,
+body[data-theme^="console"] .task-due-date-control.is-overdue:hover,
+body[data-theme^="console"] .task-due-date-control.is-overdue:focus-within {
+    color: var(--accent, #ff6a00) !important;
+    background: color-mix(in srgb, var(--accent, #ff6a00) 13%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent, #ff6a00) 30%, transparent) !important;
+}
+
+.task-due-overdue-icon,
+body[data-theme^="console"] .task-due-overdue-icon {
+    width: 0.85rem !important;
+    height: 0.85rem !important;
+    margin-right: 0.1rem !important;
+}
+
+.task-due-date-control.is-overdue .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.is-overdue .task-due-date-input {
+    width: 5.6rem !important;
+    color: var(--accent, #ff6a00) !important;
+}
+
+@media (max-width: 720px) {
+    .task-select-all-control,
+    body[data-theme^="console"] .task-select-all-control {
+        width: 100% !important;
+    }
+
+    .task-select-all-control-inner,
+    body[data-theme^="console"] .task-select-all-control-inner {
+        width: 100% !important;
+    }
+
+    .project-card-overdue-warning,
+    body[data-theme^="console"] .project-card-overdue-warning {
+        font-size: 0.68rem !important;
+    }
+}
+
+.task-due-date-control.has-due-date.is-overdue,
+body[data-theme^="console"] .task-due-date-control.has-due-date.is-overdue {
+    min-width: 6.65rem !important;
+}
+
+.task-select-all-control-inner,
+body[data-theme^="console"] .task-select-all-control-inner {
+    position: relative !important;
+}
