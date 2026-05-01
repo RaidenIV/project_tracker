@@ -3962,3 +3962,57 @@ body.is-task-dragging {
         overflow: hidden !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: 1920x1200 project-card density
+   ============================================================================ */
+@media (min-width: 1800px) and (min-height: 1100px) {
+    .stitch-project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        padding: 0.95rem !important;
+        gap: 0.58rem !important;
+        min-height: 28rem !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    .project-card-tags,
+    body[data-theme^="console"] .project-card-tags {
+        gap: 0.38rem !important;
+        min-height: 1.35rem !important;
+    }
+
+    .project-card-tags.project-card-tags--empty,
+    body[data-theme^="console"] .project-card-tags.project-card-tags--empty {
+        min-height: 1.35rem !important;
+    }
+
+    .project-card-progress,
+    body[data-theme^="console"] .project-card-progress {
+        gap: 0.48rem !important;
+    }
+
+    .project-preview-list,
+    body[data-theme^="console"] .project-preview-list {
+        gap: 0.4rem !important;
+    }
+
+    .project-preview-task,
+    .project-preview-empty,
+    body[data-theme^="console"] .project-preview-task,
+    body[data-theme^="console"] .project-preview-empty {
+        min-height: 1.72rem !important;
+        padding: 0.3rem 0.44rem !important;
+    }
+
+    .project-card-notes-bar,
+    body[data-theme^="console"] .project-card-notes-bar {
+        min-height: 1.35rem !important;
+        margin-top: 0 !important;
+    }
+
+    .project-card-footer,
+    body[data-theme^="console"] .project-card-footer {
+        gap: 0.65rem !important;
+    }
+}
