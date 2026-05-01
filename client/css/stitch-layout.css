@@ -3950,69 +3950,137 @@ body.is-task-dragging {
 }
 
 /* ============================================================================
-   Targeted patch: Add Task reliability and 1920x1200 card visibility
+   Targeted patch: 1920x1200 project-card visibility
    ============================================================================ */
 
-@media (min-width: 1800px) and (min-height: 1100px) {
-    .stitch-project-card,
-    body[data-theme^="console"] .stitch-project-card {
-        min-height: 28rem !important;
-        height: auto !important;
-        max-height: none !important;
-        overflow: hidden !important;
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid {
+        grid-auto-rows: auto !important;
+        align-items: start !important;
     }
-}
 
-/* ============================================================================
-   Targeted patch: 1920x1200 project-card density
-   ============================================================================ */
-@media (min-width: 1800px) and (min-height: 1100px) {
     .stitch-project-card,
     body[data-theme^="console"] .stitch-project-card {
-        padding: 0.95rem !important;
-        gap: 0.58rem !important;
-        min-height: 28rem !important;
+        min-height: 25.35rem !important;
         height: auto !important;
         max-height: none !important;
+        padding: 0.9rem !important;
+        gap: 0.52rem !important;
+        overflow: visible !important;
+    }
+
+    .stitch-project-card .project-header,
+    body[data-theme^="console"] .stitch-project-card .project-header {
+        gap: 0.55rem !important;
+    }
+
+    .stitch-project-card .project-title,
+    body[data-theme^="console"] .stitch-project-card .project-title {
+        font-size: 1.05rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .project-sync-text,
+    body[data-theme^="console"] .project-sync-text {
+        margin-top: 0.22rem !important;
+        font-size: 0.62rem !important;
+        line-height: 1.12 !important;
     }
 
     .project-card-tags,
     body[data-theme^="console"] .project-card-tags {
-        gap: 0.38rem !important;
-        min-height: 1.35rem !important;
+        gap: 0.32rem !important;
+        min-height: 1.25rem !important;
     }
 
     .project-card-tags.project-card-tags--empty,
     body[data-theme^="console"] .project-card-tags.project-card-tags--empty {
-        min-height: 1.35rem !important;
+        min-height: 1.25rem !important;
+    }
+
+    .project-card-tag,
+    body[data-theme^="console"] .project-card-tag {
+        min-height: 1.32rem !important;
+        padding: 0.16rem 0.48rem !important;
+        font-size: 0.66rem !important;
+        line-height: 1.1 !important;
+    }
+
+    .project-card-description-row,
+    body[data-theme^="console"] .project-card-description-row {
+        gap: 0.55rem !important;
+        align-items: center !important;
+    }
+
+    .project-card-description,
+    body[data-theme^="console"] .project-card-description {
+        min-height: 0.95rem !important;
+        font-size: 0.74rem !important;
+        line-height: 1.18 !important;
     }
 
     .project-card-progress,
     body[data-theme^="console"] .project-card-progress {
-        gap: 0.48rem !important;
+        gap: 0.38rem !important;
     }
 
     .project-preview-list,
     body[data-theme^="console"] .project-preview-list {
-        gap: 0.4rem !important;
+        gap: 0.34rem !important;
     }
 
     .project-preview-task,
     .project-preview-empty,
     body[data-theme^="console"] .project-preview-task,
     body[data-theme^="console"] .project-preview-empty {
-        min-height: 1.72rem !important;
-        padding: 0.3rem 0.44rem !important;
+        min-height: 1.58rem !important;
+        padding: 0.26rem 0.42rem !important;
+        font-size: 0.72rem !important;
+        line-height: 1.14 !important;
     }
 
     .project-card-notes-bar,
     body[data-theme^="console"] .project-card-notes-bar {
-        min-height: 1.35rem !important;
+        min-height: 1.1rem !important;
         margin-top: 0 !important;
+    }
+
+    .project-card-notes-button,
+    body[data-theme^="console"] .project-card-notes-button {
+        width: 1.4rem !important;
+        height: 1.4rem !important;
     }
 
     .project-card-footer,
     body[data-theme^="console"] .project-card-footer {
-        gap: 0.65rem !important;
+        padding-top: 0.25rem !important;
+        gap: 0.55rem !important;
+        margin-top: auto !important;
+    }
+
+    .project-card-footer-left,
+    body[data-theme^="console"] .project-card-footer-left {
+        gap: 0.22rem !important;
+    }
+
+    .project-card-footer-left .project-priority-card-button,
+    body[data-theme^="console"] .project-card-footer-left .project-priority-card-button {
+        min-height: 1.5rem !important;
+        height: 1.5rem !important;
+        min-width: 1.75rem !important;
+        padding-inline: 0.45rem !important;
+    }
+
+    .project-card-access,
+    body[data-theme^="console"] .project-card-access {
+        font-size: 0.7rem !important;
+        line-height: 1.22 !important;
+    }
+
+    .project-card-meta,
+    body[data-theme^="console"] .project-card-meta {
+        align-items: flex-end !important;
+        gap: 0.34rem !important;
     }
 }
