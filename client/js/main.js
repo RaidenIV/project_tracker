@@ -77,7 +77,7 @@ const DEFAULT_TASK_SORT_MODE = 'default';
 const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
 const PROJECT_TAG_MAX_COUNT = 5;
-const PROJECT_TITLE_MAX_LENGTH = 16;
+const PROJECT_TITLE_MAX_LENGTH = 24;
 const PROJECT_NOTES_TAB_DATA_FLAG = '__projectNotesTabs';
 const PROJECT_NOTES_DEFAULT_TAB_ID = 'notes-general';
 const TASK_TAG_PRIORITY = {
@@ -2046,6 +2046,13 @@ function deleteTask(projectId, taskId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
     if (!project) return;
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    const taskList = modalOpen ? document.getElementById(`modal-task-list-${projectId}`) : null;
+    const taskListScrollTop = taskList?.scrollTop || 0;
     
     const taskToDelete = project.tasks.find(t => t.id === taskId);
     if (taskToDelete?.completed) {
@@ -2058,7 +2065,20 @@ function deleteTask(projectId, taskId) {
     const updatedTasks = project.tasks.filter(t => t.id !== taskId);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
-    render();
+
+    if (modalOpen) {
+        render();
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalState(projectId, modalState);
+        requestAnimationFrame(() => {
+            if (taskList) taskList.scrollTop = taskListScrollTop;
+            window.scrollTo(pageScrollX, pageScrollY);
+        });
+    } else {
+        render();
+    }
+
     updateUndoButton();
     updateTotalCompletion();
 }
@@ -4723,7 +4743,6 @@ function addTaskToModal(projectId) {
 
 function deleteTaskFromModal(projectId, taskId) {
     deleteTask(projectId, taskId);
-    openProjectModal(projectId);
 }
 
 function completeProjectFromModal(projectId) {
@@ -5006,6 +5025,7 @@ function renderProjectCard(project) {
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
     const completedTasksCount = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
+    const remainingTasksCount = tasks.filter(t => !t.completed).length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
     const isShared = collaborators.length > 0;
     const isViewer = project.userRole === 'viewer';
@@ -5077,6 +5097,7 @@ function renderProjectCard(project) {
                 <div class="progress-bar-container">
                     <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${progressPercentage}%"></div>
                 </div>
+                <div class="project-card-tasks-remaining">Tasks Remaining: ${remainingTasksCount}</div>
             </div>
 
             <ul class="project-preview-list">

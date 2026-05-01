@@ -4108,3 +4108,58 @@ body.is-task-dragging {
         max-width: none !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: project-card task count, red delete hover, sticky task tabs
+   ============================================================================ */
+.project-card-tasks-remaining,
+body[data-theme^="console"] .project-card-tasks-remaining {
+    margin-top: 0.15rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.01em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-card .card-delete-button:hover,
+.project-card .card-delete-button:focus-visible,
+body[data-theme^="console"] .project-card .card-delete-button:hover,
+body[data-theme^="console"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="glass"] .project-card .card-delete-button:hover,
+body[data-theme^="glass"] .project-card .card-delete-button:focus-visible,
+body[data-theme^="blueprint"] .project-card .card-delete-button:hover,
+body[data-theme^="blueprint"] .project-card .card-delete-button:focus-visible {
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.24) !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10070 !important;
+    padding: 0.35rem 0 0.25rem !important;
+    margin-bottom: 0.75rem !important;
+    background: linear-gradient(
+        to bottom,
+        var(--panel, rgba(18, 18, 24, 0.96)) 0%,
+        var(--panel, rgba(18, 18, 24, 0.96)) 84%,
+        transparent 100%
+    ) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-card-tasks-remaining,
+    body[data-theme^="console"] .project-card-tasks-remaining {
+        margin-top: 0.05rem !important;
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+    }
+}
