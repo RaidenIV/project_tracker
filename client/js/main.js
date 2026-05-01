@@ -22,6 +22,21 @@ const updateAccountProfileOnServer = api.updateAccountProfileOnServer || (async 
 const archiveProjectOnServer = api.archiveProjectOnServer || (async () => ({ success: false }));
 const restoreProjectOnServer = api.restoreProjectOnServer || (async () => ({ success: false }));
 
+const CHROME_EXTENSION_ASYNC_RESPONSE_NOISE = 'A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received';
+
+function isChromeExtensionAsyncResponseNoise(value) {
+    const message = String(value?.message || value || '');
+    return message.includes(CHROME_EXTENSION_ASYNC_RESPONSE_NOISE);
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('unhandledrejection', (event) => {
+        if (isChromeExtensionAsyncResponseNoise(event.reason)) {
+            event.preventDefault();
+        }
+    });
+}
+
 const isLoggedIn = auth.isLoggedIn;
 const getCurrentUser = auth.getCurrentUser;
 const login = auth.login;
@@ -2792,6 +2807,7 @@ function setupTaskDragAndDrop(projectId) {
     }
 
     // ── per-gesture state (reset each drag) ──
+    let pendingDragItem = null;
     let draggableItem = null;
     let pointerStartX = 0;
     let pointerStartY = 0;
@@ -2800,8 +2816,26 @@ function setupTaskDragAndDrop(projectId) {
     let itemsGap = 0;
     let cachedItems = [];          // lazily populated, cleared on release
     let currentDropCategory = null;
+    let autoScrollFrame = null;
+    let autoScrollVelocity = 0;
+    let suppressClickAfterDrag = false;
 
     // ── helpers ──
+    function suppressNextTaskClick(event) {
+        if (!suppressClickAfterDrag) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        suppressClickAfterDrag = false;
+        document.removeEventListener('click', suppressNextTaskClick, true);
+    }
+    function getPoint(e) {
+        const touch = e.touches?.[0] || e.changedTouches?.[0];
+        return {
+            x: e.clientX ?? touch?.clientX ?? 0,
+            y: e.clientY ?? touch?.clientY ?? 0
+        };
+    }
     function getAllItems() {
         if (!cachedItems.length)
             cachedItems = Array.from(taskList.querySelectorAll('[data-task-item]'));
@@ -2812,6 +2846,14 @@ function setupTaskDragAndDrop(projectId) {
     }
     function isAbove(el)   { return el.hasAttribute('data-is-above'); }
     function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
+    function isTaskDragIgnoredTarget(target) {
+        return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .task-meta-controls, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
+    }
+    function getTaskScrollContainer() {
+        const modalScroll = taskList.closest('.modal-scroll-inner');
+        if (modalScroll && modalScroll.scrollHeight > modalScroll.clientHeight) return modalScroll;
+        return document.scrollingElement || document.documentElement;
+    }
     function getCategoryDropTargets() {
         return Array.from(document.querySelectorAll('[data-task-category-drop]'))
             .filter(el => el.dataset.taskCategoryDropProject === projectId);
@@ -2841,20 +2883,54 @@ function setupTaskDragAndDrop(projectId) {
         }
         return null;
     }
+    function stopTaskAutoScroll() {
+        autoScrollVelocity = 0;
+        if (autoScrollFrame) {
+            cancelAnimationFrame(autoScrollFrame);
+            autoScrollFrame = null;
+        }
+    }
+    function runTaskAutoScroll() {
+        if (!draggableItem || !autoScrollVelocity) {
+            autoScrollFrame = null;
+            return;
+        }
 
-    // ── drag start ──
-    function onStart(e) {
-        const handle = e.target.closest('.task-drag-handle');
-        if (!handle) return;
-        draggableItem = handle.closest('[data-task-item]');
-        if (!draggableItem) return;
+        const scrollEl = getTaskScrollContainer();
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            window.scrollBy(0, autoScrollVelocity);
+        } else {
+            scrollEl.scrollTop += autoScrollVelocity;
+        }
 
-        e.preventDefault();
+        updateDraggedTaskPosition(lastPointerX, lastPointerY);
+        autoScrollFrame = requestAnimationFrame(runTaskAutoScroll);
+    }
+    function updateTaskAutoScroll(pointerY) {
+        const scrollEl = getTaskScrollContainer();
+        const rect = (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body)
+            ? { top: 0, bottom: window.innerHeight }
+            : scrollEl.getBoundingClientRect();
+        const edgeSize = 92;
+        const maxSpeed = 18;
+        let velocity = 0;
 
-        pointerStartX = e.clientX ?? e.touches?.[0]?.clientX;
-        pointerStartY = e.clientY ?? e.touches?.[0]?.clientY;
-        lastPointerX = pointerStartX;
-        lastPointerY = pointerStartY;
+        if (pointerY < rect.top + edgeSize) {
+            velocity = -Math.ceil(((rect.top + edgeSize - pointerY) / edgeSize) * maxSpeed);
+        } else if (pointerY > rect.bottom - edgeSize) {
+            velocity = Math.ceil(((pointerY - (rect.bottom - edgeSize)) / edgeSize) * maxSpeed);
+        }
+
+        autoScrollVelocity = velocity;
+        if (velocity && !autoScrollFrame) {
+            autoScrollFrame = requestAnimationFrame(runTaskAutoScroll);
+        } else if (!velocity) {
+            stopTaskAutoScroll();
+        }
+    }
+    function beginDrag() {
+        if (!pendingDragItem || draggableItem) return;
+        draggableItem = pendingDragItem;
         clearCategoryDropTarget();
 
         // measure the gap between the first two idle items (used to size the slide)
@@ -2874,24 +2950,18 @@ function setupTaskDragAndDrop(projectId) {
         });
 
         draggableItem.classList.add('dragging');
+        suppressClickAfterDrag = true;
+        document.addEventListener('click', suppressNextTaskClick, true);
+        taskList.classList.add('is-task-dragging');
+        document.body.classList.add('is-task-dragging');
 
         // Prevent text selection while dragging without hiding the page scrollbar.
         document.body.style.userSelect = 'none';
         document.body.style.touchAction = 'none';
-
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('mouseup',   onEnd);
-        document.addEventListener('touchend',  onEnd);
     }
-
-    // ── drag move ──
-    function onMove(e) {
+    function updateDraggedTaskPosition(cx, cy) {
         if (!draggableItem) return;
-        e.preventDefault();
 
-        const cx = e.clientX ?? e.touches[0].clientX;
-        const cy = e.clientY ?? e.touches[0].clientY;
         lastPointerX = cx;
         lastPointerY = cy;
         setCategoryDropTarget(getCategoryDropTargetAtPoint(cx, cy));
@@ -2930,11 +3000,64 @@ function setupTaskDragAndDrop(projectId) {
                 item.style.transform = '';
             }
         });
+
+        updateTaskAutoScroll(cy);
+    }
+
+    // ── drag start ──
+    function onStart(e) {
+        const item = e.target.closest?.('[data-task-item]');
+        if (!item || !taskList.contains(item)) return;
+
+        const handle = e.target.closest?.('.task-drag-handle');
+        if (!handle && isTaskDragIgnoredTarget(e.target)) return;
+
+        const point = getPoint(e);
+        pendingDragItem = item;
+        pointerStartX = point.x;
+        pointerStartY = point.y;
+        lastPointerX = pointerStartX;
+        lastPointerY = pointerStartY;
+        cachedItems = [];
+        clearCategoryDropTarget();
+
+        // Make row dragging feel responsive while preventing accidental text selection.
+        document.body.style.userSelect = 'none';
+        taskList.classList.add('is-task-drag-pending');
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup',   onEnd);
+        document.addEventListener('touchend',  onEnd);
+        document.addEventListener('touchcancel', onEnd);
+    }
+
+    // ── drag move ──
+    function onMove(e) {
+        if (!pendingDragItem && !draggableItem) return;
+        const point = getPoint(e);
+        const dx = point.x - pointerStartX;
+        const dy = point.y - pointerStartY;
+        const distance = Math.hypot(dx, dy);
+
+        if (!draggableItem) {
+            if (distance < 3) return;
+            beginDrag();
+        }
+
+        if (!draggableItem) return;
+        e.preventDefault();
+        updateDraggedTaskPosition(point.x, point.y);
     }
 
     // ── drag end ──
     function onEnd(e) {
-        if (!draggableItem) return;
+        if (!pendingDragItem && !draggableItem) return;
+
+        if (!draggableItem) {
+            reset();
+            return;
+        }
 
         const all           = getAllItems();
         const originalIndex = all.indexOf(draggableItem);
@@ -2992,15 +3115,20 @@ function setupTaskDragAndDrop(projectId) {
 
     // ── cleanup ──
     function reset() {
+        stopTaskAutoScroll();
         cachedItems     = [];
+        pendingDragItem = null;
         draggableItem   = null;
         clearCategoryDropTarget();
+        taskList.classList.remove('is-task-drag-pending', 'is-task-dragging');
+        document.body.classList.remove('is-task-dragging');
         document.body.style.userSelect  = '';
         document.body.style.touchAction = '';
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('touchmove', onMove);
         document.removeEventListener('mouseup',   onEnd);
         document.removeEventListener('touchend',  onEnd);
+        document.removeEventListener('touchcancel', onEnd);
     }
 
     // ── attach ──
@@ -3662,14 +3790,14 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                       data-task-text="${normalizedTask.id}"
                       id="modal-task-text-${normalizedTask.id}"
                       onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${escapeHtml(normalizedTask.text)}</span>
-                <input type="text"
-                       class="task-input"
-                       id="modal-task-input-${normalizedTask.id}"
-                       value="${escapeHtml(normalizedTask.text)}"
-                       placeholder="New task"
-                       style="display: none;"
-                       onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
-                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); }">
+                <textarea class="task-input task-input--textarea"
+                          id="modal-task-input-${normalizedTask.id}"
+                          placeholder="New task"
+                          rows="1"
+                          style="display: none;"
+                          oninput="autoResizeModalTaskInput(this)"
+                          onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
+                          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(normalizedTask.text)}</textarea>
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
                 <button class="task-note-button ${hasTaskNote ? 'has-note' : ''}"
@@ -4514,13 +4642,22 @@ function finishEditProjectDescription(projectId) {
     setProjectDescriptionViewState(projectId, description);
     updateProjectDescription(projectId, description);
 }
+function autoResizeModalTaskInput(input) {
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = `${Math.max(input.scrollHeight, 44)}px`;
+}
+
 function editModalTask(taskId) {
     const taskText = document.getElementById(`modal-task-text-${taskId}`);
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
+    const taskItem = taskInput?.closest?.('[data-task-item]');
     if (taskText && taskInput) {
+        taskItem?.classList.add('is-editing');
         taskText.style.display = 'none';
         taskInput.style.display = 'block';
-        taskInput.focus();
+        autoResizeModalTaskInput(taskInput);
+        taskInput.focus({ preventScroll: true });
         taskInput.select();
     }
 }
@@ -4528,8 +4665,10 @@ function editModalTask(taskId) {
 function finishEditModalTask(projectId, taskId) {
     const taskText = document.getElementById(`modal-task-text-${taskId}`);
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
+    const taskItem = taskInput?.closest?.('[data-task-item]');
     if (taskText && taskInput) {
         const trimmed = taskInput.value.trim();
+        taskItem?.classList.remove('is-editing');
         if (trimmed.length === 0) {
             // Empty text — remove the task entirely, don't persist it
             deleteTask(projectId, taskId);
@@ -4540,6 +4679,7 @@ function finishEditModalTask(projectId, taskId) {
         taskText.textContent = trimmed;
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
+        taskInput.style.height = '';
     }
 }
 
@@ -5513,6 +5653,7 @@ window.cancelEditProjectDescription = cancelEditProjectDescription;
 window.finishEditProjectDescription = finishEditProjectDescription;
 window.editModalTask = editModalTask;
 window.finishEditModalTask = finishEditModalTask;
+window.autoResizeModalTaskInput = autoResizeModalTaskInput;
 window.addTaskToModal = addTaskToModal;
 window.deleteTaskFromModal = deleteTaskFromModal;
 window.completeProjectFromModal = completeProjectFromModal;

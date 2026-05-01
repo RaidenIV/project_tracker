@@ -3659,3 +3659,75 @@ body[data-theme^="console"] .control-panel .save-status--inline.save-status--ext
     overflow-wrap: anywhere !important;
     text-align: left !important;
 }
+
+/* Request: make task dragging easier, prevent accidental text selection, auto-scroll cleanly, and expand long task edits */
+.task-list.is-task-drag-pending,
+.task-list.is-task-dragging,
+.task-list.is-task-drag-pending .task-item,
+.task-list.is-task-dragging .task-item,
+.task-list.is-task-drag-pending .task-text,
+.task-list.is-task-dragging .task-text,
+body.is-task-dragging {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.task-item {
+    touch-action: manipulation !important;
+}
+
+.task-item:not(.is-editing) .task-main-content,
+.task-item:not(.is-editing) .task-text {
+    cursor: grab !important;
+}
+
+.task-item.dragging,
+.task-item.dragging .task-main-content,
+.task-item.dragging .task-text,
+.task-drag-handle:active {
+    cursor: grabbing !important;
+}
+
+.task-drag-handle {
+    flex: 0 0 auto !important;
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-width: 1.65rem !important;
+    padding: 0.28rem !important;
+    border-radius: 0.5rem !important;
+    cursor: grab !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: none !important;
+}
+
+.task-drag-handle:hover,
+.task-drag-handle:focus-visible {
+    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.task-item.is-editing {
+    align-items: flex-start !important;
+}
+
+.task-item.is-editing .task-main-content {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.task-input--textarea {
+    width: 100% !important;
+    min-height: 2.75rem !important;
+    max-height: min(16rem, 45vh) !important;
+    resize: none !important;
+    overflow-y: auto !important;
+    white-space: pre-wrap !important;
+    line-height: 1.35 !important;
+    box-sizing: border-box !important;
+}
+
+.task-item.is-editing .task-input--textarea {
+    display: block !important;
+}
