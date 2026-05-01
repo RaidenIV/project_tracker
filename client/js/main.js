@@ -368,6 +368,7 @@ const uiState = {
     openTaskPriorityMenu: null,
     openProjectPriorityMenu: null,
     openTaskCategoryMenu: null,
+    newTaskDraft: null,
     creatingTaskCategoryProjectId: null,
     creatingProjectTagProjectId: null,
     editingProjectTag: null
@@ -3151,7 +3152,19 @@ function getDisplayTasksForProject(project, options = {}) {
     const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
         ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
         : orderedTasks;
-    return hideCompleted ? categoryFilteredTasks.filter(task => !task.completed) : categoryFilteredTasks;
+    const visibleTasks = hideCompleted ? categoryFilteredTasks.filter(task => !task.completed) : categoryFilteredTasks;
+    const draftTaskId = Number(uiState.newTaskDraft?.taskId);
+    const draftProjectId = String(uiState.newTaskDraft?.projectId || '');
+    if (draftProjectId && String(project?.id) === draftProjectId && Number.isFinite(draftTaskId)) {
+        const draftIndex = visibleTasks.findIndex(task => Number(task.id) === draftTaskId);
+        if (draftIndex > 0) {
+            const nextTasks = [...visibleTasks];
+            const [draftTask] = nextTasks.splice(draftIndex, 1);
+            nextTasks.unshift(draftTask);
+            return nextTasks;
+        }
+    }
+    return visibleTasks;
 }
 
 
@@ -4659,24 +4672,33 @@ function finishEditModalTask(projectId, taskId) {
     const taskItem = taskInput?.closest?.('[data-task-item]');
     if (taskText && taskInput) {
         const trimmed = taskInput.value.trim();
+        const wasNewTaskDraft = String(uiState.newTaskDraft?.projectId || '') === String(projectId)
+            && Number(uiState.newTaskDraft?.taskId) === Number(taskId);
         taskItem?.classList.remove('is-editing');
         if (trimmed.length === 0) {
             // Empty text — remove the task entirely, don't persist it
+            if (wasNewTaskDraft) uiState.newTaskDraft = null;
             deleteTask(projectId, taskId);
             openProjectModal(projectId);
             return;
         }
+        if (wasNewTaskDraft) uiState.newTaskDraft = null;
         updateTaskText(projectId, taskId, trimmed);
         taskText.textContent = trimmed;
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
         taskInput.style.height = '';
+        if (wasNewTaskDraft) {
+            requestAnimationFrame(() => renderModalTaskList(projectId));
+        }
     }
 }
 
 function addTaskToModal(projectId) {
     const newTaskId = addTaskToProject(projectId);
     if (!newTaskId) return;
+
+    uiState.newTaskDraft = { projectId: String(projectId), taskId: Number(newTaskId) };
 
     const modal = document.getElementById('projectModal');
     const modalIsOpen = modal?.classList.contains('active');
@@ -4692,9 +4714,12 @@ function addTaskToModal(projectId) {
     }
 
     requestAnimationFrame(() => {
+        const taskItem = document.querySelector(`#modal-task-list-${projectId} [data-task-id="${newTaskId}"]`);
+        taskItem?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         editModalTask(newTaskId);
     });
 }
+
 
 function deleteTaskFromModal(projectId, taskId) {
     deleteTask(projectId, taskId);
