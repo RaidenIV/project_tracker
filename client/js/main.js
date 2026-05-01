@@ -104,6 +104,28 @@ function getNextPriorityTagValue(value) {
     return priorityCycle[(currentIndex + 1) % priorityCycle.length] || DEFAULT_TASK_TAG;
 }
 
+function normalizeTaskDueDate(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnlyMatch) return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatTaskDueDate(value) {
+    const dueDate = normalizeTaskDueDate(value);
+    if (!dueDate) return 'No due date';
+    const [year, month, day] = dueDate.split('-').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (Number.isNaN(parsed.getTime())) return dueDate;
+    return parsed.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function sanitizeTaskCategoryName(value) {
     const raw = String(value ?? '').trim();
     if (!raw) return DEFAULT_TASK_CATEGORY;
@@ -138,6 +160,7 @@ function normalizeTask(task = {}, index = 0) {
         note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
+        dueDate: normalizeTaskDueDate(task?.dueDate || task?.due_date || task?.deadline || ''),
         tag,
         category
     };
@@ -2098,6 +2121,29 @@ function updateTaskText(projectId, taskId, newText) {
     render();
 }
 
+function updateTaskDueDate(projectId, taskId, dueDateValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const dueDate = normalizeTaskDueDate(dueDateValue);
+    const updatedTasks = (Array.isArray(project.tasks) ? project.tasks : []).map((task, index) => {
+        const normalized = normalizeTask(task, index);
+        return normalized.id === taskId ? { ...normalized, dueDate } : normalized;
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+
+    const dueInput = document.getElementById(`modal-task-due-${taskId}`);
+    const dueControl = dueInput?.closest?.('.task-due-date-control');
+    if (dueInput) dueInput.value = dueDate;
+    if (dueControl) {
+        dueControl.classList.toggle('has-due-date', !!dueDate);
+        dueControl.setAttribute('title', dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
+    }
+}
+
 function addTaskToProject(projectId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
@@ -2831,6 +2877,8 @@ function setupTaskDragAndDrop(projectId) {
     let autoScrollFrame = null;
     let autoScrollVelocity = 0;
     let suppressClickAfterDrag = false;
+    let dragScrollContainer = null;
+    let dragStartScrollPosition = 0;
 
     // ── helpers ──
     function suppressNextTaskClick(event) {
@@ -2859,12 +2907,18 @@ function setupTaskDragAndDrop(projectId) {
     function isAbove(el)   { return el.hasAttribute('data-is-above'); }
     function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
     function isTaskDragIgnoredTarget(target) {
-        return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .task-meta-controls, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
+        return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .task-meta-controls, .task-due-date-control, .task-due-date-input, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
     }
     function getTaskScrollContainer() {
         const modalScroll = taskList.closest('.modal-scroll-inner');
         if (modalScroll && modalScroll.scrollHeight > modalScroll.clientHeight) return modalScroll;
         return document.scrollingElement || document.documentElement;
+    }
+    function getTaskScrollPosition(scrollEl = getTaskScrollContainer()) {
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            return window.scrollY || document.documentElement.scrollTop || 0;
+        }
+        return scrollEl?.scrollTop || 0;
     }
     function getCategoryDropTargets() {
         return Array.from(document.querySelectorAll('[data-task-category-drop]'))
@@ -2961,6 +3015,8 @@ function setupTaskDragAndDrop(projectId) {
             if (getAllItems().indexOf(item) < dragIdx) item.dataset.isAbove = '';
         });
 
+        dragScrollContainer = getTaskScrollContainer();
+        dragStartScrollPosition = getTaskScrollPosition(dragScrollContainer);
         draggableItem.classList.add('dragging');
         suppressClickAfterDrag = true;
         document.addEventListener('click', suppressNextTaskClick, true);
@@ -2978,9 +3034,10 @@ function setupTaskDragAndDrop(projectId) {
         lastPointerY = cy;
         setCategoryDropTarget(getCategoryDropTargetAtPoint(cx, cy));
 
-        // 1. follow the pointer
+        // 1. follow the pointer, including scroll delta so the task stays attached while the modal/page auto-scrolls.
+        const scrollDelta = getTaskScrollPosition(dragScrollContainer || getTaskScrollContainer()) - dragStartScrollPosition;
         draggableItem.style.transform =
-            `translate(${cx - pointerStartX}px, ${cy - pointerStartY}px)`;
+            `translate(${cx - pointerStartX}px, ${cy - pointerStartY + scrollDelta}px)`;
 
         // 2. decide which idle items should slide out of the way
         const dRect   = draggableItem.getBoundingClientRect();
@@ -3131,6 +3188,8 @@ function setupTaskDragAndDrop(projectId) {
         cachedItems     = [];
         pendingDragItem = null;
         draggableItem   = null;
+        dragScrollContainer = null;
+        dragStartScrollPosition = 0;
         clearCategoryDropTarget();
         taskList.classList.remove('is-task-drag-pending', 'is-task-dragging');
         document.body.classList.remove('is-task-dragging');
@@ -3791,6 +3850,8 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
     const hasTaskNote = normalizedTask.note.trim().length > 0;
+    const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
+    const dueDateLabel = dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date';
 
     return `
         <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
@@ -3824,6 +3885,22 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                           onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(normalizedTask.text)}</textarea>
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <label class="task-due-date-control ${dueDate ? 'has-due-date' : ''}"
+                       title="${escapeHtml(dueDateLabel)}"
+                       onclick="event.stopPropagation();"
+                       onpointerdown="event.stopPropagation();">
+                    <svg class="task-due-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+                    </svg>
+                    <input class="task-due-date-input"
+                           id="modal-task-due-${normalizedTask.id}"
+                           type="date"
+                           value="${escapeHtml(dueDate)}"
+                           aria-label="Task due date"
+                           onchange="updateTaskDueDate('${projectId}', ${normalizedTask.id}, this.value)"
+                           onclick="event.stopPropagation();"
+                           onpointerdown="event.stopPropagation();">
+                </label>
                 <button class="task-note-button ${hasTaskNote ? 'has-note' : ''}"
                         type="button"
                         aria-label="${hasTaskNote ? 'Edit task note' : 'Add task note'}"
@@ -5701,6 +5778,7 @@ window.editModalTask = editModalTask;
 window.finishEditModalTask = finishEditModalTask;
 window.autoResizeModalTaskInput = autoResizeModalTaskInput;
 window.addTaskToModal = addTaskToModal;
+window.updateTaskDueDate = updateTaskDueDate;
 window.deleteTaskFromModal = deleteTaskFromModal;
 window.completeProjectFromModal = completeProjectFromModal;
 window.confirmDeleteProject = confirmDeleteProject;

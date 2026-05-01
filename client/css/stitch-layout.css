@@ -4163,3 +4163,136 @@ body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .
         line-height: 1.12 !important;
     }
 }
+
+
+/* ============================================================================
+   Targeted patch: larger project-note indicators, viewport-sticky task tabs,
+   cursor-attached task dragging, and task due dates
+   ============================================================================ */
+
+.project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="console"] .project-card-notes-button.task-note-button.has-note::after {
+    width: 14px !important;
+    height: 14px !important;
+    top: 0 !important;
+    right: 0 !important;
+    box-shadow: 0 0 0 2px var(--panel, rgba(18, 18, 24, 0.96)) !important;
+}
+
+.modal-tab--notes.has-note::after,
+.project-notes-tab.has-note::after,
+body[data-theme^="console"] .modal-tab--notes.has-note::after,
+body[data-theme^="console"] .project-notes-tab.has-note::after {
+    width: 14px !important;
+    height: 14px !important;
+    top: 1px !important;
+    right: 1px !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls {
+    top: calc(var(--modal-padding, 32px) * -1) !important;
+    margin-left: calc(var(--modal-padding, 32px) * -1) !important;
+    margin-right: calc((var(--modal-padding, 32px) - 4px + var(--modal-scrollbar-width, 10px) + var(--modal-scrollbar-gap, 10px)) * -1) !important;
+    padding: 0.55rem var(--modal-padding, 32px) 0.35rem !important;
+    background: linear-gradient(
+        to bottom,
+        var(--panel, rgba(18, 18, 24, 0.98)) 0%,
+        var(--panel, rgba(18, 18, 24, 0.98)) 88%,
+        transparent 100%
+    ) !important;
+}
+
+.task-item.dragging,
+body[data-theme^="console"] .task-item.dragging {
+    z-index: 10090 !important;
+    will-change: transform !important;
+}
+
+.task-due-date-control {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.28rem !important;
+    min-width: 0 !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 0.42rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: var(--muted, currentColor) !important;
+    cursor: pointer !important;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease !important;
+}
+
+.task-due-date-control:hover,
+.task-due-date-control:focus-within {
+    color: var(--accent, currentColor) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    border-color: var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+}
+
+.task-due-date-control.has-due-date {
+    color: var(--accent, currentColor) !important;
+    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+}
+
+.task-due-date-icon {
+    flex: 0 0 auto !important;
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+}
+
+.task-due-date-input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 7.05rem !important;
+    min-width: 0 !important;
+    height: 1.5rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    color-scheme: dark !important;
+}
+
+.task-due-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer !important;
+    opacity: 0.75 !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input {
+    width: 1.35rem !important;
+    color: transparent !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-fields-wrapper,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-text,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-month-field,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-day-field,
+.task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-datetime-edit-year-field {
+    color: transparent !important;
+}
+
+@media (max-width: 720px) {
+    .task-due-date-control {
+        flex: 1 1 100% !important;
+        justify-content: flex-start !important;
+    }
+
+    .task-due-date-control:not(.has-due-date) .task-due-date-input,
+    .task-due-date-input {
+        width: 100% !important;
+        color: inherit !important;
+    }
+}
