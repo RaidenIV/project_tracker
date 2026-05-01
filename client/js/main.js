@@ -4342,7 +4342,7 @@ function openProjectModal(projectId, options = {}) {
                                        onchange="toggleHideCompleted()">
                                 <span class="toggle-slider"></span>
                             </label>
-                            <button class="modal-add-task-top modal-add-task-under-toggle" onclick="addTaskToModal('${project.id}')">
+                            <button class="modal-add-task-top modal-add-task-under-toggle" type="button" onclick="addTaskToModal('${project.id}')">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
@@ -4675,16 +4675,25 @@ function finishEditModalTask(projectId, taskId) {
 }
 
 function addTaskToModal(projectId) {
-    
-    
     const newTaskId = addTaskToProject(projectId);
-    render();
-    
-    // Re-open modal to show new task
-    openProjectModal(projectId);
-    
-    // Auto-focus
-    setTimeout(() => editModalTask(newTaskId), 50);
+    if (!newTaskId) return;
+
+    const modal = document.getElementById('projectModal');
+    const modalIsOpen = modal?.classList.contains('active');
+
+    if (modalIsOpen) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        updateTotalCompletion();
+        render();
+    } else {
+        render();
+        openProjectModal(projectId);
+    }
+
+    requestAnimationFrame(() => {
+        editModalTask(newTaskId);
+    });
 }
 
 function deleteTaskFromModal(projectId, taskId) {
