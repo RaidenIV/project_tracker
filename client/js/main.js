@@ -759,8 +759,8 @@ function normalizeProject(project) {
         taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
         collaborators: Array.isArray(project.collaborators) ? project.collaborators : [],
         activities: Array.isArray(project.activities) ? project.activities : [],
-        archived: Boolean(project.archived),
-        completed: Boolean(project.completed),
+        archived: isProjectArchived(project),
+        completed: isProjectCompleted(project),
         dateCreated: project.dateCreated || new Date().toISOString(),
         lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
         __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
@@ -776,8 +776,30 @@ function runRenderStep(stepName, fn) {
     }
 }
 
+function parseProjectBoolean(value) {
+    if (value === true || value === 1) return true;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        return ['true', '1', 'yes', 'completed'].includes(normalized);
+    }
+    return false;
+}
+
+function isProjectCompleted(project) {
+    return parseProjectBoolean(project?.completed);
+}
+
+function isProjectArchived(project) {
+    return parseProjectBoolean(project?.archived);
+}
+
 function getVisibleBaseProjects() {
-    return state.getCurrentViewProjects().filter(project => !project.archived);
+    return state.getProjects().filter(project => {
+        if (isProjectArchived(project)) return false;
+        return state.getView() === VIEWS.COMPLETED
+            ? isProjectCompleted(project)
+            : !isProjectCompleted(project);
+    });
 }
 
 function getArchivedProjects() {
@@ -1025,7 +1047,7 @@ function renderLeaderboardPanel() {
     if (!currentEntry && currentUserId) {
         const ownProjects = state.getProjects().filter(project => String(project.ownerId || project.owner || '') === currentUserId || project.userRole === 'owner');
         const liveCompletedTasks = ownProjects.reduce((sum, project) => sum + (Array.isArray(project.tasks) ? project.tasks.filter(task => task.completed).length : 0), 0);
-        const liveCompletedProjects = ownProjects.filter(project => project.completed && !project.archived).length;
+        const liveCompletedProjects = ownProjects.filter(project => isProjectCompleted(project) && !isProjectArchived(project)).length;
         currentEntry = {
             userId: currentUserId,
             username: accountState.user?.username || 'User',
@@ -1613,7 +1635,7 @@ function deleteProject(projectId) {
     const project = state.findProject(projectId);
     const mongoId = project?._id;
 
-    if (project?.completed) state.decrementCompletedProjects();
+    if (isProjectCompleted(project)) state.decrementCompletedProjects();
     const completedTasks = project?.tasks.filter(t => t.completed).length || 0;
     for (let i = 0; i < completedTasks; i++) state.decrementCompletedTasks();
 
@@ -1629,7 +1651,7 @@ function completeProject(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const newCompleted = !project.completed;
+    const newCompleted = !isProjectCompleted(project);
     if (newCompleted) {
         state.incrementCompletedProjects();
     } else {
@@ -1979,9 +2001,11 @@ function toggleTask(projectId, taskId) {
     if (!task) return;
     
     const willBeCompleted = !task.completed;
+    const shouldAnimateAway = willBeCompleted && getProjectHideCompletedPreference(projectId);
     
-    // If marking as complete, show a confirmed check animation before fading out
-    if (willBeCompleted) {
+    // Only use the fade-away animation when completed tasks are hidden from view.
+    // With "Hide completed tasks" off, completing a task should update in place.
+    if (shouldAnimateAway) {
         const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
         if (taskElement) {
             const checkbox = taskElement.querySelector(`[data-task-checkbox="${taskId}"]`);
@@ -2010,7 +2034,7 @@ function toggleTask(projectId, taskId) {
         }
     }
     
-    // If unmarking as complete, update immediately (no fade needed)
+    // When completed tasks stay visible, update immediately with no going-away animation.
     performTaskToggle(projectId, taskId);
 }
 
@@ -4505,7 +4529,7 @@ function openProjectModal(projectId, options = {}) {
                 ${project.archived ? `<button class="modal-delete-btn" onclick="restoreArchivedProject('${project.id}')">Restore Project</button>` : `<button class="modal-delete-btn" onclick="archiveProject('${project.id}')">Archive Project</button>`}
                 ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
                 <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
-                    ${project.completed ? 'Mark as Active' : 'Mark as Complete'}
+                    ${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}
                 </button>
             </div>`}
         </div>
@@ -5058,11 +5082,11 @@ function render() {
     const completedTasksCountEl = document.getElementById('completedTasksCount');
     const completedProjectsCountEl = document.getElementById('completedProjectsCount');
 
-    if (activeProjectsCountEl) activeProjectsCountEl.textContent = state.getProjects().filter(project => !project.completed && !project.archived).length;
+    if (activeProjectsCountEl) activeProjectsCountEl.textContent = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project)).length;
     if (completedTasksCountEl) completedTasksCountEl.textContent = stats.completedTasks || 0;
     if (completedProjectsCountEl) completedProjectsCountEl.textContent = stats.completedProjects || 0;
 
-    const incompleteTasks = state.getProjects().filter(project => !project.completed && !project.archived)
+    const incompleteTasks = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project))
         .reduce((sum, p) => sum + (Array.isArray(p.tasks) ? p.tasks.filter(t => !t.completed).length : 0), 0);
     const incompleteEl = document.getElementById('incompleteTasksCount');
     if (incompleteEl) incompleteEl.textContent = incompleteTasks;
@@ -5079,11 +5103,12 @@ function render() {
 
     if (displayProjects.length === 0) {
         emptyState.style.display = 'flex';
+        projectGrid.innerHTML = '';
         projectGrid.style.display = 'none';
         const emptyTitle = emptyState.querySelector('.title');
         const emptySubtitle = emptyState.querySelector('.subtitle');
         if (emptyTitle) emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
-        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Click "New Project" to get started';
+        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Only projects marked complete will appear here.';
     } else {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
@@ -5120,7 +5145,7 @@ function renderProjectCard(project) {
         ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
         : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner: <strong>Me</strong>');
 
-    const statusLabel = project.completed
+    const statusLabel = isProjectCompleted(project)
         ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
         : (isViewer || isEditor
             ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
@@ -5209,7 +5234,7 @@ function renderProjectCard(project) {
                 </div>
                 <span class="project-card-meta">
                     ${statusLabel}
-                    ${project.completed ? `<button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">Activate</button>` : ''}
+                    ${isProjectCompleted(project) ? `<button class="activate-button" onclick="event.stopPropagation(); completeProject('${project.id}')">Activate</button>` : ''}
                 </span>
             </div>
         </div>
@@ -5219,7 +5244,7 @@ function renderSharedProjectsPanel() {
     const sharedProjectsList = document.getElementById('sharedProjectsList');
     const sharedProjectsCount = document.getElementById('sharedProjectsCount');
 
-    const sharedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).filter(project =>
+    const sharedActiveProjects = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project)).filter(project =>
         project.userRole !== 'owner' || ((project.collaborators || []).length > 0)
     );
 
