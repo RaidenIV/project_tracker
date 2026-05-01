@@ -1,10 +1,12 @@
 const http = require('http');
+const crypto = require('crypto');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
@@ -112,6 +114,19 @@ const projectSchema = new mongoose.Schema({
     lastModified:  { type: Date, default: Date.now }
 });
 const Project = mongoose.model('Project', projectSchema);
+
+const pendingInvitationSchema = new mongoose.Schema({
+    projectId: { type: String, required: true, index: true },
+    email:     { type: String, required: true, lowercase: true, trim: true, index: true },
+    role:      { type: String, enum: ['viewer', 'editor'], default: 'editor' },
+    invitedBy: { type: String, required: true },
+    token:     { type: String, required: true, unique: true, index: true },
+    createdAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date, required: true, index: true },
+    acceptedAt:{ type: Date, default: null }
+});
+pendingInvitationSchema.index({ projectId: 1, email: 1, acceptedAt: 1 });
+const PendingInvitation = mongoose.model('PendingInvitation', pendingInvitationSchema);
 
 // Per-user cumulative stats (persist across project deletions)
 const statsSchema = new mongoose.Schema({
@@ -234,6 +249,136 @@ function appendProjectActivity(project, actor, type, message) {
         createdAt: new Date()
     });
     project.activities = activities.slice(0, 60);
+}
+
+function escapeHtmlText(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getPublicAppUrl(req) {
+    const configuredUrl = String(
+        process.env.APP_PUBLIC_URL ||
+        process.env.PUBLIC_APP_URL ||
+        process.env.CLIENT_URL ||
+        ''
+    ).trim().replace(/\/+$/, '');
+    if (configuredUrl) return configuredUrl;
+
+    const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+    const proto = forwardedProto || req.protocol || 'https';
+    const host = req.get('host') || `localhost:${PORT}`;
+    return `${proto}://${host}`.replace(/\/+$/, '');
+}
+
+function getInvitationEmailConfigError() {
+    if (!process.env.SMTP_HOST) return 'SMTP_HOST is not configured';
+    if (!process.env.MAIL_FROM && !process.env.SMTP_FROM && !process.env.SMTP_USER) {
+        return 'MAIL_FROM or SMTP_USER is not configured';
+    }
+    return '';
+}
+
+let cachedMailTransporter = null;
+function getMailTransporter() {
+    const configError = getInvitationEmailConfigError();
+    if (configError) throw new Error(configError);
+
+    if (cachedMailTransporter) return cachedMailTransporter;
+
+    const port = Number(process.env.SMTP_PORT || 587);
+    cachedMailTransporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number.isFinite(port) ? port : 587,
+        secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true',
+        auth: process.env.SMTP_USER || process.env.SMTP_PASS
+            ? {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+            }
+            : undefined
+    });
+
+    return cachedMailTransporter;
+}
+
+async function sendAccountCreationInviteEmail({ email, project, role, token, inviter, req }) {
+    const transporter = getMailTransporter();
+    const appUrl = getPublicAppUrl(req);
+    const inviteUrl = `${appUrl}/?invite=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+    const projectTitle = project?.title || 'a project';
+    const inviterName = inviter?.username || inviter?.email || 'A project owner';
+    const roleLabel = role === 'viewer' ? 'viewer' : 'editor';
+    const from = process.env.MAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER;
+
+    await transporter.sendMail({
+        from,
+        to: email,
+        subject: `${inviterName} invited you to ${projectTitle}`,
+        text: [
+            `${inviterName} invited you to collaborate on "${projectTitle}" as a ${roleLabel}.`,
+            '',
+            'Create an account with this email address to access the project:',
+            inviteUrl,
+            '',
+            'After you create the account, the project invitation will be applied automatically.'
+        ].join('\n'),
+        html: `
+            <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827;">
+                <h2 style="margin:0 0 12px;">Project invitation</h2>
+                <p>${escapeHtmlText(inviterName)} invited you to collaborate on <strong>${escapeHtmlText(projectTitle)}</strong> as a <strong>${escapeHtmlText(roleLabel)}</strong>.</p>
+                <p><a href="${escapeHtmlText(inviteUrl)}" style="display:inline-block;padding:10px 14px;border-radius:8px;background:#2563eb;color:#ffffff;text-decoration:none;">Create your account</a></p>
+                <p style="font-size:13px;color:#4b5563;">Use ${escapeHtmlText(email)} when creating the account. After registration, the project access will be applied automatically.</p>
+            </div>
+        `
+    });
+}
+
+async function claimPendingInvitationsForAccount(account) {
+    const accountId = account?._id ? account._id.toString() : '';
+    const email = String(account?.email || '').trim().toLowerCase();
+    if (!accountId || !email) return [];
+
+    const pendingInvites = await PendingInvitation.find({
+        email,
+        acceptedAt: null,
+        expiresAt: { $gt: new Date() }
+    });
+
+    const claimed = [];
+    for (const invite of pendingInvites) {
+        const project = await Project.findById(invite.projectId);
+        if (!project) {
+            invite.acceptedAt = new Date();
+            await invite.save();
+            continue;
+        }
+
+        const isOwner = String(project.owner) === accountId;
+        const alreadyCollaborator = project.collaborators.some(c => String(c.userId) === accountId);
+        if (!isOwner && !alreadyCollaborator) {
+            project.collaborators.push({
+                userId: accountId,
+                email: account.email,
+                username: account.username,
+                role: invite.role
+            });
+            project.lastModified = new Date();
+            appendProjectActivity(project, account, 'pending_invite_accepted', `${account.username} joined from an email invitation as ${invite.role}`);
+            await project.save();
+            await emitProjectUpsert(project, account);
+            claimed.push(project._id.toString());
+        }
+
+        invite.acceptedAt = new Date();
+        await invite.save();
+    }
+
+    return claimed;
 }
 
 function comparableProjectValue(value) {
@@ -424,6 +569,7 @@ app.post('/api/auth/register', async (req, res) => {
 
         // Claim any legacy 'default' projects (one-time migration for first user)
         await Project.updateMany({ owner: 'default' }, { $set: { owner: newUserId } });
+        await claimPendingInvitationsForAccount(account);
 
         const token = jwt.sign(
             { id: newUserId, email: account.email, username: account.username, profilePic: account.profilePic || '' },
@@ -635,16 +781,80 @@ app.delete('/api/projects/:id', authenticateToken, requireRole('owner'), async (
 app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), async (req, res) => {
     try {
         const { email, role } = req.body;
-        if (!email || !['viewer', 'editor'].includes(role))
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+        if (!normalizedEmail || !['viewer', 'editor'].includes(role))
             return res.status(400).json({ error: 'Valid email and role (viewer/editor) are required' });
 
-        const invitee = await Account.findOne({ email: email.toLowerCase() });
-        if (!invitee)
-            return res.status(404).json({ error: 'No account found with that email' });
-        if (invitee._id.toString() === req.user.id)
+        if (normalizedEmail === String(req.user.email || '').trim().toLowerCase())
             return res.status(400).json({ error: 'You cannot share a project with yourself' });
 
         const project = req.project;
+        const invitee = await Account.findOne({ email: normalizedEmail });
+
+        if (!invitee) {
+            const configError = getInvitationEmailConfigError();
+            if (configError) {
+                return res.status(503).json({
+                    error: 'No account found with that email, and the account creation email could not be sent.',
+                    details: configError
+                });
+            }
+
+            const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
+            let pendingInvite = await PendingInvitation.findOne({
+                projectId: project._id.toString(),
+                email: normalizedEmail,
+                acceptedAt: null
+            });
+
+            if (!pendingInvite) {
+                pendingInvite = new PendingInvitation({
+                    projectId: project._id.toString(),
+                    email: normalizedEmail,
+                    role,
+                    invitedBy: req.user.id,
+                    token: crypto.randomBytes(24).toString('hex'),
+                    expiresAt
+                });
+            } else {
+                pendingInvite.role = role;
+                pendingInvite.invitedBy = req.user.id;
+                pendingInvite.expiresAt = expiresAt;
+            }
+            await pendingInvite.save();
+
+            try {
+                await sendAccountCreationInviteEmail({
+                    email: normalizedEmail,
+                    project,
+                    role,
+                    token: pendingInvite.token,
+                    inviter: req.user,
+                    req
+                });
+            } catch (mailErr) {
+                console.error('Failed to send account creation invite:', mailErr);
+                return res.status(502).json({
+                    error: 'No account found with that email, and the account creation email could not be sent.',
+                    details: mailErr?.message
+                });
+            }
+
+            project.lastModified = new Date();
+            appendProjectActivity(project, req.user, 'pending_invite_sent', `sent an account creation invite to ${normalizedEmail} as ${role}`);
+            await project.save();
+            await emitProjectUpsert(project, req.user);
+
+            const ownerMap = await buildAccountMap([project.owner]);
+            const enriched = await enrichProject(project, req.user.id, ownerMap);
+            enriched.pendingInvitationEmailSent = true;
+            enriched.pendingInvitationMessage = `No account exists for ${normalizedEmail}, so an account creation email was sent.`;
+            return res.json(enriched);
+        }
+
+        if (invitee._id.toString() === req.user.id)
+            return res.status(400).json({ error: 'You cannot share a project with yourself' });
+
         if (project.collaborators.find(c => c.userId === invitee._id.toString()))
             return res.status(409).json({ error: `${invitee.username} is already a collaborator` });
 

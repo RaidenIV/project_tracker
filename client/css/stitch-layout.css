@@ -3249,3 +3249,38 @@ body[data-theme^="blueprint"] .project-preview-check {
         0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent),
         inset 0 -2px 0 var(--accent, #3b82f6) !important;
 }
+
+/* ========================================================================== 
+   Targeted patch: resilient sync text and pending invite confirmation
+   ========================================================================== */
+.control-panel .save-status--inline {
+    max-width: min(15rem, 48%) !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+}
+
+.control-panel .save-status--inline.save-status--long {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.045em !important;
+    line-height: 1.15 !important;
+}
+
+.control-panel .save-status--inline.save-status--extra-long {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    font-size: 0.54rem !important;
+    letter-spacing: 0.025em !important;
+    line-height: 1.12 !important;
+}
+
+.control-panel .save-status--inline.save-status--long::before,
+.control-panel .save-status--inline.save-status--extra-long::before {
+    flex: 0 0 auto !important;
+}
+
+.invite-error.is-success {
+    color: var(--success, #2d8a57) !important;
+}

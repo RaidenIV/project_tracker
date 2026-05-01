@@ -264,10 +264,8 @@ function handleTaskFloatingMenuDocumentClick(event) {
 }
 
 function sortTasks(tasks) {
-    const normalizedTasks = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
-    const incomplete = normalizedTasks.filter(t => !t.completed).sort((a, b) => Number(b.id) - Number(a.id));
-    const completed = normalizedTasks.filter(t => t.completed).sort((a, b) => Number(a.id) - Number(b.id));
-    return [...incomplete, ...completed];
+    // Preserve natural creation/manual order: first task stays first; new tasks append below it.
+    return (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
 }
 
 function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
@@ -690,13 +688,18 @@ function closeUiOptionsModal() {
 }
 
 function setSaveStatus(status, message) {
+    const normalizedMessage = String(message ?? '');
     uiState.saveStatus = status;
-    uiState.saveMessage = message;
+    uiState.saveMessage = normalizedMessage;
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
     const visualStatus = status === 'idle' ? 'saved' : status;
-    pill.className = `save-status save-status--inline save-status--${visualStatus}`;
-    pill.textContent = message;
+    const lengthClass = normalizedMessage.length > 86
+        ? ' save-status--extra-long'
+        : (normalizedMessage.length > 44 ? ' save-status--long' : '');
+    pill.className = `save-status save-status--inline save-status--${visualStatus}${lengthClass}`;
+    pill.textContent = normalizedMessage;
+    pill.title = normalizedMessage;
 }
 
 function projectUpdate(updates = {}, options = {}) {
@@ -1830,8 +1833,8 @@ function addTaskToProject(projectId) {
     const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
     const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
     const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, category });
-    // Add new tasks at the beginning (they'll appear first after sorting)
-    const updatedTasks = sortTasks([newTask, ...project.tasks]);
+    // Add new tasks below existing tasks so the first task created stays at the top.
+    const updatedTasks = sortTasks([...project.tasks, newTask]);
     
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
@@ -1870,9 +1873,22 @@ function reorderTasks(projectId, oldIndex, newIndex, renderedTaskIds = []) {
         return reorderedVisibleTasks[visibleCursor++] || task;
     });
 
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalState = captureProjectModalState(projectId);
+
     state.updateProject(projectId, projectUpdate({ tasks }));
     saveData();
-    openProjectModal(projectId);
+
+    if (document.getElementById('projectModal')?.classList.contains('active')) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalState(projectId, modalState);
+    } else {
+        render();
+    }
+
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
 }
 
 function reorderProjects(oldIndex, newIndex) {
@@ -2613,8 +2629,7 @@ function setupTaskDragAndDrop(projectId) {
 
         draggableItem.classList.add('dragging');
 
-        // lock page scroll while a finger/pointer is down
-        document.body.style.overflow  = 'hidden';
+        // Prevent text selection while dragging without hiding the page scrollbar.
         document.body.style.userSelect = 'none';
         document.body.style.touchAction = 'none';
 
@@ -2734,7 +2749,6 @@ function setupTaskDragAndDrop(projectId) {
         cachedItems     = [];
         draggableItem   = null;
         clearCategoryDropTarget();
-        document.body.style.overflow    = '';
         document.body.style.userSelect  = '';
         document.body.style.touchAction = '';
         document.removeEventListener('mousemove', onMove);
@@ -3296,9 +3310,10 @@ function getProjectModalDescription(project) {
 }
 
 function formatLeaderboardScore(entry, isCurrent = false) {
-    const raw = isCurrent ? (state.getStats()?.completedTasks || 0) : Number(entry?.completedTasks || 0);
-    if (raw >= 1000) return `${(raw / 1000).toFixed(raw >= 10000 ? 0 : 1)}k`;
-    return String(raw);
+    const percentage = isCurrent
+        ? calculateTotalCompletion()
+        : Math.round(Number(entry?.totalCompletionPercentage || 0));
+    return `${Number.isFinite(percentage) ? percentage : 0}%`;
 }
 
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
@@ -5056,7 +5071,11 @@ async function inviteCollaborator(projectId) {
 
     const email = emailEl.value.trim();
     const role  = roleEl.value;
-    if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+    if (errEl) {
+        errEl.textContent = '';
+        errEl.classList.add('hidden');
+        errEl.classList.remove('is-success');
+    }
 
     if (!email) {
         if (errEl) { errEl.textContent = 'Please enter an email address.'; errEl.classList.remove('hidden'); }
@@ -5075,9 +5094,20 @@ async function inviteCollaborator(projectId) {
                 __syncedLastModified: updated.lastModified || new Date().toISOString()
             }, { skipTouch: true }));
             emailEl.value = '';
+            const pendingMessage = updated.pendingInvitationMessage || '';
             openProjectModal(projectId);
             // Re-open on Members tab
-            setTimeout(() => switchModalTab(projectId, 'members'), 50);
+            setTimeout(() => {
+                switchModalTab(projectId, 'members');
+                if (pendingMessage) {
+                    const freshErrEl = document.getElementById(`invite-error-${projectId}`);
+                    if (freshErrEl) {
+                        freshErrEl.textContent = pendingMessage;
+                        freshErrEl.classList.remove('hidden');
+                        freshErrEl.classList.add('is-success');
+                    }
+                }
+            }, 50);
         }
     } catch (err) {
         if (errEl) { errEl.textContent = err.message; errEl.classList.remove('hidden'); }
