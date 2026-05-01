@@ -4296,3 +4296,83 @@ body[data-theme^="console"] .task-item.dragging {
         color: inherit !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: project notes icon size, standard note indicators,
+   single-icon due dates, and one-click modal exit after task drag
+   ============================================================================ */
+
+.project-card-notes-bar,
+body[data-theme^="console"] .project-card-notes-bar {
+    min-height: 2.8rem !important;
+}
+
+.project-card-notes-button,
+body[data-theme^="console"] .project-card-notes-button {
+    width: 2.8rem !important;
+    height: 2.8rem !important;
+}
+
+.project-card-notes-button .icon,
+body[data-theme^="console"] .project-card-notes-button .icon {
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+.project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="console"] .project-card-notes-button.task-note-button.has-note::after,
+.modal-tab--notes.has-note::after,
+.project-notes-tab.has-note::after,
+body[data-theme^="console"] .modal-tab--notes.has-note::after,
+body[data-theme^="console"] .project-notes-tab.has-note::after {
+    width: 7px !important;
+    height: 7px !important;
+    top: 5px !important;
+    right: 5px !important;
+}
+
+.task-due-date-icon {
+    display: none !important;
+}
+
+.task-due-date-control,
+body[data-theme^="console"] .task-due-date-control {
+    gap: 0 !important;
+    min-width: 2.1rem !important;
+}
+
+.task-due-date-control:not(.has-due-date),
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) {
+    width: 2.1rem !important;
+    padding-inline: 0.35rem !important;
+}
+
+.task-due-date-control:not(.has-due-date) .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control:not(.has-due-date) .task-due-date-input {
+    width: 1.35rem !important;
+    color: transparent !important;
+}
+
+.task-due-date-input::-webkit-calendar-picker-indicator {
+    opacity: 0.9 !important;
+    margin: 0 !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-card-notes-bar,
+    body[data-theme^="console"] .project-card-notes-bar {
+        min-height: 2.8rem !important;
+    }
+
+    .project-card-notes-button,
+    body[data-theme^="console"] .project-card-notes-button {
+        width: 2.8rem !important;
+        height: 2.8rem !important;
+    }
+
+    .project-card-notes-button .icon,
+    body[data-theme^="console"] .project-card-notes-button .icon {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+}

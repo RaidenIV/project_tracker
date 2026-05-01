@@ -2881,14 +2881,19 @@ function setupTaskDragAndDrop(projectId) {
     let dragStartScrollPosition = 0;
 
     // ── helpers ──
-    function suppressNextTaskClick(event) {
-        if (!suppressClickAfterDrag) return;
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation?.();
-        suppressClickAfterDrag = false;
-        document.removeEventListener('click', suppressNextTaskClick, true);
-    }
+function suppressNextTaskClick(event) {
+    if (!suppressClickAfterDrag) return;
+    suppressClickAfterDrag = false;
+    document.removeEventListener('click', suppressNextTaskClick, true);
+
+    // Only suppress the synthetic click that follows a task drag inside the task list.
+    // Outside/backdrop clicks should still close the project modal with one click.
+    if (!taskList.contains(event.target)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+}
     function getPoint(e) {
         const touch = e.touches?.[0] || e.changedTouches?.[0];
         return {
@@ -3889,9 +3894,6 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                        title="${escapeHtml(dueDateLabel)}"
                        onclick="event.stopPropagation();"
                        onpointerdown="event.stopPropagation();">
-                    <svg class="task-due-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
-                    </svg>
                     <input class="task-due-date-input"
                            id="modal-task-due-${normalizedTask.id}"
                            type="date"
