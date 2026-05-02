@@ -1793,7 +1793,6 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
     const finalId = finalProject?.id || tempId;
     setTimeout(() => {
         openProjectModal(finalId);
-        setTimeout(() => editModalTitle(finalId), 100);
     }, 150);
 }
 

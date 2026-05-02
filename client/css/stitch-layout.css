@@ -7523,3 +7523,66 @@ body[data-theme^="glass"] #projectModal .task-category-tabs {
     background-color: transparent !important;
     background-image: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: finalized new project modal, glass drag, and sticky task tabs
+   ============================================================================ */
+body[data-theme^="glass"] .project-card[data-project-can-reorder="true"] {
+    cursor: grab !important;
+    touch-action: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+body[data-theme^="glass"] .project-card[data-project-can-reorder="true"]:active,
+body[data-theme^="glass"] .project-card.project-card--long-press-ready,
+body[data-theme^="glass"] .project-card.dragging {
+    cursor: grabbing !important;
+}
+
+body[data-theme^="glass"] .project-grid.is-reordering .project-card:not(.dragging) {
+    transform: translate3d(var(--slide-x), var(--slide-y), 0) !important;
+    transition: transform 320ms cubic-bezier(.2,.8,.2,1) !important;
+}
+
+body[data-theme^="glass"] .project-grid.is-reordering .project-card:not(.dragging):hover {
+    transform: translate3d(var(--slide-x), var(--slide-y), 0) !important;
+}
+
+body[data-theme^="glass"] .project-grid.is-reordering .project-card.dragging {
+    transition: none !important;
+    opacity: 0.94 !important;
+    z-index: 1000 !important;
+    pointer-events: none !important;
+    box-shadow: var(--card-shadow, 0 24px 60px rgba(0, 0, 0, 0.28)) !important;
+}
+
+body[data-theme^="glass"] #projectModal .modal-tasks-card {
+    overflow: visible !important;
+}
+
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 60 !important;
+    margin: 0 !important;
+    padding: 0.65rem 0.75rem 0.5rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.14)) !important;
+    border-radius: 1.15rem 1.15rem 0 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+}
+
+body[data-theme="glass-light"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme="glass-light"] #projectModal .modal-tasks-card > .task-category-controls {
+    background: var(--panel, rgba(255, 255, 255, 0.72)) !important;
+    background-color: var(--panel, rgba(255, 255, 255, 0.72)) !important;
+}
+
