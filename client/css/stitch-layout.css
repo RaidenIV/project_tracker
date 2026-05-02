@@ -6754,3 +6754,35 @@ body[data-theme^="console"] .control-panel .save-status--inline.save-status--err
 body[data-theme^="console"] .ui-options-mode-toggle-row.ui-options-mode-toggle-row--relocated {
     display: flex !important;
 }
+
+/* ============================================================================
+   Targeted patch: fixed project-note card position and neutral auth buttons
+   ============================================================================ */
+.project-preview-list,
+body[data-theme^="console"] .project-preview-list {
+    min-height: calc((3rem * 2) + 0.75rem) !important;
+    align-content: start !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-preview-list,
+    body[data-theme^="console"] .project-preview-list {
+        min-height: calc((1.58rem * 2) + 0.34rem) !important;
+    }
+}
+
+.auth-submit,
+body[data-theme^="console"] .auth-submit {
+    background: var(--accent, currentColor) !important;
+    color: var(--text-invert, #0b0b0c) !important;
+    border-color: transparent !important;
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-submit:hover {
+    background: var(--accent-2, var(--accent, currentColor)) !important;
+    color: var(--text-invert, #0b0b0c) !important;
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--accent, currentColor) 24%, transparent) !important;
+}

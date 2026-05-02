@@ -743,6 +743,11 @@ function syncThemeBranding() {
     if (topAppLogo) {
         topAppLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
     }
+
+    const authLogo = document.querySelector('.auth-logo-img');
+    if (authLogo) {
+        authLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
 }
 
 function loadSavedViewsFromStorage() {
