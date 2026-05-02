@@ -288,6 +288,7 @@
                                         </button>
                                         <button class="sidebar-action-button" id="undoButton" type="button">Undo</button>
                                         <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">Keyboard Shortcuts</button>
+                                        <button class="sidebar-action-button" id="sidebarHowToGuideBtn" type="button">How To Guide</button>
                                     </div>
                                 </div>
                                 <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button">Sign Out</button>
@@ -379,7 +380,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Console UI is currently locked as the only available interface.</p>
+                        <p class="account-modal-subtitle">Console UI is currently the only interface; use Appearance to switch light or dark.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,6 +395,17 @@
                     <button class="theme-card is-active" type="button" data-theme-family-option="console">
                         <span class="theme-card-title">Console</span>
                         <span class="theme-card-copy">Console is the only active UI option for now.</span>
+                    </button>
+                </div>
+
+                <div class="ui-options-section-label">Appearance</div>
+                <div class="ui-options-mode-toggle-row" id="uiOptionsModeToggleRow">
+                    <button class="color-mode-toggle is-dark" id="uiColorModeToggleBtn" type="button" aria-pressed="true" aria-label="Current mode: Dark Mode. Switch to light mode.">
+                        <span class="color-mode-toggle-track">
+                            <span class="color-mode-toggle-option color-mode-toggle-option--light">Light</span>
+                            <span class="color-mode-toggle-option color-mode-toggle-option--dark">Dark</span>
+                            <span class="color-mode-toggle-thumb" aria-hidden="true"></span>
+                        </span>
                     </button>
                 </div>
 
@@ -454,6 +466,43 @@
                     <div class="shortcut-line"><kbd>Z</kbd> Undo</div>
                     <div class="shortcut-line"><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Command Palette</div>
                     <div class="shortcut-line"><kbd>?</kbd> Show Help</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How To Guide Modal -->
+    <div class="modal-overlay" id="howToGuideModal">
+        <div class="modal-content how-to-guide-modal-content">
+            <div class="account-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title">How To Guide</h2>
+                        <p class="account-modal-subtitle">A simple walkthrough of how the app works.</p>
+                    </div>
+                    <button class="modal-close" type="button" id="closeHowToGuideModalBtn">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="how-to-guide-list">
+                    <div class="how-to-guide-item">
+                        <h3>Create projects</h3>
+                        <p>Use New Project to add a project name and description, then create the project card.</p>
+                    </div>
+                    <div class="how-to-guide-item">
+                        <h3>Manage the work</h3>
+                        <p>Open a project card to add tasks, paste task lists, write notes, set priority, add tags, and invite collaborators.</p>
+                    </div>
+                    <div class="how-to-guide-item">
+                        <h3>Organize your view</h3>
+                        <p>Use Active, Shared, and Completed to switch sections. Search and Sort help narrow down the project cards.</p>
+                    </div>
+                    <div class="how-to-guide-item">
+                        <h3>Save and recover</h3>
+                        <p>Changes save automatically when the status says All changes saved. Use More... for archived projects, undo, shortcuts, and this guide.</p>
+                    </div>
                 </div>
             </div>
         </div>

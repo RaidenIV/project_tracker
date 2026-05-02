@@ -371,7 +371,8 @@ const LIGHT_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea
 const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/f173dc58-2856-4e84-b647-8cf46ca113ad/phonto-Photoroom.png?format=1000w';
 
 const THEME_OPTIONS = {
-    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' }
+    'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' },
+    'console-light': { label: 'Console Light', family: 'console', mode: 'light' }
 };
 
 const THEME_FAMILY_OPTIONS = {
@@ -407,7 +408,7 @@ const LEGACY_THEME_MAP = {
     'blueprint-dark': 'console-dark',
     'glass-light': 'console-dark',
     'glass-dark': 'console-dark',
-    'console-light': 'console-dark'
+    'console-light': 'console-light'
 };
 
 const accountState = {
@@ -618,6 +619,12 @@ function applyAccentColor(color, persist = true) {
         '--accent-rgb': `${r}, ${g}, ${b}`,
         '--accent-glow': accentGlow,
         '--accent-glow-strong': accentGlowStrong,
+        '--accent-2': accent,
+        '--accent-3': accent,
+        '--accent-ring': `rgba(${r}, ${g}, ${b}, 0.38)`,
+        '--selection-bg': `rgba(${r}, ${g}, ${b}, 0.28)`,
+        '--progress': accent,
+        '--focus-ring': `0 0 0 3px rgba(${r}, ${g}, ${b}, 0.24)`,
         '--primary': accent,
         '--primary-color': accent,
         '--primary-light': accent,
@@ -662,7 +669,8 @@ function getThemeLabel(themeName) {
 }
 
 function buildThemeName(themeFamily, colorMode) {
-    return 'console-dark';
+    const mode = colorMode === 'light' ? 'light' : 'dark';
+    return `console-${mode}`;
 }
 
 function getColorModeLabel(colorMode) {
@@ -705,19 +713,19 @@ function moveColorModeToggleToSidebarHeader() {
 }
 
 function syncColorModeToggle() {
-    const toggle = document.getElementById('colorModeToggleBtn');
-    if (!toggle) return;
     const meta = getThemeMeta(uiState.theme);
-    const isConsole = meta.family === 'console';
     const isDark = meta.mode === 'dark';
-    toggle.classList.toggle('is-dark', isDark);
-    toggle.hidden = isConsole;
-    toggle.setAttribute('aria-hidden', String(isConsole));
-    toggle.setAttribute('aria-pressed', String(isDark));
-    toggle.setAttribute('title', isConsole ? 'Console uses the fixed Stitch dark mode' : `Switch to ${isDark ? 'light' : 'dark'} mode`);
-    toggle.setAttribute('aria-label', isConsole ? 'Console uses the fixed Stitch dark mode' : `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${isDark ? 'light' : 'dark'} mode.`);
+    const nextModeLabel = isDark ? 'light' : 'dark';
+    document.querySelectorAll('#colorModeToggleBtn, #uiColorModeToggleBtn').forEach(toggle => {
+        toggle.classList.toggle('is-dark', isDark);
+        toggle.hidden = false;
+        toggle.setAttribute('aria-hidden', 'false');
+        toggle.setAttribute('aria-pressed', String(isDark));
+        toggle.setAttribute('title', `Switch to ${nextModeLabel} mode`);
+        toggle.setAttribute('aria-label', `Current mode: ${getColorModeLabel(meta.mode)}. Switch to ${nextModeLabel} mode.`);
+    });
     const label = document.querySelector('.sidebar-theme-toggle-label');
-    if (label) label.textContent = isConsole ? '' : (isDark ? 'Dark' : 'Light');
+    if (label) label.textContent = isDark ? 'Dark' : 'Light';
 }
 
 function syncThemeBranding() {
@@ -803,15 +811,14 @@ function applyTheme(themeName, persist = true) {
     const status = document.getElementById('uiOptionsStatus');
     if (status) {
         const meta = getThemeMeta(uiState.theme);
-        status.textContent = meta.family === 'console'
-            ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
-            : `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
     }
     renderThemeOptions();
 }
 
 function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
-    applyTheme('console-dark', persist);
+    const currentMode = getThemeMeta(uiState.theme).mode || 'dark';
+    applyTheme(buildThemeName('console', preferredMode || currentMode), persist);
 }
 
 function renderThemeOptions() {
@@ -849,9 +856,8 @@ function openUiOptionsModal() {
     renderThemeOptions();
     renderAccentColorOptions();
     const meta = getThemeMeta(uiState.theme);
-    document.getElementById('uiOptionsStatus').textContent = meta.family === 'console'
-        ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
-        : `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    syncColorModeToggle();
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -5671,6 +5677,15 @@ function closeCommandPalette() {
     document.getElementById('commandPaletteModal')?.classList.remove('active');
 }
 
+function openHowToGuideModal() {
+    document.getElementById('howToGuideModal')?.classList.add('active');
+}
+
+function closeHowToGuideModal() {
+    document.getElementById('howToGuideModal')?.classList.remove('active');
+}
+
+
 // ============================================================================
 // UI RENDERING
 // ============================================================================
@@ -6145,6 +6160,7 @@ function initializeEventHandlers() {
     document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
     document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
     document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
+    document.getElementById('sidebarHowToGuideBtn')?.addEventListener('click', openHowToGuideModal);
     document.getElementById('sidebarSignOutBtn')?.addEventListener('click', logout);
     document.getElementById('activeProjectsCard')?.addEventListener('click', switchToActiveView);
     document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
@@ -6182,6 +6198,11 @@ function initializeEventHandlers() {
     });
     document.getElementById('closeShortcutsModalBtn')?.addEventListener('click', closeShortcutsModal);
 
+    document.getElementById('howToGuideModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'howToGuideModal') closeHowToGuideModal();
+    });
+    document.getElementById('closeHowToGuideModalBtn')?.addEventListener('click', closeHowToGuideModal);
+
     document.getElementById('archivedProjectsModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'archivedProjectsModal') closeArchivedProjectsModal();
     });
@@ -6206,12 +6227,13 @@ function initializeEventHandlers() {
     document.querySelectorAll('[data-theme-family-option]').forEach(button => {
         button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
     });
-    document.getElementById('colorModeToggleBtn')?.addEventListener('click', () => {
+    const toggleColorMode = () => {
         const meta = getThemeMeta(uiState.theme);
-        if (meta.family === 'console') return;
         const nextMode = meta.mode === 'dark' ? 'light' : 'dark';
         applyTheme(buildThemeName(meta.family, nextMode));
-    });
+    };
+    document.getElementById('colorModeToggleBtn')?.addEventListener('click', toggleColorMode);
+    document.getElementById('uiColorModeToggleBtn')?.addEventListener('click', toggleColorMode);
     document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
         uiState.commandQuery = e.target.value || '';
         uiState.commandActiveIndex = 0;

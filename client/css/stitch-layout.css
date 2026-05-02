@@ -6326,3 +6326,187 @@ body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count
         -webkit-overflow-scrolling: touch !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: More guide, UI appearance toggle, accent-aware focus states
+   ============================================================================ */
+.how-to-guide-modal-content {
+    width: min(42rem, 92vw) !important;
+    max-width: min(42rem, 92vw) !important;
+}
+
+.how-to-guide-list {
+    display: grid !important;
+    gap: 0.8rem !important;
+    margin-top: 1rem !important;
+}
+
+.how-to-guide-item {
+    padding: 0.95rem 1rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    border-radius: 0.9rem !important;
+    background: var(--surface, var(--panel, rgba(255, 255, 255, 0.08))) !important;
+    color: var(--text, currentColor) !important;
+}
+
+.how-to-guide-item h3 {
+    margin: 0 0 0.35rem !important;
+    color: var(--heading, currentColor) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.25 !important;
+}
+
+.how-to-guide-item p {
+    margin: 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+}
+
+.ui-options-mode-toggle-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    margin: 0.65rem 0 1.2rem !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle,
+.ui-options-mode-toggle-row .color-mode-toggle {
+    display: inline-flex !important;
+    position: relative !important;
+    width: 102px !important;
+    height: 36px !important;
+    min-width: 102px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    color: var(--heading, currentColor) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-track,
+.ui-options-mode-toggle-row .color-mode-toggle-track {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 12px !important;
+    border-radius: inherit !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-option,
+.ui-options-mode-toggle-row .color-mode-toggle-option {
+    position: static !important;
+    z-index: 2 !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    clip: auto !important;
+    overflow: visible !important;
+    border: 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.64rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-option--light,
+.ui-options-mode-toggle-row .color-mode-toggle-option--light {
+    text-align: left !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-option--dark,
+.ui-options-mode-toggle-row .color-mode-toggle-option--dark {
+    text-align: right !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-thumb,
+.ui-options-mode-toggle-row .color-mode-toggle-thumb {
+    position: absolute !important;
+    top: 4px !important;
+    left: 4px !important;
+    width: 28px !important;
+    height: 28px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--accent, currentColor) !important;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--accent, currentColor) 24%, transparent) !important;
+    transform: translateX(0) !important;
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 1 !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb,
+.ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb {
+    transform: translateX(66px) !important;
+}
+
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-option--dark,
+body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light,
+.ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-option--dark,
+.ui-options-mode-toggle-row .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light {
+    color: var(--panel, var(--surface, #fff)) !important;
+}
+
+body[data-theme^="console"] .empty-state {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 30%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 4%, var(--surface, transparent)) !important;
+}
+
+body[data-theme^="console"] .paste-box:focus,
+body[data-theme^="console"] #projectModal .paste-box:focus,
+body[data-theme^="console"] .task-input:focus,
+body[data-theme^="console"] .task-input--textarea:focus,
+body[data-theme^="console"] textarea[id^="modal-task-input-"]:focus {
+    outline: none !important;
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+body[data-theme^="console"] .account-action-btn:not(.account-action-btn--secondary) {
+    color: var(--panel, var(--surface, #fff)) !important;
+}
+
+.panel-edge-toggle {
+    box-sizing: border-box !important;
+    will-change: left !important;
+}
+
+.panel-edge-toggle:hover,
+.panel-edge-toggle:focus-visible {
+    transform: translate(-50%, -50%) !important;
+}
+
+body.control-panel-is-collapsed .panel-edge-toggle:hover,
+body.control-panel-is-collapsed .panel-edge-toggle:focus-visible {
+    transform: translate(-50%, -50%) !important;
+}
+
+@media (min-width: 981px) and (max-width: 1500px) {
+    .panel-edge-toggle,
+    .panel-edge-toggle:hover,
+    .panel-edge-toggle:focus-visible {
+        top: 50vh !important;
+        left: 20vw !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle:hover,
+    body.control-panel-is-collapsed .panel-edge-toggle:focus-visible {
+        left: 5rem !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
