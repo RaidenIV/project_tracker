@@ -755,19 +755,19 @@ body[data-theme^="console"] .top-app-bar {
 }
 
 body[data-theme^="console"] .filter-chip {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    background: var(--panel) !important;
     border-color: var(--line) !important;
     color: var(--text) !important;
 }
 
 body[data-theme^="console"] .filter-chip:hover {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    background: var(--panel) !important;
     border-color: color-mix(in srgb, var(--accent) 62%, var(--line)) !important;
     color: var(--accent) !important;
 }
 
 body[data-theme^="console"] .filter-chip.is-active {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white 4%), var(--panel)) !important;
+    background: var(--panel) !important;
     color: var(--accent) !important;
     border-color: var(--accent) !important;
     box-shadow: none !important;
@@ -1089,7 +1089,7 @@ body.control-panel-is-collapsed .project-grid {
 
 .task-note-button.has-note {
     color: var(--accent, currentColor) !important;
-    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+    background: var(--accent-glow) !important;
 }
 
 .task-note-button.has-note::after {
@@ -1330,7 +1330,7 @@ body.control-panel-is-collapsed .project-grid {
 .project-details-input:focus,
 .project-details-textarea:focus {
     border-color: var(--accent, currentColor) !important;
-    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow) !important;
 }
 
 .project-details-modal-actions {
@@ -1476,7 +1476,7 @@ body.control-panel-is-collapsed .project-grid {
 }
 
 .modal-project-description-input:focus {
-    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow) !important;
 }
 
 .modal-project-description-input[readonly] {
@@ -1671,9 +1671,9 @@ body[data-theme^="console"] .control-panel .panel-user-pill {
     min-width: 0 !important;
     min-height: 2.35rem !important;
     padding: 0.28rem 0.78rem 0.28rem 0.34rem !important;
-    border: 1px solid color-mix(in srgb, var(--accent, #3b82f6) 32%, var(--line, rgba(148, 163, 184, 0.32))) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line, rgba(148, 163, 184, 0.32))) !important;
     border-radius: 999px !important;
-    background: color-mix(in srgb, var(--accent, #3b82f6) 9%, var(--surface, rgba(255, 255, 255, 0.78))) !important;
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface, rgba(255, 255, 255, 0.78))) !important;
     color: var(--text, inherit) !important;
     box-shadow: 0 8px 20px color-mix(in srgb, #000 8%, transparent) !important;
     backdrop-filter: blur(12px) saturate(130%) !important;
@@ -1690,10 +1690,10 @@ body[data-theme^="console"] .control-panel .panel-user-pill {
 body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip:hover,
 body[data-theme^="console"] .control-panel .panel-user-pill.panel-account-chip:focus-visible {
     border-color: var(--accent, currentColor) !important;
-    background: color-mix(in srgb, var(--accent, #3b82f6) 15%, var(--surface, rgba(255, 255, 255, 0.82))) !important;
+    background: color-mix(in srgb, var(--accent) 15%, var(--surface, rgba(255, 255, 255, 0.82))) !important;
     box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 35%, transparent),
-        0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent) !important;
+        0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent) 24%, transparent) !important;
     transform: translateY(-1px) !important;
     outline: none !important;
 }
@@ -1874,9 +1874,9 @@ body[data-theme^="console"] .control-panel .panel-avatar-button .panel-avatar {
 .control-panel .panel-avatar-button:focus-visible .panel-avatar,
 body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
 body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar {
-    outline: 2px solid color-mix(in srgb, var(--accent, #3b82f6) 72%, transparent) !important;
+    outline: 2px solid color-mix(in srgb, var(--accent) 72%, transparent) !important;
     outline-offset: 3px !important;
-    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 42%, transparent) !important;
     transform: translateY(-1px) !important;
 }
 
@@ -1992,11 +1992,11 @@ body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
 body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
 body[data-theme^="console"] .control-panel .panel-user-pill:hover,
 body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible {
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
-    background: color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+    background: color-mix(in srgb, var(--accent) 10%, transparent) !important;
     box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent),
-        0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 22%, transparent) !important;
+        0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent) 22%, transparent) !important;
     outline: none !important;
     transform: none !important;
 }
@@ -2026,9 +2026,9 @@ body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-ava
 body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
 body[data-theme^="console"] .control-panel .panel-user-pill:hover .panel-avatar,
 body[data-theme^="console"] .control-panel .panel-user-pill:focus-visible .panel-avatar {
-    outline: 2px solid color-mix(in srgb, var(--accent, #3b82f6) 72%, transparent) !important;
+    outline: 2px solid color-mix(in srgb, var(--accent) 72%, transparent) !important;
     outline-offset: 3px !important;
-    box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #3b82f6) 42%, transparent) !important;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 42%, transparent) !important;
     transform: none !important;
 }
 
@@ -2621,7 +2621,7 @@ body[data-theme^="blueprint"] .project-preview-priority .task-tag-flag {
     padding: 0.28rem 0.55rem !important;
     border: 1px solid var(--accent, currentColor) !important;
     background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
-    box-shadow: 0 0 0 3px var(--accent-glow, rgba(59, 130, 246, 0.14)) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow) !important;
     outline: none !important;
     text-align: center !important;
 }
@@ -3190,10 +3190,10 @@ body[data-theme^="blueprint"] .project-preview-check {
 
 .task-category-tab-shell.is-active,
 .task-category-tab-wrap.is-active .task-category-tab-shell {
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, var(--line, rgba(148, 163, 184, 0.28))) !important;
-    background: color-mix(in srgb, var(--accent, #3b82f6) 12%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
     color: var(--heading, #111827) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent) !important;
 }
 
 .task-category-tab,
@@ -3228,7 +3228,7 @@ body[data-theme^="blueprint"] .project-preview-check {
 
 .task-category-menu-button:hover,
 .task-category-menu-button:focus-visible {
-    background: color-mix(in srgb, var(--accent, #3b82f6) 12%, transparent) !important;
+    background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
     color: var(--heading, #111827) !important;
     outline: none !important;
 }
@@ -3254,11 +3254,11 @@ body[data-theme^="blueprint"] .project-preview-check {
 }
 
 .task-category-tab-wrap.is-drop-target .task-category-tab-shell {
-    border-color: var(--accent, #3b82f6) !important;
-    background: color-mix(in srgb, var(--accent, #3b82f6) 16%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
+    border-color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 16%, var(--panel, rgba(255, 255, 255, 0.9))) !important;
     box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent),
-        inset 0 -2px 0 var(--accent, #3b82f6) !important;
+        0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent),
+        inset 0 -2px 0 var(--accent) !important;
 }
 
 /* ========================================================================== 
@@ -3358,8 +3358,8 @@ body[data-theme^="blueprint"] .project-preview-check {
 }
 
 .project-notes-textarea:focus {
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
 }
 
 .project-notes-textarea[readonly] {
@@ -3392,7 +3392,7 @@ body[data-theme^="blueprint"] .project-preview-check {
 .project-card-notes-row:hover,
 .project-card-notes-row:focus-visible {
     color: var(--accent, currentColor) !important;
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 42%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
     outline: none !important;
 }
 
@@ -3553,8 +3553,8 @@ body[data-theme^="blueprint"] .project-preview-check {
 .project-notes-tab:hover,
 .project-notes-tab:focus-visible {
     color: var(--heading, currentColor) !important;
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 52%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
-    background: color-mix(in srgb, var(--accent, #3b82f6) 10%, var(--panel, rgba(255,255,255,0.08))) !important;
+    border-color: color-mix(in srgb, var(--accent) 52%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    background: color-mix(in srgb, var(--accent) 10%, var(--panel, rgba(255,255,255,0.08))) !important;
     outline: none !important;
 }
 
@@ -3602,8 +3602,8 @@ body[data-theme^="blueprint"] .project-preview-check {
 
 .project-notes-title-input:focus,
 .project-notes-textarea:focus {
-    border-color: color-mix(in srgb, var(--accent, #3b82f6) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #3b82f6) 18%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 68%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
 }
 
 .project-notes-delete-tab {
@@ -3714,7 +3714,7 @@ body.is-task-dragging {
 
 .task-drag-handle:hover,
 .task-drag-handle:focus-visible {
-    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+    background: var(--accent-glow) !important;
     color: var(--accent, currentColor) !important;
     outline: none !important;
 }
@@ -4156,12 +4156,7 @@ body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .
     z-index: 10070 !important;
     padding: 0.35rem 0 0.25rem !important;
     margin-bottom: 0.75rem !important;
-    background: linear-gradient(
-        to bottom,
-        var(--panel, rgba(18, 18, 24, 0.96)) 0%,
-        var(--panel, rgba(18, 18, 24, 0.96)) 84%,
-        transparent 100%
-    ) !important;
+    background: var(--panel, rgba(18, 18, 24, 0.96)) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
 }
@@ -4206,12 +4201,7 @@ body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .
     margin-left: calc(var(--modal-padding, 32px) * -1) !important;
     margin-right: calc((var(--modal-padding, 32px) - 4px + var(--modal-scrollbar-width, 10px) + var(--modal-scrollbar-gap, 10px)) * -1) !important;
     padding: 0.55rem var(--modal-padding, 32px) 0.35rem !important;
-    background: linear-gradient(
-        to bottom,
-        var(--panel, rgba(18, 18, 24, 0.98)) 0%,
-        var(--panel, rgba(18, 18, 24, 0.98)) 88%,
-        transparent 100%
-    ) !important;
+    background: var(--panel, rgba(18, 18, 24, 0.98)) !important;
 }
 
 .task-item.dragging,
@@ -4247,7 +4237,7 @@ body[data-theme^="console"] .task-item.dragging {
 
 .task-due-date-control.has-due-date {
     color: var(--accent, currentColor) !important;
-    background: var(--accent-glow, rgba(59, 130, 246, 0.12)) !important;
+    background: var(--accent-glow) !important;
 }
 
 .task-due-date-icon {
@@ -4394,7 +4384,7 @@ body[data-theme^="console"] .task-due-date-control:not(.has-due-date) .task-due-
 .task-category-menu-option--bulk,
 .task-priority-option--bulk {
     font-weight: 700 !important;
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
 }
 
 .task-category-menu-option:disabled,
@@ -4452,7 +4442,7 @@ body[data-theme^="console"] #projectModal .modal-content#modalContent {
     padding: 0.55rem !important;
     border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
     border-radius: 0.85rem !important;
-    background: color-mix(in srgb, var(--panel, #101820) 94%, var(--accent, #ff6a00) 6%) !important;
+    background: color-mix(in srgb, var(--panel, #101820) 94%, var(--accent) 6%) !important;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
 }
 
@@ -4536,8 +4526,8 @@ body[data-theme^="console"] #projectModal .modal-content#modalContent {
 .task-bulk-action-button:focus-visible,
 .task-bulk-date-control:hover,
 .task-bulk-date-control:focus-within {
-    border-color: color-mix(in srgb, var(--accent, #ff6a00) 62%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #ff6a00) 14%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent) !important;
 }
 
 .task-bulk-select {
@@ -4552,7 +4542,7 @@ body[data-theme^="console"] #projectModal .modal-content#modalContent {
     border: 1.5px solid var(--muted, rgba(148, 163, 184, 0.72)) !important;
     border-radius: 999px !important;
     background: transparent !important;
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
     cursor: pointer !important;
     box-shadow: none !important;
 }
@@ -4561,7 +4551,7 @@ body[data-theme^="console"] #projectModal .modal-content#modalContent {
     position: absolute !important;
     inset: 3px !important;
     border-radius: 999px !important;
-    background: var(--accent, #ff6a00) !important;
+    background: var(--accent) !important;
     transform: scale(0) !important;
     transition: transform 140ms ease !important;
 }
@@ -4569,7 +4559,7 @@ body[data-theme^="console"] #projectModal .modal-content#modalContent {
 .task-bulk-select.is-selected,
 .task-bulk-select:hover,
 .task-bulk-select:focus-visible {
-    border-color: var(--accent, #ff6a00) !important;
+    border-color: var(--accent) !important;
     outline: none !important;
 }
 
@@ -4579,8 +4569,8 @@ body[data-theme^="console"] #projectModal .modal-content#modalContent {
 
 .task-item.selected,
 body[data-theme^="console"] .task-item.selected {
-    border-color: color-mix(in srgb, var(--accent, #ff6a00) 54%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
-    background: color-mix(in srgb, var(--inset, rgba(0, 0, 0, 0.18)) 82%, var(--accent, #ff6a00) 18%) !important;
+    border-color: color-mix(in srgb, var(--accent) 54%, var(--line-soft, rgba(148, 163, 184, 0.18))) !important;
+    background: color-mix(in srgb, var(--inset, rgba(0, 0, 0, 0.18)) 82%, var(--accent) 18%) !important;
 }
 
 .task-due-date-control.has-due-date,
@@ -4597,8 +4587,8 @@ body[data-theme^="console"] .task-due-date-control.has-due-date {
 .task-due-date-control.has-due-date:focus-within,
 body[data-theme^="console"] .task-due-date-control.has-due-date:hover,
 body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within {
-    color: var(--accent, #ff6a00) !important;
-    background: color-mix(in srgb, var(--accent, #ff6a00) 8%, transparent) !important;
+    color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
     border-color: transparent !important;
 }
 
@@ -4666,8 +4656,8 @@ body[data-theme^="console"] .task-bulk-select span {
 body[data-theme^="console"] .task-due-date-control.has-due-date,
 body[data-theme^="console"] .task-due-date-control.has-due-date:hover,
 body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within {
-    color: var(--accent, #ff6a00) !important;
-    background: color-mix(in srgb, var(--accent, #ff6a00) 8%, transparent) !important;
+    color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
     border-color: transparent !important;
     cursor: pointer !important;
 }
@@ -4678,7 +4668,7 @@ body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within {
 body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-input,
 body[data-theme^="console"] .task-due-date-control.has-due-date:hover .task-due-date-input,
 body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within .task-due-date-input {
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
     cursor: pointer !important;
 }
 
@@ -4732,7 +4722,7 @@ body[data-theme^="console"] .task-select-all-box::after {
     position: absolute !important;
     inset: 3px !important;
     border-radius: 1px !important;
-    background: var(--accent, #ff6a00) !important;
+    background: var(--accent) !important;
     transform: scale(0) !important;
     transition: transform 140ms ease !important;
 }
@@ -4743,7 +4733,7 @@ body[data-theme^="console"] .task-select-all-box::after {
 body[data-theme^="console"] .task-select-all-control-inner.is-selected,
 body[data-theme^="console"] .task-select-all-control-inner:hover,
 body[data-theme^="console"] .task-select-all-control-inner:focus-within {
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
 }
 
 .task-select-all-control-inner.is-selected .task-select-all-box,
@@ -4752,7 +4742,7 @@ body[data-theme^="console"] .task-select-all-control-inner:focus-within {
 body[data-theme^="console"] .task-select-all-control-inner.is-selected .task-select-all-box,
 body[data-theme^="console"] .task-select-all-control-inner:hover .task-select-all-box,
 body[data-theme^="console"] .task-select-all-control-inner:focus-within .task-select-all-box {
-    border-color: var(--accent, #ff6a00) !important;
+    border-color: var(--accent) !important;
 }
 
 .task-select-all-control-inner.is-selected .task-select-all-box::after,
@@ -4772,7 +4762,7 @@ body[data-theme^="console"] .warning-triangle-icon {
     flex: 0 0 auto !important;
     width: 1em !important;
     height: 1em !important;
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
 }
 
 .project-card-overdue-warning,
@@ -4781,7 +4771,7 @@ body[data-theme^="console"] .project-card-overdue-warning {
     align-items: center !important;
     gap: 0.35rem !important;
     margin-top: 0.35rem !important;
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
     font-size: 0.72rem !important;
     font-weight: 900 !important;
     letter-spacing: 0.055em !important;
@@ -4801,9 +4791,9 @@ body[data-theme^="console"] .project-card-overdue-icon {
 body[data-theme^="console"] .task-due-date-control.is-overdue,
 body[data-theme^="console"] .task-due-date-control.is-overdue:hover,
 body[data-theme^="console"] .task-due-date-control.is-overdue:focus-within {
-    color: var(--accent, #ff6a00) !important;
-    background: color-mix(in srgb, var(--accent, #ff6a00) 13%, transparent) !important;
-    border-color: color-mix(in srgb, var(--accent, #ff6a00) 30%, transparent) !important;
+    color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 13%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
 }
 
 .task-due-overdue-icon,
@@ -4816,7 +4806,7 @@ body[data-theme^="console"] .task-due-overdue-icon {
 .task-due-date-control.is-overdue .task-due-date-input,
 body[data-theme^="console"] .task-due-date-control.is-overdue .task-due-date-input {
     width: 5.6rem !important;
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
 }
 
 @media (max-width: 720px) {
@@ -4904,7 +4894,7 @@ body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within .ta
 .task-due-date-control.has-due-date .task-due-date-input::selection,
 body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-input::selection {
     background: transparent !important;
-    color: var(--accent, #ff6a00) !important;
+    color: var(--accent) !important;
 }
 
 .task-bulk-select,
@@ -5074,7 +5064,7 @@ body[data-theme^="console"] .task-due-date-control:not(.has-due-date) {
 .task-due-date-control:not(.has-due-date):focus-within,
 body[data-theme^="console"] .task-due-date-control:not(.has-due-date):hover,
 body[data-theme^="console"] .task-due-date-control:not(.has-due-date):focus-within {
-    color: var(--accent, #ff8a00) !important;
+    color: var(--accent) !important;
 }
 
 .task-due-date-control:not(.has-due-date)::after,
@@ -5118,14 +5108,14 @@ body[data-theme^="console"] .accent-color-swatch span {
 
 .add-project-button,
 body[data-theme^="console"] .add-project-button {
-    background: var(--accent, #ff8a00) !important;
+    background: var(--accent) !important;
 }
 
 .task-bulk-select span,
 .task-select-all-box::after,
 body[data-theme^="console"] .task-bulk-select span,
 body[data-theme^="console"] .task-select-all-box::after {
-    background: var(--accent, #ff8a00) !important;
+    background: var(--accent) !important;
 }
 
 .accent-color-swatch,
@@ -5136,4 +5126,145 @@ body[data-theme^="console"] .accent-color-swatch {
 .accent-color-swatch span,
 body[data-theme^="console"] .accent-color-swatch span {
     background: var(--swatch-color) !important;
+}
+
+
+/* ============================================================================
+   Targeted patch: solid selected-accent surfaces and no hardcoded orange accent
+   ============================================================================ */
+.progress-bar,
+.progress-bar-container .progress-bar,
+.modal-progress .progress-bar,
+.project-card-progress .progress-bar,
+.mini-progress-track span,
+body[data-theme^="console"] .progress-bar,
+body[data-theme^="console"] .progress-bar-container .progress-bar,
+body[data-theme^="console"] .modal-progress .progress-bar,
+body[data-theme^="console"] .project-card-progress .progress-bar,
+body[data-theme^="console"] .mini-progress-track span {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.modal-done-btn,
+.project-actions .activate-button,
+.add-project-button,
+.project-notes-save-button,
+.task-note-modal-actions .modal-done-btn,
+body[data-theme^="console"] .modal-done-btn,
+body[data-theme^="console"] .project-actions .activate-button,
+body[data-theme^="console"] .add-project-button,
+body[data-theme^="console"] .project-notes-save-button,
+body[data-theme^="console"] .task-note-modal-actions .modal-done-btn {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+}
+
+.modal-done-btn:hover,
+.modal-done-btn:focus-visible,
+.project-actions .activate-button:hover,
+.project-actions .activate-button:focus-visible,
+.add-project-button:hover,
+.add-project-button:focus-visible,
+.project-notes-save-button:hover,
+.project-notes-save-button:focus-visible,
+.task-note-modal-actions .modal-done-btn:hover,
+.task-note-modal-actions .modal-done-btn:focus-visible,
+body[data-theme^="console"] .modal-done-btn:hover,
+body[data-theme^="console"] .modal-done-btn:focus-visible,
+body[data-theme^="console"] .project-actions .activate-button:hover,
+body[data-theme^="console"] .project-actions .activate-button:focus-visible,
+body[data-theme^="console"] .add-project-button:hover,
+body[data-theme^="console"] .add-project-button:focus-visible,
+body[data-theme^="console"] .project-notes-save-button:hover,
+body[data-theme^="console"] .project-notes-save-button:focus-visible,
+body[data-theme^="console"] .task-note-modal-actions .modal-done-btn:hover,
+body[data-theme^="console"] .task-note-modal-actions .modal-done-btn:focus-visible {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    filter: brightness(1.08) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+}
+
+.task-checkbox.checked,
+.task-bulk-select span,
+.task-select-all-box::after,
+.task-tag-flag,
+.task-note-button.has-note::after,
+.modal-tab--notes.has-note::after,
+.project-notes-tab.has-note::after,
+body[data-theme^="console"] .task-checkbox.checked,
+body[data-theme^="console"] .task-bulk-select span,
+body[data-theme^="console"] .task-select-all-box::after,
+body[data-theme^="console"] .task-tag-flag,
+body[data-theme^="console"] .task-note-button.has-note::after,
+body[data-theme^="console"] .modal-tab--notes.has-note::after,
+body[data-theme^="console"] .project-notes-tab.has-note::after {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+}
+
+.task-bulk-actions,
+.task-item.selected,
+.task-due-date-control.has-due-date,
+.task-due-date-control.has-due-date:hover,
+.task-due-date-control.has-due-date:focus-within,
+.task-due-date-control.is-overdue,
+.task-due-date-control.is-overdue:hover,
+.task-due-date-control.is-overdue:focus-within,
+body[data-theme^="console"] .task-bulk-actions,
+body[data-theme^="console"] .task-item.selected,
+body[data-theme^="console"] .task-due-date-control.has-due-date,
+body[data-theme^="console"] .task-due-date-control.has-due-date:hover,
+body[data-theme^="console"] .task-due-date-control.has-due-date:focus-within,
+body[data-theme^="console"] .task-due-date-control.is-overdue,
+body[data-theme^="console"] .task-due-date-control.is-overdue:hover,
+body[data-theme^="console"] .task-due-date-control.is-overdue:focus-within {
+    background-image: none !important;
+}
+
+.task-category-menu-option--bulk,
+.task-priority-option--bulk,
+.task-select-all-control-inner.is-selected,
+.task-select-all-control-inner:hover,
+.task-select-all-control-inner:focus-within,
+.warning-triangle-icon,
+.project-card-overdue-warning,
+.task-due-date-control.has-due-date,
+.task-due-date-control.has-due-date .task-due-date-input,
+.task-due-date-control.is-overdue .task-due-date-input,
+body[data-theme^="console"] .task-category-menu-option--bulk,
+body[data-theme^="console"] .task-priority-option--bulk,
+body[data-theme^="console"] .task-select-all-control-inner.is-selected,
+body[data-theme^="console"] .task-select-all-control-inner:hover,
+body[data-theme^="console"] .task-select-all-control-inner:focus-within,
+body[data-theme^="console"] .warning-triangle-icon,
+body[data-theme^="console"] .project-card-overdue-warning,
+body[data-theme^="console"] .task-due-date-control.has-due-date,
+body[data-theme^="console"] .task-due-date-control.has-due-date .task-due-date-input,
+body[data-theme^="console"] .task-due-date-control.is-overdue .task-due-date-input {
+    color: var(--accent) !important;
+}
+
+.task-bulk-select.is-selected,
+.task-bulk-select:hover,
+.task-bulk-select:focus-visible,
+.task-select-all-control-inner.is-selected .task-select-all-box,
+.task-select-all-control-inner:hover .task-select-all-box,
+.task-select-all-control-inner:focus-within .task-select-all-box,
+body[data-theme^="console"] .task-bulk-select.is-selected,
+body[data-theme^="console"] .task-bulk-select:hover,
+body[data-theme^="console"] .task-bulk-select:focus-visible,
+body[data-theme^="console"] .task-select-all-control-inner.is-selected .task-select-all-box,
+body[data-theme^="console"] .task-select-all-control-inner:hover .task-select-all-box,
+body[data-theme^="console"] .task-select-all-control-inner:focus-within .task-select-all-box {
+    border-color: var(--accent) !important;
 }
