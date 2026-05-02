@@ -5268,3 +5268,222 @@ body[data-theme^="console"] .task-select-all-control-inner:hover .task-select-al
 body[data-theme^="console"] .task-select-all-control-inner:focus-within .task-select-all-box {
     border-color: var(--accent) !important;
 }
+
+/* ============================================================================
+   Targeted patch: route remaining UI accent surfaces through selected accent
+   while preserving fixed task/project priority colors
+   ============================================================================ */
+.top-app-bar-title,
+body[data-theme^="console"] .top-app-bar-title,
+body[data-theme^="console"] .top-app-bar > .top-app-bar-title {
+    color: var(--accent) !important;
+}
+
+.filter-chip:hover,
+.filter-chip:focus-visible,
+.filter-chip.is-active,
+.project-tag-chip:hover,
+.project-tag-chip:focus-within,
+.project-tag-chip.is-editing,
+.project-tag-picker-chip:hover,
+.project-tag-picker-chip:focus-visible,
+.project-card-access,
+.side-project-role,
+.member-role-badge,
+.task-category-menu-option--bulk,
+.task-priority-option--bulk,
+body[data-theme^="console"] .filter-chip:hover,
+body[data-theme^="console"] .filter-chip:focus-visible,
+body[data-theme^="console"] .filter-chip.is-active,
+body[data-theme^="console"] .project-tag-chip:hover,
+body[data-theme^="console"] .project-tag-chip:focus-within,
+body[data-theme^="console"] .project-tag-chip.is-editing,
+body[data-theme^="console"] .project-tag-picker-chip:hover,
+body[data-theme^="console"] .project-tag-picker-chip:focus-visible,
+body[data-theme^="console"] .project-card-access,
+body[data-theme^="console"] .side-project-role,
+body[data-theme^="console"] .member-role-badge,
+body[data-theme^="console"] .task-category-menu-option--bulk,
+body[data-theme^="console"] .task-priority-option--bulk {
+    color: var(--accent) !important;
+}
+
+.filter-chip:hover,
+.filter-chip:focus-visible,
+.filter-chip.is-active,
+.project-tag-chip:hover,
+.project-tag-chip:focus-within,
+.project-tag-chip.is-editing,
+.project-tag-picker-chip:hover,
+.project-tag-picker-chip:focus-visible,
+.project-card-access,
+.side-project-role,
+.member-role-badge,
+.task-category-menu-option--bulk,
+.task-priority-option--bulk,
+#projectSortSelect:hover,
+#projectSortSelect:focus-visible,
+.task-sort-select:hover,
+.task-sort-select:focus-visible,
+body[data-theme^="console"] .filter-chip:hover,
+body[data-theme^="console"] .filter-chip:focus-visible,
+body[data-theme^="console"] .filter-chip.is-active,
+body[data-theme^="console"] .project-tag-chip:hover,
+body[data-theme^="console"] .project-tag-chip:focus-within,
+body[data-theme^="console"] .project-tag-chip.is-editing,
+body[data-theme^="console"] .project-tag-picker-chip:hover,
+body[data-theme^="console"] .project-tag-picker-chip:focus-visible,
+body[data-theme^="console"] .project-card-access,
+body[data-theme^="console"] .side-project-role,
+body[data-theme^="console"] .member-role-badge,
+body[data-theme^="console"] .task-category-menu-option--bulk,
+body[data-theme^="console"] .task-priority-option--bulk,
+body[data-theme^="console"] #projectSortSelect:hover,
+body[data-theme^="console"] #projectSortSelect:focus-visible,
+body[data-theme^="console"] .task-sort-select:hover,
+body[data-theme^="console"] .task-sort-select:focus-visible {
+    border-color: var(--accent) !important;
+}
+
+.filter-chip.is-active,
+.task-category-tab-shell.is-active,
+.task-category-tab-wrap.is-active .task-category-tab-shell,
+.task-category-tab-wrap.is-drop-target .task-category-tab-shell,
+.task-bulk-actions,
+.task-item.selected,
+body[data-theme^="console"] .filter-chip.is-active,
+body[data-theme^="console"] .task-category-tab-shell.is-active,
+body[data-theme^="console"] .task-category-tab-wrap.is-active .task-category-tab-shell,
+body[data-theme^="console"] .task-category-tab-wrap.is-drop-target .task-category-tab-shell,
+body[data-theme^="console"] .task-bulk-actions,
+body[data-theme^="console"] .task-item.selected {
+    background-image: none !important;
+}
+
+.filter-chip.is-active,
+.task-category-tab-shell.is-active,
+.task-category-tab-wrap.is-active .task-category-tab-shell,
+body[data-theme^="console"] .filter-chip.is-active,
+body[data-theme^="console"] .task-category-tab-shell.is-active,
+body[data-theme^="console"] .task-category-tab-wrap.is-active .task-category-tab-shell {
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel, transparent)) !important;
+}
+
+.task-category-tab-wrap.is-drop-target .task-category-tab-shell,
+body[data-theme^="console"] .task-category-tab-wrap.is-drop-target .task-category-tab-shell {
+    background: color-mix(in srgb, var(--accent) 16%, var(--panel, transparent)) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), inset 0 -2px 0 var(--accent) !important;
+}
+
+.paste-button,
+#pasteButton,
+body[data-theme^="console"] .paste-button,
+body[data-theme^="console"] #pasteButton {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+.paste-button:hover,
+.paste-button:focus-visible,
+#pasteButton:hover,
+#pasteButton:focus-visible,
+body[data-theme^="console"] .paste-button:hover,
+body[data-theme^="console"] .paste-button:focus-visible,
+body[data-theme^="console"] #pasteButton:hover,
+body[data-theme^="console"] #pasteButton:focus-visible {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    filter: brightness(1.08) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+}
+
+#projectSortSelect,
+.task-sort-select,
+body[data-theme^="console"] #projectSortSelect,
+body[data-theme^="console"] .task-sort-select {
+    accent-color: var(--accent) !important;
+}
+
+#projectSortSelect:hover,
+#projectSortSelect:focus-visible,
+.task-sort-select:hover,
+.task-sort-select:focus-visible,
+body[data-theme^="console"] #projectSortSelect:hover,
+body[data-theme^="console"] #projectSortSelect:focus-visible,
+body[data-theme^="console"] .task-sort-select:hover,
+body[data-theme^="console"] .task-sort-select:focus-visible {
+    color: var(--accent) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
+/* Keep priority flags independent from the user-selected accent color. */
+.task-tag-flag--high,
+.project-priority-button--high .task-tag-flag,
+.project-priority-card-button--high .task-tag-flag,
+.project-priority-indicator--high .task-tag-flag,
+.project-priority-card-indicator--high .task-tag-flag,
+body[data-theme^="console"] .task-tag-flag--high,
+body[data-theme^="console"] .project-priority-button--high .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-button--high .task-tag-flag,
+body[data-theme^="console"] .project-priority-indicator--high .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-indicator--high .task-tag-flag {
+    color: #ef4444 !important;
+    background: #ef4444 !important;
+    background-color: #ef4444 !important;
+    background-image: none !important;
+}
+
+.task-tag-flag--medium,
+.project-priority-button--medium .task-tag-flag,
+.project-priority-card-button--medium .task-tag-flag,
+.project-priority-indicator--medium .task-tag-flag,
+.project-priority-card-indicator--medium .task-tag-flag,
+body[data-theme^="console"] .task-tag-flag--medium,
+body[data-theme^="console"] .project-priority-button--medium .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-button--medium .task-tag-flag,
+body[data-theme^="console"] .project-priority-indicator--medium .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-indicator--medium .task-tag-flag {
+    color: #f97316 !important;
+    background: #f97316 !important;
+    background-color: #f97316 !important;
+    background-image: none !important;
+}
+
+.task-tag-flag--low,
+.project-priority-button--low .task-tag-flag,
+.project-priority-card-button--low .task-tag-flag,
+.project-priority-indicator--low .task-tag-flag,
+.project-priority-card-indicator--low .task-tag-flag,
+body[data-theme^="console"] .task-tag-flag--low,
+body[data-theme^="console"] .project-priority-button--low .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-button--low .task-tag-flag,
+body[data-theme^="console"] .project-priority-indicator--low .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-indicator--low .task-tag-flag {
+    color: #22c55e !important;
+    background: #22c55e !important;
+    background-color: #22c55e !important;
+    background-image: none !important;
+}
+
+.task-tag-flag--none,
+.project-priority-button--none .task-tag-flag,
+.project-priority-card-button--none .task-tag-flag,
+.project-priority-indicator--none .task-tag-flag,
+.project-priority-card-indicator--none .task-tag-flag,
+body[data-theme^="console"] .task-tag-flag--none,
+body[data-theme^="console"] .project-priority-button--none .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-button--none .task-tag-flag,
+body[data-theme^="console"] .project-priority-indicator--none .task-tag-flag,
+body[data-theme^="console"] .project-priority-card-indicator--none .task-tag-flag {
+    color: color-mix(in srgb, var(--muted, currentColor) 72%, transparent) !important;
+    background: color-mix(in srgb, var(--muted, currentColor) 72%, transparent) !important;
+    background-color: color-mix(in srgb, var(--muted, currentColor) 72%, transparent) !important;
+    background-image: none !important;
+}

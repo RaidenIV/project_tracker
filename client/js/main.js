@@ -610,10 +610,29 @@ function hexToRgb(hex) {
 function applyAccentColor(color, persist = true) {
     const accent = normalizeAccentColor(color);
     const { r, g, b } = hexToRgb(accent);
-    document.documentElement.style.setProperty('--accent', accent);
-    document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.14)`);
-    document.body?.style?.setProperty('--accent', accent);
-    document.body?.style?.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.14)`);
+    const accentGlow = `rgba(${r}, ${g}, ${b}, 0.14)`;
+    const accentGlowStrong = `rgba(${r}, ${g}, ${b}, 0.24)`;
+    const accentVariables = {
+        '--accent': accent,
+        '--accent-color': accent,
+        '--accent-rgb': `${r}, ${g}, ${b}`,
+        '--accent-glow': accentGlow,
+        '--accent-glow-strong': accentGlowStrong,
+        '--primary': accent,
+        '--primary-color': accent,
+        '--primary-light': accent,
+        '--primary-dark': accent,
+        '--primary-rgb': `${r}, ${g}, ${b}`,
+        '--primary-glow': accentGlow,
+        '--brand-accent': accent,
+        '--focus-color': accent
+    };
+    [document.documentElement, document.body].forEach(target => {
+        if (!target?.style) return;
+        Object.entries(accentVariables).forEach(([property, value]) => {
+            target.style.setProperty(property, value);
+        });
+    });
     if (persist) {
         try {
             localStorage.setItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR, accent);
