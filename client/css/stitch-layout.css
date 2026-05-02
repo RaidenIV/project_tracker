@@ -7153,3 +7153,55 @@ body[data-theme^="blueprint"] .modal-add-task-under-toggle:focus-visible {
     box-shadow: var(--neumo-inset-shadow) !important;
     outline: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism solid project progress and sign-out immunity
+   ============================================================================ */
+body[data-theme^="blueprint"] .project-card .progress-bar,
+body[data-theme^="blueprint"] .project-card-progress .progress-bar,
+body[data-theme^="blueprint"] .progress-bar-container .progress-bar,
+body[data-theme^="blueprint"] .modal-progress .progress-bar,
+body[data-theme^="blueprint"] .mini-progress-track span {
+    background: var(--accent, var(--primary, currentColor)) !important;
+    background-color: var(--accent, var(--primary, currentColor)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-progress,
+body[data-theme^="blueprint"] .project-card .progress-bar-container,
+body[data-theme^="blueprint"] .progress-bar-container {
+    background-image: none !important;
+}
+
+body[data-theme^="blueprint"] #sidebarSignOutBtn,
+body[data-theme^="blueprint"] .sidebar #sidebarSignOutBtn,
+body[data-theme^="blueprint"] .sidebar-action-button--danger {
+    color: var(--danger, #ef4444) !important;
+    border-color: color-mix(in srgb, var(--danger, #ef4444) 40%, transparent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #sidebarSignOutBtn:hover,
+body[data-theme^="blueprint"] #sidebarSignOutBtn:focus-visible,
+body[data-theme^="blueprint"] #sidebarSignOutBtn:active,
+body[data-theme^="blueprint"] .sidebar #sidebarSignOutBtn:hover,
+body[data-theme^="blueprint"] .sidebar #sidebarSignOutBtn:focus-visible,
+body[data-theme^="blueprint"] .sidebar #sidebarSignOutBtn:active,
+body[data-theme^="blueprint"] .sidebar-action-button--danger:hover,
+body[data-theme^="blueprint"] .sidebar-action-button--danger:focus-visible,
+body[data-theme^="blueprint"] .sidebar-action-button--danger:active {
+    color: var(--danger, #ef4444) !important;
+    border-color: var(--danger, #ef4444) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+    text-shadow: none !important;
+    outline: none !important;
+}
