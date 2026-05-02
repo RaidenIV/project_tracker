@@ -7023,3 +7023,133 @@ body[data-theme^="blueprint"] .leaderboard-row-score {
     white-space: nowrap !important;
 }
 
+
+/* ============================================================================
+   Targeted patch: Neumorphism chips, settings spacing, progress, priority, Add Task
+   ============================================================================ */
+body[data-theme^="blueprint"] {
+    --neumo-raised-shadow: 7px 7px 14px color-mix(in srgb, #000 22%, transparent), -7px -7px 14px color-mix(in srgb, #fff 6%, transparent);
+    --neumo-soft-shadow: 4px 4px 10px color-mix(in srgb, #000 20%, transparent), -4px -4px 10px color-mix(in srgb, #fff 5%, transparent);
+    --neumo-inset-shadow: inset 4px 4px 9px color-mix(in srgb, #000 22%, transparent), inset -4px -4px 9px color-mix(in srgb, #fff 5%, transparent);
+}
+
+body[data-theme="blueprint-light"] {
+    --neumo-raised-shadow: 7px 7px 14px rgba(160, 168, 180, 0.46), -7px -7px 14px rgba(255, 255, 255, 0.86);
+    --neumo-soft-shadow: 4px 4px 10px rgba(160, 168, 180, 0.38), -4px -4px 10px rgba(255, 255, 255, 0.82);
+    --neumo-inset-shadow: inset 4px 4px 9px rgba(160, 168, 180, 0.38), inset -4px -4px 9px rgba(255, 255, 255, 0.78);
+}
+
+body[data-theme^="blueprint"] .settings-actions,
+body[data-theme^="blueprint"] .sidebar-more-group {
+    gap: 1rem !important;
+}
+
+body[data-theme^="blueprint"] .settings-actions {
+    padding-top: 0.35rem !important;
+}
+
+body[data-theme^="blueprint"] .sidebar-more-group {
+    padding-top: 0.85rem !important;
+}
+
+body[data-theme^="blueprint"] .sidebar-action-button,
+body[data-theme^="blueprint"] .sidebar-action-button--more {
+    margin-block: 0.18rem !important;
+}
+
+body[data-theme^="blueprint"] .project-card-tag,
+body[data-theme^="blueprint"] .project-card-tag--add,
+body[data-theme^="blueprint"] .project-tag-chip,
+body[data-theme^="blueprint"] .project-tag-picker-chip,
+body[data-theme^="blueprint"] .project-tag-picker-add {
+    border-color: color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--heading, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-tag--editable:hover,
+body[data-theme^="blueprint"] .project-card-tag--editable:focus-visible,
+body[data-theme^="blueprint"] .project-card-tag--add:hover,
+body[data-theme^="blueprint"] .project-card-tag--add:focus-visible,
+body[data-theme^="blueprint"] .project-tag-chip:hover,
+body[data-theme^="blueprint"] .project-tag-chip:focus-within,
+body[data-theme^="blueprint"] .project-tag-chip.is-editing,
+body[data-theme^="blueprint"] .project-tag-picker-chip:hover,
+body[data-theme^="blueprint"] .project-tag-picker-chip:focus-visible,
+body[data-theme^="blueprint"] .project-tag-picker-add:hover,
+body[data-theme^="blueprint"] .project-tag-picker-add:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+}
+
+body[data-theme^="blueprint"] .project-tag-label,
+body[data-theme^="blueprint"] .project-tag-remove {
+    color: inherit !important;
+}
+
+body[data-theme^="blueprint"] .progress-bar,
+body[data-theme^="blueprint"] .mini-progress-track span {
+    background: var(--accent, currentColor) !important;
+    background-color: var(--accent, currentColor) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] .project-priority-button,
+body[data-theme^="blueprint"] .project-priority-card-button,
+body[data-theme^="blueprint"] .project-preview-priority {
+    border-color: color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] .project-priority-button:hover,
+body[data-theme^="blueprint"] .project-priority-button:focus-visible,
+body[data-theme^="blueprint"] .project-priority-card-button:hover,
+body[data-theme^="blueprint"] .project-priority-card-button:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+}
+
+body[data-theme^="blueprint"] .modal-add-task-top,
+body[data-theme^="blueprint"] .modal-add-task-under-toggle {
+    border-color: color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--heading, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .modal-add-task-top svg,
+body[data-theme^="blueprint"] .modal-add-task-under-toggle svg {
+    color: currentColor !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme^="blueprint"] .modal-add-task-top:hover,
+body[data-theme^="blueprint"] .modal-add-task-top:focus-visible,
+body[data-theme^="blueprint"] .modal-add-task-under-toggle:hover,
+body[data-theme^="blueprint"] .modal-add-task-under-toggle:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
