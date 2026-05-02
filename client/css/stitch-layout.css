@@ -7245,3 +7245,133 @@ body[data-theme^="glass"] .settings-actions > .sidebar-more-group.is-expanded > 
 body[data-theme^="glass"] .settings-actions > .sidebar-more-group > .sidebar-more-menu .sidebar-action-button {
     width: 100% !important;
 }
+
+/* ============================================================================
+   Targeted patch: More menu theme behavior, glass sign-out hover, fixed notes placement
+   ============================================================================ */
+body[data-theme^="console"] .sidebar-more-menu .sidebar-action-button:hover,
+body[data-theme^="console"] .sidebar-more-menu .sidebar-action-button:focus-visible {
+    color: var(--accent, currentColor) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--accent, currentColor) 42%, transparent) !important;
+}
+
+body[data-theme^="console"] .sidebar-more-menu .sidebar-action-button:hover .section-count-pill,
+body[data-theme^="console"] .sidebar-more-menu .sidebar-action-button:focus-visible .section-count-pill {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] .settings-actions > .sidebar-more-group {
+    display: grid !important;
+    gap: 0 !important;
+}
+
+body[data-theme^="blueprint"] .settings-actions > .sidebar-more-group > .sidebar-action-button--more {
+    width: 100% !important;
+}
+
+body[data-theme^="blueprint"] .settings-actions > .sidebar-more-group > .sidebar-more-menu {
+    display: grid !important;
+    gap: 0.7rem !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-0.15rem) !important;
+    transition: max-height 0.22s ease, opacity 0.18s ease, transform 0.18s ease, padding 0.18s ease !important;
+}
+
+body[data-theme^="blueprint"] .settings-actions > .sidebar-more-group.is-expanded > .sidebar-more-menu {
+    max-height: 20rem !important;
+    opacity: 1 !important;
+    padding: 0.7rem 0 0 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) !important;
+}
+
+body[data-theme^="blueprint"] .settings-actions > .sidebar-more-group > .sidebar-more-menu .sidebar-action-button {
+    width: 100% !important;
+}
+
+body[data-theme^="glass"] #sidebarSignOutBtn:hover,
+body[data-theme^="glass"] #sidebarSignOutBtn:focus-visible,
+body[data-theme^="glass"] #sidebarSignOutBtn:active,
+body[data-theme^="glass"] .sidebar-action-button--danger:hover,
+body[data-theme^="glass"] .sidebar-action-button--danger:focus-visible,
+body[data-theme^="glass"] .sidebar-action-button--danger:active {
+    color: var(--danger, #ef4444) !important;
+    border-color: var(--danger, #ef4444) !important;
+    background: color-mix(in srgb, var(--danger, #ef4444) 14%, transparent) !important;
+    background-color: color-mix(in srgb, var(--danger, #ef4444) 14%, transparent) !important;
+    background-image: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger, #ef4444) 24%, transparent),
+                0 0 22px color-mix(in srgb, var(--danger, #ef4444) 20%, transparent) !important;
+    text-shadow: none !important;
+    outline: none !important;
+}
+
+.project-preview-list,
+body[data-theme^="console"] .project-preview-list,
+body[data-theme^="glass"] .project-preview-list,
+body[data-theme^="blueprint"] .project-preview-list {
+    height: calc((var(--project-preview-row-height, 3rem) * 2) + var(--project-preview-row-gap, 0.75rem)) !important;
+    min-height: calc((var(--project-preview-row-height, 3rem) * 2) + var(--project-preview-row-gap, 0.75rem)) !important;
+    max-height: calc((var(--project-preview-row-height, 3rem) * 2) + var(--project-preview-row-gap, 0.75rem)) !important;
+    overflow: hidden !important;
+    align-content: start !important;
+}
+
+.project-preview-task,
+.project-preview-empty,
+body[data-theme^="console"] .project-preview-task,
+body[data-theme^="console"] .project-preview-empty,
+body[data-theme^="glass"] .project-preview-task,
+body[data-theme^="glass"] .project-preview-empty,
+body[data-theme^="blueprint"] .project-preview-task,
+body[data-theme^="blueprint"] .project-preview-empty {
+    min-height: var(--project-preview-row-height, 3rem) !important;
+    max-height: var(--project-preview-row-height, 3rem) !important;
+    overflow: hidden !important;
+}
+
+.project-card-notes-bar,
+body[data-theme^="console"] .project-card-notes-bar,
+body[data-theme^="glass"] .project-card-notes-bar,
+body[data-theme^="blueprint"] .project-card-notes-bar {
+    flex: 0 0 var(--project-notes-slot-height, 2.8rem) !important;
+    min-height: var(--project-notes-slot-height, 2.8rem) !important;
+    height: var(--project-notes-slot-height, 2.8rem) !important;
+    margin-top: 0 !important;
+}
+
+.project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="console"] .project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="glass"] .project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note::after {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    left: auto !important;
+    bottom: auto !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card {
+        --project-preview-row-height: 1.58rem;
+        --project-preview-row-gap: 0.34rem;
+        --project-notes-slot-height: 2.8rem;
+    }
+}
