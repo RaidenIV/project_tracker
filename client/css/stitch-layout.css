@@ -1094,7 +1094,7 @@ body.control-panel-is-collapsed .project-grid {
 
 .task-note-button.has-note::after {
     content: "" !important;
-    position: absolute !important;
+    position: fixed !important;
     top: 5px !important;
     right: 5px !important;
     width: 7px !important;
@@ -6786,3 +6786,43 @@ body[data-theme^="console"] .auth-submit:hover {
     color: var(--text-invert, #0b0b0c) !important;
     box-shadow: 0 14px 34px color-mix(in srgb, var(--accent, currentColor) 24%, transparent) !important;
 }
+
+/* ============================================================================
+   Targeted patch: auth screen Three.js background
+   ============================================================================ */
+.auth-overlay,
+body[data-theme^="console"] .auth-overlay {
+    background: #000000 !important;
+    isolation: isolate !important;
+}
+
+.auth-three-bg {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    background: #000000 !important;
+}
+
+.auth-three-bg canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.auth-three-bg::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    background: rgba(0, 0, 0, 0.34) !important;
+}
+
+.auth-card,
+body[data-theme^="console"] .auth-card {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
