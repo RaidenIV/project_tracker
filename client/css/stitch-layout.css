@@ -7205,3 +7205,43 @@ body[data-theme^="blueprint"] .sidebar-action-button--danger:active {
     text-shadow: none !important;
     outline: none !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: Glassmorphism More menu click expand/collapse spacing
+   ============================================================================ */
+body[data-theme^="glass"] .settings-actions > .sidebar-more-group {
+    display: grid !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body[data-theme^="glass"] .settings-actions > .sidebar-more-group > .sidebar-action-button--more {
+    width: 100% !important;
+}
+
+body[data-theme^="glass"] .settings-actions > .sidebar-more-group > .sidebar-more-menu {
+    display: grid !important;
+    gap: 0.7rem !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-0.15rem) !important;
+    transition: max-height 0.22s ease, opacity 0.18s ease, transform 0.18s ease, padding 0.18s ease !important;
+}
+
+body[data-theme^="glass"] .settings-actions > .sidebar-more-group.is-expanded > .sidebar-more-menu {
+    max-height: 20rem !important;
+    opacity: 1 !important;
+    padding: 0.7rem 0 0 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) !important;
+}
+
+body[data-theme^="glass"] .settings-actions > .sidebar-more-group > .sidebar-more-menu .sidebar-action-button {
+    width: 100% !important;
+}

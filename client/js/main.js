@@ -6181,6 +6181,20 @@ function initializeEventHandlers() {
     });
     initializeSidebarSections();
 
+    const sidebarMoreToggleBtn = document.getElementById('sidebarMoreToggleBtn');
+    const sidebarMoreGroup = sidebarMoreToggleBtn?.closest('.sidebar-more-group');
+    const sidebarMoreMenu = document.getElementById('sidebarMoreMenu');
+    if (sidebarMoreToggleBtn && sidebarMoreGroup) {
+        sidebarMoreToggleBtn.setAttribute('aria-expanded', sidebarMoreGroup.classList.contains('is-expanded') ? 'true' : 'false');
+        if (sidebarMoreMenu?.id) sidebarMoreToggleBtn.setAttribute('aria-controls', sidebarMoreMenu.id);
+        sidebarMoreToggleBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const nextExpanded = !sidebarMoreGroup.classList.contains('is-expanded');
+            sidebarMoreGroup.classList.toggle('is-expanded', nextExpanded);
+            sidebarMoreToggleBtn.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+        });
+    }
+
     document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
     document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
     document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
