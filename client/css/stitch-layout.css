@@ -7375,3 +7375,87 @@ body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-no
         --project-notes-slot-height: 2.8rem;
     }
 }
+
+/* ============================================================================
+   Targeted patch: glass task tabs/card/checkboxes and neumorphism add-task text
+   ============================================================================ */
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls {
+    overflow: visible !important;
+    background: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-tabs {
+    align-items: center !important;
+    min-height: 2.9rem !important;
+    padding: 0.55rem 0.65rem 0.52rem !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap,
+body[data-theme^="glass"] #projectModal .task-category-tab-shell,
+body[data-theme^="glass"] #projectModal .task-category-tab,
+body[data-theme^="glass"] #projectModal .task-category-menu-button {
+    overflow: visible !important;
+}
+
+body[data-theme="glass-dark"] #projectModal .modal-tasks-card,
+body[data-theme="glass-dark"] #projectModal .modal-tasks-card-body,
+body[data-theme="glass-dark"] #projectModal .modal-section[id^="tasks-section-"] {
+    background: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+    background-image: none !important;
+}
+
+body[data-theme="glass-dark"] #projectModal .task-category-controls,
+body[data-theme="glass-dark"] #projectModal .task-list {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-checkbox {
+    border-radius: 4px !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-checkbox.checked {
+    border-radius: 4px !important;
+}
+
+body[data-theme="blueprint-light"] #projectModal .modal-add-task-top,
+body[data-theme="blueprint-light"] #projectModal .modal-add-task-under-toggle,
+body[data-theme="blueprint-light"] .modal-add-task-top,
+body[data-theme="blueprint-light"] .modal-add-task-under-toggle {
+    color: #000 !important;
+}
+
+body[data-theme="blueprint-light"] #projectModal .modal-add-task-top svg,
+body[data-theme="blueprint-light"] #projectModal .modal-add-task-under-toggle svg,
+body[data-theme="blueprint-light"] .modal-add-task-top svg,
+body[data-theme="blueprint-light"] .modal-add-task-under-toggle svg {
+    color: #000 !important;
+    stroke: #000 !important;
+}
+
+body[data-theme="blueprint-dark"] #projectModal .modal-add-task-top,
+body[data-theme="blueprint-dark"] #projectModal .modal-add-task-under-toggle,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) #projectModal .modal-add-task-top,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) #projectModal .modal-add-task-under-toggle,
+body[data-theme="blueprint-dark"] .modal-add-task-top,
+body[data-theme="blueprint-dark"] .modal-add-task-under-toggle,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) .modal-add-task-top,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) .modal-add-task-under-toggle {
+    color: #fff !important;
+}
+
+body[data-theme="blueprint-dark"] #projectModal .modal-add-task-top svg,
+body[data-theme="blueprint-dark"] #projectModal .modal-add-task-under-toggle svg,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) #projectModal .modal-add-task-top svg,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) #projectModal .modal-add-task-under-toggle svg,
+body[data-theme="blueprint-dark"] .modal-add-task-top svg,
+body[data-theme="blueprint-dark"] .modal-add-task-under-toggle svg,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) .modal-add-task-top svg,
+body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) .modal-add-task-under-toggle svg {
+    color: #fff !important;
+    stroke: #fff !important;
+}
