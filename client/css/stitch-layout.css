@@ -5807,3 +5807,40 @@ body[data-theme^="console"] #pasteButton svg {
     stroke: currentColor !important;
     fill: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: uniform sidebar project filter button widths
+   ============================================================================ */
+.sidebar-nav-list,
+body[data-theme^="console"] .sidebar-nav-list {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+    justify-items: stretch !important;
+    align-items: stretch !important;
+}
+
+.sidebar-nav-card,
+body[data-theme^="console"] .sidebar-nav-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+}
+
+.sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card-label {
+    min-width: 0 !important;
+}
+
+.sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card-count,
+.sidebar-nav-card .section-count-pill,
+body[data-theme^="console"] .sidebar-nav-card .section-count-pill {
+    justify-self: end !important;
+}
