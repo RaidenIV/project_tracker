@@ -1228,9 +1228,42 @@ function renderLeaderboardPanel() {
         };
     }
 
-    const visibleEntries = rankedEntries.slice(0, 10);
-    if (currentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
-        visibleEntries.push(currentEntry);
+    if (currentEntry && currentUserId) {
+        currentEntry = {
+            ...currentEntry,
+            username: currentEntry.username || accountState.user?.username || 'User',
+            profilePic: currentEntry.profilePic || accountState.user?.profilePic || '',
+            totalCompletionPercentage: calculateTotalCompletion()
+        };
+    }
+
+    const completionForEntry = (entry) => {
+        const value = Math.round(Number(entry?.totalCompletionPercentage || 0));
+        return Number.isFinite(value) ? value : 0;
+    };
+
+    const entriesByUserId = new Map();
+    rankedEntries.forEach(entry => {
+        const userId = String(entry?.userId || '');
+        if (!userId) return;
+        entriesByUserId.set(userId, entry);
+    });
+    if (currentEntry && currentUserId) entriesByUserId.set(currentUserId, currentEntry);
+
+    const rankedByCompletion = Array.from(entriesByUserId.values()).sort((a, b) => {
+        return (completionForEntry(b) - completionForEntry(a))
+            || (Number(b?.completedProjects || 0) - Number(a?.completedProjects || 0))
+            || (Number(b?.completedTasks || 0) - Number(a?.completedTasks || 0))
+            || getLeaderboardUsername(a).localeCompare(getLeaderboardUsername(b));
+    }).map((entry, index) => ({
+        ...entry,
+        rank: index + 1
+    }));
+
+    const visibleEntries = rankedByCompletion.slice(0, 10);
+    const visibleCurrentEntry = currentUserId ? rankedByCompletion.find(entry => String(entry.userId) === currentUserId) : null;
+    if (visibleCurrentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
+        visibleEntries.push(visibleCurrentEntry);
     }
 
     if (!visibleEntries.length) {
@@ -1241,9 +1274,7 @@ function renderLeaderboardPanel() {
     list.innerHTML = visibleEntries.map(entry => {
         const isCurrent = currentUserId && String(entry.userId) === currentUserId;
         const username = getLeaderboardUsername(entry);
-        const completionPercentage = isCurrent
-            ? calculateTotalCompletion()
-            : Math.round(Number(entry.totalCompletionPercentage || 0));
+        const completionPercentage = completionForEntry(entry);
         const completedProjects = Number(entry.completedProjects || 0);
         const completedTasks = Number(entry.completedTasks || 0);
         const rank = String(entry.rank || '—').padStart(2, '0');

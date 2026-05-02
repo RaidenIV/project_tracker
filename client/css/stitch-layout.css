@@ -7328,9 +7328,9 @@ body[data-theme^="glass"] .sidebar-action-button--danger:active {
 body[data-theme^="console"] .project-preview-list,
 body[data-theme^="glass"] .project-preview-list,
 body[data-theme^="blueprint"] .project-preview-list {
-    height: calc((var(--project-preview-row-height, 3rem) * 2) + var(--project-preview-row-gap, 0.75rem)) !important;
-    min-height: calc((var(--project-preview-row-height, 3rem) * 2) + var(--project-preview-row-gap, 0.75rem)) !important;
-    max-height: calc((var(--project-preview-row-height, 3rem) * 2) + var(--project-preview-row-gap, 0.75rem)) !important;
+    height: calc((var(--project-preview-row-height, 3rem) * 3) + (var(--project-preview-row-gap, 0.75rem) * 2)) !important;
+    min-height: calc((var(--project-preview-row-height, 3rem) * 3) + (var(--project-preview-row-gap, 0.75rem) * 2)) !important;
+    max-height: calc((var(--project-preview-row-height, 3rem) * 3) + (var(--project-preview-row-gap, 0.75rem) * 2)) !important;
     overflow: hidden !important;
     align-content: start !important;
 }
@@ -8077,4 +8077,16 @@ body[data-theme^="blueprint"] #projectModal .modal-copy-button:active,
 body[data-theme^="blueprint"] #projectModal .modal-close:active {
     transform: translateY(1px) !important;
     box-shadow: var(--neumo-inset-shadow) !important;
+}
+
+
+/* Targeted 1920x1200 desktop grid limit */
+@media (min-width: 1900px) and (max-width: 1930px) and (min-height: 1180px) and (max-height: 1220px) {
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+    }
 }
