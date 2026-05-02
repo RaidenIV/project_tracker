@@ -5487,3 +5487,114 @@ body[data-theme^="console"] .project-priority-card-indicator--none .task-tag-fla
     background-color: color-mix(in srgb, var(--muted, currentColor) 72%, transparent) !important;
     background-image: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: neutral pill surfaces without hardcoded orange glow/gradients
+   ============================================================================ */
+.filter-chip,
+.project-card-tag,
+.project-card-tag--add,
+.project-tag-chip,
+.project-tag-picker-chip,
+.project-tag-picker-add,
+.project-card-access,
+.side-project-role,
+.member-role-badge,
+.project-type-chip,
+.project-type-button,
+.project-role-chip,
+.project-role-badge,
+body[data-theme^="console"] .filter-chip,
+body[data-theme^="console"] .project-card-tag,
+body[data-theme^="console"] .project-card-tag--add,
+body[data-theme^="console"] .project-tag-chip,
+body[data-theme^="console"] .project-tag-picker-chip,
+body[data-theme^="console"] .project-tag-picker-add,
+body[data-theme^="console"] .project-card-access,
+body[data-theme^="console"] .side-project-role,
+body[data-theme^="console"] .member-role-badge,
+body[data-theme^="console"] .project-type-chip,
+body[data-theme^="console"] .project-type-button,
+body[data-theme^="console"] .project-role-chip,
+body[data-theme^="console"] .project-role-badge {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+.filter-chip:hover,
+.filter-chip:focus-visible,
+.filter-chip.is-active,
+.project-card-tag--editable:hover,
+.project-card-tag--editable:focus-visible,
+.project-card-tag--add:hover,
+.project-card-tag--add:focus-visible,
+.project-tag-chip:hover,
+.project-tag-chip:focus-within,
+.project-tag-chip.is-editing,
+.project-tag-picker-chip:hover,
+.project-tag-picker-chip:focus-visible,
+.project-tag-picker-add:hover,
+.project-tag-picker-add:focus-visible,
+.project-card-access,
+.side-project-role,
+.member-role-badge,
+.project-type-chip:hover,
+.project-type-chip:focus-visible,
+.project-type-chip.is-active,
+.project-type-button:hover,
+.project-type-button:focus-visible,
+.project-type-button.is-active,
+.project-role-chip,
+.project-role-badge,
+body[data-theme^="console"] .filter-chip:hover,
+body[data-theme^="console"] .filter-chip:focus-visible,
+body[data-theme^="console"] .filter-chip.is-active,
+body[data-theme^="console"] .project-card-tag--editable:hover,
+body[data-theme^="console"] .project-card-tag--editable:focus-visible,
+body[data-theme^="console"] .project-card-tag--add:hover,
+body[data-theme^="console"] .project-card-tag--add:focus-visible,
+body[data-theme^="console"] .project-tag-chip:hover,
+body[data-theme^="console"] .project-tag-chip:focus-within,
+body[data-theme^="console"] .project-tag-chip.is-editing,
+body[data-theme^="console"] .project-tag-picker-chip:hover,
+body[data-theme^="console"] .project-tag-picker-chip:focus-visible,
+body[data-theme^="console"] .project-tag-picker-add:hover,
+body[data-theme^="console"] .project-tag-picker-add:focus-visible,
+body[data-theme^="console"] .project-card-access,
+body[data-theme^="console"] .side-project-role,
+body[data-theme^="console"] .member-role-badge,
+body[data-theme^="console"] .project-type-chip:hover,
+body[data-theme^="console"] .project-type-chip:focus-visible,
+body[data-theme^="console"] .project-type-chip.is-active,
+body[data-theme^="console"] .project-type-button:hover,
+body[data-theme^="console"] .project-type-button:focus-visible,
+body[data-theme^="console"] .project-type-button.is-active,
+body[data-theme^="console"] .project-role-chip,
+body[data-theme^="console"] .project-role-badge {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+.project-tag-label:hover,
+.project-tag-label:focus-visible,
+.project-tag-remove:hover,
+.project-tag-remove:focus-visible,
+body[data-theme^="console"] .project-tag-label:hover,
+body[data-theme^="console"] .project-tag-label:focus-visible,
+body[data-theme^="console"] .project-tag-remove:hover,
+body[data-theme^="console"] .project-tag-remove:focus-visible {
+    color: var(--accent) !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
