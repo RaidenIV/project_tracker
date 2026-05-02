@@ -3197,6 +3197,18 @@ function autoScrollProjectDrag(clientY) {
         el.scrollTop += step;
     }
 }
+
+function setProjectDragTransform(card, transformValue) {
+    if (!card) return;
+    card.style.transform = transformValue;
+    card.style.setProperty('--project-card-drag-transform', transformValue);
+}
+
+function clearProjectDragTransform(card) {
+    if (!card) return;
+    card.style.transform = '';
+    card.style.removeProperty('--project-card-drag-transform');
+}
 // ──────────────────────────────────────────────────────────────────────────────
 // Pointer handlers
 // ──────────────────────────────────────────────────────────────────────────────
@@ -3225,7 +3237,7 @@ function onProjectPointerMove(e) {
     //    from where the pointer was when the press started.
     const dx = e.clientX - __projectDrag.startX;
     const dy = e.clientY - __projectDrag.startY;
-    __projectDrag.sourceCard.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+    setProjectDragTransform(__projectDrag.sourceCard, `translate3d(${dx}px, ${dy}px, 0)`);
 
     // 2. Slide idle cards to make room / fill the gap
     updateProjectSlideItems(e.clientX, e.clientY);
@@ -3300,7 +3312,7 @@ function startProjectSlide(e) {
 
     const dx = e.clientX - __projectDrag.startX;
     const dy = e.clientY - __projectDrag.startY;
-    sourceCard.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+    setProjectDragTransform(sourceCard, `translate3d(${dx}px, ${dy}px, 0)`);
 }
 
 /*
@@ -3395,7 +3407,7 @@ function resetProjectSlideVisuals() {
     if (grid)        grid.classList.remove('is-reordering');
     if (sourceCard)  {
         sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
-        sourceCard.style.transform = '';
+        clearProjectDragTransform(sourceCard);
         sourceCard.style.cursor = '';
     }
     if (snapshots)   snapshots.forEach(s => {
@@ -3417,7 +3429,7 @@ function cleanupProjectDrag() {
     const drag = __projectDrag;
     if (drag?.sourceCard) {
         drag.sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
-        drag.sourceCard.style.transform = '';
+        clearProjectDragTransform(drag.sourceCard);
         drag.sourceCard.style.cursor = '';
         try { drag.sourceCard.releasePointerCapture(drag.pointerId); } catch { /* noop */ }
     }
