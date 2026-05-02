@@ -378,6 +378,23 @@ const THEME_FAMILY_OPTIONS = {
     console: { label: 'Console' }
 };
 
+const DEFAULT_ACCENT_COLOR = '#ff8a00';
+const ACCENT_COLOR_OPTIONS = [
+    '#ff2000',
+    '#ff8a00',
+    '#fff400',
+    '#9fff00',
+    '#35ff00',
+    '#00ff35',
+    '#00ff8a',
+    '#0075ff',
+    '#2400ff',
+    '#8a00ff',
+    '#df00ff',
+    '#ff00b5',
+    '#ff004a'
+];
+
 const LEGACY_THEME_MAP = {
     default: 'console-dark',
     blueprint: 'console-dark',
@@ -437,6 +454,7 @@ const uiState = {
 const LOCAL_STORAGE_KEYS = {
     SAVED_VIEWS: 'tracker_saved_views_v1',
     THEME: 'tracker_ui_theme_v1',
+    ACCENT_COLOR: 'tracker_accent_color_v1',
     PROJECT_SORT: 'tracker_project_sort_mode_v1',
     PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
     PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
@@ -572,6 +590,48 @@ function getLeaderboardUsername(entry) {
 
 function normalizeThemeName(themeName) {
     return LEGACY_THEME_MAP[themeName] || 'console-dark';
+}
+
+function normalizeAccentColor(color) {
+    const normalized = String(color || '').trim().toLowerCase();
+    return ACCENT_COLOR_OPTIONS.includes(normalized) ? normalized : DEFAULT_ACCENT_COLOR;
+}
+
+function hexToRgb(hex) {
+    const normalized = normalizeAccentColor(hex).replace('#', '');
+    const numeric = Number.parseInt(normalized, 16);
+    return {
+        r: (numeric >> 16) & 255,
+        g: (numeric >> 8) & 255,
+        b: numeric & 255
+    };
+}
+
+function applyAccentColor(color, persist = true) {
+    const accent = normalizeAccentColor(color);
+    const { r, g, b } = hexToRgb(accent);
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.14)`);
+    document.body?.style?.setProperty('--accent', accent);
+    document.body?.style?.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.14)`);
+    if (persist) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR, accent);
+        } catch (err) {
+            console.warn('Failed to save accent color preference:', err);
+        }
+    }
+    renderAccentColorOptions();
+}
+
+function loadAccentColorPreference() {
+    let storedColor = DEFAULT_ACCENT_COLOR;
+    try {
+        storedColor = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR) || DEFAULT_ACCENT_COLOR;
+    } catch (err) {
+        console.warn('Failed to load accent color preference:', err);
+    }
+    applyAccentColor(storedColor, false);
 }
 
 function getThemeMeta(themeName) {
@@ -743,8 +803,32 @@ function renderThemeOptions() {
     });
 }
 
+function renderAccentColorOptions() {
+    const grid = document.getElementById('accentColorGrid');
+    if (!grid) return;
+    let activeAccent = DEFAULT_ACCENT_COLOR;
+    try {
+        activeAccent = normalizeAccentColor(localStorage.getItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR) || DEFAULT_ACCENT_COLOR);
+    } catch {}
+    grid.innerHTML = ACCENT_COLOR_OPTIONS.map(color => {
+        const isActive = normalizeAccentColor(color) === activeAccent;
+        return `
+            <button class="accent-color-swatch ${isActive ? 'is-active' : ''}"
+                    type="button"
+                    style="--swatch-color: ${color};"
+                    title="Use accent color ${color}"
+                    aria-label="Use accent color ${color}"
+                    aria-pressed="${isActive}"
+                    onclick="applyAccentColor('${color}')">
+                <span aria-hidden="true"></span>
+            </button>
+        `;
+    }).join('');
+}
+
 function openUiOptionsModal() {
     renderThemeOptions();
+    renderAccentColorOptions();
     const meta = getThemeMeta(uiState.theme);
     document.getElementById('uiOptionsStatus').textContent = meta.family === 'console'
         ? `Current theme: ${getThemeFamilyLabel(meta.family)} • Fixed Stitch Dark`
@@ -6396,6 +6480,7 @@ window.restoreArchivedProject = restoreArchivedProject;
 window.archiveProject = archiveProject;
 window.closeUiOptionsModal = closeUiOptionsModal;
 window.openUiOptionsModal = openUiOptionsModal;
+window.applyAccentColor = applyAccentColor;
 
 // ============================================================================
 // INITIALIZATION
@@ -6586,6 +6671,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.setHideCompletedTasks(true);
     loadSavedViewsFromStorage();
     loadThemePreference();
+    loadAccentColorPreference();
     loadProjectSortPreference();
     moveColorModeToggleToSidebarHeader();
     initAuthScreen();

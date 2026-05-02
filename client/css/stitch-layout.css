@@ -4967,3 +4967,91 @@ body[data-theme^="console"] .delete-button:focus-visible {
     border-color: var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
     box-shadow: 0 0 14px color-mix(in srgb, currentColor 18%, transparent) !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: due-date hover accent, thicker bulk selector perimeter,
+   and UI Options accent color picker
+   ============================================================================ */
+.task-due-date-control:hover .task-due-date-input::-webkit-calendar-picker-indicator,
+.task-due-date-control:focus-within .task-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="console"] .task-due-date-control:hover .task-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="console"] .task-due-date-control:focus-within .task-due-date-input::-webkit-calendar-picker-indicator {
+    opacity: 1 !important;
+    filter: invert(61%) sepia(99%) saturate(2017%) hue-rotate(360deg) brightness(102%) contrast(104%) !important;
+}
+
+.task-bulk-select,
+body[data-theme^="console"] .task-bulk-select {
+    border-width: 3px !important;
+}
+
+.task-bulk-select span,
+body[data-theme^="console"] .task-bulk-select span {
+    inset: 3px !important;
+}
+
+.accent-color-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.7rem !important;
+    align-items: center !important;
+    margin: 0.55rem 0 1.25rem !important;
+}
+
+.accent-color-swatch {
+    width: 2.15rem !important;
+    height: 2.15rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--swatch-color) 44%, var(--line-soft, rgba(148, 163, 184, 0.22))) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--panel, rgba(12, 18, 28, 0.92)) 72%, var(--swatch-color) 28%) !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background 140ms ease !important;
+}
+
+.accent-color-swatch span {
+    width: 1.34rem !important;
+    height: 1.34rem !important;
+    border-radius: 999px !important;
+    background: var(--swatch-color) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32) !important;
+}
+
+.accent-color-swatch:hover,
+.accent-color-swatch:focus-visible,
+.accent-color-swatch.is-active {
+    transform: translateY(-1px) !important;
+    border-color: var(--swatch-color) !important;
+    outline: none !important;
+    box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--swatch-color) 22%, transparent),
+        0 0 18px color-mix(in srgb, var(--swatch-color) 32%, transparent) !important;
+}
+
+.accent-color-swatch.is-active span {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+        0 0 0 2px color-mix(in srgb, var(--panel, #111827) 78%, black 22%),
+        0 0 0 4px var(--swatch-color) !important;
+}
+
+@media (max-width: 720px) {
+    .accent-color-grid {
+        gap: 0.6rem !important;
+    }
+
+    .accent-color-swatch {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+
+    .accent-color-swatch span {
+        width: 1.22rem !important;
+        height: 1.22rem !important;
+    }
+}
