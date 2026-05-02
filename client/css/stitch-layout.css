@@ -5844,3 +5844,94 @@ body[data-theme^="console"] .sidebar-nav-card-count,
 body[data-theme^="console"] .sidebar-nav-card .section-count-pill {
     justify-self: end !important;
 }
+
+/* ============================================================================
+   Targeted patch: force project-status sidebar buttons to one measured width
+   ============================================================================ */
+.sidebar-nav-list,
+body[data-theme^="console"] .sidebar-nav-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-items: stretch !important;
+    align-items: stretch !important;
+    padding-inline: 0 !important;
+    margin-inline: 0 !important;
+}
+
+.sidebar-nav-list > *,
+body[data-theme^="console"] .sidebar-nav-list > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar-nav-card,
+.sidebar-nav-list .sidebar-action-button--with-count,
+body[data-theme^="console"] .sidebar-nav-card,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count {
+    width: 100% !important;
+    inline-size: 100% !important;
+    max-width: 100% !important;
+    max-inline-size: 100% !important;
+    min-width: 0 !important;
+    min-inline-size: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    justify-self: stretch !important;
+    transform: none !important;
+}
+
+.sidebar-nav-card:hover,
+.sidebar-nav-card:focus-visible,
+.sidebar-nav-card.active,
+.sidebar-nav-card.is-active,
+.sidebar-nav-list .sidebar-action-button--with-count:hover,
+.sidebar-nav-list .sidebar-action-button--with-count:focus-visible,
+.sidebar-nav-list .sidebar-action-button--with-count.active,
+.sidebar-nav-list .sidebar-action-button--with-count.is-active,
+body[data-theme^="console"] .sidebar-nav-card:hover,
+body[data-theme^="console"] .sidebar-nav-card:focus-visible,
+body[data-theme^="console"] .sidebar-nav-card.active,
+body[data-theme^="console"] .sidebar-nav-card.is-active,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count:hover,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count:focus-visible,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count.active,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count.is-active {
+    width: 100% !important;
+    inline-size: 100% !important;
+    max-width: 100% !important;
+    max-inline-size: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: none !important;
+}
+
+.sidebar-nav-card-label,
+.sidebar-nav-list .sidebar-action-button--with-count > span:first-child,
+body[data-theme^="console"] .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count > span:first-child {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.sidebar-nav-card-count,
+.sidebar-nav-card .section-count-pill,
+.sidebar-nav-list .sidebar-action-button--with-count .section-count-pill,
+body[data-theme^="console"] .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card .section-count-pill,
+body[data-theme^="console"] .sidebar-nav-list .sidebar-action-button--with-count .section-count-pill {
+    justify-self: end !important;
+    flex: 0 0 auto !important;
+}
