@@ -5598,3 +5598,132 @@ body[data-theme^="console"] .project-tag-remove:focus-visible {
     box-shadow: none !important;
     filter: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: remove remaining hardcoded sidebar/card orange accents
+   ============================================================================ */
+.add-project-button,
+body[data-theme^="console"] .add-project-button {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: var(--bg, #0b0b0c) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+.add-project-button svg,
+body[data-theme^="console"] .add-project-button svg {
+    color: currentColor !important;
+    stroke: currentColor !important;
+}
+
+.add-project-button:hover,
+.add-project-button:focus-visible,
+body[data-theme^="console"] .add-project-button:hover,
+body[data-theme^="console"] .add-project-button:focus-visible {
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: var(--bg, #0b0b0c) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+    filter: brightness(1.06) !important;
+}
+
+.sidebar-nav-card,
+body[data-theme^="console"] .sidebar-nav-card {
+    background: var(--panel, var(--surface-2, transparent)) !important;
+    background-color: var(--panel, var(--surface-2, transparent)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+.sidebar-nav-card:hover,
+.sidebar-nav-card:focus-visible,
+body[data-theme^="console"] .sidebar-nav-card:hover,
+body[data-theme^="console"] .sidebar-nav-card:focus-visible {
+    background: var(--panel, var(--surface-2, transparent)) !important;
+    background-color: var(--panel, var(--surface-2, transparent)) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) !important;
+    filter: none !important;
+}
+
+.sidebar-nav-card.active,
+.sidebar-nav-card.is-active,
+body[data-theme^="console"] .sidebar-nav-card.active,
+body[data-theme^="console"] .sidebar-nav-card.is-active {
+    background: var(--panel, var(--surface-2, transparent)) !important;
+    background-color: var(--panel, var(--surface-2, transparent)) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: inset 3px 0 0 var(--accent) !important;
+    filter: none !important;
+}
+
+.sidebar-nav-card.active .sidebar-nav-card-label,
+.sidebar-nav-card.active .sidebar-nav-card-count,
+.sidebar-nav-card.is-active .sidebar-nav-card-label,
+.sidebar-nav-card.is-active .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card.active .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card.is-active .sidebar-nav-card-count {
+    color: var(--accent) !important;
+    text-shadow: none !important;
+}
+
+.project-card:hover,
+.stitch-project-card:hover,
+body[data-theme^="console"] .project-card:hover,
+body[data-theme^="console"] .stitch-project-card:hover {
+    border-color: var(--accent) !important;
+    background-image: none !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent), 0 14px 36px color-mix(in srgb, var(--accent) 12%, transparent) !important;
+}
+
+.project-card-status,
+.project-card-status--completed,
+.activate-button,
+.project-actions .activate-button,
+body[data-theme^="console"] .project-card-status,
+body[data-theme^="console"] .project-card-status--completed,
+body[data-theme^="console"] .activate-button,
+body[data-theme^="console"] .project-actions .activate-button {
+    background: color-mix(in srgb, var(--accent) 10%, var(--panel, transparent)) !important;
+    background-color: color-mix(in srgb, var(--accent) 10%, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+.project-card-status:hover,
+.project-card-status:focus-visible,
+.activate-button:hover,
+.activate-button:focus-visible,
+.project-actions .activate-button:hover,
+.project-actions .activate-button:focus-visible,
+body[data-theme^="console"] .project-card-status:hover,
+body[data-theme^="console"] .project-card-status:focus-visible,
+body[data-theme^="console"] .activate-button:hover,
+body[data-theme^="console"] .activate-button:focus-visible,
+body[data-theme^="console"] .project-actions .activate-button:hover,
+body[data-theme^="console"] .project-actions .activate-button:focus-visible {
+    background: color-mix(in srgb, var(--accent) 16%, var(--panel, transparent)) !important;
+    background-color: color-mix(in srgb, var(--accent) 16%, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+    filter: none !important;
+}
