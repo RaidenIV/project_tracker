@@ -375,14 +375,14 @@ const THEME_OPTIONS = {
     'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
     'glass-dark': { label: 'Glassmorphism Dark', family: 'glass', mode: 'dark' },
     'glass-light': { label: 'Glassmorphism Light', family: 'glass', mode: 'light' },
-    'blueprint-dark': { label: 'Duplex Dark', family: 'blueprint', mode: 'dark' },
-    'blueprint-light': { label: 'Duplex Light', family: 'blueprint', mode: 'light' }
+    'blueprint-dark': { label: 'Neumorphism Dark', family: 'blueprint', mode: 'dark' },
+    'blueprint-light': { label: 'Neumorphism Light', family: 'blueprint', mode: 'light' }
 };
 
 const THEME_FAMILY_OPTIONS = {
     console: { label: 'Console', themePrefix: 'console' },
     glass: { label: 'Glassmorphism', themePrefix: 'glass' },
-    blueprint: { label: 'Duplex', themePrefix: 'blueprint' }
+    blueprint: { label: 'Neumorphism', themePrefix: 'blueprint' }
 };
 
 const DEFAULT_ACCENT_COLOR = '#ff8a00';

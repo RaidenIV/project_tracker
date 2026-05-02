@@ -6911,3 +6911,115 @@ body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-no
         grid-template-columns: minmax(0, 1fr) !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Glassmorphism/Neumorphism leaderboard parity
+   ============================================================================ */
+body[data-theme^="glass"] .leaderboard-panel-card,
+body[data-theme^="blueprint"] .leaderboard-panel-card {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="glass"] .leaderboard-list,
+body[data-theme^="blueprint"] .leaderboard-list {
+    display: grid !important;
+    gap: 0.8rem !important;
+}
+
+body[data-theme^="glass"] .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-row {
+    display: grid !important;
+    grid-template-columns: 1.35rem 2rem minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    min-height: 3.25rem !important;
+    padding: 0.6rem 0.75rem !important;
+    border-radius: 0.7rem !important;
+    background: var(--inset, var(--surface-2, var(--surface, rgba(127, 127, 127, 0.12)))) !important;
+    border: 1px solid var(--line-soft, var(--line, rgba(148, 163, 184, 0.18))) !important;
+    box-shadow: none !important;
+    color: var(--text, currentColor) !important;
+}
+
+body[data-theme^="glass"] .leaderboard-row:hover,
+body[data-theme^="blueprint"] .leaderboard-row:hover {
+    border-color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="glass"] .leaderboard-rank,
+body[data-theme^="blueprint"] .leaderboard-rank {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.02em !important;
+}
+
+body[data-theme^="glass"] .leaderboard-rank--top,
+body[data-theme^="blueprint"] .leaderboard-rank--top {
+    color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="glass"] .leaderboard-row-avatar,
+body[data-theme^="blueprint"] .leaderboard-row-avatar {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.35rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--surface-2, rgba(127, 127, 127, 0.16)) !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28)) !important;
+    color: transparent !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    flex: 0 0 2rem !important;
+}
+
+body[data-theme^="glass"] .leaderboard-row-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-row-avatar-img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: inherit !important;
+}
+
+body[data-theme^="glass"] .leaderboard-row-avatar-fallback,
+body[data-theme^="blueprint"] .leaderboard-row-avatar-fallback {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: var(--surface-2, rgba(127, 127, 127, 0.16)) !important;
+}
+
+body[data-theme^="glass"] .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-user {
+    display: block !important;
+    min-width: 0 !important;
+    color: var(--heading, currentColor) !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body[data-theme^="glass"] .leaderboard-meta,
+body[data-theme^="glass"] .leaderboard-row-main,
+body[data-theme^="blueprint"] .leaderboard-meta,
+body[data-theme^="blueprint"] .leaderboard-row-main {
+    display: none !important;
+}
+
+body[data-theme^="glass"] .leaderboard-row-score,
+body[data-theme^="blueprint"] .leaderboard-row-score {
+    color: var(--text, currentColor) !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
