@@ -6826,3 +6826,88 @@ body[data-theme^="console"] .auth-card {
     z-index: 1 !important;
 }
 
+
+
+/* ============================================================================
+   Targeted patch: restored UI options and project notes indicator placement
+   ============================================================================ */
+.ui-options-modal-content .theme-grid,
+body[data-theme^="console"] .ui-options-modal-content .theme-grid,
+body[data-theme^="glass"] .ui-options-modal-content .theme-grid,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.8rem !important;
+}
+
+.ui-options-modal-content .theme-card,
+body[data-theme^="console"] .ui-options-modal-content .theme-card,
+body[data-theme^="glass"] .ui-options-modal-content .theme-card,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card {
+    min-height: 5.4rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    color: var(--text, currentColor) !important;
+    box-shadow: none !important;
+}
+
+.ui-options-modal-content .theme-card:hover,
+.ui-options-modal-content .theme-card:focus-visible,
+body[data-theme^="console"] .ui-options-modal-content .theme-card:hover,
+body[data-theme^="console"] .ui-options-modal-content .theme-card:focus-visible,
+body[data-theme^="glass"] .ui-options-modal-content .theme-card:hover,
+body[data-theme^="glass"] .ui-options-modal-content .theme-card:focus-visible,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card:hover,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
+.ui-options-modal-content .theme-card.is-active,
+body[data-theme^="console"] .ui-options-modal-content .theme-card.is-active,
+body[data-theme^="glass"] .ui-options-modal-content .theme-card.is-active,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card.is-active {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent) !important;
+}
+
+.ui-options-modal-content .theme-card-title,
+body[data-theme^="console"] .ui-options-modal-content .theme-card-title,
+body[data-theme^="glass"] .ui-options-modal-content .theme-card-title,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card-title {
+    color: var(--heading, currentColor) !important;
+}
+
+.ui-options-modal-content .theme-card-copy,
+body[data-theme^="console"] .ui-options-modal-content .theme-card-copy,
+body[data-theme^="glass"] .ui-options-modal-content .theme-card-copy,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card-copy {
+    color: var(--muted, currentColor) !important;
+}
+
+.task-note-button.has-note::after,
+.project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="console"] .task-note-button.has-note::after,
+body[data-theme^="console"] .project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="glass"] .task-note-button.has-note::after,
+body[data-theme^="glass"] .project-card-notes-button.task-note-button.has-note::after,
+body[data-theme^="blueprint"] .task-note-button.has-note::after,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note::after {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+}
+
+@media (max-width: 720px) {
+    .ui-options-modal-content .theme-grid,
+    body[data-theme^="console"] .ui-options-modal-content .theme-grid,
+    body[data-theme^="glass"] .ui-options-modal-content .theme-grid,
+    body[data-theme^="blueprint"] .ui-options-modal-content .theme-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

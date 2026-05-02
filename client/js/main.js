@@ -372,11 +372,17 @@ const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea1
 
 const THEME_OPTIONS = {
     'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' },
-    'console-light': { label: 'Console Light', family: 'console', mode: 'light' }
+    'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
+    'glass-dark': { label: 'Glassmorphism Dark', family: 'glass', mode: 'dark' },
+    'glass-light': { label: 'Glassmorphism Light', family: 'glass', mode: 'light' },
+    'blueprint-dark': { label: 'Duplex Dark', family: 'blueprint', mode: 'dark' },
+    'blueprint-light': { label: 'Duplex Light', family: 'blueprint', mode: 'light' }
 };
 
 const THEME_FAMILY_OPTIONS = {
-    console: { label: 'Console' }
+    console: { label: 'Console', themePrefix: 'console' },
+    glass: { label: 'Glassmorphism', themePrefix: 'glass' },
+    blueprint: { label: 'Duplex', themePrefix: 'blueprint' }
 };
 
 const DEFAULT_ACCENT_COLOR = '#ff8a00';
@@ -398,17 +404,25 @@ const ACCENT_COLOR_OPTIONS = [
 
 const LEGACY_THEME_MAP = {
     default: 'console-dark',
-    blueprint: 'console-dark',
-    glass: 'console-dark',
     midnight: 'console-dark',
     industrial: 'console-dark',
-    'industrial-light': 'console-dark',
+    'industrial-light': 'console-light',
     'industrial-dark': 'console-dark',
-    'blueprint-light': 'console-dark',
-    'blueprint-dark': 'console-dark',
-    'glass-light': 'console-dark',
-    'glass-dark': 'console-dark',
-    'console-light': 'console-light'
+    console: 'console-dark',
+    'console-light': 'console-light',
+    'console-dark': 'console-dark',
+    glass: 'glass-dark',
+    nebula: 'glass-dark',
+    'glass-light': 'glass-light',
+    'glass-dark': 'glass-dark',
+    'nebula-light': 'glass-light',
+    'nebula-dark': 'glass-dark',
+    blueprint: 'blueprint-dark',
+    duplex: 'blueprint-dark',
+    'blueprint-light': 'blueprint-light',
+    'blueprint-dark': 'blueprint-dark',
+    'duplex-light': 'blueprint-light',
+    'duplex-dark': 'blueprint-dark'
 };
 
 const accountState = {
@@ -590,7 +604,9 @@ function getLeaderboardUsername(entry) {
 }
 
 function normalizeThemeName(themeName) {
-    return LEGACY_THEME_MAP[themeName] || 'console-dark';
+    const normalized = String(themeName || '').trim();
+    if (THEME_OPTIONS[normalized]) return normalized;
+    return LEGACY_THEME_MAP[normalized] || 'console-dark';
 }
 
 function normalizeAccentColor(color) {
@@ -670,7 +686,10 @@ function getThemeLabel(themeName) {
 
 function buildThemeName(themeFamily, colorMode) {
     const mode = colorMode === 'light' ? 'light' : 'dark';
-    return `console-${mode}`;
+    const family = THEME_FAMILY_OPTIONS[themeFamily] ? themeFamily : 'console';
+    const prefix = THEME_FAMILY_OPTIONS[family].themePrefix || 'console';
+    const themeName = `${prefix}-${mode}`;
+    return THEME_OPTIONS[themeName] ? themeName : `console-${mode}`;
 }
 
 function getColorModeLabel(colorMode) {
@@ -823,7 +842,7 @@ function applyTheme(themeName, persist = true) {
 
 function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
     const currentMode = getThemeMeta(uiState.theme).mode || 'dark';
-    applyTheme(buildThemeName('console', preferredMode || currentMode), persist);
+    applyTheme(buildThemeName(themeFamily, preferredMode || currentMode), persist);
 }
 
 function renderThemeOptions() {

@@ -33,6 +33,8 @@
 
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/themes/theme-console.css">
+    <link rel="stylesheet" href="css/themes/theme-nebula.css">
+    <link rel="stylesheet" href="css/themes/theme-duplex.css">
     <link rel="stylesheet" href="css/stitch-layout.css">
 </head>
 <body>
@@ -381,7 +383,7 @@
                 <div class="account-modal-header">
                     <div>
                         <h2 class="account-modal-title">UI Options</h2>
-                        <p class="account-modal-subtitle">Console UI is currently the only interface; switch light or dark mode below.</p>
+                        <p class="account-modal-subtitle">Choose a UI style, switch light or dark mode, and set the accent color.</p>
                     </div>
                     <button class="modal-close" type="button" onclick="closeUiOptionsModal()">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,10 +394,18 @@
 
                 <div class="ui-options-section-label">Theme</div>
 
-                <div class="theme-grid theme-grid--single" id="themeGrid">
+                <div class="theme-grid" id="themeGrid">
                     <button class="theme-card is-active" type="button" data-theme-family-option="console">
                         <span class="theme-card-title">Console</span>
-                        <span class="theme-card-copy">Console is the only active UI option for now.</span>
+                        <span class="theme-card-copy">Sharp, minimal tracker layout.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-family-option="glass">
+                        <span class="theme-card-title">Glassmorphism</span>
+                        <span class="theme-card-copy">Soft glass panels and depth.</span>
+                    </button>
+                    <button class="theme-card" type="button" data-theme-family-option="blueprint">
+                        <span class="theme-card-title">Duplex</span>
+                        <span class="theme-card-copy">Clean neumorphic controls.</span>
                     </button>
                 </div>
 
