@@ -7459,3 +7459,67 @@ body[data-theme^="blueprint"]:not([data-theme="blueprint-light"]) .modal-add-tas
     color: #fff !important;
     stroke: #fff !important;
 }
+
+/* ============================================================================
+   Targeted patch: Glassmorphism task tabs and tasks on one card
+   ============================================================================ */
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+body[data-theme^="glass"] #projectModal .modal-tasks-card {
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.14)) !important;
+    border-radius: 1.15rem !important;
+    background: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.92)) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow, 0 18px 50px rgba(0, 0, 0, 0.22)) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+}
+
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="glass"] #projectModal .task-category-controls {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+    margin: 0 !important;
+    padding: 0.65rem 0.75rem 0.5rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.14)) !important;
+    border-radius: 1.15rem 1.15rem 0 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body[data-theme^="glass"] #projectModal .modal-tasks-card-body {
+    margin: 0 !important;
+    padding: 1rem !important;
+    border: 0 !important;
+    border-radius: 0 0 1.15rem 1.15rem !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-tabs {
+    padding: 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
