@@ -7714,3 +7714,83 @@ body[data-theme^="glass"] #projectModal .task-sort-select option {
     background: var(--panel, #111318) !important;
     color: var(--heading, #fff) !important;
 }
+
+/* ============================================================================
+   Targeted patch: Glassmorphism tab alignment, menu hover, and bulk card color
+   ============================================================================ */
+body[data-theme^="glass"] #projectModal .task-category-tab-shell {
+    min-height: 2.55rem !important;
+    height: 2.55rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.28rem !important;
+    padding: 0 0.82rem !important;
+    line-height: 1 !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-tab,
+body[data-theme^="glass"] #projectModal .task-category-menu-button,
+body[data-theme^="glass"] #projectModal .task-category-add-tab {
+    min-height: 2rem !important;
+    height: 2rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-menu-button {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    border-radius: 999px !important;
+    color: var(--muted, rgba(255, 255, 255, 0.68)) !important;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-menu-button:hover,
+body[data-theme^="glass"] #projectModal .task-category-menu-button:focus-visible,
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-menu-open .task-category-menu-button {
+    background: color-mix(in srgb, var(--accent) 18%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent) 18%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 34%, transparent) !important;
+    color: var(--heading, #fff) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) !important;
+    transform: none !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-active .task-category-menu-button:hover,
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-active .task-category-menu-button:focus-visible,
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-active.is-menu-open .task-category-menu-button {
+    background: color-mix(in srgb, var(--accent) 22%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent) 22%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-category-add-tab {
+    border-radius: 999px !important;
+    padding: 0 0.8rem !important;
+}
+
+body[data-theme^="glass"] #projectModal .task-bulk-actions {
+    background: var(--surface-2, rgba(16, 18, 24, 0.58)) !important;
+    background-color: var(--surface-2, rgba(16, 18, 24, 0.58)) !important;
+    background-image: none !important;
+    border-color: var(--line, rgba(255, 255, 255, 0.14)) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(14px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(150%) !important;
+}
+
+body[data-theme="glass-dark"] #projectModal .task-bulk-actions {
+    background: rgba(16, 18, 24, 0.62) !important;
+    background-color: rgba(16, 18, 24, 0.62) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body[data-theme="glass-light"] #projectModal .task-bulk-actions {
+    background: rgba(255, 255, 255, 0.52) !important;
+    background-color: rgba(255, 255, 255, 0.52) !important;
+    border-color: rgba(255, 255, 255, 0.38) !important;
+}
