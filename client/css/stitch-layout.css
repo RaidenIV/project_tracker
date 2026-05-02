@@ -5727,3 +5727,83 @@ body[data-theme^="console"] .project-actions .activate-button:focus-visible {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent) !important;
     filter: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: modal action button text matches modal background
+   ============================================================================ */
+#projectModal .modal-add-task-top,
+#projectModal .modal-add-task-under-toggle,
+#projectModal .paste-button,
+#projectModal #pasteButton,
+.modal-add-task-top,
+.modal-add-task-under-toggle,
+.paste-button,
+#pasteButton,
+body[data-theme^="console"] #projectModal .modal-add-task-top,
+body[data-theme^="console"] #projectModal .modal-add-task-under-toggle,
+body[data-theme^="console"] #projectModal .paste-button,
+body[data-theme^="console"] #projectModal #pasteButton,
+body[data-theme^="console"] .modal-add-task-top,
+body[data-theme^="console"] .modal-add-task-under-toggle,
+body[data-theme^="console"] .paste-button,
+body[data-theme^="console"] #pasteButton {
+    color: var(--panel, var(--surface-2, var(--surface, var(--bg, #0b0b0c)))) !important;
+    text-shadow: none !important;
+}
+
+#projectModal .modal-add-task-top:hover,
+#projectModal .modal-add-task-top:focus-visible,
+#projectModal .modal-add-task-under-toggle:hover,
+#projectModal .modal-add-task-under-toggle:focus-visible,
+#projectModal .paste-button:hover,
+#projectModal .paste-button:focus-visible,
+#projectModal #pasteButton:hover,
+#projectModal #pasteButton:focus-visible,
+.modal-add-task-top:hover,
+.modal-add-task-top:focus-visible,
+.modal-add-task-under-toggle:hover,
+.modal-add-task-under-toggle:focus-visible,
+.paste-button:hover,
+.paste-button:focus-visible,
+#pasteButton:hover,
+#pasteButton:focus-visible,
+body[data-theme^="console"] #projectModal .modal-add-task-top:hover,
+body[data-theme^="console"] #projectModal .modal-add-task-top:focus-visible,
+body[data-theme^="console"] #projectModal .modal-add-task-under-toggle:hover,
+body[data-theme^="console"] #projectModal .modal-add-task-under-toggle:focus-visible,
+body[data-theme^="console"] #projectModal .paste-button:hover,
+body[data-theme^="console"] #projectModal .paste-button:focus-visible,
+body[data-theme^="console"] #projectModal #pasteButton:hover,
+body[data-theme^="console"] #projectModal #pasteButton:focus-visible,
+body[data-theme^="console"] .modal-add-task-top:hover,
+body[data-theme^="console"] .modal-add-task-top:focus-visible,
+body[data-theme^="console"] .modal-add-task-under-toggle:hover,
+body[data-theme^="console"] .modal-add-task-under-toggle:focus-visible,
+body[data-theme^="console"] .paste-button:hover,
+body[data-theme^="console"] .paste-button:focus-visible,
+body[data-theme^="console"] #pasteButton:hover,
+body[data-theme^="console"] #pasteButton:focus-visible {
+    color: var(--panel, var(--surface-2, var(--surface, var(--bg, #0b0b0c)))) !important;
+    text-shadow: none !important;
+}
+
+#projectModal .modal-add-task-top svg,
+#projectModal .modal-add-task-under-toggle svg,
+#projectModal .paste-button svg,
+#projectModal #pasteButton svg,
+.modal-add-task-top svg,
+.modal-add-task-under-toggle svg,
+.paste-button svg,
+#pasteButton svg,
+body[data-theme^="console"] #projectModal .modal-add-task-top svg,
+body[data-theme^="console"] #projectModal .modal-add-task-under-toggle svg,
+body[data-theme^="console"] #projectModal .paste-button svg,
+body[data-theme^="console"] #projectModal #pasteButton svg,
+body[data-theme^="console"] .modal-add-task-top svg,
+body[data-theme^="console"] .modal-add-task-under-toggle svg,
+body[data-theme^="console"] .paste-button svg,
+body[data-theme^="console"] #pasteButton svg {
+    color: currentColor !important;
+    stroke: currentColor !important;
+    fill: none !important;
+}
