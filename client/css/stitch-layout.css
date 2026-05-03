@@ -11080,3 +11080,39 @@ body[data-theme^="blueprint"] .auth-overlay .auth-submit:focus-visible {
     -webkit-text-fill-color: var(--auth-locked-panel, #1a1a1a) !important;
     text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.18), -1px -1px 1px rgba(0, 0, 0, 0.38) !important;
 }
+
+/* ============================================================================
+   Targeted patch: auth tab highlight visible while preserving screenshot styling
+   ============================================================================ */
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    overflow: visible !important;
+    padding: 0.35rem !important;
+    box-sizing: border-box !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+    border-radius: 0.7rem !important;
+}
+
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: transparent !important;
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    border-color: transparent !important;
+    box-shadow: inset 0 0 0 1px var(--accent, #ff8a00) !important;
+}
