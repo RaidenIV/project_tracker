@@ -10900,3 +10900,26 @@ body[data-theme^="blueprint"] .auth-submit:focus-visible {
     -webkit-text-fill-color: #ffffff !important;
     text-shadow: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: auth tab active highlight bottom clipping
+   ============================================================================ */
+.auth-tabs,
+body[data-theme^="console"] .auth-tabs,
+body[data-theme^="blueprint"] .auth-tabs {
+    overflow: visible !important;
+    padding-bottom: max(8px, 0.5rem) !important;
+}
+
+.auth-tab,
+body[data-theme^="console"] .auth-tab,
+body[data-theme^="blueprint"] .auth-tab {
+    bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.auth-tab.auth-tab-active::after,
+body[data-theme^="console"] .auth-tab.auth-tab-active::after,
+body[data-theme^="blueprint"] .auth-tab.auth-tab-active::after {
+    display: none !important;
+}
