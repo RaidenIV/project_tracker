@@ -11048,3 +11048,35 @@ body[data-theme^="blueprint"] .auth-overlay .show-pw-btn {
     border: 0 !important;
     box-shadow: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: auth tab highlight restore + neumorphic submit text
+   ============================================================================ */
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: transparent !important;
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    border-color: var(--accent, #ff8a00) !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-submit,
+.auth-overlay .auth-submit:hover:not(:disabled),
+.auth-overlay .auth-submit:focus-visible,
+body[data-theme] .auth-overlay .auth-submit,
+body[data-theme] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme] .auth-overlay .auth-submit:focus-visible,
+body[data-theme^="console"] .auth-overlay .auth-submit,
+body[data-theme^="console"] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-overlay .auth-submit:hover,
+body[data-theme^="console"] .auth-overlay .auth-submit:focus-visible,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme^="blueprint"] .auth-overlay .auth-submit:focus-visible {
+    color: var(--auth-locked-panel, #1a1a1a) !important;
+    -webkit-text-fill-color: var(--auth-locked-panel, #1a1a1a) !important;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.18), -1px -1px 1px rgba(0, 0, 0, 0.38) !important;
+}
