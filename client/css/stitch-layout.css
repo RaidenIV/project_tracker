@@ -8394,3 +8394,54 @@ body[data-theme^="glass"] .project-card[data-project-can-reorder="true"] .projec
 body[data-theme^="blueprint"] .project-card[data-project-can-reorder="true"] .project-header {
     padding-left: 2.15rem !important;
 }
+
+/* ============================================================================
+   Targeted patch: keep Add Tasks entry fixed above the task list and center
+   modal project-tag add button.
+   ============================================================================ */
+#projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="glass"] #projectModal .modal-tasks,
+body[data-theme^="blueprint"] #projectModal .modal-tasks {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#projectModal .modal-paste-section,
+body[data-theme^="console"] #projectModal .modal-paste-section,
+body[data-theme^="glass"] #projectModal .modal-paste-section,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section {
+    order: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.85rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 1rem !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid rgba(120, 120, 130, 0.22) !important;
+}
+
+#projectModal .task-bulk-actions-shell,
+body[data-theme^="console"] #projectModal .task-bulk-actions-shell,
+body[data-theme^="glass"] #projectModal .task-bulk-actions-shell,
+body[data-theme^="blueprint"] #projectModal .task-bulk-actions-shell {
+    order: 1 !important;
+}
+
+#projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="glass"] #projectModal .task-list,
+body[data-theme^="blueprint"] #projectModal .task-list {
+    order: 2 !important;
+}
+
+#projectModal .project-tag-add,
+body[data-theme^="console"] #projectModal .project-tag-add,
+body[data-theme^="glass"] #projectModal .project-tag-add,
+body[data-theme^="blueprint"] #projectModal .project-tag-add {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+}
