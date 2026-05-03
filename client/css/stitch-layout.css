@@ -8889,3 +8889,68 @@ body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-swatch.is-
         --project-tag-chip-vertical-gap: 0.85rem;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism UI options and leaderboard stats surface refinements
+   ============================================================================ */
+body[data-theme^="blueprint"] .leaderboard-profile-modal-content {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--neumo-raised-shadow, var(--shadow-level-2, none)) !important;
+}
+
+body[data-theme^="blueprint"] .leaderboard-profile-stat-card {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-header,
+body[data-theme^="blueprint"] .ui-options-mode-toggle-row,
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-actions {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-header {
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-mode-toggle-row,
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-actions {
+    padding: 0 !important;
+}
+
+body[data-theme="blueprint-dark"] .ui-options-mode-toggle-row,
+body[data-theme="blueprint-dark"] .ui-options-mode-toggle-row .ui-options-section-label,
+body[data-theme="blueprint-dark"] .ui-options-mode-toggle-row .color-mode-toggle-option {
+    color: #fff !important;
+}
+
+body[data-theme="blueprint-light"] .ui-options-mode-toggle-row,
+body[data-theme="blueprint-light"] .ui-options-mode-toggle-row .ui-options-section-label,
+body[data-theme="blueprint-light"] .ui-options-mode-toggle-row .color-mode-toggle-option {
+    color: #000 !important;
+}
+
+body[data-theme="blueprint-light"] .ui-options-modal-content .modal-done-btn,
+body[data-theme="blueprint-light"] .ui-options-modal-content .modal-done-btn:hover,
+body[data-theme="blueprint-light"] .ui-options-modal-content .modal-done-btn:focus-visible {
+    color: #000 !important;
+}
+
+body[data-theme^="blueprint"] #archivedProjectsMoreBtn .section-count-pill {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
