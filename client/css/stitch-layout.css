@@ -8788,8 +8788,8 @@ body[data-theme="blueprint-dark"] .add-project-button {
 }
 
 body[data-theme="blueprint-dark"] .add-project-button svg {
-    color: var(--accent, currentColor) !important;
-    stroke: var(--accent, currentColor) !important;
+    color: var(--panel, var(--surface, var(--bg, transparent))) !important;
+    stroke: var(--panel, var(--surface, var(--bg, transparent))) !important;
 }
 
 body[data-theme^="blueprint"] .ui-options-modal-content {
@@ -10821,8 +10821,8 @@ body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visib
 body[data-theme="blueprint-dark"] .add-project-button svg,
 body[data-theme="blueprint-dark"] .add-project-button:hover svg,
 body[data-theme="blueprint-dark"] .add-project-button:focus-visible svg {
-    color: var(--accent, currentColor) !important;
-    stroke: var(--accent, currentColor) !important;
+    color: var(--bg, var(--panel, var(--surface, #171717))) !important;
+    stroke: var(--bg, var(--panel, var(--surface, #171717))) !important;
 }
 
 body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-grid {
