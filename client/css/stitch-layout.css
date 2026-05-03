@@ -8954,3 +8954,193 @@ body[data-theme^="blueprint"] #archivedProjectsMoreBtn .section-count-pill {
     box-shadow: none !important;
     filter: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism modal controls and modal Add Tasks undo action
+   ============================================================================ */
+#projectModal .modal-paste-actions,
+body[data-theme^="console"] #projectModal .modal-paste-actions,
+body[data-theme^="glass"] #projectModal .modal-paste-actions,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: stretch !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+}
+
+#projectModal .modal-paste-actions .paste-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button {
+    width: 100% !important;
+    min-height: 2.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button {
+    min-width: 5.1rem !important;
+    padding-inline: 0.9rem !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+#projectModal .modal-paste-actions .paste-undo-button:disabled,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button:disabled,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button:disabled,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.52 !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="blueprint"] #projectModal .project-tag-add {
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--heading, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .project-tag-add:hover,
+body[data-theme^="blueprint"] #projectModal .project-tag-add:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:disabled {
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+}
+
+body[data-theme^="blueprint"] .leaderboard-profile-close,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-close,
+body[data-theme^="blueprint"] #howToGuideModal .modal-close,
+body[data-theme^="blueprint"] #shortcutsModal .modal-close {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-width: 2.35rem !important;
+    min-height: 2.35rem !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    border-radius: 0.8rem !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .leaderboard-profile-close:hover,
+body[data-theme^="blueprint"] .leaderboard-profile-close:focus-visible,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-close:hover,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-close:focus-visible,
+body[data-theme^="blueprint"] #howToGuideModal .modal-close:hover,
+body[data-theme^="blueprint"] #howToGuideModal .modal-close:focus-visible,
+body[data-theme^="blueprint"] #shortcutsModal .modal-close:hover,
+body[data-theme^="blueprint"] #shortcutsModal .modal-close:focus-visible {
+    border-color: color-mix(in srgb, var(--danger, #ef4444) 52%, transparent) !important;
+    color: var(--danger, #ef4444) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-content,
+body[data-theme^="blueprint"] #accountSettingsModal .account-profile-top,
+body[data-theme^="blueprint"] #accountSettingsModal .account-form-grid,
+body[data-theme^="blueprint"] #accountSettingsModal .account-field,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stats-section,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stat-card,
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-actions,
+body[data-theme^="blueprint"] #accountSettingsModal .account-action-btn,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-done-btn {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-input,
+body[data-theme^="blueprint"] #accountSettingsModal input.account-input {
+    background: var(--surface, var(--panel, transparent)) !important;
+    background-color: var(--surface, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    color: var(--text, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-action-btn:hover,
+body[data-theme^="blueprint"] #accountSettingsModal .account-action-btn:focus-visible,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-done-btn:hover,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-done-btn:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #shortcutsModal .shortcuts-modal-content,
+body[data-theme^="blueprint"] #shortcutsModal .shortcut-line,
+body[data-theme^="blueprint"] #shortcutsModal kbd {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #shortcutsModal .shortcut-line:hover,
+body[data-theme^="blueprint"] #shortcutsModal .shortcut-line:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+}
+
+@media (max-width: 520px) {
+    #projectModal .modal-paste-actions,
+    body[data-theme^="console"] #projectModal .modal-paste-actions,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button {
+        min-width: 0 !important;
+    }
+}

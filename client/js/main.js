@@ -2992,7 +2992,13 @@ function performUndo() {
             }
             
             saveData();
+            const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+            const modalTaskList = document.getElementById(`modal-task-list-${projectId}`);
             render();
+            if (modalOpen && modalTaskList) {
+                renderModalTaskList(projectId);
+                updateProjectProgress(projectId);
+            }
         }
     }
     
@@ -3001,12 +3007,22 @@ function performUndo() {
 }
 
 function updateUndoButton() {
-    const undoButton = document.getElementById('undoButton');
-    if (state.hasUndo()) {
-        undoButton.classList.remove('hidden');
-    } else {
-        undoButton.classList.add('hidden');
+    const hasUndo = state.hasUndo();
+    const sidebarUndoButton = document.getElementById('undoButton');
+
+    if (sidebarUndoButton) {
+        if (hasUndo) {
+            sidebarUndoButton.classList.remove('hidden');
+        } else {
+            sidebarUndoButton.classList.add('hidden');
+        }
     }
+
+    document.querySelectorAll('[data-undo-button]').forEach(button => {
+        button.disabled = !hasUndo;
+        button.setAttribute('aria-disabled', String(!hasUndo));
+        button.classList.toggle('is-disabled', !hasUndo);
+    });
 }
 
 // ============================================================================
@@ -5288,11 +5304,20 @@ function openProjectModal(projectId, options = {}) {
                                 placeholder="Enter tasks here"
                                 oninput="handleModalPasteInput('${project.id}', event)"
                                 onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
-                            <button 
-                                class="paste-button"
-                                onclick="pasteTasksInModal('${project.id}')">
-                                Add Tasks
-                            </button>
+                            <div class="modal-paste-actions">
+                                <button 
+                                    class="paste-button"
+                                    onclick="pasteTasksInModal('${project.id}')">
+                                    Add Tasks
+                                </button>
+                                <button
+                                    class="paste-button paste-undo-button"
+                                    type="button"
+                                    data-undo-button
+                                    onclick="performUndo()">
+                                    Undo
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5401,6 +5426,7 @@ function openProjectModal(projectId, options = {}) {
     </div>`;
     
     modal.classList.add('active');
+    updateUndoButton();
 
     if (options.restoreState) {
         restoreProjectModalState(project.id, options.restoreState);
