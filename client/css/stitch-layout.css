@@ -10596,3 +10596,201 @@ body[data-theme^="console"] #projectModal .task-category-tab-shell {
         flex-basis: 1.78rem !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: mobile project tag, priority popover, and description alignment
+   ============================================================================ */
+@media (max-width: 720px) {
+    #projectModal .project-tag-controls,
+    body[data-theme^="console"] #projectModal .project-tag-controls,
+    body[data-theme^="glass"] #projectModal .project-tag-controls,
+    body[data-theme^="blueprint"] #projectModal .project-tag-controls {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .project-tag-list,
+    #projectModal .project-tags-list,
+    #projectModal .project-tag-chips,
+    #projectModal .project-tag-controls .tag-list,
+    body[data-theme^="console"] #projectModal .project-tag-list,
+    body[data-theme^="console"] #projectModal .project-tags-list,
+    body[data-theme^="console"] #projectModal .project-tag-chips,
+    body[data-theme^="console"] #projectModal .project-tag-controls .tag-list,
+    body[data-theme^="glass"] #projectModal .project-tag-list,
+    body[data-theme^="glass"] #projectModal .project-tags-list,
+    body[data-theme^="glass"] #projectModal .project-tag-chips,
+    body[data-theme^="glass"] #projectModal .project-tag-controls .tag-list,
+    body[data-theme^="blueprint"] #projectModal .project-tag-list,
+    body[data-theme^="blueprint"] #projectModal .project-tags-list,
+    body[data-theme^="blueprint"] #projectModal .project-tag-chips,
+    body[data-theme^="blueprint"] #projectModal .project-tag-controls .tag-list {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+        gap: 0.48rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .project-tag-chip,
+    body[data-theme^="console"] #projectModal .project-tag-chip,
+    body[data-theme^="glass"] #projectModal .project-tag-chip,
+    body[data-theme^="blueprint"] #projectModal .project-tag-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.34rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 2.5rem) !important;
+        min-height: 2.35rem !important;
+        height: auto !important;
+        padding: 0.36rem 0.42rem 0.36rem 0.76rem !important;
+        border-radius: 999px !important;
+        line-height: 1.1 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .project-tag-label,
+    body[data-theme^="console"] #projectModal .project-tag-label,
+    body[data-theme^="glass"] #projectModal .project-tag-label,
+    body[data-theme^="blueprint"] #projectModal .project-tag-label {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+        max-width: 9.5rem !important;
+        min-height: 1.4rem !important;
+        height: auto !important;
+        padding: 0 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex: 0 1 auto !important;
+    }
+
+    #projectModal .project-tag-remove,
+    body[data-theme^="console"] #projectModal .project-tag-remove,
+    body[data-theme^="glass"] #projectModal .project-tag-remove,
+    body[data-theme^="blueprint"] #projectModal .project-tag-remove {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.55rem !important;
+        min-width: 1.55rem !important;
+        max-width: 1.55rem !important;
+        height: 1.55rem !important;
+        min-height: 1.55rem !important;
+        max-height: 1.55rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+        line-height: 1 !important;
+        flex: 0 0 1.55rem !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .project-tag-add,
+    body[data-theme^="console"] #projectModal .project-tag-add,
+    body[data-theme^="glass"] #projectModal .project-tag-add,
+    body[data-theme^="blueprint"] #projectModal .project-tag-add {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        max-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        max-height: 2.35rem !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        line-height: 1 !important;
+        flex: 0 0 2.35rem !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .project-header,
+    #projectModal .project-actions,
+    #projectModal .modal-project-priority-row,
+    #projectModal .project-priority-control,
+    body[data-theme^="console"] #projectModal .project-header,
+    body[data-theme^="console"] #projectModal .project-actions,
+    body[data-theme^="console"] #projectModal .modal-project-priority-row,
+    body[data-theme^="console"] #projectModal .project-priority-control,
+    body[data-theme^="glass"] #projectModal .project-header,
+    body[data-theme^="glass"] #projectModal .project-actions,
+    body[data-theme^="glass"] #projectModal .modal-project-priority-row,
+    body[data-theme^="glass"] #projectModal .project-priority-control,
+    body[data-theme^="blueprint"] #projectModal .project-header,
+    body[data-theme^="blueprint"] #projectModal .project-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-project-priority-row,
+    body[data-theme^="blueprint"] #projectModal .project-priority-control {
+        overflow: visible !important;
+        contain: none !important;
+        isolation: auto !important;
+    }
+
+    #projectModal .project-priority-control--modal .project-priority-popover,
+    body[data-theme^="console"] #projectModal .project-priority-control--modal .project-priority-popover,
+    body[data-theme^="glass"] #projectModal .project-priority-control--modal .project-priority-popover,
+    body[data-theme^="blueprint"] #projectModal .project-priority-control--modal .project-priority-popover {
+        left: 50% !important;
+        right: auto !important;
+        top: calc(100% + 0.5rem) !important;
+        width: min(22rem, calc(100vw - 1.5rem)) !important;
+        min-width: min(18rem, calc(100vw - 1.5rem)) !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        max-height: min(54svh, 24rem) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        transform: translateX(-50%) !important;
+        z-index: 2147483600 !important;
+        box-sizing: border-box !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #projectModal .modal-project-description-view,
+    body[data-theme^="console"] #projectModal .modal-project-description-view,
+    body[data-theme^="glass"] #projectModal .modal-project-description-view,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-view {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        justify-content: stretch !important;
+        gap: 0.7rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0.35rem 0 0.85rem !important;
+        padding: 0 !important;
+        text-align: left !important;
+    }
+
+    #projectModal .modal-project-description-text,
+    body[data-theme^="console"] #projectModal .modal-project-description-text,
+    body[data-theme^="glass"] #projectModal .modal-project-description-text,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-text {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        align-self: center !important;
+        line-height: 1.25 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    #projectModal .modal-project-description-edit,
+    body[data-theme^="console"] #projectModal .modal-project-description-edit,
+    body[data-theme^="glass"] #projectModal .modal-project-description-edit,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-edit {
+        align-self: center !important;
+        justify-self: end !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+}
