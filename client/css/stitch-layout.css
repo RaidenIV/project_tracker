@@ -9185,3 +9185,85 @@ body[data-theme^="blueprint"] #completedTasksCount,
 body[data-theme^="blueprint"] #incompleteTasksCount {
     color: var(--accent, currentColor) !important;
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism avatar convexity and mobile scrolling recovery
+   ============================================================================ */
+body[data-theme^="blueprint"] .panel-avatar,
+body[data-theme^="blueprint"] .account-avatar,
+body[data-theme^="blueprint"] .menu-account-avatar,
+body[data-theme^="blueprint"] .leaderboard-row-avatar,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 72%, transparent) !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .panel-avatar-img,
+body[data-theme^="blueprint"] .account-avatar-img,
+body[data-theme^="blueprint"] .menu-account-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-row-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar-img {
+    border-radius: inherit !important;
+}
+
+@media (max-width: 980px) {
+    html,
+    body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    body {
+        position: static !important;
+        touch-action: pan-y !important;
+        overscroll-behavior-y: auto !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        height: auto !important;
+        min-height: 100dvh !important;
+        overflow: visible !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    .control-panel-scroll-inner,
+    .viewport {
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .viewport {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .project-grid {
+        min-height: 0 !important;
+    }
+}
