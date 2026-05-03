@@ -10216,3 +10216,37 @@ body[data-theme^="console"] #projectModal .task-item:not(.dragging) {
         z-index: 2147483000 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Console sticky task tabs top clipping fix
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    top: 0 !important;
+    padding-top: 0.38rem !important;
+    min-height: calc(2.15rem + 0.38rem) !important;
+    overflow: visible !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tabs {
+    padding-top: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tab-wrap,
+body[data-theme^="console"] #projectModal .task-category-tab-shell {
+    overflow: visible !important;
+    clip-path: none !important;
+}
+
+@media (max-width: 720px) {
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+        padding-top: calc(0.38rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(2.15rem + 0.38rem + env(safe-area-inset-top, 0px)) !important;
+    }
+}
+
