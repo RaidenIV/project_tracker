@@ -10833,3 +10833,47 @@ body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-grid {
     box-shadow: none !important;
     padding: 0 !important;
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism New Project text/icon cutout color
+   ============================================================================ */
+body[data-theme="blueprint-light"] .control-panel .add-project-button,
+body[data-theme="blueprint-light"] .control-panel .add-project-button:hover,
+body[data-theme="blueprint-light"] .control-panel .add-project-button:focus-visible,
+body[data-theme="blueprint-light"] .add-project-button,
+body[data-theme="blueprint-light"] .add-project-button:hover,
+body[data-theme="blueprint-light"] .add-project-button:focus-visible {
+    --new-project-cutout-color: var(--panel, var(--surface, var(--bg, #e8eaed)));
+    color: var(--new-project-cutout-color) !important;
+    -webkit-text-fill-color: var(--new-project-cutout-color) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .add-project-button,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:hover,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visible,
+body[data-theme="blueprint-dark"] .add-project-button,
+body[data-theme="blueprint-dark"] .add-project-button:hover,
+body[data-theme="blueprint-dark"] .add-project-button:focus-visible {
+    --new-project-cutout-color: var(--panel, var(--surface, var(--bg, #1a1a1a)));
+    color: var(--new-project-cutout-color) !important;
+    -webkit-text-fill-color: var(--new-project-cutout-color) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .control-panel .add-project-button svg,
+body[data-theme^="blueprint"] .control-panel .add-project-button:hover svg,
+body[data-theme^="blueprint"] .control-panel .add-project-button:focus-visible svg,
+body[data-theme^="blueprint"] .add-project-button svg,
+body[data-theme^="blueprint"] .add-project-button:hover svg,
+body[data-theme^="blueprint"] .add-project-button:focus-visible svg,
+body[data-theme^="blueprint"] .control-panel .add-project-button svg *,
+body[data-theme^="blueprint"] .control-panel .add-project-button:hover svg *,
+body[data-theme^="blueprint"] .control-panel .add-project-button:focus-visible svg *,
+body[data-theme^="blueprint"] .add-project-button svg *,
+body[data-theme^="blueprint"] .add-project-button:hover svg *,
+body[data-theme^="blueprint"] .add-project-button:focus-visible svg * {
+    color: var(--new-project-cutout-color) !important;
+    stroke: var(--new-project-cutout-color) !important;
+    -webkit-text-fill-color: var(--new-project-cutout-color) !important;
+}
