@@ -10923,3 +10923,128 @@ body[data-theme^="console"] .auth-tab.auth-tab-active::after,
 body[data-theme^="blueprint"] .auth-tab.auth-tab-active::after {
     display: none !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: locked auth screen Neumorphism dark mode + matching password input
+   ============================================================================ */
+.auth-overlay,
+body[data-theme] .auth-overlay,
+body[data-theme^="console"] .auth-overlay,
+body[data-theme^="blueprint"] .auth-overlay {
+    --auth-locked-bg: #1a1a1a;
+    --auth-locked-bg-2: #202020;
+    --auth-locked-bg-3: #141414;
+    --auth-locked-panel: #1a1a1a;
+    --auth-locked-heading: #ffffff;
+    --auth-locked-text: rgba(255, 255, 255, 0.78);
+    --auth-locked-muted: rgba(255, 255, 255, 0.6);
+    --auth-locked-muted-2: rgba(255, 255, 255, 0.5);
+    --auth-locked-line: rgba(255, 255, 255, 0.06);
+    --auth-locked-light-shadow: rgba(255, 255, 255, 0.05);
+    --auth-locked-dark-shadow: rgba(0, 0, 0, 0.6);
+    --auth-locked-shadow-level-2: 6px 6px 12px var(--auth-locked-dark-shadow), -3px -3px 10px var(--auth-locked-light-shadow);
+    --auth-locked-shadow-inset: inset 2px 2px 5px var(--auth-locked-dark-shadow), inset -1px -1px 4px var(--auth-locked-light-shadow);
+    background: #000000 !important;
+    color: var(--auth-locked-text) !important;
+}
+
+.auth-overlay .auth-card,
+body[data-theme] .auth-overlay .auth-card,
+body[data-theme^="console"] .auth-overlay .auth-card,
+body[data-theme^="blueprint"] .auth-overlay .auth-card {
+    background: var(--auth-locked-panel) !important;
+    color: var(--auth-locked-text) !important;
+    border: 1px solid var(--auth-locked-line) !important;
+    box-shadow: var(--auth-locked-shadow-level-2) !important;
+}
+
+.auth-overlay .auth-logo-img,
+body[data-theme] .auth-overlay .auth-logo-img {
+    filter: none !important;
+}
+
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    background: var(--auth-locked-panel) !important;
+    border: 1px solid var(--auth-locked-line) !important;
+    box-shadow: var(--auth-locked-shadow-inset) !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    background: transparent !important;
+    color: var(--auth-locked-muted) !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: var(--auth-locked-panel) !important;
+    color: var(--accent, #ff8a00) !important;
+    border-color: var(--accent, #ff8a00) !important;
+    box-shadow: var(--auth-locked-shadow-level-2) !important;
+}
+
+.auth-overlay .auth-label,
+body[data-theme] .auth-overlay .auth-label,
+body[data-theme^="console"] .auth-overlay .auth-label,
+body[data-theme^="blueprint"] .auth-overlay .auth-label,
+.auth-overlay .remember-me-label,
+body[data-theme] .auth-overlay .remember-me-label {
+    color: var(--auth-locked-muted) !important;
+}
+
+.auth-overlay .auth-input-wrap,
+body[data-theme] .auth-overlay .auth-input-wrap,
+body[data-theme^="console"] .auth-overlay .auth-input-wrap,
+body[data-theme^="blueprint"] .auth-overlay .auth-input-wrap {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-input,
+.auth-overlay .auth-input-wrap .auth-input,
+body[data-theme] .auth-overlay .auth-input,
+body[data-theme] .auth-overlay .auth-input-wrap .auth-input,
+body[data-theme^="console"] .auth-overlay .auth-input,
+body[data-theme^="console"] .auth-overlay .auth-input-wrap .auth-input,
+body[data-theme^="blueprint"] .auth-overlay .auth-input,
+body[data-theme^="blueprint"] .auth-overlay .auth-input-wrap .auth-input {
+    background: var(--auth-locked-panel) !important;
+    background-color: var(--auth-locked-panel) !important;
+    color: var(--auth-locked-heading) !important;
+    border: 1px solid var(--auth-locked-line) !important;
+    box-shadow: var(--auth-locked-shadow-inset) !important;
+}
+
+.auth-overlay .auth-input::placeholder,
+body[data-theme] .auth-overlay .auth-input::placeholder {
+    color: var(--auth-locked-muted-2) !important;
+}
+
+.auth-overlay .auth-input:focus,
+.auth-overlay .auth-input-wrap .auth-input:focus,
+body[data-theme] .auth-overlay .auth-input:focus,
+body[data-theme] .auth-overlay .auth-input-wrap .auth-input:focus {
+    border-color: var(--accent, #ff8a00) !important;
+    box-shadow: var(--auth-locked-shadow-inset), 0 0 0 2px color-mix(in srgb, var(--accent, #ff8a00) 28%, transparent) !important;
+}
+
+.auth-overlay .show-pw-btn,
+body[data-theme] .auth-overlay .show-pw-btn,
+body[data-theme^="console"] .auth-overlay .show-pw-btn,
+body[data-theme^="blueprint"] .auth-overlay .show-pw-btn {
+    background: transparent !important;
+    color: var(--auth-locked-muted) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}

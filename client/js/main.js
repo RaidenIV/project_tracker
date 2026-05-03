@@ -452,7 +452,7 @@ const uiState = {
     activeProjectTag: PROJECT_TAG_ALL_FILTER,
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'console-dark',
+    theme: 'blueprint-dark',
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -681,7 +681,7 @@ function getLeaderboardUsername(entry) {
 function normalizeThemeName(themeName) {
     const normalized = String(themeName || '').trim();
     if (THEME_OPTIONS[normalized]) return normalized;
-    return LEGACY_THEME_MAP[normalized] || 'console-dark';
+    return LEGACY_THEME_MAP[normalized] || 'blueprint-dark';
 }
 
 function getCurrentColorMode() {
@@ -861,7 +861,7 @@ function syncThemeBranding() {
 
     const authLogo = document.querySelector('.auth-logo-img');
     if (authLogo) {
-        authLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+        authLogo.src = DARK_MODE_LOGO_URL;
     }
 }
 
@@ -909,10 +909,10 @@ function persistProjectSortPreference(sortMode) {
 
 function loadThemePreference() {
     try {
-        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
+        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-dark');
     } catch (err) {
         console.warn('Failed to load UI preference:', err);
-        uiState.theme = 'console-dark';
+        uiState.theme = 'blueprint-dark';
     }
     applyTheme(uiState.theme, false);
 }
