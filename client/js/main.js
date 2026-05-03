@@ -74,6 +74,7 @@ const DEFAULT_TASK_CATEGORY = 'General';
 const DEFAULT_TASK_CATEGORY_FILTER = 'all';
 const TASK_CATEGORY_DROP_ALL = '__all__';
 const DEFAULT_TASK_SORT_MODE = 'default';
+const COMPLETED_TASK_BATCH_DEFAULT = 50;
 const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
 const PROJECT_TAG_MAX_COUNT = 5;
@@ -464,7 +465,8 @@ const uiState = {
     newTaskDraft: null,
     creatingTaskCategoryProjectId: null,
     creatingProjectTagProjectId: null,
-    editingProjectTag: null
+    editingProjectTag: null,
+    completedTaskDisplayLimits: {}
 };
 
 const LOCAL_STORAGE_KEYS = {
@@ -524,6 +526,75 @@ function setProjectHideCompletedPreference(projectId, hideCompleted) {
     preferences[key] = !!hideCompleted;
     saveProjectHideCompletedPreferences(preferences);
 }
+
+
+
+function getProjectCompletedTaskLimitPreference(projectId) {
+    const key = String(projectId || '');
+    if (!key) return COMPLETED_TASK_BATCH_DEFAULT;
+    const value = uiState.completedTaskDisplayLimits?.[key];
+    if (value === 'all') return 'all';
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) && numericValue > 0
+        ? Math.max(COMPLETED_TASK_BATCH_DEFAULT, Math.floor(numericValue))
+        : COMPLETED_TASK_BATCH_DEFAULT;
+}
+
+function setProjectCompletedTaskLimitPreference(projectId, limit) {
+    const key = String(projectId || '');
+    if (!key) return;
+    if (!uiState.completedTaskDisplayLimits) uiState.completedTaskDisplayLimits = {};
+    if (limit === 'all') {
+        uiState.completedTaskDisplayLimits[key] = 'all';
+        return;
+    }
+    const numericLimit = Number(limit);
+    uiState.completedTaskDisplayLimits[key] = Number.isFinite(numericLimit) && numericLimit > 0
+        ? Math.max(COMPLETED_TASK_BATCH_DEFAULT, Math.floor(numericLimit))
+        : COMPLETED_TASK_BATCH_DEFAULT;
+}
+
+function resetProjectCompletedTaskLimitPreference(projectId) {
+    const key = String(projectId || '');
+    if (!key || !uiState.completedTaskDisplayLimits) return;
+    delete uiState.completedTaskDisplayLimits[key];
+}
+
+function getCompletedTaskDisplayState(project, options = {}) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const sortMode = options.sortMode || getProjectTaskSortPreference(project?.id);
+    const activeCategory = options.activeCategory !== undefined
+        ? options.activeCategory
+        : getProjectTaskCategoryFilter(project?.id);
+    const completedLimit = options.completedLimit !== undefined
+        ? options.completedLimit
+        : getProjectCompletedTaskLimitPreference(project?.id);
+    const orderedTasks = sortTasksForDisplay(tasks, sortMode);
+    const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
+        ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
+        : orderedTasks;
+    const completedTasks = categoryFilteredTasks.filter(task => task.completed);
+    const completedVisibleLimit = completedLimit === 'all'
+        ? completedTasks.length
+        : Math.max(COMPLETED_TASK_BATCH_DEFAULT, Number(completedLimit) || COMPLETED_TASK_BATCH_DEFAULT);
+    const visibleCompletedIds = new Set(completedTasks
+        .slice(0, completedVisibleLimit)
+        .map(task => String(task.id)));
+    const visibleTasks = categoryFilteredTasks.filter(task => !task.completed || visibleCompletedIds.has(String(task.id)));
+
+    return {
+        visibleTasks,
+        totalCompleted: completedTasks.length,
+        visibleCompleted: completedLimit === 'all'
+            ? completedTasks.length
+            : Math.min(completedVisibleLimit, completedTasks.length),
+        hiddenCompleted: completedLimit === 'all'
+            ? 0
+            : Math.max(0, completedTasks.length - completedVisibleLimit),
+        completedLimit
+    };
+}
+
 
 function loadProjectTaskSortPreferences() {
     try {
@@ -4061,7 +4132,10 @@ function getDisplayTasksForProject(project, options = {}) {
     const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
         ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
         : orderedTasks;
-    const visibleTasks = hideCompleted ? categoryFilteredTasks.filter(task => !task.completed) : categoryFilteredTasks;
+    const displayState = hideCompleted
+        ? { visibleTasks: categoryFilteredTasks.filter(task => !task.completed) }
+        : getCompletedTaskDisplayState(project, { sortMode, activeCategory });
+    const visibleTasks = displayState.visibleTasks;
     const draftTaskId = Number(uiState.newTaskDraft?.taskId);
     const draftProjectId = String(uiState.newTaskDraft?.projectId || '');
     if (draftProjectId && String(project?.id) === draftProjectId && Number.isFinite(draftTaskId)) {
@@ -4939,6 +5013,58 @@ function updateTaskNote(projectId, taskId, noteValue) {
     render();
 }
 
+function buildCompletedTaskDisplayControlsMarkup(projectId, displayState, hideCompleted) {
+    if (hideCompleted || !displayState || displayState.totalCompleted <= COMPLETED_TASK_BATCH_DEFAULT) return '';
+
+    const totalCompleted = Number(displayState.totalCompleted) || 0;
+    const visibleCompleted = Number(displayState.visibleCompleted) || 0;
+    const hiddenCompleted = Math.max(0, totalCompleted - visibleCompleted);
+    const isShowingAll = hiddenCompleted <= 0;
+
+    return `
+        <div class="completed-task-display-controls" id="completed-task-display-controls-${projectId}">
+            <span class="completed-task-display-summary">
+                ${isShowingAll
+                    ? `Showing all ${totalCompleted} completed tasks`
+                    : `Showing ${visibleCompleted} of ${totalCompleted} completed tasks`}
+            </span>
+            ${!isShowingAll ? `
+                <div class="completed-task-display-actions" aria-label="Show more completed tasks">
+                    <button type="button" class="completed-task-display-button" onclick="showMoreCompletedTasks('${projectId}', 50)">
+                        Show 50 more
+                    </button>
+                    <button type="button" class="completed-task-display-button" onclick="showMoreCompletedTasks('${projectId}', 100)">
+                        Show 100 more
+                    </button>
+                    <button type="button" class="completed-task-display-button" onclick="showAllCompletedTasks('${projectId}')">
+                        Show all
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function renderCompletedTaskDisplayControls(projectId, displayState, hideCompleted) {
+    const container = document.getElementById(`completed-task-display-controls-shell-${projectId}`);
+    if (!container) return;
+    container.innerHTML = buildCompletedTaskDisplayControlsMarkup(projectId, displayState, hideCompleted);
+}
+
+function showMoreCompletedTasks(projectId, amount) {
+    const currentLimit = getProjectCompletedTaskLimitPreference(projectId);
+    if (currentLimit === 'all') return;
+    const increment = Number(amount);
+    const nextLimit = (Number(currentLimit) || COMPLETED_TASK_BATCH_DEFAULT) + (Number.isFinite(increment) ? increment : COMPLETED_TASK_BATCH_DEFAULT);
+    setProjectCompletedTaskLimitPreference(projectId, nextLimit);
+    renderModalTaskList(projectId);
+}
+
+function showAllCompletedTasks(projectId) {
+    setProjectCompletedTaskLimitPreference(projectId, 'all');
+    renderModalTaskList(projectId);
+}
+
 function renderModalTaskList(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
@@ -4953,12 +5079,18 @@ function renderModalTaskList(projectId) {
         activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
         setStoredProjectTaskCategoryFilter(projectId, activeCategory);
     }
-    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory });
+    const completedDisplayState = hideCompleted
+        ? null
+        : getCompletedTaskDisplayState(project, { sortMode, activeCategory });
+    const displayTasks = completedDisplayState
+        ? completedDisplayState.visibleTasks
+        : getDisplayTasksForProject(project, { hideCompleted, sortMode, activeCategory });
     const selectedTasks = state.getSelectedTasks(projectId);
 
     taskList.dataset.sortMode = sortMode;
     taskList.dataset.activeCategory = activeCategory;
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    renderCompletedTaskDisplayControls(projectId, completedDisplayState, hideCompleted);
     renderTaskSelectAllControl(projectId, displayTasks);
     renderTaskBulkActions(projectId);
     renderTaskCategoryControls(projectId);
@@ -5249,11 +5381,19 @@ function openProjectModal(projectId, options = {}) {
 
     const tasks = Array.isArray(project.tasks) ? project.tasks : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+    if (!options.restoreState) {
+        resetProjectCompletedTaskLimitPreference(project.id);
+    }
     const hideCompleted = getProjectHideCompletedPreference(project.id);
     const taskSortMode = getProjectTaskSortPreference(project.id);
     const activeCategory = getProjectTaskCategoryFilter(project.id);
     state.setHideCompletedTasks(hideCompleted);
-    const displayTasks = getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
+    const completedDisplayState = hideCompleted
+        ? null
+        : getCompletedTaskDisplayState(project, { sortMode: taskSortMode, activeCategory });
+    const displayTasks = completedDisplayState
+        ? completedDisplayState.visibleTasks
+        : getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
 
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
@@ -5374,6 +5514,9 @@ function openProjectModal(projectId, options = {}) {
                         </div>
                         <div class="task-list" id="modal-task-list-${project.id}">
                             ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
+                        </div>
+                        <div class="completed-task-display-controls-shell" id="completed-task-display-controls-shell-${project.id}">
+                            ${buildCompletedTaskDisplayControlsMarkup(project.id, completedDisplayState, hideCompleted)}
                         </div>
                         
                         <!-- Paste Tasks Section in Modal -->
@@ -5546,6 +5689,9 @@ function toggleHideCompleted() {
     if (!projectId) return;
 
     setProjectHideCompletedPreference(projectId, checkbox.checked);
+    if (!checkbox.checked) {
+        resetProjectCompletedTaskLimitPreference(projectId);
+    }
     renderModalTaskList(projectId);
 }
 
@@ -6771,6 +6917,8 @@ window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
 window.saveActiveProjectNoteFromSurface = saveActiveProjectNoteFromSurface;
 window.toggleHideCompleted = toggleHideCompleted;
+window.showMoreCompletedTasks = showMoreCompletedTasks;
+window.showAllCompletedTasks = showAllCompletedTasks;
 window.setProjectTaskSortMode = setProjectTaskSortMode;
 window.updateTaskTag = updateTaskTag;
 window.cycleProjectCardTaskPriority = cycleProjectCardTaskPriority;

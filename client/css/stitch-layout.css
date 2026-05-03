@@ -9267,3 +9267,94 @@ body[data-theme^="blueprint"] .leaderboard-profile-avatar-img {
         min-height: 0 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: completed-task batch display controls in project modal
+   ============================================================================ */
+#projectModal .completed-task-display-controls-shell,
+body[data-theme^="console"] #projectModal .completed-task-display-controls-shell,
+body[data-theme^="glass"] #projectModal .completed-task-display-controls-shell,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-controls-shell {
+    order: 3 !important;
+}
+
+#projectModal .completed-task-display-controls,
+body[data-theme^="console"] #projectModal .completed-task-display-controls,
+body[data-theme^="glass"] #projectModal .completed-task-display-controls,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-controls {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+    margin: 0.35rem 0 0.85rem !important;
+    padding: 0.65rem 0.75rem !important;
+    border: 1px solid rgba(130, 145, 165, 0.24) !important;
+    border-radius: 0.85rem !important;
+    font-size: 0.78rem !important;
+}
+
+#projectModal .completed-task-display-summary,
+body[data-theme^="console"] #projectModal .completed-task-display-summary,
+body[data-theme^="glass"] #projectModal .completed-task-display-summary,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-summary {
+    min-width: 0 !important;
+    line-height: 1.25 !important;
+}
+
+#projectModal .completed-task-display-actions,
+body[data-theme^="console"] #projectModal .completed-task-display-actions,
+body[data-theme^="glass"] #projectModal .completed-task-display-actions,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.45rem !important;
+    flex-wrap: wrap !important;
+}
+
+#projectModal .completed-task-display-button,
+body[data-theme^="console"] #projectModal .completed-task-display-button,
+body[data-theme^="glass"] #projectModal .completed-task-display-button,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-button {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2rem !important;
+    padding: 0.45rem 0.65rem !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(130, 145, 165, 0.28) !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+}
+
+#projectModal .completed-task-display-button:hover,
+body[data-theme^="console"] #projectModal .completed-task-display-button:hover,
+body[data-theme^="glass"] #projectModal .completed-task-display-button:hover,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-button:hover {
+    color: var(--accent, #0099ff) !important;
+    border-color: color-mix(in srgb, var(--accent, #0099ff) 55%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+    #projectModal .completed-task-display-controls,
+    body[data-theme^="console"] #projectModal .completed-task-display-controls,
+    body[data-theme^="glass"] #projectModal .completed-task-display-controls,
+    body[data-theme^="blueprint"] #projectModal .completed-task-display-controls {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    #projectModal .completed-task-display-actions,
+    body[data-theme^="console"] #projectModal .completed-task-display-actions,
+    body[data-theme^="glass"] #projectModal .completed-task-display-actions,
+    body[data-theme^="blueprint"] #projectModal .completed-task-display-actions {
+        justify-content: flex-start !important;
+    }
+}
