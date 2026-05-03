@@ -8784,7 +8784,7 @@ body[data-theme^="blueprint"] .add-project-button:active {
 }
 
 body[data-theme="blueprint-dark"] .add-project-button {
-    color: var(--bg, transparent) !important;
+    color: var(--panel, var(--surface, var(--bg, transparent))) !important;
 }
 
 body[data-theme="blueprint-dark"] .add-project-button svg {

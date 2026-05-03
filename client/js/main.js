@@ -374,20 +374,24 @@ const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea1
 const THEME_OPTIONS = {
     'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' },
     'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
-    'glass-dark': { label: 'Glassmorphism Dark', family: 'glass', mode: 'dark' },
-    'glass-light': { label: 'Glassmorphism Light', family: 'glass', mode: 'light' },
     'blueprint-dark': { label: 'Neumorphism Dark', family: 'blueprint', mode: 'dark' },
     'blueprint-light': { label: 'Neumorphism Light', family: 'blueprint', mode: 'light' }
 };
 
 const THEME_FAMILY_OPTIONS = {
     console: { label: 'Console', themePrefix: 'console' },
-    glass: { label: 'Glassmorphism', themePrefix: 'glass' },
     blueprint: { label: 'Neumorphism', themePrefix: 'blueprint' }
 };
 
 const DEFAULT_ACCENT_COLOR = '#ff8a00';
-const ACCENT_COLOR_OPTIONS = [
+const LIGHT_MODE_ACCENT_COLOR_OPTIONS = [
+    '#2400ff',
+    '#8a00ff',
+    '#df00ff',
+    '#ff00b5',
+    '#ff004a'
+];
+const DARK_MODE_ACCENT_COLOR_OPTIONS = [
     '#ff2000',
     '#ff8a00',
     '#fff400',
@@ -395,12 +399,11 @@ const ACCENT_COLOR_OPTIONS = [
     '#35ff00',
     '#00ff35',
     '#00ff8a',
-    '#0075ff',
-    '#2400ff',
-    '#8a00ff',
-    '#df00ff',
-    '#ff00b5',
-    '#ff004a'
+    '#0075ff'
+];
+const ACCENT_COLOR_OPTIONS = [
+    ...DARK_MODE_ACCENT_COLOR_OPTIONS,
+    ...LIGHT_MODE_ACCENT_COLOR_OPTIONS
 ];
 
 const LEGACY_THEME_MAP = {
@@ -412,12 +415,12 @@ const LEGACY_THEME_MAP = {
     console: 'console-dark',
     'console-light': 'console-light',
     'console-dark': 'console-dark',
-    glass: 'glass-dark',
-    nebula: 'glass-dark',
-    'glass-light': 'glass-light',
-    'glass-dark': 'glass-dark',
-    'nebula-light': 'glass-light',
-    'nebula-dark': 'glass-dark',
+    glass: 'console-dark',
+    nebula: 'console-dark',
+    'glass-light': 'console-light',
+    'glass-dark': 'console-dark',
+    'nebula-light': 'console-light',
+    'nebula-dark': 'console-dark',
     blueprint: 'blueprint-dark',
     duplex: 'blueprint-dark',
     'blueprint-light': 'blueprint-light',
@@ -681,9 +684,26 @@ function normalizeThemeName(themeName) {
     return LEGACY_THEME_MAP[normalized] || 'console-dark';
 }
 
-function normalizeAccentColor(color) {
+function getCurrentColorMode() {
+    try {
+        return getThemeMeta(uiState.theme).mode === 'light' ? 'light' : 'dark';
+    } catch {
+        return 'dark';
+    }
+}
+
+function getAccentColorOptionsForMode(colorMode = getCurrentColorMode()) {
+    return colorMode === 'light' ? LIGHT_MODE_ACCENT_COLOR_OPTIONS : DARK_MODE_ACCENT_COLOR_OPTIONS;
+}
+
+function getDefaultAccentColorForMode(colorMode = getCurrentColorMode()) {
+    return colorMode === 'light' ? LIGHT_MODE_ACCENT_COLOR_OPTIONS[0] : DEFAULT_ACCENT_COLOR;
+}
+
+function normalizeAccentColor(color, colorMode = getCurrentColorMode()) {
     const normalized = String(color || '').trim().toLowerCase();
-    return ACCENT_COLOR_OPTIONS.includes(normalized) ? normalized : DEFAULT_ACCENT_COLOR;
+    const options = getAccentColorOptionsForMode(colorMode);
+    return options.includes(normalized) ? normalized : getDefaultAccentColorForMode(colorMode);
 }
 
 function hexToRgb(hex) {
@@ -738,14 +758,18 @@ function applyAccentColor(color, persist = true) {
     renderAccentColorOptions();
 }
 
-function loadAccentColorPreference() {
-    let storedColor = DEFAULT_ACCENT_COLOR;
+function ensureAccentColorAllowedForCurrentMode(persist = true) {
+    let storedColor = getDefaultAccentColorForMode();
     try {
-        storedColor = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR) || DEFAULT_ACCENT_COLOR;
+        storedColor = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR) || getDefaultAccentColorForMode();
     } catch (err) {
         console.warn('Failed to load accent color preference:', err);
     }
-    applyAccentColor(storedColor, false);
+    applyAccentColor(storedColor, persist);
+}
+
+function loadAccentColorPreference() {
+    ensureAccentColorAllowedForCurrentMode(false);
 }
 
 function getThemeMeta(themeName) {
@@ -904,6 +928,7 @@ function applyTheme(themeName, persist = true) {
             console.warn('Failed to save UI preference:', err);
         }
     }
+    ensureAccentColorAllowedForCurrentMode(persist);
     const status = document.getElementById('uiOptionsStatus');
     if (status) {
         const meta = getThemeMeta(uiState.theme);
@@ -932,7 +957,8 @@ function renderAccentColorOptions() {
     try {
         activeAccent = normalizeAccentColor(localStorage.getItem(LOCAL_STORAGE_KEYS.ACCENT_COLOR) || DEFAULT_ACCENT_COLOR);
     } catch {}
-    grid.innerHTML = ACCENT_COLOR_OPTIONS.map(color => {
+    const colorOptions = getAccentColorOptionsForMode();
+    grid.innerHTML = colorOptions.map(color => {
         const isActive = normalizeAccentColor(color) === activeAccent;
         return `
             <button class="accent-color-swatch ${isActive ? 'is-active' : ''}"
