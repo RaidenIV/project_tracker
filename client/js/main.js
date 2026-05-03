@@ -3040,7 +3040,7 @@ function switchToCompletedView() {
 // DRAG AND DROP
 // ============================================================================
 
-// Project drag-to-reorder (iOS-style: long-press to enter edit mode + pointer-based slide)
+// Project drag-to-reorder (handle-based pointer slide)
 let __projectDrag = null;
 let __suppressNextProjectGridClick = false;
 let __projectEditMode = false;
@@ -3074,12 +3074,17 @@ function setupProjectDragAndDrop() {
     const cards = Array.from(projectGrid.querySelectorAll('.project-card'));
     cards.forEach((card) => {
         card.setAttribute('draggable', 'false');
+        const handle = card.querySelector('.project-card-reorder-handle');
+        if (!handle || handle.__projectReorderHandleBound) return;
+        handle.__projectReorderHandleBound = true;
 
-        card.addEventListener('pointerdown', (e) => {
+        handle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
+
+        handle.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return;
-
-            const t = e.target;
-            if (t && t.closest && t.closest('button, input, textarea, select, a, [contenteditable="true"], [role="textbox"]')) return;
             if (card.dataset.projectCanReorder !== 'true') return;
 
             const projectId = card.getAttribute('data-project-id');
@@ -3089,37 +3094,32 @@ function setupProjectDragAndDrop() {
             const startIndex = viewProjects.findIndex(p => String(p.id) === String(projectId));
             if (startIndex === -1) return;
 
+            e.preventDefault();
+            e.stopPropagation();
             clearProjectLongPress();
 
+            const scrollEl = getScrollParent(projectGrid);
+            __projectDragScrollEl = scrollEl;
             __projectDrag = {
                 pointerId:  e.pointerId,
                 startIndex,
                 startX:     e.clientX,
                 startY:     e.clientY,
+                startScrollTop: getProjectDragScrollTop(scrollEl),
+                startScrollLeft: getProjectDragScrollLeft(scrollEl),
+                scrollEl,
                 grid:       projectGrid,
                 sourceCard: card,
+                sourceHandle: handle,
                 active:     false,
-                pendingLongPress: true,
-                longPressReady: false,
+                pendingLongPress: false,
+                longPressReady: true,
                 snapshots:  null,
                 targetIndex:     startIndex,
                 lastTargetIndex: startIndex
             };
 
-            __projectPendingPress = __projectDrag;
-            card.classList.add('project-card--long-press-pending');
-
-            __projectLongPressTimer = window.setTimeout(() => {
-                if (!__projectDrag || __projectDrag.pointerId !== e.pointerId || __projectDrag.sourceCard !== card) return;
-                __projectDrag.longPressReady = true;
-                __projectPendingPress = null;
-                __suppressNextProjectGridClick = true;
-                setProjectEditMode(true);
-                card.classList.remove('project-card--long-press-pending');
-                card.classList.add('project-card--long-press-ready');
-            }, 280);
-
-            try { card.setPointerCapture(e.pointerId); } catch { /* noop */ }
+            try { handle.setPointerCapture(e.pointerId); } catch { /* noop */ }
 
             window.addEventListener('pointermove',  onProjectPointerMove,   { passive: false });
             window.addEventListener('pointerup',    onProjectPointerUp,     { passive: false, once: true });
@@ -3150,7 +3150,7 @@ function bindProjectEditModeExitHandlers() {
     if (__projectEditListenersBound) return;
     __projectEditListenersBound = true;
 
-    // Escape closes task-note modal first, then exits edit mode.
+    // Escape closes task-note modal first, then exits drag edit mode.
     document.addEventListener('keydown', (e) => {
         if (isTypingTarget(e.target)) return;
         if (e.key === 'Escape' && document.getElementById('taskNoteModal')?.classList.contains('active')) {
@@ -3160,7 +3160,7 @@ function bindProjectEditModeExitHandlers() {
         if (e.key === 'Escape' && __projectEditMode) setProjectEditMode(false);
     });
 
-    // Click outside the grid (or on the modal) exits edit mode — iOS "Done" equivalent
+    // Click outside the grid (or on the modal) exits drag edit mode.
     document.addEventListener('pointerdown', (e) => {
         if (!__projectEditMode) return;
         if (__projectDrag && __projectDrag.active) return;
@@ -3192,13 +3192,36 @@ function getScrollParent(el) {
     return document.scrollingElement || document.documentElement;
 }
 
+function getProjectDragScrollTop(el) {
+    if (!el) return 0;
+    return (el === document.scrollingElement || el === document.documentElement)
+        ? window.scrollY
+        : el.scrollTop;
+}
+
+function getProjectDragScrollLeft(el) {
+    if (!el) return 0;
+    return (el === document.scrollingElement || el === document.documentElement)
+        ? window.scrollX
+        : el.scrollLeft;
+}
+
+function getProjectDragDelta(event) {
+    if (!__projectDrag) return { dx: 0, dy: 0 };
+    const scrollEl = __projectDrag.scrollEl || __projectDragScrollEl;
+    return {
+        dx: (event.clientX - __projectDrag.startX) + (getProjectDragScrollLeft(scrollEl) - (__projectDrag.startScrollLeft || 0)),
+        dy: (event.clientY - __projectDrag.startY) + (getProjectDragScrollTop(scrollEl) - (__projectDrag.startScrollTop || 0))
+    };
+}
+
 function autoScrollProjectDrag(clientY) {
     if (!__projectDrag || !__projectDrag.active) return;
 
     // Cache the scroll container for this gesture
-    if (!__projectDragScrollEl) __projectDragScrollEl = getScrollParent(__projectDrag.grid);
+    if (!__projectDragScrollEl) __projectDragScrollEl = __projectDrag.scrollEl || getScrollParent(__projectDrag.grid);
 
-    const el = __projectDragScrollEl;
+    const el = __projectDrag.scrollEl || __projectDragScrollEl;
     if (!el) return;
 
     const rect = (el === document.scrollingElement || el === document.documentElement)
@@ -3249,43 +3272,33 @@ function onProjectPointerMove(e) {
 
     const moved = Math.hypot(e.clientX - __projectDrag.startX, e.clientY - __projectDrag.startY);
 
-    if (__projectDrag.pendingLongPress && !__projectDrag.longPressReady) {
-        if (moved > 7) cleanupProjectDrag();
-        return;
-    }
-
     e.preventDefault();
 
-    // Small movement threshold after the long-press has armed dragging.
+    // Small movement threshold after grabbing the reorder handle.
     if (!__projectDrag.active) {
         const THRESHOLD = 2;
         if (moved < THRESHOLD) return;
         startProjectSlide(e);
     }
 
-    // 1. Dragged card follows the pointer (zero-lag, no easing).
-    //    translate3d is relative to layout position, so we only need the delta
-    //    from where the pointer was when the press started.
-    const dx = e.clientX - __projectDrag.startX;
-    const dy = e.clientY - __projectDrag.startY;
+    // Let the viewport scroll first, then include the scroll delta in the drag
+    // transform so the card remains attached to the cursor while scrolling.
+    autoScrollProjectDrag(e.clientY);
+
+    const { dx, dy } = getProjectDragDelta(e);
     setProjectDragTransform(__projectDrag.sourceCard, `translate3d(${dx}px, ${dy}px, 0)`);
 
-    // 2. Slide idle cards to make room / fill the gap
+    // Slide idle cards to make room / fill the gap.
     updateProjectSlideItems(e.clientX, e.clientY);
-    autoScrollProjectDrag(e.clientY);
 }
 
 
 function onProjectPointerUp(e) {
     if (!__projectDrag) return;
 
-    // Pointer released before the threshold was crossed — nothing to commit.
-    // If the long press armed, suppress the click so the modal does not open.
+    // Pointer released before the drag threshold was crossed — nothing to commit.
     if (!__projectDrag.active) {
-        if (__projectDrag.longPressReady) {
-            e.preventDefault();
-            __suppressNextProjectGridClick = true;
-        }
+        e.preventDefault();
         cleanupProjectDrag();
         return;
     }
@@ -3328,6 +3341,7 @@ function onProjectPointerCancel() {
 function startProjectSlide(e) {
     const { sourceCard, grid } = __projectDrag;
     __projectDrag.active = true;
+    setProjectEditMode(true);
     grid.classList.add('is-reordering');
 
     // Snapshot ALL cards (including dragged) in DOM order
@@ -3341,8 +3355,7 @@ function startProjectSlide(e) {
     // Use the same delta logic as onProjectPointerMove so there is no jump.
     sourceCard.classList.add('dragging');
 
-    const dx = e.clientX - __projectDrag.startX;
-    const dy = e.clientY - __projectDrag.startY;
+    const { dx, dy } = getProjectDragDelta(e);
     setProjectDragTransform(sourceCard, `translate3d(${dx}px, ${dy}px, 0)`);
 }
 
@@ -3462,7 +3475,7 @@ function cleanupProjectDrag() {
         drag.sourceCard.classList.remove('dragging', 'project-card--long-press-pending', 'project-card--long-press-ready');
         clearProjectDragTransform(drag.sourceCard);
         drag.sourceCard.style.cursor = '';
-        try { drag.sourceCard.releasePointerCapture(drag.pointerId); } catch { /* noop */ }
+        try { (drag.sourceHandle || drag.sourceCard).releasePointerCapture(drag.pointerId); } catch { /* noop */ }
     }
 
     __projectPendingPress = null;
@@ -5147,12 +5160,6 @@ function openProjectModal(projectId, options = {}) {
                                        onchange="toggleHideCompleted()">
                                 <span class="toggle-slider"></span>
                             </label>
-                            <button class="modal-add-task-top modal-add-task-under-toggle" type="button" onclick="addTaskToModal('${project.id}')">
-                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                Add Task
-                            </button>
                             <div class="task-select-all-control" id="task-select-all-control-${project.id}">
                                 ${buildTaskSelectAllControlMarkup(project.id, displayTasks, selectedTasks)}
                             </div>
@@ -5177,7 +5184,7 @@ function openProjectModal(projectId, options = {}) {
                         
                         <!-- Paste Tasks Section in Modal -->
                         <div class="modal-paste-section">
-                            <h4 class="modal-paste-title">Tasks List</h4>
+                            <h4 class="modal-paste-title">Add Tasks Here</h4>
                             <textarea 
                                 class="paste-box"
                                 id="modal-paste-box-${project.id}"
@@ -5186,7 +5193,7 @@ function openProjectModal(projectId, options = {}) {
                             <button 
                                 class="paste-button"
                                 onclick="pasteTasksInModal('${project.id}')">
-                                Add Pasted Tasks
+                                Add Tasks
                             </button>
                         </div>
                     </div>
@@ -5842,6 +5849,11 @@ function renderProjectCard(project) {
              data-project-id="${project.id}"
              data-project-can-reorder="${canReorderProject ? 'true' : 'false'}"
              onclick="openProjectModal('${project.id}')">
+            ${canReorderProject ? `<button class="project-card-reorder-handle" type="button" title="Reorder project" aria-label="Reorder project" onclick="event.preventDefault(); event.stopPropagation();">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+            </button>` : ''}
             <div class="project-header">
                 <div class="project-title-container">
                     <div>
