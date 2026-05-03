@@ -10794,3 +10794,42 @@ body[data-theme^="console"] #projectModal .task-category-tab-shell {
         white-space: nowrap !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: UI Options button/color-card refinements
+   ============================================================================ */
+body[data-theme^="console"] .ui-options-modal-content .modal-done-btn,
+body[data-theme^="console"] .ui-options-modal-content .modal-done-btn:hover,
+body[data-theme^="console"] .ui-options-modal-content .modal-done-btn:focus-visible {
+    color: var(--panel, var(--surface, var(--bg, #111318))) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .add-project-button,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:hover,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visible,
+body[data-theme="blueprint-dark"] .add-project-button,
+body[data-theme="blueprint-dark"] .add-project-button:hover,
+body[data-theme="blueprint-dark"] .add-project-button:focus-visible {
+    color: var(--bg, var(--panel, var(--surface, #171717))) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .add-project-button svg,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:hover svg,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visible svg,
+body[data-theme="blueprint-dark"] .add-project-button svg,
+body[data-theme="blueprint-dark"] .add-project-button:hover svg,
+body[data-theme="blueprint-dark"] .add-project-button:focus-visible svg {
+    color: var(--accent, currentColor) !important;
+    stroke: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-grid {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
