@@ -1334,20 +1334,17 @@ function buildLeaderboardProfileModalMarkup(entry) {
     return `
         <div class="modal-content leaderboard-profile-modal-content" role="dialog" aria-modal="true" aria-labelledby="leaderboardProfileTitle">
             <div class="account-modal-scroll">
-                <div class="account-modal-header">
-                    <div>
-                        <h2 class="account-modal-title" id="leaderboardProfileTitle">${escapeHtml(username)}</h2>
-                        <p class="account-modal-subtitle">Leaderboard stats</p>
-                    </div>
-                    <button class="modal-close" type="button" onclick="closeLeaderboardProfileModal()" aria-label="Close leaderboard stats">
+                <div class="leaderboard-profile-modal-header">
+                    <button class="modal-close leaderboard-profile-close" type="button" onclick="closeLeaderboardProfileModal()" aria-label="Close leaderboard stats">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
+                    <h2 class="leaderboard-profile-heading" id="leaderboardProfileTitle">Leaderboard Stats</h2>
                 </div>
                 <div class="leaderboard-profile-top">
                     <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
-                    <div>
+                    <div class="leaderboard-profile-summary">
                         <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
                         <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • ${Number.isFinite(completion) ? completion : 0}% complete</div>
                     </div>

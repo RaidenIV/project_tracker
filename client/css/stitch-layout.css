@@ -8627,3 +8627,65 @@ body[data-theme^="blueprint"] #projectModal .project-tag-add {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism flat background + leaderboard modal profile header
+   ============================================================================ */
+body[data-theme^="blueprint"] {
+    background: var(--bg) !important;
+    background-attachment: scroll !important;
+    background-size: auto !important;
+}
+
+body[data-theme^="blueprint"] .bg-gradient,
+body[data-theme^="blueprint"]::before,
+body[data-theme^="blueprint"]::after {
+    display: none !important;
+    background: var(--bg) !important;
+}
+
+body[data-theme^="blueprint"] .auth-overlay {
+    background: var(--bg) !important;
+    background-size: auto !important;
+}
+
+.leaderboard-profile-modal-header,
+body[data-theme^="console"] .leaderboard-profile-modal-header,
+body[data-theme^="glass"] .leaderboard-profile-modal-header,
+body[data-theme^="blueprint"] .leaderboard-profile-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1.2rem !important;
+}
+
+.leaderboard-profile-heading,
+body[data-theme^="console"] .leaderboard-profile-heading,
+body[data-theme^="glass"] .leaderboard-profile-heading,
+body[data-theme^="blueprint"] .leaderboard-profile-heading {
+    margin: 0 0 0 auto !important;
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: clamp(1.25rem, 2vw, 1.6rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    text-align: right !important;
+    text-transform: none !important;
+}
+
+.leaderboard-profile-close,
+body[data-theme^="console"] .leaderboard-profile-close,
+body[data-theme^="glass"] .leaderboard-profile-close,
+body[data-theme^="blueprint"] .leaderboard-profile-close {
+    flex: 0 0 auto !important;
+}
+
+.leaderboard-profile-summary,
+body[data-theme^="console"] .leaderboard-profile-summary,
+body[data-theme^="glass"] .leaderboard-profile-summary,
+body[data-theme^="blueprint"] .leaderboard-profile-summary {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
