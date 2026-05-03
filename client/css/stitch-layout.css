@@ -11354,3 +11354,85 @@ body[data-theme^="blueprint"] .auth-overlay .auth-error {
         margin-bottom: 0.85rem !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: auth title spacing, logo placement, and casing refinement
+   ============================================================================ */
+.auth-overlay .auth-brand-copy,
+body[data-theme] .auth-overlay .auth-brand-copy,
+body[data-theme^="console"] .auth-overlay .auth-brand-copy,
+body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
+    gap: 0.12rem !important;
+    margin: 0 0 1.05rem !important;
+}
+
+.auth-overlay .auth-product-title,
+body[data-theme] .auth-overlay .auth-product-title,
+body[data-theme^="console"] .auth-overlay .auth-product-title,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-title {
+    font-size: clamp(1.69rem, 5vw, 2.38rem) !important;
+    text-transform: none !important;
+    letter-spacing: 0.035em !important;
+}
+
+.auth-overlay .auth-product-subtitle,
+body[data-theme] .auth-overlay .auth-product-subtitle,
+body[data-theme^="console"] .auth-overlay .auth-product-subtitle,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-subtitle {
+    text-transform: none !important;
+    letter-spacing: 0.045em !important;
+}
+
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    display: flex !important;
+    gap: 0.38rem !important;
+    padding: 0.38rem !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab,
+.auth-overlay .auth-submit,
+body[data-theme] .auth-overlay .auth-submit,
+body[data-theme^="console"] .auth-overlay .auth-submit,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit {
+    text-transform: none !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    flex: 1 1 0 !important;
+    letter-spacing: 0.015em !important;
+}
+
+.auth-overlay .auth-logo-img,
+body[data-theme] .auth-overlay .auth-logo-img,
+body[data-theme^="console"] .auth-overlay .auth-logo-img,
+body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
+    width: min(4.25rem, 18vw) !important;
+    max-width: 50% !important;
+    margin: 1rem auto 0 !important;
+}
+
+@media (max-width: 430px) {
+    .auth-overlay .auth-logo-img,
+    body[data-theme] .auth-overlay .auth-logo-img,
+    body[data-theme^="console"] .auth-overlay .auth-logo-img,
+    body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
+        width: min(3.5rem, 18vw) !important;
+        margin-top: 0.85rem !important;
+    }
+
+    .auth-overlay .auth-brand-copy,
+    body[data-theme] .auth-overlay .auth-brand-copy,
+    body[data-theme^="console"] .auth-overlay .auth-brand-copy,
+    body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
+        gap: 0.12rem !important;
+    }
+}
