@@ -11362,7 +11362,7 @@ body[data-theme^="blueprint"] .auth-overlay .auth-error {
 body[data-theme] .auth-overlay .auth-brand-copy,
 body[data-theme^="console"] .auth-overlay .auth-brand-copy,
 body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
-    gap: 0.12rem !important;
+    gap: 0.24rem !important;
     margin: 0 0 1.05rem !important;
 }
 
@@ -11433,6 +11433,6 @@ body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
     body[data-theme] .auth-overlay .auth-brand-copy,
     body[data-theme^="console"] .auth-overlay .auth-brand-copy,
     body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
-        gap: 0.12rem !important;
+        gap: 0.24rem !important;
     }
 }
