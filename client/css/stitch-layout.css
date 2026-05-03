@@ -10150,3 +10150,69 @@ body[data-theme^="console"] #projectModal .task-item:not(.dragging) {
         z-index: 100000 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Console task tabs stick to the true modal top while scrolling
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-content#modalContent {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    contain: none !important;
+    isolation: auto !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"],
+body[data-theme^="console"] #projectModal .modal-tasks-card {
+    overflow: visible !important;
+    contain: none !important;
+    isolation: auto !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2147483000 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.995)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.995)) !important;
+    box-shadow: 0 1px 0 var(--line, rgba(148, 163, 184, 0.22)) !important;
+    transform: translateZ(0) !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-item:not(.dragging) {
+    z-index: 0 !important;
+}
+
+@media (max-width: 720px) {
+    body[data-theme^="console"] #projectModal .modal-content#modalContent {
+        height: 100svh !important;
+        max-height: 100svh !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        height: auto !important;
+        min-height: 100svh !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        z-index: 2147483000 !important;
+    }
+}
