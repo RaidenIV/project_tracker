@@ -5014,12 +5014,18 @@ function updateTaskNote(projectId, taskId, noteValue) {
 }
 
 function buildCompletedTaskDisplayControlsMarkup(projectId, displayState, hideCompleted) {
-    if (hideCompleted || !displayState || displayState.totalCompleted <= COMPLETED_TASK_BATCH_DEFAULT) return '';
+    if (hideCompleted || !displayState) return '';
 
     const totalCompleted = Number(displayState.totalCompleted) || 0;
+    if (totalCompleted <= 0) return '';
+
     const visibleCompleted = Number(displayState.visibleCompleted) || 0;
     const hiddenCompleted = Math.max(0, totalCompleted - visibleCompleted);
     const isShowingAll = hiddenCompleted <= 0;
+    const showMoreDisabled = isShowingAll ? 'disabled aria-disabled="true"' : '';
+    const showAllDisabled = isShowingAll || displayState.completedLimit === 'all'
+        ? 'disabled aria-disabled="true"'
+        : '';
 
     return `
         <div class="completed-task-display-controls" id="completed-task-display-controls-${projectId}">
@@ -5028,19 +5034,17 @@ function buildCompletedTaskDisplayControlsMarkup(projectId, displayState, hideCo
                     ? `Showing all ${totalCompleted} completed tasks`
                     : `Showing ${visibleCompleted} of ${totalCompleted} completed tasks`}
             </span>
-            ${!isShowingAll ? `
-                <div class="completed-task-display-actions" aria-label="Show more completed tasks">
-                    <button type="button" class="completed-task-display-button" onclick="showMoreCompletedTasks('${projectId}', 50)">
-                        Show 50 more
-                    </button>
-                    <button type="button" class="completed-task-display-button" onclick="showMoreCompletedTasks('${projectId}', 100)">
-                        Show 100 more
-                    </button>
-                    <button type="button" class="completed-task-display-button" onclick="showAllCompletedTasks('${projectId}')">
-                        Show all
-                    </button>
-                </div>
-            ` : ''}
+            <div class="completed-task-display-actions" aria-label="Show more completed tasks">
+                <button type="button" class="completed-task-display-button" ${showMoreDisabled} onclick="showMoreCompletedTasks('${projectId}', 50)">
+                    Show 50 more
+                </button>
+                <button type="button" class="completed-task-display-button" ${showMoreDisabled} onclick="showMoreCompletedTasks('${projectId}', 100)">
+                    Show 100 more
+                </button>
+                <button type="button" class="completed-task-display-button" ${showAllDisabled} onclick="showAllCompletedTasks('${projectId}')">
+                    Show all
+                </button>
+            </div>
         </div>
     `;
 }
@@ -5512,11 +5516,11 @@ function openProjectModal(projectId, options = {}) {
                         <div class="task-bulk-actions-shell" id="task-bulk-actions-${project.id}">
                             ${buildTaskBulkActionsMarkup(project.id, project, selectedTasks)}
                         </div>
-                        <div class="task-list" id="modal-task-list-${project.id}">
-                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
-                        </div>
                         <div class="completed-task-display-controls-shell" id="completed-task-display-controls-shell-${project.id}">
                             ${buildCompletedTaskDisplayControlsMarkup(project.id, completedDisplayState, hideCompleted)}
+                        </div>
+                        <div class="task-list" id="modal-task-list-${project.id}">
+                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
                         </div>
                         
                         <!-- Paste Tasks Section in Modal -->

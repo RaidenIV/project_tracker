@@ -8431,7 +8431,7 @@ body[data-theme^="blueprint"] #projectModal .task-bulk-actions-shell {
 body[data-theme^="console"] #projectModal .task-list,
 body[data-theme^="glass"] #projectModal .task-list,
 body[data-theme^="blueprint"] #projectModal .task-list {
-    order: 2 !important;
+    order: 3 !important;
 }
 
 #projectModal .project-tag-add,
@@ -9275,7 +9275,7 @@ body[data-theme^="blueprint"] .leaderboard-profile-avatar-img {
 body[data-theme^="console"] #projectModal .completed-task-display-controls-shell,
 body[data-theme^="glass"] #projectModal .completed-task-display-controls-shell,
 body[data-theme^="blueprint"] #projectModal .completed-task-display-controls-shell {
-    order: 3 !important;
+    order: 2 !important;
 }
 
 #projectModal .completed-task-display-controls,
@@ -9340,6 +9340,16 @@ body[data-theme^="glass"] #projectModal .completed-task-display-button:hover,
 body[data-theme^="blueprint"] #projectModal .completed-task-display-button:hover {
     color: var(--accent, #0099ff) !important;
     border-color: color-mix(in srgb, var(--accent, #0099ff) 55%, transparent) !important;
+}
+
+#projectModal .completed-task-display-button:disabled,
+body[data-theme^="console"] #projectModal .completed-task-display-button:disabled,
+body[data-theme^="glass"] #projectModal .completed-task-display-button:disabled,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-button:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    color: inherit !important;
+    border-color: rgba(130, 145, 165, 0.22) !important;
 }
 
 @media (max-width: 640px) {
