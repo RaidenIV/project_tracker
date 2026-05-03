@@ -10877,3 +10877,26 @@ body[data-theme^="blueprint"] .add-project-button:focus-visible svg * {
     stroke: var(--new-project-cutout-color) !important;
     -webkit-text-fill-color: var(--new-project-cutout-color) !important;
 }
+
+/* ============================================================================
+   Targeted patch: auth submit button text readability/alignment
+   ============================================================================ */
+.auth-submit,
+.auth-submit:hover:not(:disabled),
+.auth-submit:focus-visible,
+body[data-theme^="console"] .auth-submit,
+body[data-theme^="console"] .auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-submit:hover,
+body[data-theme^="console"] .auth-submit:focus-visible,
+body[data-theme^="blueprint"] .auth-submit,
+body[data-theme^="blueprint"] .auth-submit:hover:not(:disabled),
+body[data-theme^="blueprint"] .auth-submit:focus-visible {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    line-height: 1 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: none !important;
+}
