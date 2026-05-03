@@ -5035,13 +5035,13 @@ function buildCompletedTaskDisplayControlsMarkup(projectId, displayState, hideCo
                     : `Showing ${visibleCompleted} of ${totalCompleted} completed tasks`}
             </span>
             <div class="completed-task-display-actions" aria-label="Show more completed tasks">
-                <button type="button" class="completed-task-display-button" ${showMoreDisabled} onclick="showMoreCompletedTasks('${projectId}', 50)">
+                <button type="button" class="completed-task-display-button" ${showMoreDisabled} data-completed-task-action="show-more" data-project-id="${escapeHtml(projectId)}" data-amount="50">
                     Show 50 more
                 </button>
-                <button type="button" class="completed-task-display-button" ${showMoreDisabled} onclick="showMoreCompletedTasks('${projectId}', 100)">
+                <button type="button" class="completed-task-display-button" ${showMoreDisabled} data-completed-task-action="show-more" data-project-id="${escapeHtml(projectId)}" data-amount="100">
                     Show 100 more
                 </button>
-                <button type="button" class="completed-task-display-button" ${showAllDisabled} onclick="showAllCompletedTasks('${projectId}')">
+                <button type="button" class="completed-task-display-button" ${showAllDisabled} data-completed-task-action="show-all" data-project-id="${escapeHtml(projectId)}">
                     Show all
                 </button>
             </div>
@@ -5055,18 +5055,61 @@ function renderCompletedTaskDisplayControls(projectId, displayState, hideComplet
     container.innerHTML = buildCompletedTaskDisplayControlsMarkup(projectId, displayState, hideCompleted);
 }
 
+function getLiveCompletedTaskDisplayState(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return null;
+    const sortMode = getProjectTaskSortPreference(projectId);
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
+        setStoredProjectTaskCategoryFilter(projectId, activeCategory);
+    }
+    return getCompletedTaskDisplayState(project, { sortMode, activeCategory });
+}
+
 function showMoreCompletedTasks(projectId, amount) {
-    const currentLimit = getProjectCompletedTaskLimitPreference(projectId);
-    if (currentLimit === 'all') return;
+    const displayState = getLiveCompletedTaskDisplayState(projectId);
+    if (!displayState || displayState.completedLimit === 'all') return;
+
+    const totalCompleted = Number(displayState.totalCompleted) || 0;
+    const visibleCompleted = Number(displayState.visibleCompleted) || COMPLETED_TASK_BATCH_DEFAULT;
     const increment = Number(amount);
-    const nextLimit = (Number(currentLimit) || COMPLETED_TASK_BATCH_DEFAULT) + (Number.isFinite(increment) ? increment : COMPLETED_TASK_BATCH_DEFAULT);
-    setProjectCompletedTaskLimitPreference(projectId, nextLimit);
+    const nextLimit = Math.min(
+        totalCompleted,
+        visibleCompleted + (Number.isFinite(increment) && increment > 0 ? increment : COMPLETED_TASK_BATCH_DEFAULT)
+    );
+
+    setProjectCompletedTaskLimitPreference(projectId, nextLimit >= totalCompleted ? 'all' : nextLimit);
     renderModalTaskList(projectId);
 }
 
 function showAllCompletedTasks(projectId) {
     setProjectCompletedTaskLimitPreference(projectId, 'all');
     renderModalTaskList(projectId);
+}
+
+function handleCompletedTaskDisplayControlClick(event) {
+    const button = event.target.closest('[data-completed-task-action]');
+    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+
+    const projectId = button.getAttribute('data-project-id');
+    const action = button.getAttribute('data-completed-task-action');
+    if (!projectId || !action) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (action === 'show-more') {
+        showMoreCompletedTasks(projectId, Number(button.getAttribute('data-amount')) || COMPLETED_TASK_BATCH_DEFAULT);
+    } else if (action === 'show-all') {
+        showAllCompletedTasks(projectId);
+    }
+}
+
+if (typeof document !== 'undefined' && !document.__completedTaskDisplayControlsBound) {
+    document.addEventListener('click', handleCompletedTaskDisplayControlClick);
+    document.__completedTaskDisplayControlsBound = true;
 }
 
 function renderModalTaskList(projectId) {
