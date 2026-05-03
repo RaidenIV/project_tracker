@@ -8689,3 +8689,203 @@ body[data-theme^="blueprint"] .leaderboard-profile-summary {
     flex-direction: column !important;
     justify-content: center !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: leaderboard stats header, Neumorphism chips/buttons/options
+   ============================================================================ */
+.viewport,
+body[data-theme^="console"] .viewport,
+body[data-theme^="glass"] .viewport,
+body[data-theme^="blueprint"] .viewport {
+    --project-tag-chip-vertical-gap: 1.15rem;
+}
+
+.view-filter-chips:not(:empty),
+body[data-theme^="console"] .view-filter-chips:not(:empty),
+body[data-theme^="glass"] .view-filter-chips:not(:empty),
+body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+    margin-top: 0 !important;
+    margin-bottom: var(--project-tag-chip-vertical-gap) !important;
+}
+
+.leaderboard-profile-modal-header,
+body[data-theme^="console"] .leaderboard-profile-modal-header,
+body[data-theme^="glass"] .leaderboard-profile-modal-header,
+body[data-theme^="blueprint"] .leaderboard-profile-modal-header {
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+}
+
+.leaderboard-profile-heading,
+body[data-theme^="console"] .leaderboard-profile-heading,
+body[data-theme^="glass"] .leaderboard-profile-heading,
+body[data-theme^="blueprint"] .leaderboard-profile-heading {
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.leaderboard-profile-close,
+body[data-theme^="console"] .leaderboard-profile-close,
+body[data-theme^="glass"] .leaderboard-profile-close,
+body[data-theme^="blueprint"] .leaderboard-profile-close {
+    margin-left: auto !important;
+}
+
+body[data-theme^="blueprint"] .filter-chip {
+    min-height: 2.25rem !important;
+    padding: 0.45rem 1rem !important;
+    border-radius: var(--radius-full, 999px) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    color: var(--text, currentColor) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .filter-chip:hover,
+body[data-theme^="blueprint"] .filter-chip:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-level-3) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .filter-chip.is-active {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow-inset) !important;
+}
+
+body[data-theme^="blueprint"] .add-project-button {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--radius-xl, 15px) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-level-2) !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] .add-project-button:hover,
+body[data-theme^="blueprint"] .add-project-button:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-level-3) !important;
+    color: var(--accent, currentColor) !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] .add-project-button:active {
+    box-shadow: var(--shadow-pressed) !important;
+}
+
+body[data-theme="blueprint-dark"] .add-project-button {
+    color: var(--bg, transparent) !important;
+}
+
+body[data-theme="blueprint-dark"] .add-project-button svg {
+    color: var(--accent, currentColor) !important;
+    stroke: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content {
+    background: var(--panel, var(--surface, transparent)) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--radius-2xl, 18px) !important;
+    box-shadow: var(--shadow-level-2) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-header,
+body[data-theme^="blueprint"] .ui-options-mode-toggle-row,
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-grid,
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-actions {
+    background: var(--panel, var(--surface, transparent)) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--radius-xl, 15px) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-header {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-mode-toggle-row,
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-grid,
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-actions {
+    padding: 0.85rem !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .ui-options-section-label {
+    color: var(--heading, currentColor) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card {
+    border-color: var(--line, rgba(255, 255, 255, 0.08)) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card:hover,
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-level-3) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .theme-card.is-active {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-inset) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .color-mode-toggle,
+body[data-theme^="blueprint"] .ui-options-modal-content .modal-close,
+body[data-theme^="blueprint"] .ui-options-modal-content .modal-done-btn,
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-swatch {
+    background: var(--panel, var(--surface, transparent)) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .color-mode-toggle-track {
+    background: var(--panel, var(--surface, transparent)) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--shadow-inset) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .color-mode-toggle-thumb {
+    background: var(--panel-strong, var(--surface-2, transparent)) !important;
+    box-shadow: var(--shadow-level-1) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .modal-close:hover,
+body[data-theme^="blueprint"] .ui-options-modal-content .modal-close:focus-visible,
+body[data-theme^="blueprint"] .ui-options-modal-content .modal-done-btn:hover,
+body[data-theme^="blueprint"] .ui-options-modal-content .modal-done-btn:focus-visible,
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-swatch:hover,
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-swatch:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-level-3) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-swatch.is-active {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-inset) !important;
+}
+
+@media (max-width: 980px) {
+    .viewport,
+    body[data-theme^="console"] .viewport,
+    body[data-theme^="glass"] .viewport,
+    body[data-theme^="blueprint"] .viewport {
+        --project-tag-chip-vertical-gap: 0.85rem;
+    }
+}

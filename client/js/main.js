@@ -1335,12 +1335,12 @@ function buildLeaderboardProfileModalMarkup(entry) {
         <div class="modal-content leaderboard-profile-modal-content" role="dialog" aria-modal="true" aria-labelledby="leaderboardProfileTitle">
             <div class="account-modal-scroll">
                 <div class="leaderboard-profile-modal-header">
+                    <h2 class="leaderboard-profile-heading" id="leaderboardProfileTitle">Leaderboard Stats</h2>
                     <button class="modal-close leaderboard-profile-close" type="button" onclick="closeLeaderboardProfileModal()" aria-label="Close leaderboard stats">
                         <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
-                    <h2 class="leaderboard-profile-heading" id="leaderboardProfileTitle">Leaderboard Stats</h2>
                 </div>
                 <div class="leaderboard-profile-top">
                     <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
