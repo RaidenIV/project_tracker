@@ -9368,3 +9368,128 @@ body[data-theme^="blueprint"] #projectModal .completed-task-display-button:disab
         justify-content: flex-start !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Console task tabs attached to tasks card and compact menu dot
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] {
+    overflow: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card {
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 1.05rem !important;
+    background: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 90 !important;
+    margin: 0 !important;
+    padding: 0.65rem 0.75rem 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 1.05rem 1.05rem 0 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    overflow: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card-body {
+    margin: 0 !important;
+    padding: 1rem !important;
+    border: 0 !important;
+    border-radius: 0 0 1.05rem 1.05rem !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tabs {
+    align-items: center !important;
+    min-height: 2.15rem !important;
+    gap: 0.45rem !important;
+    padding: 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tab-shell {
+    min-height: 2.1rem !important;
+    height: 2.1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.28rem !important;
+    padding: 0 0.72rem !important;
+    line-height: 1 !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tab,
+body[data-theme^="console"] #projectModal .task-category-menu-button,
+body[data-theme^="console"] #projectModal .task-category-add-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-menu-button {
+    box-sizing: border-box !important;
+    align-self: center !important;
+    width: 1.34rem !important;
+    min-width: 1.34rem !important;
+    max-width: 1.34rem !important;
+    height: 1.34rem !important;
+    min-height: 1.34rem !important;
+    max-height: 1.34rem !important;
+    gap: 0.13rem !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: inherit !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-menu-button span {
+    flex: 0 0 auto !important;
+    width: 3px !important;
+    height: 3px !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    background: currentColor !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-menu-button:hover,
+body[data-theme^="console"] #projectModal .task-category-menu-button:focus-visible,
+body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-menu-open .task-category-menu-button {
+    background: color-mix(in srgb, var(--accent, #ff9900) 16%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent, #ff9900) 16%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent, #ff9900) 32%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+}
