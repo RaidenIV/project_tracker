@@ -9841,3 +9841,312 @@ body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-menu-open .
         grid-column: 3 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: mobile task list optimization
+   ============================================================================ */
+@media (max-width: 720px) {
+    #projectModal .task-list,
+    body[data-theme^="console"] #projectModal .task-list,
+    body[data-theme^="glass"] #projectModal .task-list,
+    body[data-theme^="blueprint"] #projectModal .task-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.62rem !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        display: grid !important;
+        grid-template-columns: 1.55rem 1.75rem minmax(0, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        align-items: flex-start !important;
+        column-gap: 0.48rem !important;
+        row-gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 0.68rem !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-bulk-select,
+    body[data-theme^="console"] #projectModal .task-bulk-select,
+    body[data-theme^="glass"] #projectModal .task-bulk-select,
+    body[data-theme^="blueprint"] #projectModal .task-bulk-select {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: start !important;
+        margin: 0.18rem 0 0 !important;
+    }
+
+    #projectModal .task-checkbox,
+    body[data-theme^="console"] #projectModal .task-checkbox,
+    body[data-theme^="glass"] #projectModal .task-checkbox,
+    body[data-theme^="blueprint"] #projectModal .task-checkbox {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: start !important;
+        margin-top: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    #projectModal .task-main-content,
+    body[data-theme^="console"] #projectModal .task-main-content,
+    body[data-theme^="glass"] #projectModal .task-main-content,
+    body[data-theme^="blueprint"] #projectModal .task-main-content {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        align-self: start !important;
+    }
+
+    #projectModal .task-text,
+    body[data-theme^="console"] #projectModal .task-text,
+    body[data-theme^="glass"] #projectModal .task-text,
+    body[data-theme^="blueprint"] #projectModal .task-text {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        line-height: 1.32 !important;
+        font-size: clamp(0.82rem, 3.65vw, 0.94rem) !important;
+    }
+
+    #projectModal .task-input--textarea,
+    body[data-theme^="console"] #projectModal .task-input--textarea,
+    body[data-theme^="glass"] #projectModal .task-input--textarea,
+    body[data-theme^="blueprint"] #projectModal .task-input--textarea {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        font-size: 0.95rem !important;
+        line-height: 1.35 !important;
+    }
+
+    #projectModal .task-drag-handle,
+    body[data-theme^="console"] #projectModal .task-drag-handle,
+    body[data-theme^="glass"] #projectModal .task-drag-handle,
+    body[data-theme^="blueprint"] #projectModal .task-drag-handle {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        justify-self: center !important;
+        align-self: center !important;
+        width: 1.5rem !important;
+        min-width: 1.5rem !important;
+        height: 1.5rem !important;
+        padding: 0.25rem !important;
+        margin: 0 !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme^="console"] #projectModal .task-meta-controls,
+    body[data-theme^="glass"] #projectModal .task-meta-controls,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls {
+        grid-column: 2 / -1 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+        gap: 0.42rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-note-button,
+    #projectModal .task-priority-button,
+    #projectModal .delete-button,
+    #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="console"] #projectModal .task-note-button,
+    body[data-theme^="console"] #projectModal .task-priority-button,
+    body[data-theme^="console"] #projectModal .delete-button,
+    body[data-theme^="console"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="glass"] #projectModal .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-priority-button,
+    body[data-theme^="glass"] #projectModal .delete-button,
+    body[data-theme^="glass"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="blueprint"] #projectModal .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button,
+    body[data-theme^="blueprint"] #projectModal .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control:not(.has-due-date) {
+        width: 2.15rem !important;
+        min-width: 2.15rem !important;
+        height: 2.15rem !important;
+        min-height: 2.15rem !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date {
+        width: auto !important;
+        min-width: 5.1rem !important;
+        max-width: 100% !important;
+        height: 2.15rem !important;
+        min-height: 2.15rem !important;
+        padding-inline: 0.32rem !important;
+        flex: 0 1 auto !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date .task-due-date-input {
+        width: 4.75rem !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        font-size: 0.7rem !important;
+    }
+
+    #projectModal .task-priority-control,
+    body[data-theme^="console"] #projectModal .task-priority-control,
+    body[data-theme^="glass"] #projectModal .task-priority-control,
+    body[data-theme^="blueprint"] #projectModal .task-priority-control {
+        position: relative !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+    }
+
+    #projectModal .task-priority-popover,
+    body[data-theme^="console"] #projectModal .task-priority-popover,
+    body[data-theme^="glass"] #projectModal .task-priority-popover,
+    body[data-theme^="blueprint"] #projectModal .task-priority-popover {
+        right: 0 !important;
+        left: auto !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        min-width: min(13rem, calc(100vw - 1.5rem)) !important;
+        z-index: 220 !important;
+    }
+
+    #projectModal .task-priority-option,
+    body[data-theme^="console"] #projectModal .task-priority-option,
+    body[data-theme^="glass"] #projectModal .task-priority-option,
+    body[data-theme^="blueprint"] #projectModal .task-priority-option {
+        white-space: normal !important;
+        text-align: left !important;
+        line-height: 1.2 !important;
+    }
+}
+
+@media (max-width: 420px) {
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        grid-template-columns: 1.35rem 1.55rem minmax(0, 1fr) !important;
+        column-gap: 0.4rem !important;
+        row-gap: 0.5rem !important;
+        padding: 0.62rem !important;
+    }
+
+    #projectModal .task-note-button,
+    #projectModal .task-priority-button,
+    #projectModal .delete-button,
+    #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="console"] #projectModal .task-note-button,
+    body[data-theme^="console"] #projectModal .task-priority-button,
+    body[data-theme^="console"] #projectModal .delete-button,
+    body[data-theme^="console"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="glass"] #projectModal .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-priority-button,
+    body[data-theme^="glass"] #projectModal .delete-button,
+    body[data-theme^="glass"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="blueprint"] #projectModal .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button,
+    body[data-theme^="blueprint"] #projectModal .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control:not(.has-due-date) {
+        width: 2rem !important;
+        min-width: 2rem !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date {
+        height: 2rem !important;
+        min-height: 2rem !important;
+        min-width: 4.85rem !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: Console project modal task tabs stay pinned at modal top
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    position: relative !important;
+    isolation: isolate !important;
+    overflow-y: auto !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"],
+body[data-theme^="console"] #projectModal .modal-tasks-card {
+    position: relative !important;
+    overflow: visible !important;
+    contain: none !important;
+    isolation: isolate !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100000 !important;
+    margin: 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.99)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.99)) !important;
+    background-image: none !important;
+    box-shadow: 0 1px 0 var(--line, rgba(148, 163, 184, 0.22)) !important;
+    transform: translateZ(0) !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-item:not(.dragging) {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+@media (max-width: 900px) {
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        padding-top: 0 !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child {
+        margin-top: calc(0.85rem + env(safe-area-inset-top, 0px)) !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        z-index: 100000 !important;
+    }
+}
