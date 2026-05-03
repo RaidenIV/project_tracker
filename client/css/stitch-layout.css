@@ -9144,3 +9144,44 @@ body[data-theme^="blueprint"] #shortcutsModal .shortcut-line:focus-within {
         min-width: 0 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism account settings surfaces and completion values
+   ============================================================================ */
+body[data-theme^="blueprint"] #accountSettingsModal .account-profile-top,
+body[data-theme^="blueprint"] #accountSettingsModal .account-form-grid,
+body[data-theme^="blueprint"] #accountSettingsModal .account-field,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stats-section,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stat-card,
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-actions {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-profile-top,
+body[data-theme^="blueprint"] #accountSettingsModal .account-form-grid,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stats-section,
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-actions {
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-field {
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-stat-card {
+    border-radius: 0 !important;
+}
+
+body[data-theme^="blueprint"] .sidebar-total-completion-section .total-percentage,
+body[data-theme^="blueprint"] .sidebar-total-completion-section .sidebar-completion-stat strong,
+body[data-theme^="blueprint"] #totalPercentage,
+body[data-theme^="blueprint"] #completedTasksCount,
+body[data-theme^="blueprint"] #incompleteTasksCount {
+    color: var(--accent, currentColor) !important;
+}

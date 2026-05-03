@@ -2379,6 +2379,7 @@ function performTaskToggle(projectId, taskId) {
         }
         return t;
     });
+    saveTaskCompletionUndoState(projectId, project.tasks, updatedTasks);
     
     // Sort tasks after toggling
     const sortedTasks = sortTasks(updatedTasks);
@@ -2419,6 +2420,7 @@ function completeTaskBatch(projectId, shouldCompleteTask) {
 
     if (completedCount <= 0) return;
 
+    saveTaskCompletionUndoState(projectId, project.tasks, updatedTasks);
     for (let i = 0; i < completedCount; i++) state.incrementCompletedTasks();
 
     const pageScrollX = window.scrollX;
@@ -2553,6 +2555,81 @@ function updateCompletedTaskStatBy(delta) {
     }
 }
 
+function getTaskCompletionUndoStates(beforeTasks = [], afterTasks = []) {
+    const afterById = new Map((Array.isArray(afterTasks) ? afterTasks : [])
+        .map((task, index) => normalizeTask(task, index))
+        .map(task => [task.id, task]));
+
+    return (Array.isArray(beforeTasks) ? beforeTasks : [])
+        .map((task, index) => normalizeTask(task, index))
+        .filter(task => {
+            const afterTask = afterById.get(task.id);
+            return afterTask && !!afterTask.completed !== !!task.completed;
+        })
+        .map(task => ({
+            id: task.id,
+            completed: !!task.completed,
+            completedDate: task.completedDate || null
+        }));
+}
+
+function saveTaskCompletionUndoState(projectId, beforeTasks = [], afterTasks = []) {
+    const taskStates = getTaskCompletionUndoStates(beforeTasks, afterTasks);
+    if (!taskStates.length) return false;
+
+    state.saveUndoState('taskCompletion', { projectId, taskStates });
+    updateUndoButton();
+    return true;
+}
+
+function restoreTaskCompletionUndo(undoEntry) {
+    const { projectId, taskStates } = undoEntry?.data || {};
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks) || !Array.isArray(taskStates)) return false;
+
+    const previousStateById = new Map(taskStates.map(task => [Number(task.id), task]));
+    let completedStatDelta = 0;
+    let changed = false;
+
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        const previousState = previousStateById.get(normalizedTask.id);
+        if (!previousState || !!normalizedTask.completed === !!previousState.completed) return normalizedTask;
+
+        completedStatDelta += previousState.completed ? 1 : -1;
+        changed = true;
+        return {
+            ...normalizedTask,
+            completed: !!previousState.completed,
+            completedDate: previousState.completed ? (previousState.completedDate || null) : null
+        };
+    });
+
+    if (!changed) return false;
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+
+    updateCompletedTaskStatBy(completedStatDelta);
+    state.updateProject(projectId, projectUpdate({ tasks: sortTasks(updatedTasks) }));
+    saveData();
+
+    if (modalOpen) {
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        if (modalState) restoreProjectModalState(projectId, modalState);
+    }
+
+    render();
+    updateTotalCompletion();
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
+    return true;
+}
+
 function refreshModalTaskUi(projectId, options = {}) {
     const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
     const modalState = modalOpen ? (options.modalState || captureProjectModalState(projectId)) : null;
@@ -2645,6 +2722,9 @@ function updateSelectedTasks(projectId, updater) {
 
     if (!changed) return false;
 
+    if (completedStatDelta !== 0) {
+        saveTaskCompletionUndoState(projectId, project.tasks, updatedTasks);
+    }
     updateCompletedTaskStatBy(completedStatDelta);
     state.updateProject(projectId, projectUpdate({ tasks: sortTasks(updatedTasks) }));
     saveData();
@@ -3000,6 +3080,8 @@ function performUndo() {
                 updateProjectProgress(projectId);
             }
         }
+    } else if (undoEntry.action === 'taskCompletion') {
+        restoreTaskCompletionUndo(undoEntry);
     }
     
     updateUndoButton();
