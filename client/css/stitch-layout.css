@@ -8445,3 +8445,185 @@ body[data-theme^="blueprint"] #projectModal .project-tag-add {
     line-height: 1 !important;
     text-align: center !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: leaderboard profile modal, Glassmorphism handle-only drag,
+   compact Add Tasks input, and modal tag-plus alignment refinement
+   ============================================================================ */
+.leaderboard-row,
+body[data-theme^="console"] .leaderboard-row,
+body[data-theme^="glass"] .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-row {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 100% !important;
+    font: inherit !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+.leaderboard-row:hover .leaderboard-user,
+.leaderboard-row:focus-visible .leaderboard-user,
+body[data-theme^="console"] .leaderboard-row:hover .leaderboard-user,
+body[data-theme^="console"] .leaderboard-row:focus-visible .leaderboard-user,
+body[data-theme^="glass"] .leaderboard-row:hover .leaderboard-user,
+body[data-theme^="glass"] .leaderboard-row:focus-visible .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-row:hover .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-row:focus-visible .leaderboard-user {
+    color: var(--accent, currentColor) !important;
+}
+
+.leaderboard-row:focus-visible,
+body[data-theme^="console"] .leaderboard-row:focus-visible,
+body[data-theme^="glass"] .leaderboard-row:focus-visible,
+body[data-theme^="blueprint"] .leaderboard-row:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent, currentColor) 55%, transparent) !important;
+    outline-offset: 2px !important;
+}
+
+.leaderboard-profile-modal-content,
+body[data-theme^="console"] .leaderboard-profile-modal-content,
+body[data-theme^="glass"] .leaderboard-profile-modal-content,
+body[data-theme^="blueprint"] .leaderboard-profile-modal-content {
+    width: min(34rem, calc(100vw - 2rem)) !important;
+    max-height: 88vh !important;
+}
+
+.leaderboard-profile-top,
+body[data-theme^="console"] .leaderboard-profile-top,
+body[data-theme^="glass"] .leaderboard-profile-top,
+body[data-theme^="blueprint"] .leaderboard-profile-top {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    margin-bottom: 1.15rem !important;
+}
+
+.leaderboard-profile-avatar,
+body[data-theme^="console"] .leaderboard-profile-avatar,
+body[data-theme^="glass"] .leaderboard-profile-avatar,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar {
+    width: 4rem !important;
+    height: 4rem !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 28%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+    flex: 0 0 auto !important;
+}
+
+.leaderboard-profile-avatar-img,
+body[data-theme^="console"] .leaderboard-profile-avatar-img,
+body[data-theme^="glass"] .leaderboard-profile-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.leaderboard-profile-avatar-fallback,
+body[data-theme^="console"] .leaderboard-profile-avatar-fallback,
+body[data-theme^="glass"] .leaderboard-profile-avatar-fallback,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar-fallback {
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+.leaderboard-profile-name,
+body[data-theme^="console"] .leaderboard-profile-name,
+body[data-theme^="glass"] .leaderboard-profile-name,
+body[data-theme^="blueprint"] .leaderboard-profile-name {
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+}
+
+.leaderboard-profile-meta,
+body[data-theme^="console"] .leaderboard-profile-meta,
+body[data-theme^="glass"] .leaderboard-profile-meta,
+body[data-theme^="blueprint"] .leaderboard-profile-meta {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.85rem !important;
+    margin-top: 0.2rem !important;
+}
+
+.leaderboard-profile-stats-grid,
+body[data-theme^="console"] .leaderboard-profile-stats-grid,
+body[data-theme^="glass"] .leaderboard-profile-stats-grid,
+body[data-theme^="blueprint"] .leaderboard-profile-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+}
+
+body[data-theme^="glass"] .project-card[data-project-can-reorder="true"],
+body[data-theme^="glass"] .project-card[data-project-can-reorder="true"]:active,
+body[data-theme^="glass"] .project-card.project-card--long-press-pending,
+body[data-theme^="glass"] .project-card.project-card--long-press-ready:not(.dragging) {
+    cursor: pointer !important;
+    touch-action: auto !important;
+    -webkit-user-select: auto !important;
+    user-select: auto !important;
+}
+
+body[data-theme^="glass"] .project-card-reorder-handle,
+body[data-theme^="glass"] .project-card-reorder-handle:hover,
+body[data-theme^="glass"] .project-card-reorder-handle:focus-visible {
+    cursor: grab !important;
+    touch-action: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+body[data-theme^="glass"] .project-card-reorder-handle:active,
+body[data-theme^="glass"] .project-card.dragging .project-card-reorder-handle,
+body[data-theme^="glass"] .project-card.dragging {
+    cursor: grabbing !important;
+}
+
+#projectModal .paste-box,
+body[data-theme^="console"] #projectModal .paste-box,
+body[data-theme^="glass"] #projectModal .paste-box,
+body[data-theme^="blueprint"] #projectModal .paste-box {
+    min-height: 2.75rem !important;
+    height: 2.75rem !important;
+    overflow-y: hidden !important;
+    resize: none !important;
+    line-height: 1.35 !important;
+}
+
+#projectModal .paste-box.has-task-text,
+body[data-theme^="console"] #projectModal .paste-box.has-task-text,
+body[data-theme^="glass"] #projectModal .paste-box.has-task-text,
+body[data-theme^="blueprint"] #projectModal .paste-box.has-task-text {
+    min-height: 5.75rem !important;
+    overflow-y: auto !important;
+}
+
+#projectModal .project-tag-add,
+body[data-theme^="console"] #projectModal .project-tag-add,
+body[data-theme^="glass"] #projectModal .project-tag-add,
+body[data-theme^="blueprint"] #projectModal .project-tag-add {
+    min-height: 1.75rem !important;
+    height: 1.75rem !important;
+    width: 1.75rem !important;
+    line-height: 0 !important;
+    vertical-align: middle !important;
+}
+
+@media (max-width: 520px) {
+    .leaderboard-profile-stats-grid,
+    body[data-theme^="console"] .leaderboard-profile-stats-grid,
+    body[data-theme^="glass"] .leaderboard-profile-stats-grid,
+    body[data-theme^="blueprint"] .leaderboard-profile-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

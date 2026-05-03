@@ -435,6 +435,7 @@ const accountState = {
         activeProjects: 0
     },
     leaderboard: [],
+    renderedLeaderboardEntries: [],
     currentLeaderboardRank: null,
     currentLeaderboardEntry: null,
     pendingProfilePic: null
@@ -1266,6 +1267,8 @@ function renderLeaderboardPanel() {
         visibleEntries.push(visibleCurrentEntry);
     }
 
+    accountState.renderedLeaderboardEntries = visibleEntries;
+
     if (!visibleEntries.length) {
         list.innerHTML = '<div class="side-panel-empty">No rankings yet</div>';
         return;
@@ -1284,15 +1287,107 @@ function renderLeaderboardPanel() {
         const avatarMarkup = profilePic
             ? `<img class="leaderboard-row-avatar-img" src="${escapeHtml(profilePic)}" alt="">`
             : `<span class="leaderboard-row-avatar-fallback" aria-hidden="true"></span>`;
+        const userIdLiteral = serializeInlineJsString(String(entry.userId || ''));
         return `
-            <div class="leaderboard-row ${isCurrent ? 'is-current' : ''}">
+            <button class="leaderboard-row ${isCurrent ? 'is-current' : ''}" type="button" onclick="openLeaderboardProfileModal(${userIdLiteral})" aria-label="Open ${escapeHtml(username)} stats">
                 <span class="leaderboard-rank${rankClass}">${rank}</span>
                 <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
                 <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
-            </div>
+            </button>
         `;
     }).join('');
+}
+
+function getLeaderboardModalEntry(userId) {
+    const normalizedUserId = String(userId || '');
+    if (!normalizedUserId) return null;
+    const visibleEntry = (accountState.renderedLeaderboardEntries || [])
+        .find(entry => String(entry?.userId || '') === normalizedUserId);
+    if (visibleEntry) return visibleEntry;
+    if (String(accountState.currentLeaderboardEntry?.userId || '') === normalizedUserId) {
+        return accountState.currentLeaderboardEntry;
+    }
+    return (accountState.leaderboard || [])
+        .find(entry => String(entry?.userId || '') === normalizedUserId) || null;
+}
+
+function buildLeaderboardProfileModalMarkup(entry) {
+    const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
+    const isCurrent = currentUserId && String(entry.userId || '') === currentUserId;
+    const username = getLeaderboardUsername(entry);
+    const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
+    const rank = Number(entry.rank || entry.leaderboardRank || 0);
+    const completion = Math.round(Number(entry.totalCompletionPercentage || 0));
+    const stats = [
+        ['Rank', rank > 0 ? `#${rank}` : '—'],
+        ['Total Completion', `${Number.isFinite(completion) ? completion : 0}%`],
+        ['Completed Tasks', Number(entry.completedTasks || 0)],
+        ['Completed Projects', Number(entry.completedProjects || 0)],
+        ['Active Projects', Number(entry.activeProjects || 0)],
+        ['Shared Projects', Number(entry.sharedProjects || 0)]
+    ];
+    const avatarMarkup = profilePic
+        ? `<img class="leaderboard-profile-avatar-img" src="${escapeHtml(profilePic)}" alt="">`
+        : `<span class="leaderboard-profile-avatar-fallback" aria-hidden="true">${escapeHtml(String(username || 'U').charAt(0).toUpperCase() || 'U')}</span>`;
+
+    return `
+        <div class="modal-content leaderboard-profile-modal-content" role="dialog" aria-modal="true" aria-labelledby="leaderboardProfileTitle">
+            <div class="account-modal-scroll">
+                <div class="account-modal-header">
+                    <div>
+                        <h2 class="account-modal-title" id="leaderboardProfileTitle">${escapeHtml(username)}</h2>
+                        <p class="account-modal-subtitle">Leaderboard stats</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeLeaderboardProfileModal()" aria-label="Close leaderboard stats">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="leaderboard-profile-top">
+                    <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
+                    <div>
+                        <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
+                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • ${Number.isFinite(completion) ? completion : 0}% complete</div>
+                    </div>
+                </div>
+                <div class="leaderboard-profile-stats-grid">
+                    ${stats.map(([label, value]) => `
+                        <div class="account-stat-card leaderboard-profile-stat-card">
+                            <div class="account-stat-value">${escapeHtml(value)}</div>
+                            <div class="account-stat-label">${escapeHtml(label)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function openLeaderboardProfileModal(userId) {
+    const entry = getLeaderboardModalEntry(userId);
+    if (!entry) return;
+
+    let modal = document.getElementById('leaderboardProfileModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal-overlay leaderboard-profile-modal';
+        modal.id = 'leaderboardProfileModal';
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeLeaderboardProfileModal();
+        });
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = buildLeaderboardProfileModalMarkup(entry);
+    modal.classList.add('active');
+}
+
+function closeLeaderboardProfileModal() {
+    const modal = document.getElementById('leaderboardProfileModal');
+    if (!modal) return;
+    modal.classList.remove('active');
 }
 
 function setSidebarSectionExpanded(sectionKey, expanded) {
@@ -2762,8 +2857,8 @@ function addTaskToProject(projectId) {
     const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
     const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
     const newTask = normalizeTask({ id: Date.now(), text: '', completed: false, tag: DEFAULT_TASK_TAG, category });
-    // Add new tasks below existing tasks so the first task created stays at the top.
-    const updatedTasks = sortTasks([...project.tasks, newTask]);
+    // Add new tasks above existing tasks so the newest task appears at the top.
+    const updatedTasks = sortTasks([newTask, ...project.tasks]);
     
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
@@ -3153,6 +3248,10 @@ function bindProjectEditModeExitHandlers() {
     // Escape closes task-note modal first, then exits drag edit mode.
     document.addEventListener('keydown', (e) => {
         if (isTypingTarget(e.target)) return;
+        if (e.key === 'Escape' && document.getElementById('leaderboardProfileModal')?.classList.contains('active')) {
+            closeLeaderboardProfileModal();
+            return;
+        }
         if (e.key === 'Escape' && document.getElementById('taskNoteModal')?.classList.contains('active')) {
             closeTaskNoteModal();
             return;
@@ -5188,7 +5287,9 @@ function openProjectModal(projectId, options = {}) {
                             <textarea 
                                 class="paste-box"
                                 id="modal-paste-box-${project.id}"
+                                rows="1"
                                 placeholder="Enter tasks here"
+                                oninput="handleModalPasteInput('${project.id}', event)"
                                 onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
                             <button 
                                 class="paste-button"
@@ -5602,7 +5703,7 @@ function pasteTasks() {
     }));
     const nextCategories = getProjectTaskCategories(project);
     
-    const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
+    const updatedTasks = sortTasks([...newTasks, ...project.tasks]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     
     pasteBox.value = '';
@@ -5642,10 +5743,11 @@ function pasteTasksInModal(projectId) {
     }));
     const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
 
-    const updatedTasks = sortTasks([...project.tasks, ...newTasks]);
+    const updatedTasks = sortTasks([...newTasks, ...project.tasks]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
 
     pasteBox.value = '';
+    adjustModalPasteBox(pasteBox);
     saveData();
     renderModalTaskList(projectId);
     updateProjectProgress(projectId);
@@ -5674,6 +5776,22 @@ async function restoreArchivedProject(projectId) {
     state.updateProject(projectId, projectUpdate({ archived: false }));
     await saveData();
     render();
+}
+
+function adjustModalPasteBox(pasteBox) {
+    if (!pasteBox) return;
+    const hasText = pasteBox.value.trim().length > 0;
+    pasteBox.classList.toggle('has-task-text', hasText);
+    if (!hasText) {
+        pasteBox.style.setProperty('height', '2.75rem', 'important');
+        return;
+    }
+    pasteBox.style.setProperty('height', 'auto', 'important');
+    pasteBox.style.setProperty('height', `${pasteBox.scrollHeight}px`, 'important');
+}
+
+function handleModalPasteInput(projectId, event) {
+    adjustModalPasteBox(event?.target || document.getElementById(`modal-paste-box-${projectId}`));
 }
 
 function handleModalPasteKeydown(projectId, event) {
@@ -6600,12 +6718,15 @@ window.editProjectTitleOnCard = editProjectTitleOnCard;
 window.finishEditProjectTitleOnCard = finishEditProjectTitleOnCard;
 window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.toggleSidebarSection = toggleSidebarSection;
+window.handleModalPasteInput = handleModalPasteInput;
 window.handleModalPasteKeydown = handleModalPasteKeydown;
 window.openShortcutsModal = openShortcutsModal;
 window.closeShortcutsModal = closeShortcutsModal;
 window.switchToSharedView = switchToSharedView;
 window.openArchivedProjectsModal = openArchivedProjectsModal;
 window.closeArchivedProjectsModal = closeArchivedProjectsModal;
+window.openLeaderboardProfileModal = openLeaderboardProfileModal;
+window.closeLeaderboardProfileModal = closeLeaderboardProfileModal;
 
 window.applySavedView = applySavedView;
 window.deleteSavedView = deleteSavedView;
