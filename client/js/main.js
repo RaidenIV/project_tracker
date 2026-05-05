@@ -482,6 +482,10 @@ const LOCAL_STORAGE_KEYS = {
     PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1'
 };
 
+const SESSION_STORAGE_KEYS = {
+    OPEN_PROJECT_MODAL: 'tracker_open_project_modal_v1'
+};
+
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -1708,6 +1712,75 @@ function restoreProjectModalState(projectId, modalState) {
     });
 }
 
+function getProjectModalActiveTab(projectId) {
+    const activeTab = document.querySelector(`#modalContent .modal-tab.active`);
+    if (!activeTab) return 'tasks';
+    const suffix = `-tab-${projectId}`;
+    if (activeTab.id.endsWith(suffix)) {
+        const tabName = activeTab.id.slice(0, -suffix.length);
+        return ['tasks', 'notes', 'members', 'history'].includes(tabName) ? tabName : 'tasks';
+    }
+    return activeTab.id.replace(/-(.+)$/, '').split('-')[0] || 'tasks';
+}
+
+function saveOpenProjectModalState(projectId, activeTab = null) {
+    const normalizedProjectId = String(projectId || '');
+    if (!normalizedProjectId) return;
+    try {
+        const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
+        sessionStorage.setItem(SESSION_STORAGE_KEYS.OPEN_PROJECT_MODAL, JSON.stringify({
+            projectId: normalizedProjectId,
+            activeTab: activeTab || getProjectModalActiveTab(normalizedProjectId),
+            scrollTop: scrollEl?.scrollTop || 0
+        }));
+    } catch (err) {
+        console.warn('Failed to save open project modal state:', err);
+    }
+}
+
+function clearOpenProjectModalState() {
+    try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEYS.OPEN_PROJECT_MODAL);
+    } catch (err) {
+        console.warn('Failed to clear open project modal state:', err);
+    }
+}
+
+function getSavedOpenProjectModalState() {
+    try {
+        const raw = sessionStorage.getItem(SESSION_STORAGE_KEYS.OPEN_PROJECT_MODAL);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        const projectId = String(parsed?.projectId || '');
+        if (!projectId) return null;
+        const activeTab = ['tasks', 'notes', 'members', 'history'].includes(parsed?.activeTab) ? parsed.activeTab : 'tasks';
+        return {
+            projectId,
+            activeTab,
+            scrollTop: Number(parsed?.scrollTop || 0) || 0
+        };
+    } catch (err) {
+        console.warn('Failed to load open project modal state:', err);
+        return null;
+    }
+}
+
+function restoreOpenProjectModalFromSession() {
+    const modalState = getSavedOpenProjectModalState();
+    if (!modalState) return;
+    const project = state.findProject(modalState.projectId);
+    if (!project) {
+        clearOpenProjectModalState();
+        return;
+    }
+    openProjectModal(project.id, { restoreState: modalState });
+}
+
+function persistOpenProjectModalBeforeUnload() {
+    const projectId = getOpenProjectModalId();
+    if (projectId) saveOpenProjectModalState(projectId);
+}
+
 // ============================================================================
 // DATA MANAGEMENT
 // ============================================================================
@@ -1724,6 +1797,7 @@ export async function loadData() {
         state.setProjects(projects);
         state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
         render();
+        restoreOpenProjectModalFromSession();
     } catch (err) {
         console.error('Failed to load project data:', err);
         state.setProjects([]);
@@ -2418,34 +2492,80 @@ function closeProjectNotesModal() {
     delete modal.dataset.projectId;
 }
 
+function writeClipboardText(text) {
+    const value = String(text ?? '');
+    if (navigator.clipboard?.writeText) {
+        return navigator.clipboard.writeText(value);
+    }
+
+    return new Promise((resolve, reject) => {
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = value;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.top = '-9999px';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            const copied = document.execCommand('copy');
+            textarea.remove();
+            copied ? resolve() : reject(new Error('Clipboard copy failed'));
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+function showCopyButtonFeedback(button) {
+    if (!button) return;
+    const originalHTML = button.innerHTML;
+    button.classList.add('is-copied');
+    button.innerHTML = `
+        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+        </svg>
+    `;
+
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('is-copied');
+    }, 1500);
+}
+
 function copyProjectToClipboard(projectId, evt) {
     const project = state.findProject(projectId);
     if (!project) return;
-    
+
     // Only copy incomplete task text
     const incompleteTasks = project.tasks.filter(t => !t.completed);
-    
-    let text = incompleteTasks.map(task => task.text).join('\n');
-    
-    navigator.clipboard.writeText(text).then(() => {
-        // Show brief feedback with checkmark
-        const button = evt?.target?.closest('button');
-        if (button) {
-            const originalHTML = button.innerHTML;
-            
-            // Swap icon to checkmark, keep the existing accent-blue colour
-            button.innerHTML = `
-                <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                </svg>
-            `;
-            
-            setTimeout(() => {
-                button.innerHTML = originalHTML;
-            }, 1500);
-        }
+
+    const text = incompleteTasks.map(task => task.text).join('\n');
+
+    writeClipboardText(text).then(() => {
+        showCopyButtonFeedback(evt?.target?.closest('button'));
     }).catch(err => {
         console.error('Failed to copy:', err);
+    });
+}
+
+function copyTaskToClipboard(projectId, taskId, evt) {
+    evt?.preventDefault?.();
+    evt?.stopPropagation?.();
+
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const task = (Array.isArray(project.tasks) ? project.tasks : [])
+        .map((item, index) => normalizeTask(item, index))
+        .find(item => item.id === Number(taskId));
+    const text = String(task?.text || '').trim();
+    if (!text) return;
+
+    writeClipboardText(text).then(() => {
+        showCopyButtonFeedback(evt?.target?.closest('button'));
+    }).catch(err => {
+        console.error('Failed to copy task:', err);
     });
 }
 
@@ -4916,6 +5036,15 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                           onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(normalizedTask.text)}</textarea>
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
+                <button class="task-copy-button"
+                        type="button"
+                        aria-label="Copy task"
+                        title="Copy task"
+                        onclick="copyTaskToClipboard('${projectId}', ${normalizedTask.id}, event)">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
                 <label class="task-due-date-control ${dueDate ? 'has-due-date' : ''} ${taskOverdue ? 'is-overdue' : ''}"
                        title="${escapeHtml(dueDateLabel)}"
                        onclick="openTaskDueDatePicker('${projectId}', ${normalizedTask.id}, event)"
@@ -5770,6 +5899,7 @@ function openProjectModal(projectId, options = {}) {
     } else if (options.activeTab) {
         switchModalTab(project.id, options.activeTab);
     }
+    saveOpenProjectModalState(project.id);
     
     // Setup task dragging for manual reordering and category-tab drops.
     setTimeout(() => setupTaskDragAndDrop(project.id), 100);
@@ -5784,6 +5914,10 @@ function switchModalTab(projectId, tab) {
         if (s === tab) { sec.classList.remove('hidden'); btn.classList.add('active'); }
         else           { sec.classList.add('hidden');    btn.classList.remove('active'); }
     });
+
+    if (document.getElementById('projectModal')?.classList.contains('active')) {
+        saveOpenProjectModalState(projectId, tab);
+    }
 }
 
 function saveProjectNotes(projectId) {
@@ -5810,6 +5944,7 @@ function toggleHideCompleted() {
 function closeProjectModal() {
     const modal = document.getElementById('projectModal');
     modal.classList.remove('active');
+    clearOpenProjectModalState();
     state.clearAllTaskSelections();
     render();
 }
@@ -6990,6 +7125,7 @@ window.deleteProject = deleteProject;
 window.completeProject = completeProject;
 window.toggleTask = toggleTask;
 window.copyProjectToClipboard = copyProjectToClipboard;
+window.copyTaskToClipboard = copyTaskToClipboard;
 window.switchToActiveView = switchToActiveView;
 window.switchToCompletedView = switchToCompletedView;
 window.openProjectModal = openProjectModal;
@@ -7285,6 +7421,7 @@ function onAuthSuccess(user) {
 // ============================================================================
 
 document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
+window.addEventListener('beforeunload', persistOpenProjectModalBeforeUnload);
 
 document.addEventListener('DOMContentLoaded', () => {
     state.setHideCompletedTasks(true);

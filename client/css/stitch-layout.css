@@ -11750,3 +11750,169 @@ body[data-theme^="blueprint"] .task-bulk-date-control input::-webkit-calendar-pi
     color: var(--accent, currentColor) !important;
     outline: none !important;
 }
+
+/* ============================================================================
+   Targeted follow-up: sidebar title accent, project modal button controls,
+   wider modal, and per-task copy actions
+   ============================================================================ */
+.sidebar-app-title,
+body[data-theme] .sidebar-app-title,
+body[data-theme^="console"] .sidebar-app-title,
+body[data-theme^="glass"] .sidebar-app-title,
+body[data-theme^="blueprint"] .sidebar-app-title {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
+
+#projectModal .modal-content#modalContent,
+body[data-theme^="console"] #projectModal .modal-content#modalContent,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
+    width: min(94vw, 825px) !important;
+    max-width: 825px !important;
+}
+
+#projectModal .modal-tabs,
+body[data-theme^="console"] #projectModal .modal-tabs,
+body[data-theme^="glass"] #projectModal .modal-tabs,
+body[data-theme^="blueprint"] #projectModal .modal-tabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    margin: 0 0 1.15rem !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    border: 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-tab,
+body[data-theme^="console"] #projectModal .modal-tab,
+body[data-theme^="glass"] #projectModal .modal-tab,
+body[data-theme^="blueprint"] #projectModal .modal-tab {
+    position: relative !important;
+    bottom: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 0 !important;
+    min-width: max-content !important;
+    min-height: 2.45rem !important;
+    margin: 0 !important;
+    padding: 0.64rem 0.95rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+    font: inherit !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .modal-tab:hover,
+#projectModal .modal-tab:focus-visible,
+body[data-theme^="console"] #projectModal .modal-tab:hover,
+body[data-theme^="console"] #projectModal .modal-tab:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-tab:hover,
+body[data-theme^="glass"] #projectModal .modal-tab:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-tab:hover,
+body[data-theme^="blueprint"] #projectModal .modal-tab:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    background-color: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    outline: none !important;
+}
+
+#projectModal .modal-tab.active,
+#projectModal .modal-tab[aria-selected="true"],
+body[data-theme^="console"] #projectModal .modal-tab.active,
+body[data-theme^="console"] #projectModal .modal-tab[aria-selected="true"],
+body[data-theme^="glass"] #projectModal .modal-tab.active,
+body[data-theme^="glass"] #projectModal .modal-tab[aria-selected="true"],
+body[data-theme^="blueprint"] #projectModal .modal-tab.active,
+body[data-theme^="blueprint"] #projectModal .modal-tab[aria-selected="true"] {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 86%, var(--accent, currentColor) 14%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 86%, var(--accent, currentColor) 14%) !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-tab::after,
+#projectModal .modal-tab.active::after,
+#projectModal .modal-tab[aria-selected="true"]::after,
+body[data-theme^="console"] #projectModal .modal-tab::after,
+body[data-theme^="glass"] #projectModal .modal-tab::after,
+body[data-theme^="blueprint"] #projectModal .modal-tab::after {
+    display: none !important;
+    content: none !important;
+}
+
+.task-copy-button {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease !important;
+}
+
+.task-copy-button .icon,
+.task-copy-button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    pointer-events: none !important;
+}
+
+.task-copy-button:hover,
+.task-copy-button:focus-visible,
+.task-copy-button.is-copied {
+    color: var(--accent, currentColor) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    background-color: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    border-color: var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .task-copy-button {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--shadow-level-1, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] .task-copy-button:hover,
+body[data-theme^="blueprint"] .task-copy-button:focus-visible,
+body[data-theme^="blueprint"] .task-copy-button.is-copied {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    border-color: var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: var(--shadow-inset, var(--inset-shadow, none)) !important;
+    outline: none !important;
+}
