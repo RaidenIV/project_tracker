@@ -2185,6 +2185,44 @@ function getProjectNotesActiveTab(projectId) {
     return data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
 }
 
+function extractLinksFromText(text = '') {
+    const rawText = String(text || '');
+    const links = [];
+    const seen = new Set();
+    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+    let match;
+
+    while ((match = urlPattern.exec(rawText)) !== null) {
+        let label = match[1].replace(/[),.;:!?]+$/g, '');
+        if (!label) continue;
+        const href = label.toLowerCase().startsWith('www.') ? `https://${label}` : label;
+        if (!/^https?:\/\//i.test(href) || seen.has(href)) continue;
+        seen.add(href);
+        links.push({ href, label });
+    }
+
+    return links;
+}
+
+function renderProjectNotesLinksMarkup(text = '') {
+    const links = extractLinksFromText(text);
+    if (!links.length) return '';
+
+    return `
+        <div class="project-notes-link-preview" aria-label="Project note links">
+            <div class="project-notes-link-preview-label">Links</div>
+            <div class="project-notes-link-list">
+                ${links.map(link => `
+                    <a class="project-notes-link"
+                       href="${escapeHtml(link.href)}"
+                       target="_blank"
+                       rel="noopener noreferrer">${escapeHtml(link.label)}</a>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
 function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
     const data = normalizeProjectNotesData(project?.notes || '');
     const activeTab = data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
@@ -2230,6 +2268,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
                           id="project-notes-body-${safeSurface}"
                           placeholder="Write project notes here..."
                           ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')"` : 'readonly'}>${escapeHtml(activeTab.body || '')}</textarea>
+                ${renderProjectNotesLinksMarkup(activeTab.body || '')}
                 ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
             </div>
         </div>`;

@@ -11436,3 +11436,317 @@ body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
         gap: 0.24rem !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: sidebar branding, visible tabs, links in notes, undo inversion,
+   neumorphic calendar controls, and avatar fill correction
+   ============================================================================ */
+.sidebar-app-brand {
+    display: grid !important;
+    gap: 0.22rem !important;
+    margin: 0 0 1.15rem !important;
+    padding: 0.15rem 0 0.85rem !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.22)) 78%, transparent) !important;
+}
+
+.sidebar-app-title {
+    margin: 0 !important;
+    color: var(--heading, var(--text, #fff)) !important;
+    font: inherit !important;
+    font-size: clamp(1.38rem, 1.7vw, 1.68rem) !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+}
+
+.sidebar-app-subtitle {
+    margin: 0 !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.035em !important;
+}
+
+body.control-panel-is-collapsed .sidebar-app-brand {
+    display: none !important;
+}
+
+#undoButton,
+button[data-undo-button],
+.paste-undo-button,
+.undo-button {
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-image: none !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+#undoButton:hover,
+#undoButton:focus-visible,
+button[data-undo-button]:hover,
+button[data-undo-button]:focus-visible,
+.paste-undo-button:hover,
+.paste-undo-button:focus-visible,
+.undo-button:hover,
+.undo-button:focus-visible {
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+#projectModal .modal-tabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    gap: 0.45rem !important;
+    padding: 0 0.35rem !important;
+    overflow: visible !important;
+    border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+}
+
+#projectModal .modal-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.35rem !important;
+    margin: 0 0 -1px !important;
+    padding: 0.62rem 1rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-bottom-color: var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-tab:hover,
+#projectModal .modal-tab:focus-visible {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 36%, var(--line, transparent)) !important;
+    background: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    background-color: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    color: var(--heading, currentColor) !important;
+}
+
+#projectModal .modal-tab.active,
+#projectModal .modal-tab[aria-selected="true"] {
+    border-color: var(--accent, currentColor) !important;
+    border-bottom-color: var(--panel, transparent) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+}
+
+#projectModal .task-category-tab-shell {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+}
+
+#projectModal .task-category-tab-shell:hover,
+#projectModal .task-category-tab-shell:focus-within,
+#projectModal .task-category-tab-wrap.is-menu-open .task-category-tab-shell {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 36%, var(--line, transparent)) !important;
+    background: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    background-color: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    color: var(--heading, currentColor) !important;
+}
+
+#projectModal .task-category-tab-shell.is-active,
+#projectModal .task-category-tab-wrap.is-active .task-category-tab-shell {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tabs,
+body[data-theme^="console"] #projectModal .task-category-tabs {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    scrollbar-width: none !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tabs::-webkit-scrollbar,
+body[data-theme^="console"] #projectModal .task-category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.project-notes-link-preview {
+    display: grid !important;
+    gap: 0.5rem !important;
+    margin-top: 0.75rem !important;
+    padding: 0.75rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+}
+
+.project-notes-link-preview-label {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+
+.project-notes-link-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.45rem !important;
+}
+
+.project-notes-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    max-width: 100% !important;
+    padding: 0.35rem 0.58rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 42%, var(--line, transparent)) !important;
+    border-radius: 999px !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-image: none !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.project-notes-link:hover,
+.project-notes-link:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control,
+body[data-theme^="blueprint"] .task-bulk-date-control {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--shadow-level-1, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control:hover,
+body[data-theme^="blueprint"] .task-due-date-control:focus-within,
+body[data-theme^="blueprint"] .task-bulk-date-control:hover,
+body[data-theme^="blueprint"] .task-bulk-date-control:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-inset, var(--inset-shadow, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control:not(.has-due-date)::after {
+    background: currentColor !important;
+    background-color: currentColor !important;
+    background-image: none !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="blueprint"] .task-bulk-date-control input::-webkit-calendar-picker-indicator {
+    opacity: 0 !important;
+    filter: none !important;
+}
+
+.control-panel .panel-avatar,
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar {
+    position: relative !important;
+    display: block !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    max-width: 2.5rem !important;
+    max-height: 2.5rem !important;
+    flex: 0 0 2.5rem !important;
+    aspect-ratio: 1 / 1 !important;
+    overflow: hidden !important;
+    border-radius: 999px !important;
+}
+
+.control-panel .panel-avatar-img,
+.control-panel .panel-avatar-fallback {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    border-radius: inherit !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-img:not(.hidden) {
+    display: block !important;
+}
+
+.control-panel .panel-avatar-fallback:not(.hidden) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.control-panel .panel-avatar > .hidden {
+    display: none !important;
+}
+
+/* Targeted follow-up: keep nested project-note tabs visibly shaped and non-scrolling in Console. */
+#projectModal .project-notes-tabs {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+}
+
+#projectModal .project-notes-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+#projectModal .project-notes-tab {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+}
+
+#projectModal .project-notes-tab.is-active,
+#projectModal .project-notes-tab:hover,
+#projectModal .project-notes-tab:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
