@@ -8963,7 +8963,7 @@ body[data-theme^="console"] #projectModal .modal-paste-actions,
 body[data-theme^="glass"] #projectModal .modal-paste-actions,
 body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
     align-items: stretch !important;
     gap: 0.6rem !important;
     width: 100% !important;
@@ -9797,7 +9797,7 @@ body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-menu-open .
     body[data-theme^="console"] #projectModal .modal-paste-actions,
     body[data-theme^="glass"] #projectModal .modal-paste-actions,
     body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
-        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-columns: minmax(0, 1fr) auto auto !important;
         gap: 0.5rem !important;
     }
 
@@ -11443,7 +11443,7 @@ body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
    ============================================================================ */
 .sidebar-app-brand {
     display: grid !important;
-    gap: 0.22rem !important;
+    gap: 0.44rem !important;
     margin: 0 0 1.15rem !important;
     padding: 0.15rem 0 0.85rem !important;
     border-bottom: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.22)) 78%, transparent) !important;
@@ -11915,4 +11915,77 @@ body[data-theme^="blueprint"] .task-copy-button.is-copied {
     border-color: var(--accent, var(--primary, currentColor)) !important;
     box-shadow: var(--shadow-inset, var(--inset-shadow, none)) !important;
     outline: none !important;
+}
+
+/* Targeted patch: sidebar subtitle spacing and modal Copy All / Undo placement. */
+#projectModal .modal-paste-actions,
+body[data-theme^="console"] #projectModal .modal-paste-actions,
+body[data-theme^="glass"] #projectModal .modal-paste-actions,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button,
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-image: none !important;
+    border: 1px solid var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button:hover,
+#projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button:hover,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button:hover,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    border-color: var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+    gap: 0.45rem !important;
+    min-width: 9.25rem !important;
+}
+
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    flex: 0 0 auto !important;
+}
+
+@media (max-width: 520px) {
+    #projectModal .modal-paste-actions,
+    body[data-theme^="console"] #projectModal .modal-paste-actions,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    #projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+        min-width: 0 !important;
+    }
 }
