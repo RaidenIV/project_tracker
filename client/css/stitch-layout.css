@@ -12558,3 +12558,81 @@ body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-create {
         gap: 1.05rem !important;
     }
 }
+
+/* 2026-05 follow-up: editable note links and UI-matched link surfaces */
+.project-notes-edit-link--tag,
+.project-notes-remove-link--tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.65rem !important;
+    min-width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.25))) !important;
+    background: var(--surface-2, var(--surface, transparent)) !important;
+    background-color: var(--surface-2, var(--surface, transparent)) !important;
+    background-image: none !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-edit-link--tag {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-notes-remove-link--tag {
+    color: #dc2626 !important;
+}
+
+.project-notes-edit-link--tag:hover,
+.project-notes-edit-link--tag:focus-visible,
+.project-notes-remove-link--tag:hover,
+.project-notes-remove-link--tag:focus-visible {
+    border-color: currentColor !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 16%, transparent) !important;
+}
+
+body[data-theme^="console"] .project-notes-link-editor {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-link-editor {
+    border-color: var(--line-soft, var(--border, rgba(148, 163, 184, 0.22))) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, inset 5px 5px 12px rgba(0, 0, 0, 0.16), inset -5px -5px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-add-link,
+body[data-theme^="blueprint"] .project-notes-link.project-notes-link--tag,
+body[data-theme^="blueprint"] a.project-notes-link.project-notes-link--tag.project-card-tag,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag,
+body[data-theme^="blueprint"] .project-notes-remove-link--tag {
+    border-color: color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow, 4px 4px 10px rgba(0, 0, 0, 0.16), -4px -4px 10px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-add-link:hover,
+body[data-theme^="blueprint"] .project-notes-add-link:focus-visible,
+body[data-theme^="blueprint"] .project-notes-link.project-notes-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-link.project-notes-link--tag:focus-visible,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag:focus-visible,
+body[data-theme^="blueprint"] .project-notes-remove-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-remove-link--tag:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow, inset 4px 4px 9px rgba(0, 0, 0, 0.16), inset -4px -4px 9px rgba(255, 255, 255, 0.06)) !important;
+}
