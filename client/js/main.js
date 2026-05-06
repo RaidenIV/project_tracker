@@ -2259,6 +2259,37 @@ function getProjectNotesActiveTab(projectId) {
     return data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
 }
 
+function normalizeProjectNoteHref(value = '') {
+    const rawHref = String(value ?? '').trim();
+    if (!rawHref) return '';
+    const href = rawHref.toLowerCase().startsWith('www.') ? `https://${rawHref}` : rawHref;
+    if (!/^(https?:\/\/|mailto:)/i.test(href)) return '';
+    return href.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 500);
+}
+
+function normalizeProjectNoteLinks(links = []) {
+    if (!Array.isArray(links)) return [];
+    const seen = new Set();
+    return links
+        .map((link, index) => {
+            const fallbackId = `link-${Date.now()}-${index}`;
+            const id = String(link?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+            const href = normalizeProjectNoteHref(link?.href ?? link?.url ?? '');
+            const label = String(link?.label ?? link?.text ?? link?.title ?? '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .slice(0, 80);
+            if (!label && !href) return null;
+            const safeLabel = label || href;
+            const key = `${safeLabel.toLowerCase()}|${href.toLowerCase()}`;
+            if (seen.has(key)) return null;
+            seen.add(key);
+            return { id, label: safeLabel, href };
+        })
+        .filter(Boolean)
+        .slice(0, 20);
+}
+
 function extractLinksFromText(text = '') {
     const rawText = String(text || '');
     const links = [];
@@ -2269,30 +2300,74 @@ function extractLinksFromText(text = '') {
     while ((match = urlPattern.exec(rawText)) !== null) {
         let label = match[1].replace(/[),.;:!?]+$/g, '');
         if (!label) continue;
-        const href = label.toLowerCase().startsWith('www.') ? `https://${label}` : label;
-        if (!/^https?:\/\//i.test(href) || seen.has(href)) continue;
+        const href = normalizeProjectNoteHref(label);
+        if (!href || seen.has(href)) continue;
         seen.add(href);
-        links.push({ href, label });
+        links.push({ id: `legacy-${links.length}`, href, label });
     }
 
     return links;
 }
 
-function renderProjectNotesLinksMarkup(text = '') {
-    const links = extractLinksFromText(text);
-    if (!links.length) return '';
+function collectProjectNoteLinksFromSurface(tabId, surface = 'modal') {
+    const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
+    return Array.from(document.querySelectorAll(`[data-project-notes-links="${safeSurface}"][data-tab-id="${tabId}"] [data-project-note-link-row]`))
+        .map((row, index) => ({
+            id: row.getAttribute('data-link-id') || `link-${Date.now()}-${index}`,
+            label: row.querySelector('[data-project-note-link-label]')?.value || '',
+            href: row.querySelector('[data-project-note-link-url]')?.value || ''
+        }));
+}
+
+function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = false, surface = 'modal', legacyText = '') {
+    const safeLinks = normalizeProjectNoteLinks(links);
+    const legacyLinks = extractLinksFromText(legacyText).filter(link => !safeLinks.some(savedLink => savedLink.href && savedLink.href === link.href));
+    if (!canEdit && !safeLinks.length && !legacyLinks.length) return '';
+
+    const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
+    const editableRows = safeLinks.map(link => canEdit ? `
+        <div class="project-notes-link-row" data-project-note-link-row data-link-id="${escapeHtml(link.id)}">
+            <input class="project-notes-link-input"
+                   type="text"
+                   value="${escapeHtml(link.label)}"
+                   placeholder="Link text"
+                   aria-label="Link text"
+                   data-project-note-link-label
+                   onblur="updateProjectNoteLink('${projectId}', '${tabId}', '${link.id}', 'label', this.value, '${safeSurface}')">
+            <input class="project-notes-link-input"
+                   type="url"
+                   value="${escapeHtml(link.href)}"
+                   placeholder="https://example.com"
+                   aria-label="Link URL"
+                   data-project-note-link-url
+                   onblur="updateProjectNoteLink('${projectId}', '${tabId}', '${link.id}', 'href', this.value, '${safeSurface}')">
+            ${link.href ? `<a class="project-notes-link-open" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">Open</a>` : '<span class="project-notes-link-open is-empty">Add URL</span>'}
+            <button class="project-notes-remove-link" type="button" onclick="deleteProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Delete link">×</button>
+        </div>
+    ` : `
+        <a class="project-notes-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
+    `).join('');
+
+    const legacyRows = legacyLinks.length ? `
+        <div class="project-notes-legacy-links" aria-label="Links found in note text">
+            <div class="project-notes-link-preview-label">Detected note links</div>
+            <div class="project-notes-link-list">
+                ${legacyLinks.map(link => `<a class="project-notes-link project-notes-link--legacy" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}
+            </div>
+        </div>
+    ` : '';
 
     return `
-        <div class="project-notes-link-preview" aria-label="Project note links">
-            <div class="project-notes-link-preview-label">Links</div>
-            <div class="project-notes-link-list">
-                ${links.map(link => `
-                    <a class="project-notes-link"
-                       href="${escapeHtml(link.href)}"
-                       target="_blank"
-                       rel="noopener noreferrer">${escapeHtml(link.label)}</a>
-                `).join('')}
+        <div class="project-notes-link-editor" data-project-notes-links="${safeSurface}" data-tab-id="${tabId}" aria-label="Project note links">
+            <div class="project-notes-link-editor-header">
+                <div>
+                    <div class="project-notes-link-preview-label">Links</div>
+                    <p class="project-notes-link-helper">Add display text and a URL without putting the URL in the note body.</p>
+                </div>
+                ${canEdit ? `<button class="project-notes-add-link" type="button" onmousedown="event.preventDefault()" onclick="addProjectNoteLink('${projectId}', '${tabId}', '${safeSurface}', event)" title="Add link" aria-label="Add link">+</button>` : ''}
             </div>
+            ${safeLinks.length || !canEdit ? `<div class="project-notes-link-list project-notes-link-list--editable">${editableRows}</div>` : '<p class="project-notes-link-empty">No links added yet.</p>'}
+            ${legacyRows}
         </div>
     `;
 }
@@ -2342,7 +2417,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
                           id="project-notes-body-${safeSurface}"
                           placeholder="Write project notes here..."
                           ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')"` : 'readonly'}>${escapeHtml(activeTab.body || '')}</textarea>
-                ${renderProjectNotesLinksMarkup(activeTab.body || '')}
+                ${renderProjectNotesLinksMarkup(projectId, activeTab.id, activeTab.links || [], canEdit, safeSurface, activeTab.body || '')}
                 ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
             </div>
         </div>`;
@@ -2395,11 +2470,19 @@ function deleteProjectNoteTab(projectId, tabId, surface = 'quick', event) {
     if (!state.canEdit(projectId)) return;
     const data = getProjectNotesDataForProject(projectId);
     if (data.tabs.length <= 1) return;
-    const nextTabs = data.tabs.filter(tab => tab.id !== tabId);
-    if (nextTabs.length === data.tabs.length) return;
-    data.tabs = nextTabs;
-    data.activeTabId = nextTabs[0].id;
-    saveProjectNotesData(projectId, data, { renderSurface: surface });
+    const tab = data.tabs.find(item => item.id === tabId);
+    openConfirmationDialog({
+        title: 'Delete Note Tab?',
+        message: `Delete "${tab?.title || 'this note tab'}"? This cannot be undone.`,
+        confirmLabel: 'Delete Tab',
+        onConfirm: () => {
+            const nextTabs = data.tabs.filter(item => item.id !== tabId);
+            if (nextTabs.length === data.tabs.length) return;
+            data.tabs = nextTabs;
+            data.activeTabId = nextTabs[0].id;
+            saveProjectNotesData(projectId, data, { renderSurface: surface });
+        }
+    });
 }
 
 function updateProjectNoteTitle(projectId, tabId, titleValue, surface = 'modal') {
@@ -2424,6 +2507,60 @@ function updateProjectNoteBody(projectId, tabId, bodyValue, surface = 'modal') {
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
+function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const currentLinks = normalizeProjectNoteLinks(tab.links || []);
+    const nextNumber = currentLinks.length + 1;
+    const nextLinkId = `link-${Date.now()}-${nextNumber}`;
+    tab.links = normalizeProjectNoteLinks([...currentLinks, { id: nextLinkId, label: `New Link ${nextNumber}`, href: '' }]);
+    data.activeTabId = tabId;
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+    requestAnimationFrame(() => document.querySelector(`[data-link-id="${nextLinkId}"] [data-project-note-link-label]`)?.focus({ preventScroll: true }));
+}
+
+function updateProjectNoteLink(projectId, tabId, linkId, field, value, surface = 'modal') {
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const links = normalizeProjectNoteLinks(tab.links || []);
+    const link = links.find(item => item.id === linkId);
+    if (!link) return;
+    if (field === 'href') {
+        link.href = normalizeProjectNoteHref(value);
+    } else {
+        link.label = String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    }
+    tab.links = normalizeProjectNoteLinks(links);
+    data.activeTabId = tabId;
+    saveProjectNotesData(projectId, data);
+}
+
+function deleteProjectNoteLink(projectId, tabId, linkId, surface = 'modal', event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const link = normalizeProjectNoteLinks(tab.links || []).find(item => item.id === linkId);
+    openConfirmationDialog({
+        title: 'Delete Link?',
+        message: `Delete "${link?.label || 'this link'}"?`,
+        confirmLabel: 'Delete Link',
+        onConfirm: () => {
+            tab.links = normalizeProjectNoteLinks(tab.links || []).filter(item => item.id !== linkId);
+            data.activeTabId = tabId;
+            saveProjectNotesData(projectId, data, { renderSurface: surface });
+        }
+    });
+}
+
 function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!state.canEdit(projectId)) return;
     const activeTab = getProjectNotesActiveTab(projectId);
@@ -2434,6 +2571,7 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!tab) return;
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyTextarea) tab.body = String(bodyTextarea.value || '').trim();
+    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
@@ -3045,20 +3183,27 @@ function deleteSelectedTasks(projectId, event) {
     const selectedIds = new Set(getSelectedTaskIdsForProject(projectId));
     if (selectedIds.size <= 0) return;
 
-    const modalState = captureProjectModalState(projectId);
-    const deletedTasks = project.tasks
-        .map((task, index) => normalizeTask(task, index))
-        .filter(task => selectedIds.has(task.id));
-    const completedDeletedCount = deletedTasks.filter(task => task.completed).length;
-    const updatedTasks = project.tasks
-        .map((task, index) => normalizeTask(task, index))
-        .filter(task => !selectedIds.has(task.id));
+    openConfirmationDialog({
+        title: selectedIds.size === 1 ? 'Delete Selected Task?' : 'Delete Selected Tasks?',
+        message: `Delete ${selectedIds.size} selected ${selectedIds.size === 1 ? 'task' : 'tasks'}? This cannot be undone.`,
+        confirmLabel: 'Delete Tasks',
+        onConfirm: () => {
+            const modalState = captureProjectModalState(projectId);
+            const deletedTasks = project.tasks
+                .map((task, index) => normalizeTask(task, index))
+                .filter(task => selectedIds.has(task.id));
+            const completedDeletedCount = deletedTasks.filter(task => task.completed).length;
+            const updatedTasks = project.tasks
+                .map((task, index) => normalizeTask(task, index))
+                .filter(task => !selectedIds.has(task.id));
 
-    updateCompletedTaskStatBy(-completedDeletedCount);
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
-    clearSelectedTasksForProject(projectId, false);
-    saveData();
-    refreshModalTaskUi(projectId, { modalState });
+            updateCompletedTaskStatBy(-completedDeletedCount);
+            state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+            clearSelectedTasksForProject(projectId, false);
+            saveData();
+            refreshModalTaskUi(projectId, { modalState });
+        }
+    });
 }
 
 function updateProjectProgress(projectId) {
@@ -4852,15 +4997,22 @@ function deleteProjectTag(projectId, tagName, event) {
     const project = state.findProject(projectId);
     if (!project) return;
     const normalizedTag = normalizeProjectTagName(tagName);
-    const nextTags = getProjectTags(project).filter(tag => tag !== normalizedTag);
-    state.updateProject(projectId, projectUpdate({ tags: nextTags }));
-    if (uiState.activeProjectTag === normalizedTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
-    if (uiState.editingProjectTag?.projectId === projectId && uiState.editingProjectTag.originalTag === normalizedTag) {
-        uiState.editingProjectTag = null;
-    }
-    saveData();
-    renderProjectTagControls(projectId);
-    render();
+    openConfirmationDialog({
+        title: 'Delete Project Tag?',
+        message: `Delete the "${normalizedTag}" tag from this project?`,
+        confirmLabel: 'Delete Tag',
+        onConfirm: () => {
+            const nextTags = getProjectTags(project).filter(tag => tag !== normalizedTag);
+            state.updateProject(projectId, projectUpdate({ tags: nextTags }));
+            if (uiState.activeProjectTag === normalizedTag) uiState.activeProjectTag = PROJECT_TAG_ALL_FILTER;
+            if (uiState.editingProjectTag?.projectId === projectId && uiState.editingProjectTag.originalTag === normalizedTag) {
+                uiState.editingProjectTag = null;
+            }
+            saveData();
+            renderProjectTagControls(projectId);
+            render();
+        }
+    });
 }
 
 function setProjectTagFilter(tagName) {
@@ -4903,7 +5055,8 @@ function createDefaultProjectNotesTab(body = '') {
     return {
         id: PROJECT_NOTES_DEFAULT_TAB_ID,
         title: 'Notes',
-        body: String(body ?? '')
+        body: String(body ?? ''),
+        links: []
     };
 }
 
@@ -4912,7 +5065,8 @@ function normalizeProjectNotesTab(tab, index = 0) {
     const id = String(tab?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
     const title = String(tab?.title || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
     const body = String(tab?.body ?? tab?.text ?? tab?.note ?? '');
-    return { id, title, body };
+    const links = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? []);
+    return { id, title, body, links };
 }
 
 function normalizeProjectNotesData(notes) {
@@ -4956,7 +5110,7 @@ function serializeProjectNotesData(data) {
 function getProjectNotesPlainText(notes) {
     const data = normalizeProjectNotesData(notes);
     return data.tabs
-        .map(tab => `${tab.title} ${tab.body}`.trim())
+        .map(tab => `${tab.title} ${tab.body} ${(tab.links || []).map(link => `${link.label} ${link.href}`).join(' ')}`.trim())
         .filter(Boolean)
         .join(' ')
         .trim();
@@ -4964,7 +5118,7 @@ function getProjectNotesPlainText(notes) {
 
 function projectHasNotes(notes) {
     const data = normalizeProjectNotesData(notes);
-    return data.tabs.some(tab => String(tab.body || '').trim().length > 0);
+    return data.tabs.some(tab => String(tab.body || '').trim().length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
 }
 
 function formatProjectNotesPreview(notes) {
@@ -5418,23 +5572,29 @@ function deleteTaskCategory(projectId, currentCategory) {
     if (!state.canEdit(projectId) || currentCategory === DEFAULT_TASK_CATEGORY) return;
     const project = state.findProject(projectId);
     if (!project) return;
-    if (!window.confirm(`Delete "${currentCategory}"? Tasks in this category will move back to All.`)) return;
 
-    const updatedTasks = (project.tasks || []).map((task, index) => {
-        const normalizedTask = normalizeTask(task, index);
-        if (normalizedTask.category !== currentCategory) return normalizedTask;
-        return { ...normalizedTask, category: DEFAULT_TASK_CATEGORY };
+    openConfirmationDialog({
+        title: 'Delete Task Category?',
+        message: `Delete "${currentCategory}"? Tasks in this category will move back to All.`,
+        confirmLabel: 'Delete Category',
+        onConfirm: () => {
+            const updatedTasks = (project.tasks || []).map((task, index) => {
+                const normalizedTask = normalizeTask(task, index);
+                if (normalizedTask.category !== currentCategory) return normalizedTask;
+                return { ...normalizedTask, category: DEFAULT_TASK_CATEGORY };
+            });
+            const nextCategories = getProjectTaskCategories(project).filter(category => category !== currentCategory);
+
+            state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+            if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
+                setStoredProjectTaskCategoryFilter(projectId, DEFAULT_TASK_CATEGORY_FILTER);
+            }
+            uiState.openTaskCategoryMenu = null;
+            saveData();
+            renderModalTaskList(projectId);
+            render();
+        }
     });
-    const nextCategories = getProjectTaskCategories(project).filter(category => category !== currentCategory);
-
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
-    if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
-        setStoredProjectTaskCategoryFilter(projectId, DEFAULT_TASK_CATEGORY_FILTER);
-    }
-    uiState.openTaskCategoryMenu = null;
-    saveData();
-    renderModalTaskList(projectId);
-    render();
 }
 
 function updateTaskTag(projectId, taskId, tagValue) {
@@ -6127,7 +6287,14 @@ function addTaskToModal(projectId) {
 
 
 function deleteTaskFromModal(projectId, taskId) {
-    deleteTask(projectId, taskId);
+    const project = state.findProject(projectId);
+    const task = project?.tasks?.map((item, index) => normalizeTask(item, index)).find(item => item.id === taskId);
+    openConfirmationDialog({
+        title: 'Delete Task?',
+        message: `Delete "${task?.text || 'this task'}"? This cannot be undone.`,
+        confirmLabel: 'Delete Task',
+        onConfirm: () => deleteTask(projectId, taskId)
+    });
 }
 
 function completeProjectFromModal(projectId) {
@@ -6139,34 +6306,63 @@ function completeProjectFromModal(projectId) {
 // CONFIRMATION DIALOGS
 // ============================================================================
 
-function confirmDeleteProject(projectId) {
+function openConfirmationDialog({ title = 'Confirm Delete', message = 'Are you sure you want to delete this item?', confirmLabel = 'Delete', onConfirm } = {}) {
     const confirmDialog = document.getElementById('confirmDialog');
     const confirmBtn = document.getElementById('confirmDeleteBtn');
-    
+    const titleEl = confirmDialog?.querySelector('.confirm-dialog h3');
+    const messageEl = document.getElementById('confirmMessage');
+
+    if (!confirmDialog || !confirmBtn) {
+        if (window.confirm(message) && typeof onConfirm === 'function') onConfirm();
+        return;
+    }
+
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+    confirmBtn.textContent = confirmLabel;
     confirmBtn.onclick = () => {
-        deleteProject(projectId);
+        if (typeof onConfirm === 'function') onConfirm();
         closeConfirmDialog();
-        closeProjectModal();
     };
-    
+
     confirmDialog.classList.add('active');
 }
 
+function confirmDeleteProject(projectId) {
+    const project = state.findProject(projectId);
+    openConfirmationDialog({
+        title: 'Delete Project?',
+        message: `Delete ${project?.title ? `"${project.title}"` : 'this project'}? This cannot be undone.`,
+        confirmLabel: 'Delete Project',
+        onConfirm: () => {
+            deleteProject(projectId);
+            closeProjectModal();
+        }
+    });
+}
+
 function confirmDeleteProjectCard(projectId) {
-    const confirmDialog = document.getElementById('confirmDialog');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    
-    confirmBtn.onclick = () => {
-        deleteProject(projectId);
-        closeConfirmDialog();
-    };
-    
-    confirmDialog.classList.add('active');
+    const project = state.findProject(projectId);
+    openConfirmationDialog({
+        title: 'Delete Project?',
+        message: `Delete ${project?.title ? `"${project.title}"` : 'this project'}? This cannot be undone.`,
+        confirmLabel: 'Delete Project',
+        onConfirm: () => deleteProject(projectId)
+    });
 }
 
 function closeConfirmDialog() {
     const confirmDialog = document.getElementById('confirmDialog');
-    confirmDialog.classList.remove('active');
+    const titleEl = confirmDialog?.querySelector('.confirm-dialog h3');
+    const messageEl = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDialog) confirmDialog.classList.remove('active');
+    if (titleEl) titleEl.textContent = 'Delete Project?';
+    if (messageEl) messageEl.textContent = 'Are you sure you want to delete this project? This action cannot be undone.';
+    if (confirmBtn) {
+        confirmBtn.textContent = 'Delete';
+        confirmBtn.onclick = null;
+    }
 }
 
 // ============================================================================
@@ -7163,6 +7359,9 @@ window.addProjectNoteTab = addProjectNoteTab;
 window.deleteProjectNoteTab = deleteProjectNoteTab;
 window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
+window.addProjectNoteLink = addProjectNoteLink;
+window.updateProjectNoteLink = updateProjectNoteLink;
+window.deleteProjectNoteLink = deleteProjectNoteLink;
 window.saveActiveProjectNoteFromSurface = saveActiveProjectNoteFromSurface;
 window.toggleHideCompleted = toggleHideCompleted;
 window.showMoreCompletedTasks = showMoreCompletedTasks;

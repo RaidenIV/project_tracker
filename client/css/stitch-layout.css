@@ -11989,3 +11989,313 @@ body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all
         min-width: 0 !important;
     }
 }
+
+/* 2026-05 targeted fixes: 3456 display, delete confirmations, notes links, and modal stacking */
+.project-card .project-title,
+.stitch-project-card .project-title,
+body[data-theme] .project-card .project-title,
+body[data-theme] .stitch-project-card .project-title {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
+
+body[data-theme$="-light"] .project-card .project-sync-text,
+body[data-theme$="-light"] .stitch-project-card .project-sync-text {
+    color: #000 !important;
+}
+
+body[data-theme$="-dark"] .project-card .project-sync-text,
+body[data-theme$="-dark"] .stitch-project-card .project-sync-text,
+body:not([data-theme$="-light"]) .project-card .project-sync-text,
+body:not([data-theme$="-light"]) .stitch-project-card .project-sync-text {
+    color: #fff !important;
+}
+
+body[data-theme^="console"] .project-card.dragging,
+body[data-theme^="console"] .stitch-project-card.dragging,
+body[data-theme^="console"] .project-grid.is-reordering .project-card.dragging,
+body[data-theme^="console"] .project-grid.is-reordering .stitch-project-card.dragging {
+    opacity: 1 !important;
+    background: var(--panel-strong, var(--panel, #0f172a)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+@media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (max-height: 1185px) and (min-resolution: 1.5dppx) {
+    :root {
+        --layout-padding-x: clamp(1.6rem, 2vw, 2.5rem);
+        --layout-padding-y: clamp(1.4rem, 1.8vw, 2.25rem);
+    }
+
+    body.has-sidebar #mainContent,
+    body.sidebar-collapsed #mainContent {
+        padding-top: clamp(1.4rem, 1.8vw, 2rem) !important;
+    }
+
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: clamp(1rem, 1.15vw, 1.35rem) !important;
+        align-items: stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card {
+        min-height: clamp(26rem, 31vw, 34rem) !important;
+    }
+}
+
+@media (min-width: 3000px) and (min-height: 1900px) {
+    :root {
+        --layout-padding-x: clamp(3rem, 3.2vw, 6rem);
+        --layout-padding-y: clamp(2.75rem, 2.6vw, 5rem);
+    }
+
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: clamp(1.5rem, 1.15vw, 2.5rem) !important;
+    }
+
+    .project-card,
+    .stitch-project-card {
+        min-height: clamp(34rem, 21vw, 45rem) !important;
+    }
+}
+
+#confirmDialog {
+    z-index: 120000 !important;
+}
+
+#confirmDialog.active {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#confirmDialog .confirm-dialog {
+    width: min(92vw, 28rem) !important;
+    padding: 1.5rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--panel, var(--surface, #fff)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38) !important;
+}
+
+#confirmDialog .confirm-dialog h3 {
+    margin: 0 0 0.6rem !important;
+    color: var(--text, currentColor) !important;
+}
+
+#confirmDialog .confirm-dialog p {
+    color: var(--muted, currentColor) !important;
+}
+
+#confirmDialog .confirm-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin-top: 1.25rem !important;
+}
+
+#confirmDialog .confirm-cancel,
+#confirmDialog .confirm-delete {
+    min-height: 2.65rem !important;
+    padding: 0.7rem 1rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+#confirmDialog .confirm-cancel {
+    color: var(--text, currentColor) !important;
+    background: var(--surface, transparent) !important;
+}
+
+#confirmDialog .confirm-delete {
+    color: #fff !important;
+    background: color-mix(in srgb, #dc2626 86%, var(--accent, #dc2626) 14%) !important;
+    border-color: color-mix(in srgb, #dc2626 72%, transparent) !important;
+}
+
+body[data-theme^="console"] #confirmDialog .confirm-dialog {
+    background: var(--panel-strong, var(--panel, #050b16)) !important;
+    border-color: color-mix(in srgb, var(--accent, #38bdf8) 44%, transparent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 18%, transparent), 0 28px 80px rgba(0, 0, 0, 0.55) !important;
+}
+
+body[data-theme^="blueprint"] #confirmDialog .confirm-dialog,
+body[data-theme^="blueprint"] #confirmDialog .confirm-cancel,
+body[data-theme^="blueprint"] #confirmDialog .confirm-delete {
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+}
+
+.project-notes-link-editor {
+    display: grid !important;
+    gap: 0.75rem !important;
+    margin-top: 0.85rem !important;
+    padding: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.24))) !important;
+    border-radius: 1rem !important;
+    background: color-mix(in srgb, var(--surface, transparent) 82%, var(--accent, currentColor) 8%) !important;
+}
+
+.project-notes-link-editor-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.project-notes-link-helper,
+.project-notes-link-empty {
+    margin: 0.15rem 0 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+}
+
+.project-notes-add-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    flex: 0 0 2rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: transparent !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-link-list--editable {
+    display: grid !important;
+    gap: 0.55rem !important;
+}
+
+.project-notes-link-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) auto auto !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+}
+
+.project-notes-link-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 2.35rem !important;
+    padding: 0.55rem 0.7rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--input-bg, var(--surface, transparent)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 0.75rem !important;
+}
+
+.project-notes-link-open,
+.project-notes-remove-link,
+.project-notes-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.25rem !important;
+    padding: 0.45rem 0.7rem !important;
+    border-radius: 0.7rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.25))) !important;
+    color: var(--accent, currentColor) !important;
+    text-decoration: none !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 8%) !important;
+}
+
+.project-notes-link-open.is-empty {
+    color: var(--muted, currentColor) !important;
+}
+
+.project-notes-remove-link {
+    min-width: 2.25rem !important;
+    color: #dc2626 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+}
+
+.project-notes-legacy-links {
+    display: grid !important;
+    gap: 0.45rem !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tabs {
+    display: flex !important;
+    gap: 0.75rem !important;
+    padding: 0.25rem !important;
+    background: transparent !important;
+    border-bottom: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tab {
+    position: relative !important;
+    bottom: auto !important;
+    min-height: 2.85rem !important;
+    padding: 0.7rem 1.05rem !important;
+    color: var(--muted, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.22))) !important;
+    border-radius: 999px !important;
+    box-shadow: var(--card-shadow, 7px 7px 16px rgba(0, 0, 0, 0.16), -7px -7px 16px rgba(255, 255, 255, 0.08)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tab.active {
+    color: var(--accent, currentColor) !important;
+    background: var(--surface, var(--panel, transparent)) !important;
+    box-shadow: var(--inset-shadow, inset 6px 6px 12px rgba(0, 0, 0, 0.16), inset -6px -6px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tab::before,
+body[data-theme^="blueprint"] #projectModal .modal-tab::after {
+    display: none !important;
+}
+
+body[data-theme^="console"] #projectModal,
+body[data-theme^="console"] #projectModal .modal-content,
+body[data-theme^="console"] #projectModal .modal-body,
+body[data-theme^="console"] #projectModal .tasks-section,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .modal-tasks-card,
+body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-item,
+body[data-theme^="console"] #projectModal .task-meta-controls {
+    overflow: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .task-priority-control.is-open,
+body[data-theme^="console"] #projectModal .task-item:has(.task-priority-control.is-open) {
+    z-index: 100400 !important;
+}
+
+body[data-theme^="console"] #projectModal .task-priority-popover {
+    z-index: 100500 !important;
+    background: var(--panel-strong, var(--panel, #050b16)) !important;
+    border-color: color-mix(in srgb, var(--accent, #38bdf8) 38%, transparent) !important;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 18%, transparent) !important;
+}
+
+@media (max-width: 720px) {
+    .project-notes-link-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .project-notes-link-open,
+    .project-notes-remove-link {
+        width: 100% !important;
+    }
+}
+
+body[data-theme] #projectModal .modal-title,
+body[data-theme] #projectModal .modal-title-edit-button {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
