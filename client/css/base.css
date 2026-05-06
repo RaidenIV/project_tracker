@@ -8989,3 +8989,65 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     font-size: 0.78rem;
     font-weight: 700;
 }
+
+/* ============================================================================
+   ROUND 37 BASE — Card title due date, link edit button
+   ============================================================================ */
+
+.project-title-row-with-due {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.project-card-title-due {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--accent, currentColor);
+    cursor: pointer;
+    white-space: nowrap;
+    opacity: 0.82;
+    transition: opacity 0.15s ease;
+}
+
+.project-card-title-due:hover {
+    opacity: 1;
+}
+
+.project-card-title-due.is-overdue {
+    color: #ef4444;
+    opacity: 1;
+}
+
+/* Edit link icon button */
+.project-notes-edit-link--tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0.5;
+    vertical-align: middle;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.project-notes-edit-link--tag:hover {
+    opacity: 1;
+    color: var(--accent);
+}
+
+.project-notes-link-edit-icon {
+    width: 0.7rem;
+    height: 0.7rem;
+    pointer-events: none;
+}
