@@ -12317,3 +12317,244 @@ body[data-theme] #projectModal .modal-title,
 body[data-theme] #projectModal .modal-title-edit-button {
     color: var(--accent, var(--primary, currentColor)) !important;
 }
+
+/* 2026-05 follow-up: notes link creation modal and 3456 display parity */
+.project-notes-link-list--tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+}
+
+.project-notes-link-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 0.28rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+}
+
+.project-notes-link.project-notes-link--tag,
+a.project-notes-link.project-notes-link--tag.project-card-tag {
+    min-height: 2rem !important;
+    max-width: 100% !important;
+    padding: 0.38rem 0.68rem !important;
+    border-radius: 999px !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 42%, var(--line, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-notes-link.project-notes-link--tag:hover,
+.project-notes-link.project-notes-link--tag:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+.project-notes-remove-link--tag {
+    width: 1.65rem !important;
+    min-width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+}
+
+#projectNoteLinkModal {
+    z-index: 121000 !important;
+}
+
+#projectNoteLinkModal.active {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.project-note-link-modal-content {
+    width: min(92vw, 30rem) !important;
+    max-height: min(86vh, 34rem) !important;
+    padding: 1.5rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--panel, var(--surface, #fff)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38) !important;
+}
+
+.project-note-link-modal-header {
+    align-items: flex-start !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.project-note-link-modal-body {
+    display: grid !important;
+    gap: 0.85rem !important;
+}
+
+.project-note-link-field {
+    display: grid !important;
+    gap: 0.38rem !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.project-note-link-field input {
+    width: 100% !important;
+    min-height: 2.75rem !important;
+    padding: 0.7rem 0.85rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--input-bg, var(--surface, transparent)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 0.85rem !important;
+    font: inherit !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    outline: none !important;
+}
+
+.project-note-link-field input:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.project-note-link-error {
+    min-height: 1.1rem !important;
+    margin: 0 !important;
+    color: #ef4444 !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+}
+
+.project-note-link-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin-top: 0.25rem !important;
+}
+
+.project-note-link-cancel,
+.project-note-link-create {
+    min-height: 2.65rem !important;
+    padding: 0.7rem 1rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-note-link-cancel {
+    color: var(--text, currentColor) !important;
+    background: var(--surface, transparent) !important;
+}
+
+.project-note-link-create {
+    color: var(--button-fg, #fff) !important;
+    background: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="console"] #projectNoteLinkModal .project-note-link-modal-content {
+    background: var(--panel-strong, var(--panel, #050b16)) !important;
+    border-color: color-mix(in srgb, var(--accent, #38bdf8) 44%, transparent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 18%, transparent), 0 28px 80px rgba(0, 0, 0, 0.55) !important;
+}
+
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-modal-content,
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-field input,
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-cancel,
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-create {
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+}
+
+@media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (max-height: 1185px) and (min-resolution: 1.5dppx) {
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 27rem !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 1.55rem !important;
+        gap: 1.05rem !important;
+    }
+}
+
+@media (min-width: 3000px) and (min-height: 1900px) {
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 27rem !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 1.55rem !important;
+        gap: 1.05rem !important;
+    }
+}

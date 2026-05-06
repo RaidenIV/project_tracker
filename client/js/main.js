@@ -2312,11 +2312,15 @@ function extractLinksFromText(text = '') {
 function collectProjectNoteLinksFromSurface(tabId, surface = 'modal') {
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
     return Array.from(document.querySelectorAll(`[data-project-notes-links="${safeSurface}"][data-tab-id="${tabId}"] [data-project-note-link-row]`))
-        .map((row, index) => ({
-            id: row.getAttribute('data-link-id') || `link-${Date.now()}-${index}`,
-            label: row.querySelector('[data-project-note-link-label]')?.value || '',
-            href: row.querySelector('[data-project-note-link-url]')?.value || ''
-        }));
+        .map((row, index) => {
+            const labelControl = row.querySelector('[data-project-note-link-label]');
+            const urlControl = row.querySelector('[data-project-note-link-url]');
+            return {
+                id: row.getAttribute('data-link-id') || `link-${Date.now()}-${index}`,
+                label: labelControl?.value || labelControl?.getAttribute('data-project-note-link-label') || labelControl?.textContent || '',
+                href: urlControl?.value || urlControl?.getAttribute('data-project-note-link-url') || urlControl?.getAttribute('href') || ''
+            };
+        });
 }
 
 function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = false, surface = 'modal', legacyText = '') {
@@ -2326,36 +2330,23 @@ function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = f
     if (!canEdit && !linkedItems.length && !legacyLinks.length) return '';
 
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
-    const editableRows = safeLinks.map(link => canEdit ? `
-        <div class="project-notes-link-row" data-project-note-link-row data-link-id="${escapeHtml(link.id)}">
-            <input class="project-notes-link-input"
-                   type="text"
-                   value="${escapeHtml(link.label)}"
-                   placeholder="Word or link text"
-                   aria-label="Word or link text"
-                   data-project-note-link-label
-                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"
-                   onblur="updateProjectNoteLink('${projectId}', '${tabId}', '${link.id}', 'label', this.value, '${safeSurface}')">
-            <input class="project-notes-link-input"
-                   type="url"
-                   value="${escapeHtml(link.href)}"
-                   placeholder="Paste URL"
-                   aria-label="Link URL"
-                   data-project-note-link-url
-                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"
-                   onblur="updateProjectNoteLink('${projectId}', '${tabId}', '${link.id}', 'href', this.value, '${safeSurface}')">
-            ${link.href ? `<a class="project-notes-link-open" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">Open</a>` : `<button class="project-notes-link-open is-empty" type="button" onclick="focusProjectNoteLinkUrl('${link.id}', event)">Add URL</button>`}
-            <button class="project-notes-remove-link" type="button" onclick="deleteProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Delete link">×</button>
-        </div>
-    ` : link.href ? `
-        <a class="project-notes-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
-    ` : '').join('');
+    const linkTags = linkedItems.map(link => `
+        <span class="project-notes-link-chip" data-project-note-link-row data-link-id="${escapeHtml(link.id)}">
+            <a class="project-notes-link project-notes-link--tag project-card-tag"
+               href="${escapeHtml(link.href)}"
+               target="_blank"
+               rel="noopener noreferrer"
+               data-project-note-link-label="${escapeHtml(link.label)}"
+               data-project-note-link-url="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a>
+            ${canEdit ? `<button class="project-notes-remove-link project-notes-remove-link--tag" type="button" onclick="deleteProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Delete link">×</button>` : ''}
+        </span>
+    `).join('');
 
     const legacyRows = legacyLinks.length ? `
         <div class="project-notes-legacy-links" aria-label="Links found in note text">
             <div class="project-notes-link-preview-label">Detected note links</div>
-            <div class="project-notes-link-list">
-                ${legacyLinks.map(link => `<a class="project-notes-link project-notes-link--legacy" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}
+            <div class="project-notes-link-list project-notes-link-list--tags">
+                ${legacyLinks.map(link => `<a class="project-notes-link project-notes-link--tag project-notes-link--legacy project-card-tag" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}
             </div>
         </div>
     ` : '';
@@ -2365,11 +2356,11 @@ function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = f
             <div class="project-notes-link-editor-header">
                 <div>
                     <div class="project-notes-link-preview-label">Links</div>
-                    <p class="project-notes-link-helper">Add display text and a URL without putting the URL in the note body.</p>
+                    <p class="project-notes-link-helper">Click + to attach a URL to custom hyperlink text.</p>
                 </div>
                 ${canEdit ? `<button class="project-notes-add-link" type="button" onmousedown="event.preventDefault()" onclick="addProjectNoteLink('${projectId}', '${tabId}', '${safeSurface}', event)" title="Add link" aria-label="Add link">+</button>` : ''}
             </div>
-            ${safeLinks.length || !canEdit ? `<div class="project-notes-link-list project-notes-link-list--editable">${editableRows}</div>` : '<p class="project-notes-link-empty">No links added yet.</p>'}
+            ${linkedItems.length ? `<div class="project-notes-link-list project-notes-link-list--tags">${linkTags}</div>` : (canEdit ? '<p class="project-notes-link-empty">No links added yet.</p>' : '')}
             ${legacyRows}
         </div>
     `;
@@ -2510,6 +2501,58 @@ function updateProjectNoteBody(projectId, tabId, bodyValue, surface = 'modal') {
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
+function ensureProjectNoteLinkModal() {
+    let modal = document.getElementById('projectNoteLinkModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-note-link-modal-overlay" id="projectNoteLinkModal" aria-hidden="true">
+            <div class="modal-content project-note-link-modal-content" role="dialog" aria-modal="true" aria-labelledby="projectNoteLinkModalTitle">
+                <div class="task-note-modal-header project-note-link-modal-header">
+                    <div>
+                        <h3 class="task-note-modal-title" id="projectNoteLinkModalTitle">Create Link</h3>
+                        <p class="task-note-modal-subtitle">Attach a URL to custom text.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectNoteLinkModal()" aria-label="Close create link modal">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="project-note-link-modal-body">
+                    <label class="project-note-link-field">
+                        <span>Text</span>
+                        <input id="projectNoteLinkTextInput" type="text" maxlength="80" placeholder="Example: Contract" autocomplete="off">
+                    </label>
+                    <label class="project-note-link-field">
+                        <span>URL</span>
+                        <input id="projectNoteLinkUrlInput" type="url" maxlength="500" placeholder="https://example.com" autocomplete="off">
+                    </label>
+                    <p class="project-note-link-error" id="projectNoteLinkError" role="alert" aria-live="polite"></p>
+                    <div class="project-note-link-actions">
+                        <button class="project-note-link-cancel" type="button" onclick="closeProjectNoteLinkModal()">Cancel</button>
+                        <button class="project-note-link-create" type="button" onclick="createProjectNoteLinkFromModal()">Create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectNoteLinkModal');
+    modal?.addEventListener('click', event => {
+        if (event.target === modal) closeProjectNoteLinkModal();
+    });
+    ['projectNoteLinkTextInput', 'projectNoteLinkUrlInput'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                createProjectNoteLinkFromModal();
+            }
+        });
+    });
+    return modal;
+}
+
 function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -2517,16 +2560,66 @@ function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
     const data = getProjectNotesDataForProject(projectId);
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
+
+    const modal = ensureProjectNoteLinkModal();
+    const textInput = document.getElementById('projectNoteLinkTextInput');
+    const urlInput = document.getElementById('projectNoteLinkUrlInput');
+    const errorEl = document.getElementById('projectNoteLinkError');
+    modal.dataset.projectId = projectId;
+    modal.dataset.tabId = tabId;
+    modal.dataset.surface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '') || 'modal';
+    if (textInput) textInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (errorEl) errorEl.textContent = '';
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => textInput?.focus({ preventScroll: true }));
+}
+
+function closeProjectNoteLinkModal() {
+    const modal = document.getElementById('projectNoteLinkModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
+    delete modal.dataset.tabId;
+    delete modal.dataset.surface;
+}
+
+function createProjectNoteLinkFromModal() {
+    const modal = document.getElementById('projectNoteLinkModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    const tabId = modal.dataset.tabId;
+    const surface = modal.dataset.surface || 'modal';
+    if (!projectId || !tabId || !state.canEdit(projectId)) return;
+
+    const textInput = document.getElementById('projectNoteLinkTextInput');
+    const urlInput = document.getElementById('projectNoteLinkUrlInput');
+    const errorEl = document.getElementById('projectNoteLinkError');
+    const label = String(textInput?.value || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const href = normalizeProjectNoteHref(urlInput?.value || '');
+
+    if (!label) {
+        if (errorEl) errorEl.textContent = 'Add the text for the hyperlink.';
+        textInput?.focus({ preventScroll: true });
+        return;
+    }
+    if (!href) {
+        if (errorEl) errorEl.textContent = 'Add a valid URL that starts with http://, https://, www., or mailto:.';
+        urlInput?.focus({ preventScroll: true });
+        return;
+    }
+
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
     const currentLinks = normalizeProjectNoteLinks(tab.links || []);
-    const nextNumber = currentLinks.length + 1;
-    const nextLinkId = `link-${Date.now()}-${nextNumber}`;
-    tab.links = normalizeProjectNoteLinks([...currentLinks, { id: nextLinkId, label: `Link ${nextNumber}`, href: '' }]);
+    const nextLinkId = `link-${Date.now()}-${currentLinks.length + 1}`;
+    tab.links = normalizeProjectNoteLinks([...currentLinks, { id: nextLinkId, label, href }]);
     data.activeTabId = tabId;
+    closeProjectNoteLinkModal();
     saveProjectNotesData(projectId, data, { renderSurface: surface });
-    requestAnimationFrame(() => {
-        const row = document.querySelector(`[data-link-id="${nextLinkId}"]`);
-        row?.querySelector('[data-project-note-link-label]')?.focus({ preventScroll: true });
-    });
 }
 
 function focusProjectNoteLinkUrl(linkId, event) {
@@ -7377,6 +7470,8 @@ window.deleteProjectNoteTab = deleteProjectNoteTab;
 window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
 window.addProjectNoteLink = addProjectNoteLink;
+window.closeProjectNoteLinkModal = closeProjectNoteLinkModal;
+window.createProjectNoteLinkFromModal = createProjectNoteLinkFromModal;
 window.focusProjectNoteLinkUrl = focusProjectNoteLinkUrl;
 window.updateProjectNoteLink = updateProjectNoteLink;
 window.deleteProjectNoteLink = deleteProjectNoteLink;
