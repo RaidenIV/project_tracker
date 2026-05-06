@@ -147,6 +147,7 @@ const taskSchema = new mongoose.Schema({
     completedDate: String,
     tag:           { type: String, enum: ['', 'critical', 'high', 'medium', 'low'], default: '' },
     category:      { type: String, default: '' },
+    dueDate:       { type: String, default: '' },
     note:          { type: String, default: '' }
 });
 
@@ -175,6 +176,7 @@ const projectSchema = new mongoose.Schema({
     completedDate: String,
     notes:         { type: String, default: '' },
     description:   { type: String, default: '' },
+    dueDate:       { type: String, default: '' },
     tags:          { type: [String], default: [] },
     archived:      { type: Boolean, default: false },
     owner:         { type: String, required: true },   // Account._id as string
@@ -486,6 +488,19 @@ function projectFieldChanged(existingValue, incomingValue) {
     return JSON.stringify(comparableProjectValue(existingValue)) !== JSON.stringify(comparableProjectValue(incomingValue));
 }
 
+function sanitizeDateKey(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnlyMatch) return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
@@ -503,6 +518,7 @@ function sanitizeTask(task, index = 0) {
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         tag,
         category,
+        dueDate: sanitizeDateKey(task?.dueDate || task?.due_date || task?.deadline || ''),
         note: typeof task?.note === 'string' ? task.note.trim() : (typeof task?.notes === 'string' ? task.notes.trim() : '')
     };
 }
@@ -540,6 +556,9 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     }
     if (body.completed !== undefined) sanitized.completed = !!body.completed;
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
+    if (body.dueDate !== undefined || body.due_date !== undefined || body.deadline !== undefined) {
+        sanitized.dueDate = sanitizeDateKey(body.dueDate ?? body.due_date ?? body.deadline ?? '');
+    }
     if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
     if (body.description !== undefined) sanitized.description = typeof body.description === 'string'
         ? body.description.trim().replace(/\s+/g, ' ').slice(0, 280)
@@ -610,6 +629,10 @@ function summarizeProjectUpdate(existingProject, incomingBody) {
 
     if (typeof update.description === 'string' && update.description !== (oldProject.description || '')) {
         return { type: 'description_updated', message: 'updated the project description' };
+    }
+
+    if (typeof update.dueDate === 'string' && update.dueDate !== (oldProject.dueDate || '')) {
+        return { type: 'due_date_updated', message: update.dueDate ? `set the project due date to ${update.dueDate}` : 'cleared the project due date' };
     }
 
     if (typeof update.notes === 'string' && update.notes !== (oldProject.notes || '')) {
@@ -730,7 +753,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, completed, completedDate, notes, description } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, completed, completedDate, dueDate, notes, description } = req.body;
         const sanitizedDescription = typeof description === 'string'
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
@@ -749,6 +772,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             projectPriorityTag: sanitizeProjectPriorityTag(projectPriorityTag ?? projectPriority ?? priorityTag),
             completed:     completed    || false,
             completedDate: completedDate || null,
+            dueDate:       sanitizeDateKey(dueDate || ''),
             notes:         notes        || '',
             description:   sanitizedDescription,
             archived:      false,
@@ -775,7 +799,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'completed', 'completedDate', 'notes', 'description', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'completed', 'completedDate', 'dueDate', 'notes', 'description', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);
