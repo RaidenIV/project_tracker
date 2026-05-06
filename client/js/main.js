@@ -2321,8 +2321,9 @@ function collectProjectNoteLinksFromSurface(tabId, surface = 'modal') {
 
 function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = false, surface = 'modal', legacyText = '') {
     const safeLinks = normalizeProjectNoteLinks(links);
-    const legacyLinks = extractLinksFromText(legacyText).filter(link => !safeLinks.some(savedLink => savedLink.href && savedLink.href === link.href));
-    if (!canEdit && !safeLinks.length && !legacyLinks.length) return '';
+    const linkedItems = safeLinks.filter(link => link.href);
+    const legacyLinks = extractLinksFromText(legacyText).filter(link => !linkedItems.some(savedLink => savedLink.href && savedLink.href === link.href));
+    if (!canEdit && !linkedItems.length && !legacyLinks.length) return '';
 
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
     const editableRows = safeLinks.map(link => canEdit ? `
@@ -2330,23 +2331,25 @@ function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = f
             <input class="project-notes-link-input"
                    type="text"
                    value="${escapeHtml(link.label)}"
-                   placeholder="Link text"
-                   aria-label="Link text"
+                   placeholder="Word or link text"
+                   aria-label="Word or link text"
                    data-project-note-link-label
+                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"
                    onblur="updateProjectNoteLink('${projectId}', '${tabId}', '${link.id}', 'label', this.value, '${safeSurface}')">
             <input class="project-notes-link-input"
                    type="url"
                    value="${escapeHtml(link.href)}"
-                   placeholder="https://example.com"
+                   placeholder="Paste URL"
                    aria-label="Link URL"
                    data-project-note-link-url
+                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"
                    onblur="updateProjectNoteLink('${projectId}', '${tabId}', '${link.id}', 'href', this.value, '${safeSurface}')">
-            ${link.href ? `<a class="project-notes-link-open" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">Open</a>` : '<span class="project-notes-link-open is-empty">Add URL</span>'}
+            ${link.href ? `<a class="project-notes-link-open" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">Open</a>` : `<button class="project-notes-link-open is-empty" type="button" onclick="focusProjectNoteLinkUrl('${link.id}', event)">Add URL</button>`}
             <button class="project-notes-remove-link" type="button" onclick="deleteProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Delete link">×</button>
         </div>
-    ` : `
+    ` : link.href ? `
         <a class="project-notes-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
-    `).join('');
+    ` : '').join('');
 
     const legacyRows = legacyLinks.length ? `
         <div class="project-notes-legacy-links" aria-label="Links found in note text">
@@ -2517,10 +2520,24 @@ function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
     const currentLinks = normalizeProjectNoteLinks(tab.links || []);
     const nextNumber = currentLinks.length + 1;
     const nextLinkId = `link-${Date.now()}-${nextNumber}`;
-    tab.links = normalizeProjectNoteLinks([...currentLinks, { id: nextLinkId, label: `New Link ${nextNumber}`, href: '' }]);
+    tab.links = normalizeProjectNoteLinks([...currentLinks, { id: nextLinkId, label: `Link ${nextNumber}`, href: '' }]);
     data.activeTabId = tabId;
     saveProjectNotesData(projectId, data, { renderSurface: surface });
-    requestAnimationFrame(() => document.querySelector(`[data-link-id="${nextLinkId}"] [data-project-note-link-label]`)?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => {
+        const row = document.querySelector(`[data-link-id="${nextLinkId}"]`);
+        row?.querySelector('[data-project-note-link-label]')?.focus({ preventScroll: true });
+    });
+}
+
+function focusProjectNoteLinkUrl(linkId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const safeLinkId = String(linkId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const row = document.querySelector(`[data-link-id="${safeLinkId}"]`);
+    const urlInput = row?.querySelector('[data-project-note-link-url]');
+    if (!urlInput) return;
+    urlInput.focus({ preventScroll: true });
+    urlInput.select?.();
 }
 
 function updateProjectNoteLink(projectId, tabId, linkId, field, value, surface = 'modal') {
@@ -7360,6 +7377,7 @@ window.deleteProjectNoteTab = deleteProjectNoteTab;
 window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
 window.addProjectNoteLink = addProjectNoteLink;
+window.focusProjectNoteLinkUrl = focusProjectNoteLinkUrl;
 window.updateProjectNoteLink = updateProjectNoteLink;
 window.deleteProjectNoteLink = deleteProjectNoteLink;
 window.saveActiveProjectNoteFromSurface = saveActiveProjectNoteFromSurface;

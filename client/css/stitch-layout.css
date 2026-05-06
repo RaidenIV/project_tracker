@@ -12021,46 +12021,56 @@ body[data-theme^="console"] .project-grid.is-reordering .stitch-project-card.dra
 }
 
 @media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (max-height: 1185px) and (min-resolution: 1.5dppx) {
-    :root {
-        --layout-padding-x: clamp(1.6rem, 2vw, 2.5rem);
-        --layout-padding-y: clamp(1.4rem, 1.8vw, 2.25rem);
-    }
-
-    body.has-sidebar #mainContent,
-    body.sidebar-collapsed #mainContent {
-        padding-top: clamp(1.4rem, 1.8vw, 2rem) !important;
+    .viewport {
+        padding: 1.15rem 2rem 1.5rem !important;
     }
 
     .project-grid,
     body.has-sidebar .project-grid,
-    body.sidebar-collapsed .project-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: clamp(1rem, 1.15vw, 1.35rem) !important;
-        align-items: stretch !important;
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+        align-items: start !important;
     }
 
     .project-card,
     .stitch-project-card {
-        min-height: clamp(26rem, 31vw, 34rem) !important;
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+        padding: 1.2rem !important;
+        gap: 0.78rem !important;
     }
 }
 
 @media (min-width: 3000px) and (min-height: 1900px) {
-    :root {
-        --layout-padding-x: clamp(3rem, 3.2vw, 6rem);
-        --layout-padding-y: clamp(2.75rem, 2.6vw, 5rem);
+    .viewport {
+        padding: 1.15rem 2rem 1.5rem !important;
     }
 
     .project-grid,
     body.has-sidebar .project-grid,
-    body.sidebar-collapsed .project-grid {
-        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-        gap: clamp(1.5rem, 1.15vw, 2.5rem) !important;
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+        align-items: start !important;
     }
 
     .project-card,
     .stitch-project-card {
-        min-height: clamp(34rem, 21vw, 45rem) !important;
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+        padding: 1.2rem !important;
+        gap: 0.78rem !important;
     }
 }
 
@@ -12213,7 +12223,15 @@ body[data-theme^="blueprint"] #confirmDialog .confirm-delete {
 }
 
 .project-notes-link-open.is-empty {
+    appearance: none !important;
+    cursor: pointer !important;
     color: var(--muted, currentColor) !important;
+}
+
+.project-notes-link-open.is-empty:hover,
+.project-notes-link-open.is-empty:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
 }
 
 .project-notes-remove-link {
