@@ -1035,7 +1035,8 @@ function normalizeProject(project) {
         completed: isProjectCompleted(project),
         dateCreated: project.dateCreated || new Date().toISOString(),
         lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
-        __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
+        __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null,
+        dueDate: normalizeTaskDueDate(project.dueDate || project.due_date || project.deadline || '')
     };
     return normalizedProject;
 }
@@ -2332,13 +2333,15 @@ function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = f
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
     const linkTags = linkedItems.map(link => `
         <span class="project-notes-link-chip" data-project-note-link-row data-link-id="${escapeHtml(link.id)}">
-            <a class="project-notes-link project-notes-link--tag project-card-tag"
-               href="${escapeHtml(link.href)}"
-               target="_blank"
-               rel="noopener noreferrer"
+            <button class="project-notes-link project-notes-link--tag project-notes-link--btn project-card-tag"
+               type="button"
                data-project-note-link-label="${escapeHtml(link.label)}"
-               data-project-note-link-url="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a>
-            ${canEdit ? `<button class="project-notes-edit-link project-notes-edit-link--tag" type="button" onclick="editProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Edit link">✎</button><button class="project-notes-remove-link project-notes-remove-link--tag" type="button" onclick="deleteProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Delete link">×</button>` : ''}
+               data-project-note-link-url="${escapeHtml(link.href)}"
+               onclick="${canEdit ? `editProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)` : `window.open('${escapeHtml(link.href)}','_blank','noopener,noreferrer')`}"
+               title="${canEdit ? 'Edit link: ' : ''}${escapeHtml(link.href)}">
+                ${escapeHtml(link.label)}
+                ${canEdit ? `<svg class="project-notes-link-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>` : ''}
+            </button>
         </span>
     `).join('');
 
@@ -2531,6 +2534,8 @@ function ensureProjectNoteLinkModal() {
                     <p class="project-note-link-error" id="projectNoteLinkError" role="alert" aria-live="polite"></p>
                     <div class="project-note-link-actions">
                         <button class="project-note-link-cancel" type="button" onclick="closeProjectNoteLinkModal()">Cancel</button>
+                        <button class="project-note-link-visit" id="projectNoteLinkVisitButton" type="button" onclick="visitProjectNoteLinkFromModal()" style="display:none;">Open URL</button>
+                        <button class="project-note-link-delete" id="projectNoteLinkDeleteButton" type="button" onclick="deleteProjectNoteLinkFromModal()" style="display:none;">Delete</button>
                         <button class="project-note-link-create" id="projectNoteLinkSubmitButton" type="button" onclick="createProjectNoteLinkFromModal()">Create</button>
                     </div>
                 </div>
@@ -2558,9 +2563,33 @@ function configureProjectNoteLinkModal(mode = 'create') {
     const title = document.getElementById('projectNoteLinkModalTitle');
     const subtitle = document.querySelector('#projectNoteLinkModal .task-note-modal-subtitle');
     const submitButton = document.getElementById('projectNoteLinkSubmitButton');
+    const visitButton = document.getElementById('projectNoteLinkVisitButton');
+    const deleteButton = document.getElementById('projectNoteLinkDeleteButton');
     if (title) title.textContent = isEdit ? 'Edit Link' : 'Create Link';
     if (subtitle) subtitle.textContent = isEdit ? 'Update the hyperlink text and URL.' : 'Attach a URL to custom text.';
     if (submitButton) submitButton.textContent = isEdit ? 'Update' : 'Create';
+    if (visitButton) visitButton.style.display = isEdit ? '' : 'none';
+    if (deleteButton) deleteButton.style.display = isEdit ? '' : 'none';
+}
+
+function visitProjectNoteLinkFromModal() {
+    const modal = document.getElementById('projectNoteLinkModal');
+    if (!modal) return;
+    const urlInput = document.getElementById('projectNoteLinkUrlInput');
+    const href = normalizeProjectNoteHref(urlInput?.value || '');
+    if (href) window.open(href, '_blank', 'noopener,noreferrer');
+}
+
+function deleteProjectNoteLinkFromModal() {
+    const modal = document.getElementById('projectNoteLinkModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    const tabId = modal.dataset.tabId;
+    const linkId = modal.dataset.linkId;
+    const surface = modal.dataset.surface || 'modal';
+    if (!projectId || !tabId || !linkId) return;
+    closeProjectNoteLinkModal();
+    deleteProjectNoteLink(projectId, tabId, linkId, surface, null);
 }
 
 function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
@@ -2871,6 +2900,31 @@ function copyTaskToClipboard(projectId, taskId, evt) {
     }).catch(err => {
         console.error('Failed to copy task:', err);
     });
+}
+
+function updateProjectDueDate(projectId, value, evt) {
+    evt?.preventDefault?.();
+    evt?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const normalized = normalizeTaskDueDate(value);
+    state.updateProject(projectId, projectUpdate({ dueDate: normalized }));
+    saveData();
+    render();
+}
+
+function openProjectDueDatePicker(projectId, evt) {
+    evt?.preventDefault?.();
+    evt?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    // Try card picker first, then modal picker
+    const cardInput = document.getElementById(`project-due-date-${projectId}`);
+    const modalInput = document.getElementById(`modal-project-due-date-${projectId}`);
+    const input = cardInput || modalInput;
+    if (input) {
+        try { input.showPicker?.(); } catch (_) {}
+        input.focus();
+        input.click();
+    }
 }
 
 // ============================================================================
@@ -5974,7 +6028,21 @@ function openProjectModal(projectId, options = {}) {
     content.innerHTML = `<div class="modal-scroll-inner">
         <div class="modal-header-centered">
             <div class="modal-title-container">
-                <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
+                <div class="modal-title-row">
+                    <label class="modal-project-due-date-btn ${project.dueDate ? 'has-due-date' : ''} ${project.dueDate && project.dueDate < getTodayDateKey() && !isProjectCompleted(project) ? 'is-overdue' : ''}"
+                           title="${project.dueDate ? (project.dueDate < getTodayDateKey() && !isProjectCompleted(project) ? 'Overdue: ' : 'Due: ') + formatTaskDueDate(project.dueDate) : 'Set project due date'}"
+                           onclick="openProjectDueDatePicker('${project.id}', event)">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        ${project.dueDate ? `<span class="modal-project-due-date-label">${formatTaskDueDate(project.dueDate)}</span>` : ''}
+                        <input class="project-due-date-input" id="modal-project-due-date-${project.id}" type="date" value="${escapeHtml(project.dueDate || '')}"
+                               aria-label="Project due date"
+                               onclick="event.stopPropagation()"
+                               onchange="updateProjectDueDate('${project.id}', this.value, event)">
+                    </label>
+                    <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
+                </div>
                 <input type="text" 
                        class="modal-title-input" 
                        id="modal-title-input-${project.id}"
@@ -5999,11 +6067,6 @@ function openProjectModal(projectId, options = {}) {
                 </div>
             </div>
             <div style="display: flex; gap: 4px;">
-                <button class="modal-copy-button" onclick="copyProjectToClipboard('${project.id}', event)">
-                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                </button>
                 <button class="modal-close" onclick="closeProjectModal()">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -6096,11 +6159,22 @@ function openProjectModal(projectId, options = {}) {
                                 placeholder="Enter tasks here"
                                 oninput="handleModalPasteInput('${project.id}', event)"
                                 onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
-                            <div class="modal-paste-actions">
+                        <div class="modal-paste-actions">
                                 <button 
                                     class="paste-button"
                                     onclick="pasteTasksInModal('${project.id}')">
                                     Add Tasks
+                                </button>
+                                <button
+                                    class="paste-button modal-copy-all-tasks-button"
+                                    type="button"
+                                    onclick="copyProjectToClipboard('${project.id}', event)"
+                                    title="Copy all incomplete tasks to clipboard"
+                                    aria-label="Copy all incomplete tasks">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy All
                                 </button>
                                 <button
                                     class="paste-button paste-undo-button"
@@ -6904,6 +6978,17 @@ function renderProjectCard(project) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
                     </svg>
                 </button>
+                <label class="project-card-due-date-button ${project.dueDate ? 'has-due-date' : ''} ${project.dueDate && project.dueDate < getTodayDateKey() && !isProjectCompleted(project) ? 'is-overdue' : ''}"
+                        title="${project.dueDate ? (project.dueDate < getTodayDateKey() && !isProjectCompleted(project) ? 'Overdue: ' : 'Due: ') + formatTaskDueDate(project.dueDate) : 'Set project due date'}"
+                        onclick="openProjectDueDatePicker('${project.id}', event)">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <input class="project-due-date-input" id="project-due-date-${project.id}" type="date" value="${escapeHtml(project.dueDate || '')}"
+                           aria-label="Project due date"
+                           onclick="event.stopPropagation()"
+                           onchange="updateProjectDueDate('${project.id}', this.value, event)">
+                </label>
             </div>
 
             <div class="project-card-footer">
@@ -7487,6 +7572,10 @@ window.deleteProject = deleteProject;
 window.completeProject = completeProject;
 window.toggleTask = toggleTask;
 window.copyProjectToClipboard = copyProjectToClipboard;
+window.updateProjectDueDate = updateProjectDueDate;
+window.openProjectDueDatePicker = openProjectDueDatePicker;
+window.visitProjectNoteLinkFromModal = visitProjectNoteLinkFromModal;
+window.deleteProjectNoteLinkFromModal = deleteProjectNoteLinkFromModal;
 window.copyTaskToClipboard = copyTaskToClipboard;
 window.switchToActiveView = switchToActiveView;
 window.switchToCompletedView = switchToCompletedView;

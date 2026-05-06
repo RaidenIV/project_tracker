@@ -1895,3 +1895,241 @@ body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:f
     color: var(--danger) !important;
     stroke: currentColor !important;
 }
+
+/* ============================================================================
+   ROUND 36 DUPLEX ICON BUTTON FIXES
+   - Remove squares from modal task action buttons (copy, note, delete)
+   - Remove squares from project card action buttons (edit, delete)
+   - Project note icon only accent when has-note
+   - Copy individual task button only accent on hover
+   - Delete button proper centering
+   - Project due date button styles
+   ============================================================================ */
+
+/* Modal task row: copy, note, delete buttons — transparent at rest, no squares */
+body[data-theme^="blueprint"] #projectModal .task-item .task-copy-button,
+body[data-theme^="blueprint"] #projectModal .task-item .task-note-button,
+body[data-theme^="blueprint"] #projectModal .task-item .delete-button,
+body[data-theme^="blueprint"] #projectModal .task-item .task-delete-button {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Task copy button: muted at rest, only accent on hover */
+body[data-theme^="blueprint"] #projectModal .task-item .task-copy-button {
+    color: var(--muted-3) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-item .task-copy-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-item .task-copy-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-item .task-copy-button.is-copied {
+    color: var(--primary) !important;
+    background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+    box-shadow: none !important;
+}
+
+/* Task note button: muted at rest, accent only if has-note */
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button {
+    color: var(--muted-3) !important;
+}
+
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-note-button.has-note {
+    color: var(--primary) !important;
+}
+
+body[data-theme="blueprint-light"] #projectModal .task-item .task-note-button {
+    color: var(--muted-3) !important;
+}
+
+body[data-theme="blueprint-light"] #projectModal .task-item .task-note-button.has-note {
+    color: var(--primary) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-item .task-note-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-item .task-note-button:focus-visible {
+    color: var(--primary) !important;
+    background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+    box-shadow: none !important;
+}
+
+/* Delete button: muted at rest, red on hover, properly centered */
+body[data-theme="blueprint-dark"] #projectModal .task-item .delete-button,
+body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button {
+    color: var(--muted-3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body[data-theme="blueprint-light"] #projectModal .task-item .delete-button,
+body[data-theme="blueprint-light"] #projectModal .task-item .task-delete-button {
+    color: var(--muted-3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-item .delete-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-item .delete-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-item .task-delete-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-item .task-delete-button:focus-visible {
+    color: var(--danger) !important;
+    background: color-mix(in srgb, var(--danger) 10%, transparent) !important;
+    box-shadow: none !important;
+}
+
+/* Project card action buttons: edit, delete — transparent at rest, no squares */
+body[data-theme^="blueprint"] .project-card .project-actions .edit-button,
+body[data-theme^="blueprint"] .project-card .project-actions .card-delete-button {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--muted) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-actions .edit-button:hover,
+body[data-theme^="blueprint"] .project-card .project-actions .edit-button:focus-visible {
+    color: var(--primary) !important;
+    background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-actions .card-delete-button:hover,
+body[data-theme^="blueprint"] .project-card .project-actions .card-delete-button:focus-visible {
+    color: var(--danger) !important;
+    background: color-mix(in srgb, var(--danger) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Project card notes button: only accent when has-note */
+body[data-theme^="blueprint"] .project-card .project-card-notes-button {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--muted) !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.has-note {
+    color: var(--primary) !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button:hover,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button:focus-visible {
+    color: var(--primary) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Project card due date button styles */
+body[data-theme^="blueprint"] .project-card .project-card-due-date-button {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--muted) !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-due-date-button.has-due-date {
+    color: var(--primary) !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-due-date-button.is-overdue {
+    color: var(--danger) !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-due-date-button:hover,
+body[data-theme^="blueprint"] .project-card .project-card-due-date-button:focus-visible {
+    color: var(--primary) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Modal project due date button */
+body[data-theme^="blueprint"] .modal-project-due-date-btn {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+    color: var(--muted) !important;
+    padding: 4px 8px !important;
+}
+
+body[data-theme^="blueprint"] .modal-project-due-date-btn.has-due-date {
+    color: var(--primary) !important;
+    border-color: color-mix(in srgb, var(--primary) 40%, transparent) !important;
+    background: color-mix(in srgb, var(--primary) 8%, transparent) !important;
+}
+
+body[data-theme^="blueprint"] .modal-project-due-date-btn.is-overdue {
+    color: var(--danger) !important;
+    border-color: color-mix(in srgb, var(--danger) 40%, transparent) !important;
+    background: color-mix(in srgb, var(--danger) 8%, transparent) !important;
+}
+
+/* Note link button with edit icon */
+body[data-theme^="blueprint"] .project-notes-link--btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    cursor: pointer !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-link-edit-icon {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+    opacity: 0.5 !important;
+    flex: 0 0 auto !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-link--btn:hover .project-notes-link-edit-icon {
+    opacity: 1 !important;
+}
+
+/* Link modal delete button */
+body[data-theme^="blueprint"] .project-note-link-delete {
+    background: transparent !important;
+    border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent) !important;
+    color: var(--danger) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0 14px !important;
+    min-height: 38px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+body[data-theme^="blueprint"] .project-note-link-delete:hover {
+    background: color-mix(in srgb, var(--danger) 14%, transparent) !important;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 24%, transparent) !important;
+}
+
+body[data-theme^="blueprint"] .project-note-link-visit {
+    background: transparent !important;
+    border: 1px solid var(--line) !important;
+    color: var(--muted) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0 14px !important;
+    min-height: 38px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: color 0.2s ease, border-color 0.2s ease !important;
+}
+
+body[data-theme^="blueprint"] .project-note-link-visit:hover {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+}

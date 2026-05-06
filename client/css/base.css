@@ -8829,3 +8829,163 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     height: 12px;
     flex: 0 0 12px;
 }
+
+/* ============================================================================
+   ROUND 36 BASE FIXES
+   ============================================================================ */
+
+/* Remove card backgrounds from preview tasks (all themes) */
+.project-preview-task,
+.project-preview-empty {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0.28rem 0 !important;
+    min-height: auto !important;
+    border-radius: 0 !important;
+}
+
+/* Project notes link button with edit icon */
+.project-notes-link--btn {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: inherit;
+    font: inherit;
+    cursor: pointer;
+    color: inherit;
+    text-decoration: none;
+    padding: inherit;
+}
+
+.project-notes-link-edit-icon {
+    width: 0.7rem;
+    height: 0.7rem;
+    opacity: 0.45;
+    flex: 0 0 auto;
+    transition: opacity 0.15s ease;
+}
+
+.project-notes-link--btn:hover .project-notes-link-edit-icon {
+    opacity: 0.9;
+}
+
+/* Project note link modal: delete and visit buttons */
+.project-note-link-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.project-note-link-visit {
+    padding: 0 14px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.28));
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.project-note-link-visit:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.project-note-link-delete {
+    padding: 0 14px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    background: transparent;
+    color: #ef4444;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.project-note-link-delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Card delete button: non-accent, red on hover */
+.card-delete-button {
+    color: var(--muted) !important;
+}
+
+.card-delete-button:hover {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* Modal project due date button */
+.modal-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.modal-project-due-date-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    padding: 3px 8px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+}
+
+.modal-project-due-date-btn .icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
+}
+
+.modal-project-due-date-btn .project-due-date-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+    border: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-project-due-date-btn.has-due-date {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.modal-project-due-date-btn.is-overdue {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.modal-project-due-date-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
