@@ -127,6 +127,15 @@ function formatTaskDueDate(value) {
     return parsed.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function getProjectDueDate(project = {}) {
+    return normalizeTaskDueDate(project?.dueDate || project?.projectDueDate || project?.deadline || '');
+}
+
+function formatProjectDueDate(value) {
+    const dueDate = normalizeTaskDueDate(value);
+    return dueDate ? formatTaskDueDate(dueDate) : 'No project due date';
+}
+
 function getTodayDateKey() {
     const today = new Date();
     const year = today.getFullYear();
@@ -139,6 +148,11 @@ function isTaskOverdue(task) {
     const normalizedTask = normalizeTask(task);
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
     return Boolean(dueDate && !normalizedTask.completed && dueDate < getTodayDateKey());
+}
+
+function isProjectDueDateOverdue(project) {
+    const dueDate = getProjectDueDate(project);
+    return Boolean(dueDate && !isProjectCompleted(project) && dueDate < getTodayDateKey());
 }
 
 function projectHasOverdueTasks(project) {
@@ -1026,6 +1040,7 @@ function normalizeProject(project) {
         notes: typeof project.notes === 'string' ? project.notes : '',
         description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
         projectPriorityTag: getProjectPriorityTag(project),
+        dueDate: getProjectDueDate(project),
         tags: normalizeProjectTags(project.tags || project.projectTags || []),
         tasks: normalizedTasks,
         taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
@@ -2053,6 +2068,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
         lastModified: createdAt,
         priority: state.getProjects().length,
         projectPriorityTag: DEFAULT_TASK_TAG,
+        dueDate: '',
         completed: false,
         notes: '',
         description: requiredDescription,
@@ -2075,6 +2091,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
             __syncedLastModified: created.lastModified || createdAt,
             description: typeof created.description === 'string' ? created.description : requiredDescription,
             projectPriorityTag: getProjectPriorityTag(created),
+            dueDate: getProjectDueDate(created),
             userRole: 'owner',
             ownerName: state.getCurrentUser()?.username || '',
             ownerEmail: state.getCurrentUser()?.email || '',
@@ -2338,7 +2355,7 @@ function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = f
                rel="noopener noreferrer"
                data-project-note-link-label="${escapeHtml(link.label)}"
                data-project-note-link-url="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a>
-            ${canEdit ? `<button class="project-notes-edit-link project-notes-edit-link--tag" type="button" onclick="editProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Edit link">✎</button><button class="project-notes-remove-link project-notes-remove-link--tag" type="button" onclick="deleteProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Delete link">×</button>` : ''}
+            ${canEdit ? `<button class="project-notes-edit-link project-notes-edit-link--tag" type="button" onclick="editProjectNoteLink('${projectId}', '${tabId}', '${link.id}', '${safeSurface}', event)" aria-label="Edit link" title="Edit link"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>` : ''}
         </span>
     `).join('');
 
@@ -2530,6 +2547,8 @@ function ensureProjectNoteLinkModal() {
                     </label>
                     <p class="project-note-link-error" id="projectNoteLinkError" role="alert" aria-live="polite"></p>
                     <div class="project-note-link-actions">
+                        <button class="project-note-link-delete" id="projectNoteLinkDeleteButton" type="button" onclick="deleteProjectNoteLinkFromModal()">Delete Link</button>
+                        <span class="project-note-link-actions-spacer" aria-hidden="true"></span>
                         <button class="project-note-link-cancel" type="button" onclick="closeProjectNoteLinkModal()">Cancel</button>
                         <button class="project-note-link-create" id="projectNoteLinkSubmitButton" type="button" onclick="createProjectNoteLinkFromModal()">Create</button>
                     </div>
@@ -2558,9 +2577,11 @@ function configureProjectNoteLinkModal(mode = 'create') {
     const title = document.getElementById('projectNoteLinkModalTitle');
     const subtitle = document.querySelector('#projectNoteLinkModal .task-note-modal-subtitle');
     const submitButton = document.getElementById('projectNoteLinkSubmitButton');
+    const deleteButton = document.getElementById('projectNoteLinkDeleteButton');
     if (title) title.textContent = isEdit ? 'Edit Link' : 'Create Link';
-    if (subtitle) subtitle.textContent = isEdit ? 'Update the hyperlink text and URL.' : 'Attach a URL to custom text.';
+    if (subtitle) subtitle.textContent = isEdit ? 'Update the hyperlink text, URL, or delete the link.' : 'Attach a URL to custom text.';
     if (submitButton) submitButton.textContent = isEdit ? 'Update' : 'Create';
+    if (deleteButton) deleteButton.classList.toggle('is-hidden', !isEdit);
 }
 
 function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
@@ -2673,6 +2694,24 @@ function createProjectNoteLinkFromModal() {
         const nextLinkId = `link-${Date.now()}-${currentLinks.length + 1}`;
         tab.links = normalizeProjectNoteLinks([...currentLinks, { id: nextLinkId, label, href }]);
     }
+    data.activeTabId = tabId;
+    closeProjectNoteLinkModal();
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function deleteProjectNoteLinkFromModal() {
+    const modal = document.getElementById('projectNoteLinkModal');
+    if (!modal) return;
+    const projectId = modal.dataset.projectId;
+    const tabId = modal.dataset.tabId;
+    const linkId = modal.dataset.linkId;
+    const surface = modal.dataset.surface || 'modal';
+    if (!projectId || !tabId || !linkId || !state.canEdit(projectId)) return;
+
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    tab.links = normalizeProjectNoteLinks(tab.links || []).filter(item => item.id !== linkId);
     data.activeTabId = tabId;
     closeProjectNoteLinkModal();
     saveProjectNotesData(projectId, data, { renderSurface: surface });
@@ -3076,7 +3115,7 @@ function buildTaskSelectAllControlMarkup(projectId, displayTasks = [], selectedT
                    aria-label="Select all visible tasks"
                    onchange="toggleSelectAllVisibleTasks('${projectId}', this.checked)">
             <span class="task-select-all-box" aria-hidden="true"></span>
-            <span>Select all tasks</span>
+            <span>Select All Tasks</span>
         </label>
     `;
 }
@@ -5304,6 +5343,34 @@ function formatLeaderboardScore(entry, isCurrent = false) {
     return `${Number.isFinite(percentage) ? percentage : 0}%`;
 }
 
+function renderProjectDueDateControlMarkup(project, surface = 'card') {
+    const projectId = project?.id || '';
+    const dueDate = getProjectDueDate(project);
+    const overdue = isProjectDueDateOverdue(project);
+    const canEdit = projectId && state.canEdit(projectId);
+    const title = overdue
+        ? `Project overdue: ${formatProjectDueDate(dueDate)}`
+        : (dueDate ? `Project due ${formatProjectDueDate(dueDate)}` : 'Add project due date');
+    const safeSurface = String(surface || 'card').replace(/[^a-zA-Z0-9_-]/g, '') || 'card';
+
+    return `
+        <label class="project-due-date-control project-due-date-control--${safeSurface} ${dueDate ? 'has-due-date' : ''} ${overdue ? 'is-overdue' : ''} ${canEdit ? '' : 'is-disabled'}"
+               title="${escapeHtml(title)}"
+               onclick="event.stopPropagation();"
+               onpointerdown="event.stopPropagation();">
+            ${overdue ? renderWarningTriangleIcon('project-due-overdue-icon') : ''}
+            <input class="project-due-date-input"
+                   id="project-due-${safeSurface}-${projectId}"
+                   type="date"
+                   value="${escapeHtml(dueDate)}"
+                   aria-label="Project due date"
+                   ${canEdit ? `onchange="updateProjectDueDate('${projectId}', this.value)"` : 'disabled'}
+                   onclick="event.stopPropagation(); this.showPicker?.();"
+                   onpointerdown="event.stopPropagation();">
+        </label>
+    `;
+}
+
 function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const normalizedTask = normalizeTask(task);
     const project = state.findProject(projectId);
@@ -5799,6 +5866,24 @@ function cycleProjectCardTaskPriority(projectId, taskId, event) {
     updateTaskTag(projectId, taskId, getNextTaskPriorityValue(task));
 }
 
+function updateProjectDueDate(projectId, dueDateValue) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const dueDate = normalizeTaskDueDate(dueDateValue);
+    state.updateProject(projectId, projectUpdate({ dueDate }));
+    saveData();
+
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    if (modalOpen) {
+        openProjectModal(projectId, { restoreState: modalState });
+    } else {
+        render();
+    }
+}
+
 function updateProjectPriority(projectId, tagValue) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
@@ -5974,16 +6059,19 @@ function openProjectModal(projectId, options = {}) {
     content.innerHTML = `<div class="modal-scroll-inner">
         <div class="modal-header-centered">
             <div class="modal-title-container">
-                <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
-                <input type="text" 
-                       class="modal-title-input" 
-                       id="modal-title-input-${project.id}"
-                       value="${escapeHtml(project.title)}"
-                       style="display: none;"
-                       onblur="finishEditModalTitle('${project.id}')"
-                       oninput="handleProjectTitleInput(this)"
-                       onanimationend="this.classList.remove('project-title-shake')"
-                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
+                <div class="modal-title-row">
+                    ${renderProjectDueDateControlMarkup(project, 'modal')}
+                    <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
+                    <input type="text" 
+                           class="modal-title-input" 
+                           id="modal-title-input-${project.id}"
+                           value="${escapeHtml(project.title)}"
+                           style="display: none;"
+                           onblur="finishEditModalTitle('${project.id}')"
+                           oninput="handleProjectTitleInput(this)"
+                           onanimationend="this.classList.remove('project-title-shake')"
+                           onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
+                </div>
                 <div class="modal-stats">
                     <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
                     <span>•</span>
@@ -5999,11 +6087,6 @@ function openProjectModal(projectId, options = {}) {
                 </div>
             </div>
             <div style="display: flex; gap: 4px;">
-                <button class="modal-copy-button" onclick="copyProjectToClipboard('${project.id}', event)">
-                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                </button>
                 <button class="modal-close" onclick="closeProjectModal()">
                     <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -6061,9 +6144,6 @@ function openProjectModal(projectId, options = {}) {
                                        onchange="toggleHideCompleted()">
                                 <span class="toggle-slider"></span>
                             </label>
-                            <div class="task-select-all-control" id="task-select-all-control-${project.id}">
-                                ${buildTaskSelectAllControlMarkup(project.id, displayTasks, selectedTasks)}
-                            </div>
                         </div>
                         <div class="task-sort-control">
                             <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
@@ -6103,12 +6183,24 @@ function openProjectModal(projectId, options = {}) {
                                     Add Tasks
                                 </button>
                                 <button
+                                    class="paste-button modal-copy-all-tasks-button"
+                                    type="button"
+                                    onclick="copyProjectToClipboard('${project.id}', event)">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy All Tasks
+                                </button>
+                                <button
                                     class="paste-button paste-undo-button"
                                     type="button"
                                     data-undo-button
                                     onclick="performUndo()">
                                     Undo
                                 </button>
+                            </div>
+                            <div class="task-select-all-control task-select-all-control--below-add" id="task-select-all-control-${project.id}">
+                                ${buildTaskSelectAllControlMarkup(project.id, displayTasks, selectedTasks)}
                             </div>
                         </div>
                     </div>
@@ -6904,6 +6996,7 @@ function renderProjectCard(project) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
                     </svg>
                 </button>
+                ${renderProjectDueDateControlMarkup(project, 'card')}
             </div>
 
             <div class="project-card-footer">
@@ -7508,6 +7601,7 @@ window.finishEditModalTask = finishEditModalTask;
 window.autoResizeModalTaskInput = autoResizeModalTaskInput;
 window.addTaskToModal = addTaskToModal;
 window.updateTaskDueDate = updateTaskDueDate;
+window.updateProjectDueDate = updateProjectDueDate;
 window.deleteTaskFromModal = deleteTaskFromModal;
 window.completeProjectFromModal = completeProjectFromModal;
 window.confirmDeleteProject = confirmDeleteProject;
@@ -7532,6 +7626,7 @@ window.createProjectNoteLinkFromModal = createProjectNoteLinkFromModal;
 window.focusProjectNoteLinkUrl = focusProjectNoteLinkUrl;
 window.updateProjectNoteLink = updateProjectNoteLink;
 window.deleteProjectNoteLink = deleteProjectNoteLink;
+window.deleteProjectNoteLinkFromModal = deleteProjectNoteLinkFromModal;
 window.saveActiveProjectNoteFromSurface = saveActiveProjectNoteFromSurface;
 window.toggleHideCompleted = toggleHideCompleted;
 window.showMoreCompletedTasks = showMoreCompletedTasks;

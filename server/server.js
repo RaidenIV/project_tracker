@@ -145,6 +145,7 @@ const taskSchema = new mongoose.Schema({
     text:          String,
     completed:     Boolean,
     completedDate: String,
+    dueDate:       { type: String, default: '' },
     tag:           { type: String, enum: ['', 'critical', 'high', 'medium', 'low'], default: '' },
     category:      { type: String, default: '' },
     note:          { type: String, default: '' }
@@ -171,6 +172,7 @@ const projectSchema = new mongoose.Schema({
     dateCreated:   String,
     priority:      { type: Number, default: 0 },
     projectPriorityTag: { type: String, default: 'none' },
+    dueDate:       { type: String, default: '' },
     completed:     { type: Boolean, default: false },
     completedDate: String,
     notes:         { type: String, default: '' },
@@ -486,6 +488,19 @@ function projectFieldChanged(existingValue, incomingValue) {
     return JSON.stringify(comparableProjectValue(existingValue)) !== JSON.stringify(comparableProjectValue(incomingValue));
 }
 
+function sanitizeDateKey(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnlyMatch) return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
@@ -501,6 +516,7 @@ function sanitizeTask(task, index = 0) {
         text: typeof task?.text === 'string' ? task.text : '',
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
+        dueDate: sanitizeDateKey(task?.dueDate || task?.due_date || task?.deadline || ''),
         tag,
         category,
         note: typeof task?.note === 'string' ? task.note.trim() : (typeof task?.notes === 'string' ? task.notes.trim() : '')
@@ -538,6 +554,9 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.projectPriorityTag !== undefined || body.projectPriority !== undefined || body.priorityTag !== undefined) {
         sanitized.projectPriorityTag = sanitizeProjectPriorityTag(body.projectPriorityTag ?? body.projectPriority ?? body.priorityTag);
     }
+    if (body.dueDate !== undefined || body.projectDueDate !== undefined || body.deadline !== undefined) {
+        sanitized.dueDate = sanitizeDateKey(body.dueDate ?? body.projectDueDate ?? body.deadline);
+    }
     if (body.completed !== undefined) sanitized.completed = !!body.completed;
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
     if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
@@ -559,6 +578,10 @@ function summarizeProjectUpdate(existingProject, incomingBody) {
 
     if (typeof update.projectPriorityTag === 'string' && update.projectPriorityTag !== (oldProject.projectPriorityTag || 'none')) {
         return { type: 'project_priority_updated', message: 'updated the project priority' };
+    }
+
+    if (typeof update.dueDate === 'string' && update.dueDate !== (oldProject.dueDate || '')) {
+        return { type: 'project_due_date_updated', message: update.dueDate ? 'updated the project due date' : 'cleared the project due date' };
     }
 
     if (typeof update.archived === 'boolean' && update.archived !== !!oldProject.archived) {
@@ -730,7 +753,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, completed, completedDate, notes, description } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, dueDate, projectDueDate, deadline, completed, completedDate, notes, description } = req.body;
         const sanitizedDescription = typeof description === 'string'
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
@@ -747,6 +770,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             dateCreated:   dateCreated  || new Date().toISOString(),
             priority:      priority     ?? 0,
             projectPriorityTag: sanitizeProjectPriorityTag(projectPriorityTag ?? projectPriority ?? priorityTag),
+            dueDate:       sanitizeDateKey(dueDate ?? projectDueDate ?? deadline),
             completed:     completed    || false,
             completedDate: completedDate || null,
             notes:         notes        || '',
@@ -775,7 +799,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'completed', 'completedDate', 'notes', 'description', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'dueDate', 'completed', 'completedDate', 'notes', 'description', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);

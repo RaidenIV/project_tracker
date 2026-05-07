@@ -12636,3 +12636,430 @@ body[data-theme^="blueprint"] .project-notes-remove-link--tag:focus-visible {
     border-color: var(--accent, currentColor) !important;
     box-shadow: var(--neumo-inset-shadow, inset 4px 4px 9px rgba(0, 0, 0, 0.16), inset -4px -4px 9px rgba(255, 255, 255, 0.06)) !important;
 }
+
+/* 2026-05 targeted patch: task add controls, project due dates, link edit modal, mobile layout */
+#projectModal .modal-title-row,
+body[data-theme^="console"] #projectModal .modal-title-row,
+body[data-theme^="glass"] #projectModal .modal-title-row,
+body[data-theme^="blueprint"] #projectModal .modal-title-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.55rem !important;
+    min-width: 0 !important;
+}
+
+.project-due-date-control,
+body[data-theme^="console"] .project-due-date-control,
+body[data-theme^="glass"] .project-due-date-control,
+body[data-theme^="blueprint"] .project-due-date-control {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.1rem !important;
+    min-width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-height: 2.1rem !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.24)) 72%, transparent) !important;
+    border-radius: 999px !important;
+    color: var(--muted, currentColor) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.08)) !important;
+    background-color: var(--surface, rgba(127, 127, 127, 0.08)) !important;
+    background-image: none !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    flex: 0 0 auto !important;
+}
+
+.project-due-date-control:hover,
+.project-due-date-control:focus-within,
+body[data-theme^="console"] .project-due-date-control:hover,
+body[data-theme^="console"] .project-due-date-control:focus-within,
+body[data-theme^="glass"] .project-due-date-control:hover,
+body[data-theme^="glass"] .project-due-date-control:focus-within,
+body[data-theme^="blueprint"] .project-due-date-control:hover,
+body[data-theme^="blueprint"] .project-due-date-control:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
+}
+
+.project-due-date-control.has-due-date,
+body[data-theme^="console"] .project-due-date-control.has-due-date,
+body[data-theme^="glass"] .project-due-date-control.has-due-date,
+body[data-theme^="blueprint"] .project-due-date-control.has-due-date {
+    width: auto !important;
+    min-width: 6.35rem !important;
+    padding: 0 0.38rem !important;
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 82%, var(--accent, currentColor) 18%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 82%, var(--accent, currentColor) 18%) !important;
+}
+
+.project-due-date-control--modal,
+body[data-theme^="console"] .project-due-date-control--modal,
+body[data-theme^="glass"] .project-due-date-control--modal,
+body[data-theme^="blueprint"] .project-due-date-control--modal {
+    width: 2.45rem !important;
+    min-width: 2.45rem !important;
+    height: 2.45rem !important;
+    min-height: 2.45rem !important;
+}
+
+.project-due-date-control--modal.has-due-date,
+body[data-theme^="console"] .project-due-date-control--modal.has-due-date,
+body[data-theme^="glass"] .project-due-date-control--modal.has-due-date,
+body[data-theme^="blueprint"] .project-due-date-control--modal.has-due-date {
+    min-width: 7.1rem !important;
+}
+
+.project-due-date-control.is-overdue,
+body[data-theme^="console"] .project-due-date-control.is-overdue,
+body[data-theme^="glass"] .project-due-date-control.is-overdue,
+body[data-theme^="blueprint"] .project-due-date-control.is-overdue {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, #ef4444 22%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 78%, #ef4444 22%) !important;
+}
+
+.project-due-date-input,
+body[data-theme^="console"] .project-due-date-input,
+body[data-theme^="glass"] .project-due-date-input,
+body[data-theme^="blueprint"] .project-due-date-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    color: currentColor !important;
+    background: transparent !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    cursor: pointer !important;
+}
+
+.project-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="console"] .project-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="glass"] .project-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="blueprint"] .project-due-date-input::-webkit-calendar-picker-indicator {
+    display: block !important;
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+    margin: auto !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    opacity: 0.95 !important;
+    filter: none !important;
+}
+
+.project-due-date-control:not(.has-due-date) .project-due-date-input,
+body[data-theme^="console"] .project-due-date-control:not(.has-due-date) .project-due-date-input,
+body[data-theme^="glass"] .project-due-date-control:not(.has-due-date) .project-due-date-input,
+body[data-theme^="blueprint"] .project-due-date-control:not(.has-due-date) .project-due-date-input {
+    color: transparent !important;
+}
+
+.project-due-date-control:not(.has-due-date) .project-due-date-input::-webkit-datetime-edit,
+.project-due-date-control:not(.has-due-date) .project-due-date-input::-webkit-datetime-edit-fields-wrapper,
+.project-due-date-control:not(.has-due-date) .project-due-date-input::-webkit-datetime-edit-text,
+.project-due-date-control:not(.has-due-date) .project-due-date-input::-webkit-datetime-edit-month-field,
+.project-due-date-control:not(.has-due-date) .project-due-date-input::-webkit-datetime-edit-day-field,
+.project-due-date-control:not(.has-due-date) .project-due-date-input::-webkit-datetime-edit-year-field {
+    color: transparent !important;
+}
+
+.project-due-overdue-icon {
+    position: absolute !important;
+    top: -0.12rem !important;
+    right: -0.12rem !important;
+    width: 0.74rem !important;
+    height: 0.74rem !important;
+    color: #ef4444 !important;
+    background: var(--panel, var(--surface, #fff)) !important;
+    border-radius: 999px !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+}
+
+body[data-theme^="blueprint"] .project-due-date-control {
+    box-shadow: var(--neumo-soft-shadow, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-due-date-control:hover,
+body[data-theme^="blueprint"] .project-due-date-control:focus-within,
+body[data-theme^="blueprint"] .project-due-date-control.has-due-date {
+    box-shadow: var(--neumo-inset-shadow, var(--inset-shadow, none)) !important;
+}
+
+#projectModal .modal-paste-section .paste-box,
+body[data-theme^="console"] #projectModal .modal-paste-section .paste-box,
+body[data-theme^="glass"] #projectModal .modal-paste-section .paste-box,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section .paste-box {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 20%, transparent) !important;
+    outline: none !important;
+}
+
+#projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button) {
+    color: transparent !important;
+    -webkit-text-stroke: 0.68px color-mix(in srgb, var(--button-fg, #ffffff) 82%, transparent) !important;
+    text-shadow: none !important;
+    background: var(--accent, var(--primary, currentColor)) !important;
+    background-color: var(--accent, var(--primary, currentColor)) !important;
+    background-image: none !important;
+    border-color: var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+#projectModal .task-select-all-control--below-add,
+body[data-theme^="console"] #projectModal .task-select-all-control--below-add,
+body[data-theme^="glass"] #projectModal .task-select-all-control--below-add,
+body[data-theme^="blueprint"] #projectModal .task-select-all-control--below-add {
+    width: 100% !important;
+    margin: 0.72rem 0 0 !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+}
+
+#projectModal .task-select-all-control--below-add .task-select-all-control-inner,
+body[data-theme^="console"] #projectModal .task-select-all-control--below-add .task-select-all-control-inner,
+body[data-theme^="glass"] #projectModal .task-select-all-control--below-add .task-select-all-control-inner,
+body[data-theme^="blueprint"] #projectModal .task-select-all-control--below-add .task-select-all-control-inner {
+    text-transform: none !important;
+}
+
+.project-notes-edit-link--tag,
+body[data-theme^="console"] .project-notes-edit-link--tag,
+body[data-theme^="glass"] .project-notes-edit-link--tag,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.65rem !important;
+    min-width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 40%, var(--line, transparent)) !important;
+    border-radius: 999px !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 86%, var(--accent, currentColor) 14%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 86%, var(--accent, currentColor) 14%) !important;
+    background-image: none !important;
+    cursor: pointer !important;
+}
+
+.project-notes-edit-link--tag:hover,
+.project-notes-edit-link--tag:focus-visible,
+body[data-theme^="console"] .project-notes-edit-link--tag:hover,
+body[data-theme^="console"] .project-notes-edit-link--tag:focus-visible,
+body[data-theme^="glass"] .project-notes-edit-link--tag:hover,
+body[data-theme^="glass"] .project-notes-edit-link--tag:focus-visible,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+.project-notes-edit-link--tag .icon {
+    width: 0.92rem !important;
+    height: 0.92rem !important;
+}
+
+.project-note-link-actions {
+    align-items: center !important;
+}
+
+.project-note-link-actions-spacer {
+    flex: 1 1 auto !important;
+}
+
+.project-note-link-delete,
+.project-note-link-cancel,
+.project-note-link-create {
+    min-height: 2.65rem !important;
+    padding: 0.7rem 1rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-note-link-delete {
+    color: #ef4444 !important;
+    background: color-mix(in srgb, var(--surface, transparent) 84%, #ef4444 16%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 84%, #ef4444 16%) !important;
+    border-color: color-mix(in srgb, #ef4444 58%, transparent) !important;
+}
+
+.project-note-link-delete.is-hidden {
+    display: none !important;
+}
+
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-delete {
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+}
+
+@media (max-width: 760px) {
+    #projectModal .modal-content,
+    body[data-theme^="console"] #projectModal .modal-content,
+    body[data-theme^="glass"] #projectModal .modal-content,
+    body[data-theme^="blueprint"] #projectModal .modal-content {
+        width: calc(100vw - 1rem) !important;
+        max-width: calc(100vw - 1rem) !important;
+        max-height: calc(100svh - 1rem) !important;
+        margin: 0.5rem !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal .modal-scroll-inner {
+        max-height: calc(100svh - 2rem) !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 1rem !important;
+    }
+
+    #projectModal .modal-header-centered,
+    body[data-theme^="console"] #projectModal .modal-header-centered,
+    body[data-theme^="glass"] #projectModal .modal-header-centered,
+    body[data-theme^="blueprint"] #projectModal .modal-header-centered {
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+
+    #projectModal .modal-title-container,
+    body[data-theme^="console"] #projectModal .modal-title-container,
+    body[data-theme^="glass"] #projectModal .modal-title-container,
+    body[data-theme^="blueprint"] #projectModal .modal-title-container {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    #projectModal .modal-title-row,
+    body[data-theme^="console"] #projectModal .modal-title-row,
+    body[data-theme^="glass"] #projectModal .modal-title-row,
+    body[data-theme^="blueprint"] #projectModal .modal-title-row {
+        justify-content: flex-start !important;
+    }
+
+    #projectModal .modal-title,
+    #projectModal .modal-title-input,
+    body[data-theme^="console"] #projectModal .modal-title,
+    body[data-theme^="console"] #projectModal .modal-title-input,
+    body[data-theme^="glass"] #projectModal .modal-title,
+    body[data-theme^="glass"] #projectModal .modal-title-input,
+    body[data-theme^="blueprint"] #projectModal .modal-title,
+    body[data-theme^="blueprint"] #projectModal .modal-title-input {
+        max-width: calc(100vw - 6.75rem) !important;
+        min-width: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    #projectModal .modal-task-controls-row,
+    body[data-theme^="console"] #projectModal .modal-task-controls-row,
+    body[data-theme^="glass"] #projectModal .modal-task-controls-row,
+    body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+
+    #projectModal .hide-completed-toggle,
+    #projectModal .task-sort-control,
+    body[data-theme^="console"] #projectModal .hide-completed-toggle,
+    body[data-theme^="console"] #projectModal .task-sort-control,
+    body[data-theme^="glass"] #projectModal .hide-completed-toggle,
+    body[data-theme^="glass"] #projectModal .task-sort-control,
+    body[data-theme^="blueprint"] #projectModal .hide-completed-toggle,
+    body[data-theme^="blueprint"] #projectModal .task-sort-control {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        grid-template-columns: auto auto minmax(0, 1fr) !important;
+        row-gap: 0.5rem !important;
+        align-items: start !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme^="console"] #projectModal .task-meta-controls,
+    body[data-theme^="glass"] #projectModal .task-meta-controls,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls {
+        grid-column: 1 / -1 !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+
+    #projectModal .modal-paste-actions,
+    body[data-theme^="console"] #projectModal .modal-paste-actions,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+    #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+    body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .project-note-link-actions {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.65rem !important;
+    }
+
+    .project-note-link-actions-spacer {
+        display: none !important;
+    }
+
+    .project-note-link-delete,
+    .project-note-link-cancel,
+    .project-note-link-create {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .project-card-notes-bar,
+    body[data-theme^="console"] .project-card-notes-bar,
+    body[data-theme^="glass"] .project-card-notes-bar,
+    body[data-theme^="blueprint"] .project-card-notes-bar {
+        gap: 0.45rem !important;
+        flex-wrap: wrap !important;
+    }
+
+    .project-due-date-control.has-due-date,
+    body[data-theme^="console"] .project-due-date-control.has-due-date,
+    body[data-theme^="glass"] .project-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] .project-due-date-control.has-due-date {
+        min-width: 5.9rem !important;
+    }
+}
