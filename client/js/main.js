@@ -6246,10 +6246,10 @@ function openProjectModal(projectId, options = {}) {
             </button>
         </div>`;
     
-    content.innerHTML = `<div class="modal-scroll-inner">
-        <div class="modal-top-menu-shell">
-            ${modalMenuBarMarkup}
-        </div>
+    content.innerHTML = `<div class="modal-top-menu-shell">
+        ${modalMenuBarMarkup}
+    </div>
+    <div class="modal-scroll-inner">
         <div class="modal-header-centered">
             <div class="modal-title-container">
                 <div class="modal-title-row">

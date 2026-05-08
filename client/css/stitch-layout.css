@@ -14768,3 +14768,191 @@ body[data-theme^="blueprint"] .project-layout-controls.is-open .project-layout-t
         right: 0.65rem !important;
     }
 }
+
+/* Targeted patch: full-width project modal menu bar, separated scroll area, and left-aligned description. */
+#projectModal .modal-content#modalContent,
+body[data-theme^="console"] #projectModal .modal-content#modalContent,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+#projectModal .modal-top-menu-shell,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+    position: relative !important;
+    top: auto !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 130 !important;
+    border-radius: inherit inherit 0 0 !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.85rem 1.1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    gap: 0.9rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    border-radius: inherit inherit 0 0 !important;
+    border-top: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-bar::-webkit-scrollbar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar::-webkit-scrollbar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar::-webkit-scrollbar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar::-webkit-scrollbar {
+    display: none !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item {
+    flex: 1 1 0 !important;
+    min-width: 6.25rem !important;
+    min-height: 2.55rem !important;
+    justify-content: center !important;
+    padding: 0.58rem 1rem !important;
+    font-size: 0.95rem !important;
+    line-height: 1.1 !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+    margin-left: 0.35rem !important;
+    flex: 0 0 2.5rem !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+}
+
+#projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.35rem 1.5rem 1.5rem !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-gutter: stable !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+#projectModal .modal-header-centered,
+body[data-theme^="console"] #projectModal .modal-header-centered,
+body[data-theme^="glass"] #projectModal .modal-header-centered,
+body[data-theme^="blueprint"] #projectModal .modal-header-centered,
+#projectModal .modal-title-container,
+body[data-theme^="console"] #projectModal .modal-title-container,
+body[data-theme^="glass"] #projectModal .modal-title-container,
+body[data-theme^="blueprint"] #projectModal .modal-title-container {
+    align-items: flex-start !important;
+    text-align: left !important;
+}
+
+#projectModal .modal-title-row,
+body[data-theme^="console"] #projectModal .modal-title-row,
+body[data-theme^="glass"] #projectModal .modal-title-row,
+body[data-theme^="blueprint"] #projectModal .modal-title-row {
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+
+#projectModal .modal-title-row .modal-title,
+#projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="console"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="console"] #projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="glass"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="glass"] #projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .modal-title-edit-button {
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+
+#projectModal .modal-project-description-view,
+body[data-theme^="console"] #projectModal .modal-project-description-view,
+body[data-theme^="glass"] #projectModal .modal-project-description-view,
+body[data-theme^="blueprint"] #projectModal .modal-project-description-view {
+    align-self: stretch !important;
+    justify-content: flex-start !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    text-align: left !important;
+}
+
+#projectModal .modal-project-description-text,
+body[data-theme^="console"] #projectModal .modal-project-description-text,
+body[data-theme^="glass"] #projectModal .modal-project-description-text,
+body[data-theme^="blueprint"] #projectModal .modal-project-description-text,
+#projectModal .modal-project-description-text.is-editing,
+body[data-theme^="console"] #projectModal .modal-project-description-text.is-editing,
+body[data-theme^="glass"] #projectModal .modal-project-description-text.is-editing,
+body[data-theme^="blueprint"] #projectModal .modal-project-description-text.is-editing {
+    text-align: left !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        gap: 0.65rem !important;
+        padding: calc(0.65rem + env(safe-area-inset-top, 0px)) 0.75rem 0.65rem !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item {
+        flex: 0 0 auto !important;
+        min-width: 5.5rem !important;
+        min-height: 2.4rem !important;
+        padding: 0.52rem 0.85rem !important;
+        font-size: 0.9rem !important;
+    }
+
+    #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        padding: 1rem 0.85rem calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+        scrollbar-gutter: auto !important;
+    }
+}
