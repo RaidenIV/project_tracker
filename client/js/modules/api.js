@@ -80,19 +80,70 @@ export async function createProjectOnServer(project) {
     }
 }
 
+async function getLatestServerProjectForRetry(project) {
+    const projectId = String(project?.id || project?._id || '');
+    const projectMongoId = String(project?._id || '');
+    if (!projectId && !projectMongoId) return null;
+
+    try {
+        const latestProjects = await loadProjectsFromServer();
+        return latestProjects.find(candidate => {
+            const candidateId = String(candidate?.id || '');
+            const candidateMongoId = String(candidate?._id || '');
+            return (projectId && (candidateId === projectId || candidateMongoId === projectId)) ||
+                (projectMongoId && (candidateId === projectMongoId || candidateMongoId === projectMongoId));
+        }) || null;
+    } catch (err) {
+        console.warn('Could not reload latest project before conflict retry:', err);
+        return null;
+    }
+}
+
 export async function saveProjectToServer(project) {
     if (!project._id) {
         return { ok: false, skipped: true };
     }
+
+    const projectEndpointId = project._id;
+    const buildPayload = (knownLastModified) => ({
+        ...project,
+        __clientKnownLastModified: knownLastModified || project.__syncedLastModified || project.lastModified || null
+    });
+
     try {
-        const payload = { ...project, __clientKnownLastModified: project.lastModified || null };
-        const savedProject = await request('PUT', API_ENDPOINTS.PROJECT(project._id), payload);
+        const savedProject = await request('PUT', API_ENDPOINTS.PROJECT(projectEndpointId), buildPayload(project.__syncedLastModified || project.lastModified || null));
         return { ok: true, project: savedProject };
     } catch (err) {
+        const isConflict = err.code === 'PROJECT_CONFLICT' || err.status === 409;
+        if (isConflict) {
+            const latestProject = await getLatestServerProjectForRetry(project);
+            const latestModified = latestProject?.lastModified || latestProject?.updatedAt || null;
+            if (latestModified) {
+                try {
+                    const retryEndpointId = latestProject?._id || projectEndpointId;
+                    const retryPayload = {
+                        ...buildPayload(latestModified),
+                        _id: latestProject?._id || project._id,
+                        id: project.id || latestProject?.id || latestProject?._id
+                    };
+                    const savedProject = await request('PUT', API_ENDPOINTS.PROJECT(retryEndpointId), retryPayload);
+                    return { ok: true, project: savedProject, retriedConflict: true };
+                } catch (retryErr) {
+                    console.error('Conflict retry failed while saving project:', retryErr);
+                    return {
+                        ok: false,
+                        conflict: retryErr.code === 'PROJECT_CONFLICT' || retryErr.status === 409,
+                        message: retryErr.message,
+                        projectId: project.id || project._id
+                    };
+                }
+            }
+        }
+
         console.error('Error saving project:', err);
         return {
             ok: false,
-            conflict: err.code === 'PROJECT_CONFLICT' || err.status === 409,
+            conflict: isConflict,
             message: err.message,
             projectId: project.id || project._id
         };

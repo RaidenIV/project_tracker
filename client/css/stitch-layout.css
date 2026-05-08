@@ -13276,3 +13276,122 @@ body[data-theme^="blueprint"] .project-preview-empty {
     background-color: transparent !important;
     box-shadow: none !important;
 }
+
+/* Targeted patch: neumorphism icon state cleanup and mobile modal scrolling. */
+body[data-theme^="blueprint"] .task-copy-button.is-copied:not(:hover):not(:focus-visible) {
+    color: var(--muted, currentColor) !important;
+    border-color: var(--line, rgba(255, 255, 255, 0.08)) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow-level-1, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note),
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):active {
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note) .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note) svg,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover svg,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible svg,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):active .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):active svg {
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note)::after {
+    display: none !important;
+    content: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note svg {
+    color: var(--accent, currentColor) !important;
+    stroke: currentColor !important;
+}
+
+@media (max-width: 760px) {
+    body:has(#projectModal.active) {
+        overflow: hidden !important;
+        touch-action: none !important;
+    }
+
+    #projectModal.active,
+    body[data-theme^="console"] #projectModal.active,
+    body[data-theme^="glass"] #projectModal.active,
+    body[data-theme^="blueprint"] #projectModal.active {
+        position: fixed !important;
+        inset: 0 !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        padding: calc(0.5rem + env(safe-area-inset-top, 0px)) 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        overflow: hidden !important;
+        overscroll-behavior: contain !important;
+    }
+
+    #projectModal.active #modalContent,
+    body[data-theme^="console"] #projectModal.active #modalContent,
+    body[data-theme^="glass"] #projectModal.active #modalContent,
+    body[data-theme^="blueprint"] #projectModal.active #modalContent {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+        max-height: calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal.active .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal.active .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal.active .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal.active .modal-scroll-inner {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #projectModal.active .modal-tabs,
+    body[data-theme^="console"] #projectModal.active .modal-tabs,
+    body[data-theme^="glass"] #projectModal.active .modal-tabs,
+    body[data-theme^="blueprint"] #projectModal.active .modal-tabs {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        overscroll-behavior-x: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #projectModal.active .task-list,
+    body[data-theme^="console"] #projectModal.active .task-list,
+    body[data-theme^="glass"] #projectModal.active .task-list,
+    body[data-theme^="blueprint"] #projectModal.active .task-list {
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+}
