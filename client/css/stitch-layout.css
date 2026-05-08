@@ -14621,3 +14621,150 @@ body[data-theme^="blueprint"] .project-layout-option.is-active {
         right: 0.1rem !important;
     }
 }
+
+/* Targeted patch: profile-backed layout controls, sticky modal menu spacing, and neumorphic layout menu polish. */
+#projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    padding-top: 0 !important;
+}
+
+#projectModal .modal-top-menu-shell,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 120 !important;
+    margin: 0 0 1rem !important;
+    padding: 0 !important;
+    border-radius: inherit inherit 0 0 !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0.75rem 0.85rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.22)) 82%, transparent) !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+    margin-left: auto !important;
+    flex: 0 0 2.35rem !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+#projectModal .modal-tasks-card > .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+    top: 4.35rem !important;
+    z-index: 70 !important;
+}
+
+.project-layout-controls,
+body[data-theme^="console"] .project-layout-controls,
+body[data-theme^="glass"] .project-layout-controls,
+body[data-theme^="blueprint"] .project-layout-controls {
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+}
+
+.project-layout-menu,
+body[data-theme^="console"] .project-layout-menu,
+body[data-theme^="glass"] .project-layout-menu,
+body[data-theme^="blueprint"] .project-layout-menu {
+    top: calc(100% + 0.7rem) !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-toggle,
+body[data-theme^="blueprint"] .project-layout-menu,
+body[data-theme^="blueprint"] .project-layout-option {
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.22))) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-menu {
+    padding: 1rem !important;
+    border-radius: 1.2rem !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-menu-title {
+    color: var(--muted, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-options {
+    gap: 0.6rem !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-option {
+    border-radius: 999px !important;
+    color: var(--muted, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-option:hover,
+body[data-theme^="blueprint"] .project-layout-option:focus-visible,
+body[data-theme^="blueprint"] .project-layout-option.is-active,
+body[data-theme^="blueprint"] .project-layout-controls.is-open .project-layout-toggle {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--inset-shadow, inset 6px 6px 12px rgba(0, 0, 0, 0.16), inset -6px -6px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        padding: 0.62rem 0.7rem !important;
+    }
+
+    #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 3.85rem !important;
+    }
+
+    .project-layout-controls,
+    body[data-theme^="console"] .project-layout-controls,
+    body[data-theme^="glass"] .project-layout-controls,
+    body[data-theme^="blueprint"] .project-layout-controls {
+        top: 0.65rem !important;
+        right: 0.65rem !important;
+    }
+}

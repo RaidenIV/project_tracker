@@ -1385,6 +1385,9 @@ function applyAccountUI(user) {
 
     const accountEmailInput = document.getElementById('accountEmailInput');
     if (accountEmailInput) accountEmailInput.value = accountState.user.email || '';
+
+    ensureProjectLayoutControls();
+    applyProjectGridLayoutPreference();
 }
 
 function syncAccountStatsToModal() {
@@ -6223,7 +6226,7 @@ function openProjectModal(projectId, options = {}) {
     
     const selectedTasks = state.getSelectedTasks(projectId);
     const modalMenuBarMarkup = `
-        <div class="modal-tabs modal-menu-bar" role="menubar" aria-label="Project modal menu">
+        <div class="modal-menu-bar" role="menubar" aria-label="Project modal menu">
             <button class="modal-tab modal-menu-item active" role="menuitem" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
             <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
                 <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -6989,29 +6992,50 @@ const PROJECT_GRID_LAYOUT_DEFAULT = Object.freeze({
     density: 'comfortable'
 });
 
-function loadProjectGridLayoutPreference() {
-    try {
-        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_GRID_LAYOUT);
-        const parsed = raw ? JSON.parse(raw) : null;
-        const columns = ['auto', '1', '2', '3', '4'].includes(String(parsed?.columns))
-            ? String(parsed.columns)
-            : PROJECT_GRID_LAYOUT_DEFAULT.columns;
-        const density = ['compact', 'comfortable', 'spacious'].includes(String(parsed?.density))
-            ? String(parsed.density)
-            : PROJECT_GRID_LAYOUT_DEFAULT.density;
-        return { columns, density };
-    } catch (err) {
-        console.warn('Failed to load project grid layout preference:', err);
-        return { ...PROJECT_GRID_LAYOUT_DEFAULT };
-    }
+function normalizeProjectGridLayoutPreference(layout) {
+    const columns = ['auto', '1', '2', '3', '4'].includes(String(layout?.columns))
+        ? String(layout.columns)
+        : PROJECT_GRID_LAYOUT_DEFAULT.columns;
+    const density = ['compact', 'comfortable', 'spacious'].includes(String(layout?.density))
+        ? String(layout.density)
+        : PROJECT_GRID_LAYOUT_DEFAULT.density;
+    return { columns, density };
 }
 
-function saveProjectGridLayoutPreference(layout) {
+function getAccountUiPreferences() {
+    const preferences = accountState.user?.uiPreferences || accountState.user?.preferences || {};
+    return preferences && typeof preferences === 'object' ? preferences : {};
+}
+
+function loadProjectGridLayoutPreference() {
+    return normalizeProjectGridLayoutPreference(getAccountUiPreferences().projectGridLayout);
+}
+
+async function saveProjectGridLayoutPreference(layout) {
+    const normalizedLayout = normalizeProjectGridLayoutPreference(layout);
+    const currentPreferences = getAccountUiPreferences();
+    const nextPreferences = {
+        ...currentPreferences,
+        projectGridLayout: normalizedLayout
+    };
+
+    accountState.user = {
+        ...(accountState.user || getCurrentUser?.() || {}),
+        uiPreferences: nextPreferences
+    };
+
     try {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_GRID_LAYOUT, JSON.stringify(layout || PROJECT_GRID_LAYOUT_DEFAULT));
+        const response = await updateAccountProfileOnServer({ uiPreferences: nextPreferences });
+        if (response?.user) {
+            accountState.user = response.user;
+            state.setCurrentUser(accountState.user);
+        }
     } catch (err) {
-        console.warn('Failed to save project grid layout preference:', err);
+        console.warn('Failed to save project grid layout preference to the user profile:', err);
+        setSaveStatus('error', 'Layout preference could not be saved to your profile');
     }
+
+    return normalizedLayout;
 }
 
 function getEffectiveProjectGridColumns(columns) {
@@ -7040,9 +7064,9 @@ function applyProjectGridLayoutPreference() {
     }
 
     const gapMap = {
-        compact: '0.9rem',
-        comfortable: '',
-        spacious: '2rem'
+        compact: '0.65rem',
+        comfortable: '1.35rem',
+        spacious: '2.35rem'
     };
     if (gapMap[layout.density]) {
         grid.style.setProperty('gap', gapMap[layout.density], 'important');
@@ -7131,14 +7155,22 @@ function setProjectGridLayoutOption(key, value, event) {
     const layout = loadProjectGridLayoutPreference();
     if (key === 'columns') layout.columns = ['auto', '1', '2', '3', '4'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.columns;
     if (key === 'density') layout.density = ['compact', 'comfortable', 'spacious'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.density;
-    saveProjectGridLayoutPreference(layout);
+    const normalizedLayout = normalizeProjectGridLayoutPreference(layout);
+    accountState.user = {
+        ...(accountState.user || getCurrentUser?.() || {}),
+        uiPreferences: {
+            ...getAccountUiPreferences(),
+            projectGridLayout: normalizedLayout
+        }
+    };
     const controls = document.getElementById('projectLayoutControls');
     if (controls) {
-        controls.innerHTML = buildProjectLayoutControlsMarkup(layout);
+        controls.innerHTML = buildProjectLayoutControlsMarkup(normalizedLayout);
         controls.classList.add('is-open');
         controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', 'true');
     }
     applyProjectGridLayoutPreference();
+    saveProjectGridLayoutPreference(normalizedLayout);
 }
 
 function openHowToGuideModal() {

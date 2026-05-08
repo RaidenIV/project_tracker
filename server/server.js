@@ -135,6 +135,7 @@ const accountSchema = new mongoose.Schema({
     email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
     username:     { type: String, required: true, trim: true },
     profilePic:   { type: String, default: '' },
+    uiPreferences:{ type: mongoose.Schema.Types.Mixed, default: () => ({}) },
     passwordHash: { type: String, required: true },
     createdAt:    { type: Date, default: Date.now }
 });
@@ -662,12 +663,29 @@ function createAuthToken(account) {
     );
 }
 
+function sanitizeUiPreferences(value = {}) {
+    const source = value && typeof value === 'object' ? value : {};
+    const gridLayout = source.projectGridLayout && typeof source.projectGridLayout === 'object' ? source.projectGridLayout : {};
+    const columns = ['auto', '1', '2', '3', '4'].includes(String(gridLayout.columns))
+        ? String(gridLayout.columns)
+        : 'auto';
+    const density = ['compact', 'comfortable', 'spacious'].includes(String(gridLayout.density))
+        ? String(gridLayout.density)
+        : 'comfortable';
+
+    return {
+        ...source,
+        projectGridLayout: { columns, density }
+    };
+}
+
 function formatAuthUser(account) {
     return {
         id: account._id.toString(),
         email: account.email,
         username: account.username,
         profilePic: account.profilePic || '',
+        uiPreferences: sanitizeUiPreferences(account.uiPreferences || {}),
         createdAt: account.createdAt
     };
 }
@@ -719,13 +737,14 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
-    const account = await Account.findById(req.user.id, 'email username profilePic createdAt');
+    const account = await Account.findById(req.user.id, 'email username profilePic uiPreferences createdAt');
     if (!account) return res.status(404).json({ error: 'Account not found' });
     res.json({ user: {
         id: account._id.toString(),
         email: account.email,
         username: account.username,
         profilePic: account.profilePic || '',
+        uiPreferences: sanitizeUiPreferences(account.uiPreferences || {}),
         createdAt: account.createdAt
     }});
 });
@@ -1048,7 +1067,7 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
 app.get('/api/account', authenticateToken, async (req, res) => {
     try {
         const [account, stats, ownedProjects, sharedProjects, activeProjects, leaderboardPayload] = await Promise.all([
-            Account.findById(req.user.id, 'email username profilePic createdAt'),
+            Account.findById(req.user.id, 'email username profilePic uiPreferences createdAt'),
             getOrCreateStats(req.user.id),
             Project.countDocuments({ owner: req.user.id }),
             Project.countDocuments({ 'collaborators.userId': req.user.id, archived: false }),
@@ -1068,6 +1087,7 @@ app.get('/api/account', authenticateToken, async (req, res) => {
                 email: account.email,
                 username: account.username,
                 profilePic: account.profilePic || '',
+                uiPreferences: sanitizeUiPreferences(account.uiPreferences || {}),
                 createdAt: account.createdAt
             },
             stats: {
@@ -1105,7 +1125,11 @@ app.put('/api/account', authenticateToken, async (req, res) => {
             updates.profilePic = profilePic;
         }
 
-        const account = await Account.findByIdAndUpdate(req.user.id, updates, { new: true, runValidators: true, select: 'email username profilePic createdAt' });
+        if (req.body.uiPreferences !== undefined) {
+            updates.uiPreferences = sanitizeUiPreferences(req.body.uiPreferences);
+        }
+
+        const account = await Account.findByIdAndUpdate(req.user.id, updates, { new: true, runValidators: true, select: 'email username profilePic uiPreferences createdAt' });
         if (!account) return res.status(404).json({ error: 'Account not found' });
 
         if (updates.username) {
