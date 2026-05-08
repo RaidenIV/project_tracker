@@ -4610,7 +4610,8 @@ function suppressNextTaskClick(event) {
         if (!item || !taskList.contains(item)) return;
 
         const handle = e.target.closest?.('.task-drag-handle');
-        if (!handle && isTaskDragIgnoredTarget(e.target)) return;
+        if (!handle || !item.contains(handle)) return;
+        if (isTaskDragIgnoredTarget(e.target)) return;
 
         const point = getPoint(e);
         pendingDragItem = item;
