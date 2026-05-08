@@ -494,7 +494,8 @@ const LOCAL_STORAGE_KEYS = {
     PROJECT_SORT: 'tracker_project_sort_mode_v1',
     PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
     PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
-    PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1'
+    PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1',
+    PROJECT_GRID_LAYOUT: 'tracker_project_grid_layout_v1'
 };
 
 const SESSION_STORAGE_KEYS = {
@@ -6221,8 +6222,31 @@ function openProjectModal(projectId, options = {}) {
     const content = document.getElementById('modalContent');
     
     const selectedTasks = state.getSelectedTasks(projectId);
+    const modalMenuBarMarkup = `
+        <div class="modal-tabs modal-menu-bar" role="menubar" aria-label="Project modal menu">
+            <button class="modal-tab modal-menu-item active" role="menuitem" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
+            <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
+                <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>
+                Notes
+            </button>
+            <button class="modal-tab modal-menu-item" role="menuitem" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
+                Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
+            </button>
+            <button class="modal-tab modal-menu-item" role="menuitem" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
+            <button class="modal-close modal-menu-close" onclick="closeProjectModal()" type="button" aria-label="Close project modal">
+                <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>`;
     
     content.innerHTML = `<div class="modal-scroll-inner">
+        <div class="modal-top-menu-shell">
+            ${modalMenuBarMarkup}
+        </div>
         <div class="modal-header-centered">
             <div class="modal-title-container">
                 <div class="modal-title-row">
@@ -6238,6 +6262,15 @@ function openProjectModal(projectId, options = {}) {
                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
                     ${renderProjectDueDateControlMarkup(project, 'modal')}
                 </div>
+                <div class="modal-project-description-view ${getProjectModalDescription(project) ? '' : 'is-empty'}"
+                     id="modal-project-description-view-${project.id}">
+                    <span class="modal-project-description-text"
+                          id="modal-project-description-${project.id}"
+                          data-placeholder="Add project description"
+                          role="textbox"
+                          ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); return false; } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
+                    ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
+                </div>
                 <div class="modal-stats">
                     <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
                     <span>•</span>
@@ -6252,23 +6285,6 @@ function openProjectModal(projectId, options = {}) {
                     ${renderProjectPriorityControlMarkup(project.id, project, 'modal')}
                 </div>
             </div>
-            <div style="display: flex; gap: 4px;">
-                <button class="modal-close" onclick="closeProjectModal()">
-                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <div class="modal-project-description-view ${getProjectModalDescription(project) ? '' : 'is-empty'}"
-             id="modal-project-description-view-${project.id}">
-            <span class="modal-project-description-text"
-                  id="modal-project-description-${project.id}"
-                  data-placeholder="Add project description"
-                  role="textbox"
-                  ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); return false; } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
-            ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
         </div>
 
         <div class="modal-progress">
@@ -6277,22 +6293,7 @@ function openProjectModal(projectId, options = {}) {
             </div>
             <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
         </div>
-        
-        <!-- Menu bar for Tasks, Notes, Members, and History -->
-        <div class="modal-tabs modal-menu-bar" role="menubar" aria-label="Project modal menu">
-            <button class="modal-tab modal-menu-item active" role="menuitem" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
-            <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
-                <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
-                </svg>
-                Notes
-            </button>
-            <button class="modal-tab modal-menu-item" role="menuitem" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
-                Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
-            </button>
-            <button class="modal-tab modal-menu-item" role="menuitem" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
-        </div>
+
         
         <!-- Tasks Section -->
         <div class="modal-section" id="tasks-section-${project.id}">
@@ -6983,6 +6984,163 @@ function closeCommandPalette() {
     document.getElementById('commandPaletteModal')?.classList.remove('active');
 }
 
+const PROJECT_GRID_LAYOUT_DEFAULT = Object.freeze({
+    columns: 'auto',
+    density: 'comfortable'
+});
+
+function loadProjectGridLayoutPreference() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_GRID_LAYOUT);
+        const parsed = raw ? JSON.parse(raw) : null;
+        const columns = ['auto', '1', '2', '3', '4'].includes(String(parsed?.columns))
+            ? String(parsed.columns)
+            : PROJECT_GRID_LAYOUT_DEFAULT.columns;
+        const density = ['compact', 'comfortable', 'spacious'].includes(String(parsed?.density))
+            ? String(parsed.density)
+            : PROJECT_GRID_LAYOUT_DEFAULT.density;
+        return { columns, density };
+    } catch (err) {
+        console.warn('Failed to load project grid layout preference:', err);
+        return { ...PROJECT_GRID_LAYOUT_DEFAULT };
+    }
+}
+
+function saveProjectGridLayoutPreference(layout) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_GRID_LAYOUT, JSON.stringify(layout || PROJECT_GRID_LAYOUT_DEFAULT));
+    } catch (err) {
+        console.warn('Failed to save project grid layout preference:', err);
+    }
+}
+
+function getEffectiveProjectGridColumns(columns) {
+    const raw = String(columns || PROJECT_GRID_LAYOUT_DEFAULT.columns);
+    if (raw === 'auto') return null;
+    const requested = Number(raw);
+    if (!Number.isFinite(requested) || requested < 1) return null;
+    if (window.innerWidth <= 860) return 1;
+    if (window.innerWidth <= 1450) return Math.min(requested, 2);
+    return Math.min(Math.max(Math.floor(requested), 1), 4);
+}
+
+function applyProjectGridLayoutPreference() {
+    const grid = document.getElementById('projectGrid');
+    if (!grid) return;
+    const layout = loadProjectGridLayoutPreference();
+    const effectiveColumns = getEffectiveProjectGridColumns(layout.columns);
+    grid.dataset.layoutColumns = layout.columns;
+    grid.dataset.layoutDensity = layout.density;
+    grid.classList.toggle('project-grid--manual-layout', !!effectiveColumns);
+
+    if (effectiveColumns) {
+        grid.style.setProperty('grid-template-columns', `repeat(${effectiveColumns}, minmax(0, 1fr))`, 'important');
+    } else {
+        grid.style.removeProperty('grid-template-columns');
+    }
+
+    const gapMap = {
+        compact: '0.9rem',
+        comfortable: '',
+        spacious: '2rem'
+    };
+    if (gapMap[layout.density]) {
+        grid.style.setProperty('gap', gapMap[layout.density], 'important');
+    } else {
+        grid.style.removeProperty('gap');
+    }
+}
+
+function buildProjectLayoutControlsMarkup(layout) {
+    const columnOptions = [
+        ['auto', 'Auto'],
+        ['1', '1'],
+        ['2', '2'],
+        ['3', '3'],
+        ['4', '4']
+    ];
+    const densityOptions = [
+        ['compact', 'Compact'],
+        ['comfortable', 'Comfortable'],
+        ['spacious', 'Spacious']
+    ];
+    return `
+        <button class="project-layout-toggle" type="button" aria-label="Project card layout options" aria-expanded="false" onclick="toggleProjectLayoutMenu(event)">
+            <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="6" cy="6" r="1.7"></circle>
+                <circle cx="12" cy="6" r="1.7"></circle>
+                <circle cx="18" cy="6" r="1.7"></circle>
+                <circle cx="6" cy="12" r="1.7"></circle>
+                <circle cx="12" cy="12" r="1.7"></circle>
+                <circle cx="18" cy="12" r="1.7"></circle>
+                <circle cx="6" cy="18" r="1.7"></circle>
+                <circle cx="12" cy="18" r="1.7"></circle>
+                <circle cx="18" cy="18" r="1.7"></circle>
+            </svg>
+        </button>
+        <div class="project-layout-menu" role="menu" aria-label="Project card layout menu">
+            <div class="project-layout-menu-title">Cards per row</div>
+            <div class="project-layout-options" role="group" aria-label="Cards per row">
+                ${columnOptions.map(([value, label]) => `<button class="project-layout-option ${layout.columns === value ? 'is-active' : ''}" type="button" onclick="setProjectGridLayoutOption('columns', '${value}', event)">${label}</button>`).join('')}
+            </div>
+            <div class="project-layout-menu-title">Spacing</div>
+            <div class="project-layout-options" role="group" aria-label="Project card spacing">
+                ${densityOptions.map(([value, label]) => `<button class="project-layout-option ${layout.density === value ? 'is-active' : ''}" type="button" onclick="setProjectGridLayoutOption('density', '${value}', event)">${label}</button>`).join('')}
+            </div>
+        </div>`;
+}
+
+function ensureProjectLayoutControls() {
+    const grid = document.getElementById('projectGrid');
+    if (!grid?.parentElement) return;
+    const host = grid.parentElement;
+    host.classList.add('project-grid-layout-host');
+    const layout = loadProjectGridLayoutPreference();
+    let controls = document.getElementById('projectLayoutControls');
+    if (!controls) {
+        controls = document.createElement('div');
+        controls.id = 'projectLayoutControls';
+        controls.className = 'project-layout-controls';
+        host.insertBefore(controls, grid);
+    }
+    controls.innerHTML = buildProjectLayoutControlsMarkup(layout);
+    controls.classList.remove('is-open');
+    applyProjectGridLayoutPreference();
+}
+
+function closeProjectLayoutMenu() {
+    const controls = document.getElementById('projectLayoutControls');
+    if (!controls) return;
+    controls.classList.remove('is-open');
+    controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', 'false');
+}
+
+function toggleProjectLayoutMenu(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const controls = document.getElementById('projectLayoutControls');
+    if (!controls) return;
+    const isOpen = !controls.classList.contains('is-open');
+    controls.classList.toggle('is-open', isOpen);
+    controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', String(isOpen));
+}
+
+function setProjectGridLayoutOption(key, value, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const layout = loadProjectGridLayoutPreference();
+    if (key === 'columns') layout.columns = ['auto', '1', '2', '3', '4'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.columns;
+    if (key === 'density') layout.density = ['compact', 'comfortable', 'spacious'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.density;
+    saveProjectGridLayoutPreference(layout);
+    const controls = document.getElementById('projectLayoutControls');
+    if (controls) {
+        controls.innerHTML = buildProjectLayoutControlsMarkup(layout);
+        controls.classList.add('is-open');
+        controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', 'true');
+    }
+    applyProjectGridLayoutPreference();
+}
+
 function openHowToGuideModal() {
     document.getElementById('howToGuideModal')?.classList.add('active');
 }
@@ -7001,6 +7159,7 @@ function render() {
     const projectGrid = document.getElementById('projectGrid');
     const emptyState = document.getElementById('emptyState');
     if (!projectGrid || !emptyState) return;
+    ensureProjectLayoutControls();
 
     const stats = state.getStats() || { completedTasks: 0, completedProjects: 0 };
     const activeProjectsCountEl = document.getElementById('activeProjectsCount');
@@ -7038,6 +7197,7 @@ function render() {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
+        applyProjectGridLayoutPreference();
 
         if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER) {
             setTimeout(setupProjectDragAndDrop, 100);
@@ -8048,6 +8208,8 @@ function onAuthSuccess(user) {
 // ============================================================================
 
 document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
+document.addEventListener('click', closeProjectLayoutMenu);
+window.addEventListener('resize', applyProjectGridLayoutPreference);
 window.addEventListener('beforeunload', persistOpenProjectModalBeforeUnload);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8070,3 +8232,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.setProjectCardSortMode = setProjectCardSortMode;
+window.toggleProjectLayoutMenu = toggleProjectLayoutMenu;
+window.setProjectGridLayoutOption = setProjectGridLayoutOption;

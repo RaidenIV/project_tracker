@@ -14247,3 +14247,377 @@ body[data-theme^="blueprint"] #projectModal .project-priority-control.is-open .p
 body[data-theme^="console"] .project-card .project-card-notes-bar {
     gap: 0.6rem !important;
 }
+
+/* Targeted patch: sticky modal menu bar, project title/description placement, grid layout menu, and due-date hover polish. */
+#projectModal .modal-top-menu-shell,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    width: 100% !important;
+    margin: 0 0 1rem !important;
+    padding: 0 0 0.65rem !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    position: relative !important;
+    top: auto !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+    min-width: 0 !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-close,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+    margin-left: auto !important;
+    flex: 0 0 2.35rem !important;
+    width: 2.35rem !important;
+    min-width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#projectModal .modal-header-centered,
+body[data-theme^="console"] #projectModal .modal-header-centered,
+body[data-theme^="glass"] #projectModal .modal-header-centered,
+body[data-theme^="blueprint"] #projectModal .modal-header-centered {
+    padding-top: 0 !important;
+}
+
+#projectModal .modal-title-container,
+body[data-theme^="console"] #projectModal .modal-title-container,
+body[data-theme^="glass"] #projectModal .modal-title-container,
+body[data-theme^="blueprint"] #projectModal .modal-title-container {
+    width: 100% !important;
+}
+
+#projectModal .modal-title-row,
+body[data-theme^="console"] #projectModal .modal-title-row,
+body[data-theme^="glass"] #projectModal .modal-title-row,
+body[data-theme^="blueprint"] #projectModal .modal-title-row {
+    align-items: center !important;
+    line-height: 1.2 !important;
+}
+
+#projectModal .modal-title-row .modal-title,
+#projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="console"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="console"] #projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="glass"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="glass"] #projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .modal-title-edit-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 2rem !important;
+    line-height: 1.2 !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal {
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+}
+
+#projectModal .modal-title-container > .modal-project-description-view,
+body[data-theme^="console"] #projectModal .modal-title-container > .modal-project-description-view,
+body[data-theme^="glass"] #projectModal .modal-title-container > .modal-project-description-view,
+body[data-theme^="blueprint"] #projectModal .modal-title-container > .modal-project-description-view {
+    margin: 0.45rem 0 0.55rem !important;
+    width: 100% !important;
+}
+
+#projectModal .modal-progress,
+body[data-theme^="console"] #projectModal .modal-progress,
+body[data-theme^="glass"] #projectModal .modal-progress,
+body[data-theme^="blueprint"] #projectModal .modal-progress {
+    margin-top: 0.9rem !important;
+}
+
+#projectModal .modal-paste-section + .task-select-all-control--below-add,
+body[data-theme^="console"] #projectModal .modal-paste-section + .task-select-all-control--below-add,
+body[data-theme^="glass"] #projectModal .modal-paste-section + .task-select-all-control--below-add,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section + .task-select-all-control--below-add {
+    order: 1 !important;
+    margin: 0.6rem 0 0.95rem !important;
+    padding-top: 0 !important;
+}
+
+#projectModal .task-bulk-actions-shell,
+body[data-theme^="console"] #projectModal .task-bulk-actions-shell,
+body[data-theme^="glass"] #projectModal .task-bulk-actions-shell,
+body[data-theme^="blueprint"] #projectModal .task-bulk-actions-shell {
+    order: 2 !important;
+}
+
+#projectModal .completed-task-display-controls-shell,
+body[data-theme^="console"] #projectModal .completed-task-display-controls-shell,
+body[data-theme^="glass"] #projectModal .completed-task-display-controls-shell,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-controls-shell {
+    order: 3 !important;
+}
+
+#projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="glass"] #projectModal .task-list,
+body[data-theme^="blueprint"] #projectModal .task-list {
+    order: 4 !important;
+}
+
+body[data-theme^="console"] .project-card .project-due-date-control:hover,
+body[data-theme^="console"] .project-card .project-due-date-control:focus-within,
+body[data-theme^="console"] #projectModal .project-due-date-control:hover,
+body[data-theme^="console"] #projectModal .project-due-date-control:focus-within {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="console"] .project-card .project-due-date-control:hover .project-due-date-icon,
+body[data-theme^="console"] .project-card .project-due-date-control:focus-within .project-due-date-icon,
+body[data-theme^="console"] #projectModal .project-due-date-control:hover .project-due-date-icon,
+body[data-theme^="console"] #projectModal .project-due-date-control:focus-within .project-due-date-icon {
+    color: var(--accent, currentColor) !important;
+    stroke: currentColor !important;
+}
+
+.project-grid-layout-host,
+body[data-theme^="console"] .project-grid-layout-host,
+body[data-theme^="glass"] .project-grid-layout-host,
+body[data-theme^="blueprint"] .project-grid-layout-host {
+    position: relative !important;
+}
+
+.project-layout-controls,
+body[data-theme^="console"] .project-layout-controls,
+body[data-theme^="glass"] .project-layout-controls,
+body[data-theme^="blueprint"] .project-layout-controls {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    z-index: 45 !important;
+    display: inline-flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+    pointer-events: none !important;
+}
+
+.project-layout-toggle,
+body[data-theme^="console"] .project-layout-toggle,
+body[data-theme^="glass"] .project-layout-toggle,
+body[data-theme^="blueprint"] .project-layout-toggle {
+    pointer-events: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.25)) 80%, transparent) !important;
+    border-radius: 0.78rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.9)) !important;
+    background: var(--surface, rgba(12, 18, 28, 0.76)) !important;
+    background-color: var(--surface, rgba(12, 18, 28, 0.76)) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow-level-1, 0 10px 24px rgba(0, 0, 0, 0.18)) !important;
+    cursor: pointer !important;
+}
+
+.project-layout-toggle svg,
+body[data-theme^="console"] .project-layout-toggle svg,
+body[data-theme^="glass"] .project-layout-toggle svg,
+body[data-theme^="blueprint"] .project-layout-toggle svg {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+}
+
+.project-layout-toggle:hover,
+.project-layout-toggle:focus-visible,
+.project-layout-controls.is-open .project-layout-toggle,
+body[data-theme^="console"] .project-layout-toggle:hover,
+body[data-theme^="console"] .project-layout-toggle:focus-visible,
+body[data-theme^="console"] .project-layout-controls.is-open .project-layout-toggle,
+body[data-theme^="glass"] .project-layout-toggle:hover,
+body[data-theme^="glass"] .project-layout-toggle:focus-visible,
+body[data-theme^="glass"] .project-layout-controls.is-open .project-layout-toggle,
+body[data-theme^="blueprint"] .project-layout-toggle:hover,
+body[data-theme^="blueprint"] .project-layout-toggle:focus-visible,
+body[data-theme^="blueprint"] .project-layout-controls.is-open .project-layout-toggle {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-toggle {
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-toggle:hover,
+body[data-theme^="blueprint"] .project-layout-toggle:focus-visible,
+body[data-theme^="blueprint"] .project-layout-controls.is-open .project-layout-toggle {
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+}
+
+.project-layout-menu,
+body[data-theme^="console"] .project-layout-menu,
+body[data-theme^="glass"] .project-layout-menu,
+body[data-theme^="blueprint"] .project-layout-menu {
+    pointer-events: auto !important;
+    position: absolute !important;
+    top: calc(100% + 0.45rem) !important;
+    right: 0 !important;
+    width: min(18rem, 78vw) !important;
+    padding: 0.8rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.25)) 82%, transparent) !important;
+    border-radius: 1rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--panel, #10151f) !important;
+    background-color: var(--panel, #10151f) !important;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(-0.25rem) !important;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease !important;
+}
+
+.project-layout-controls.is-open .project-layout-menu,
+body[data-theme^="console"] .project-layout-controls.is-open .project-layout-menu,
+body[data-theme^="glass"] .project-layout-controls.is-open .project-layout-menu,
+body[data-theme^="blueprint"] .project-layout-controls.is-open .project-layout-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+body[data-theme^="blueprint"] .project-layout-menu {
+    box-shadow: var(--neumo-soft-shadow, 0 18px 42px rgba(0, 0, 0, 0.34)) !important;
+}
+
+.project-layout-menu-title,
+body[data-theme^="console"] .project-layout-menu-title,
+body[data-theme^="glass"] .project-layout-menu-title,
+body[data-theme^="blueprint"] .project-layout-menu-title {
+    margin: 0.1rem 0 0.45rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.9)) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-layout-options,
+body[data-theme^="console"] .project-layout-options,
+body[data-theme^="glass"] .project-layout-options,
+body[data-theme^="blueprint"] .project-layout-options {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.45rem !important;
+    margin: 0 0 0.75rem !important;
+}
+
+.project-layout-options:last-child,
+body[data-theme^="console"] .project-layout-options:last-child,
+body[data-theme^="glass"] .project-layout-options:last-child,
+body[data-theme^="blueprint"] .project-layout-options:last-child {
+    margin-bottom: 0 !important;
+}
+
+.project-layout-option,
+body[data-theme^="console"] .project-layout-option,
+body[data-theme^="glass"] .project-layout-option,
+body[data-theme^="blueprint"] .project-layout-option {
+    min-height: 2rem !important;
+    padding: 0.38rem 0.65rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.25)) 82%, transparent) !important;
+    border-radius: 0.72rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-layout-option:hover,
+.project-layout-option:focus-visible,
+.project-layout-option.is-active,
+body[data-theme^="console"] .project-layout-option:hover,
+body[data-theme^="console"] .project-layout-option:focus-visible,
+body[data-theme^="console"] .project-layout-option.is-active,
+body[data-theme^="glass"] .project-layout-option:hover,
+body[data-theme^="glass"] .project-layout-option:focus-visible,
+body[data-theme^="glass"] .project-layout-option.is-active,
+body[data-theme^="blueprint"] .project-layout-option:hover,
+body[data-theme^="blueprint"] .project-layout-option:focus-visible,
+body[data-theme^="blueprint"] .project-layout-option.is-active {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        gap: 0.3rem !important;
+        padding: 0.28rem !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item {
+        padding-inline: 0.45rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+        flex-basis: 2.1rem !important;
+        width: 2.1rem !important;
+        min-width: 2.1rem !important;
+        height: 2.1rem !important;
+        min-height: 2.1rem !important;
+    }
+
+    .project-layout-controls,
+    body[data-theme^="console"] .project-layout-controls,
+    body[data-theme^="glass"] .project-layout-controls,
+    body[data-theme^="blueprint"] .project-layout-controls {
+        top: 0.1rem !important;
+        right: 0.1rem !important;
+    }
+}
