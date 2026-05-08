@@ -13494,3 +13494,106 @@ body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:n
         touch-action: pan-y !important;
     }
 }
+
+/* Targeted patch: keep modal task action SVGs optically centered on their buttons. */
+#projectModal .task-meta-controls .task-copy-button,
+#projectModal .task-meta-controls .task-note-button,
+#projectModal .task-meta-controls .delete-button,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-copy-button,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-note-button,
+body[data-theme^="console"] #projectModal .task-meta-controls .delete-button,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-copy-button,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-note-button,
+body[data-theme^="glass"] #projectModal .task-meta-controls .delete-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 0 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+}
+
+#projectModal .task-meta-controls .task-copy-button .icon,
+#projectModal .task-meta-controls .task-copy-button svg,
+#projectModal .task-meta-controls .task-note-button .icon,
+#projectModal .task-meta-controls .task-note-button svg,
+#projectModal .task-meta-controls .delete-button .icon,
+#projectModal .task-meta-controls .delete-button svg,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-copy-button .icon,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-copy-button svg,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-note-button .icon,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-note-button svg,
+body[data-theme^="console"] #projectModal .task-meta-controls .delete-button .icon,
+body[data-theme^="console"] #projectModal .task-meta-controls .delete-button svg,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-copy-button .icon,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-copy-button svg,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-note-button .icon,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-note-button svg,
+body[data-theme^="glass"] #projectModal .task-meta-controls .delete-button .icon,
+body[data-theme^="glass"] #projectModal .task-meta-controls .delete-button svg,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button svg,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button svg,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button svg {
+    display: block !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    max-width: 16px !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    max-height: 16px !important;
+    flex: 0 0 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    transform-box: fill-box !important;
+    transform-origin: center center !important;
+}
+
+#projectModal .task-meta-controls .task-copy-button .icon,
+#projectModal .task-meta-controls .task-copy-button svg,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-copy-button .icon,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-copy-button svg,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-copy-button .icon,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-copy-button svg,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button svg {
+    transform: translate(-0.35px, -0.35px) !important;
+}
+
+#projectModal .task-meta-controls .task-note-button .icon,
+#projectModal .task-meta-controls .task-note-button svg,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-note-button .icon,
+body[data-theme^="console"] #projectModal .task-meta-controls .task-note-button svg,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-note-button .icon,
+body[data-theme^="glass"] #projectModal .task-meta-controls .task-note-button svg,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button svg {
+    transform: translateY(-0.45px) !important;
+}
+
+#projectModal .task-meta-controls .delete-button .icon,
+#projectModal .task-meta-controls .delete-button svg,
+body[data-theme^="console"] #projectModal .task-meta-controls .delete-button .icon,
+body[data-theme^="console"] #projectModal .task-meta-controls .delete-button svg,
+body[data-theme^="glass"] #projectModal .task-meta-controls .delete-button .icon,
+body[data-theme^="glass"] #projectModal .task-meta-controls .delete-button svg,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button svg {
+    transform: translateY(-0.3px) !important;
+}
