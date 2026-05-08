@@ -13063,3 +13063,101 @@ body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-delete {
         min-width: 5.9rem !important;
     }
 }
+
+/* Targeted patch: project due-date icon centering, state color, and modal title placement */
+.project-due-date-icon,
+body[data-theme^="console"] .project-due-date-icon,
+body[data-theme^="glass"] .project-due-date-icon,
+body[data-theme^="blueprint"] .project-due-date-icon {
+    position: relative !important;
+    z-index: 1 !important;
+    flex: 0 0 auto !important;
+    width: 1.06rem !important;
+    height: 1.06rem !important;
+    color: currentColor !important;
+    stroke-width: 2 !important;
+    pointer-events: none !important;
+}
+
+.project-due-date-value,
+body[data-theme^="console"] .project-due-date-value,
+body[data-theme^="glass"] .project-due-date-value,
+body[data-theme^="blueprint"] .project-due-date-value {
+    position: relative !important;
+    z-index: 1 !important;
+    color: currentColor !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    pointer-events: none !important;
+    white-space: nowrap !important;
+}
+
+.project-due-date-input,
+body[data-theme^="console"] .project-due-date-input,
+body[data-theme^="glass"] .project-due-date-input,
+body[data-theme^="blueprint"] .project-due-date-input {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    opacity: 0 !important;
+    color: transparent !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.project-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="console"] .project-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="glass"] .project-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="blueprint"] .project-due-date-input::-webkit-calendar-picker-indicator {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+}
+
+.project-due-date-control,
+body[data-theme^="console"] .project-due-date-control,
+body[data-theme^="glass"] .project-due-date-control,
+body[data-theme^="blueprint"] .project-due-date-control {
+    gap: 0.36rem !important;
+}
+
+.project-due-date-control:not(.has-due-date),
+body[data-theme^="console"] .project-due-date-control:not(.has-due-date),
+body[data-theme^="glass"] .project-due-date-control:not(.has-due-date),
+body[data-theme^="blueprint"] .project-due-date-control:not(.has-due-date) {
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+}
+
+.project-due-date-control.has-due-date,
+body[data-theme^="console"] .project-due-date-control.has-due-date,
+body[data-theme^="glass"] .project-due-date-control.has-due-date,
+body[data-theme^="blueprint"] .project-due-date-control.has-due-date {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-due-date-control--card:not(.has-due-date),
+body[data-theme^="console"] .project-due-date-control--card:not(.has-due-date),
+body[data-theme^="glass"] .project-due-date-control--card:not(.has-due-date),
+body[data-theme^="blueprint"] .project-due-date-control--card:not(.has-due-date) {
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal {
+    order: 3 !important;
+}

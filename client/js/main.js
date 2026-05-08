@@ -5359,6 +5359,11 @@ function renderProjectDueDateControlMarkup(project, surface = 'card') {
                onclick="event.stopPropagation();"
                onpointerdown="event.stopPropagation();">
             ${overdue ? renderWarningTriangleIcon('project-due-overdue-icon') : ''}
+            <svg class="project-due-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
+            </svg>
+            ${dueDate ? `<span class="project-due-date-value" aria-hidden="true">${escapeHtml(dueDate)}</span>` : ''}
             <input class="project-due-date-input"
                    id="project-due-${safeSurface}-${projectId}"
                    type="date"
@@ -6060,7 +6065,6 @@ function openProjectModal(projectId, options = {}) {
         <div class="modal-header-centered">
             <div class="modal-title-container">
                 <div class="modal-title-row">
-                    ${renderProjectDueDateControlMarkup(project, 'modal')}
                     <button class="modal-title modal-title-edit-button" id="modal-title-${project.id}" onclick="editModalTitle('${project.id}')" type="button" title="Edit project name and description">${escapeHtml(project.title)}</button>
                     <input type="text" 
                            class="modal-title-input" 
@@ -6071,6 +6075,7 @@ function openProjectModal(projectId, options = {}) {
                            oninput="handleProjectTitleInput(this)"
                            onanimationend="this.classList.remove('project-title-shake')"
                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditModalTitle('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }" >
+                    ${renderProjectDueDateControlMarkup(project, 'modal')}
                 </div>
                 <div class="modal-stats">
                     <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
