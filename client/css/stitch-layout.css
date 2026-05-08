@@ -13395,3 +13395,102 @@ body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-no
         overflow: visible !important;
     }
 }
+
+/* 2026-05 targeted fixes: leaderboard scoring support, Neumorphism task copy icon state, Add Tasks text, and mobile scroll stability. */
+body[data-theme^="blueprint"] #projectModal .task-copy-button,
+body[data-theme^="blueprint"] #projectModal .task-copy-button.is-copied:not(:hover):not(:focus-visible) {
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    -webkit-text-fill-color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    border-color: var(--line, rgba(255, 255, 255, 0.08)) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow-level-1, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-copy-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-copy-button svg,
+body[data-theme^="blueprint"] #projectModal .task-copy-button.is-copied:not(:hover):not(:focus-visible) .icon,
+body[data-theme^="blueprint"] #projectModal .task-copy-button.is-copied:not(:hover):not(:focus-visible) svg {
+    color: inherit !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-copy-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-copy-button:focus-visible {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    -webkit-text-fill-color: var(--accent, var(--primary, currentColor)) !important;
+    border-color: var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: var(--shadow-inset, var(--inset-shadow, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note),
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):active,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note) .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note) svg,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover svg,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible .icon,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible svg {
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    -webkit-text-fill-color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    stroke: currentColor !important;
+}
+
+#projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-text-stroke: 0 transparent !important;
+    text-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+    html:has(#projectModal.active),
+    body:has(#projectModal.active) {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal.active .modal-content,
+    #projectModal.active #modalContent,
+    body[data-theme^="console"] #projectModal.active .modal-content,
+    body[data-theme^="glass"] #projectModal.active .modal-content,
+    body[data-theme^="blueprint"] #projectModal.active .modal-content {
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal.active .modal-scroll-inner,
+    #projectModal.active .modal-body,
+    body[data-theme^="console"] #projectModal.active .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal.active .modal-body,
+    body[data-theme^="glass"] #projectModal.active .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal.active .modal-body,
+    body[data-theme^="blueprint"] #projectModal.active .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal.active .modal-body {
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        touch-action: pan-y !important;
+    }
+
+    #projectModal.active .modal-paste-section,
+    #projectModal.active .task-list,
+    body[data-theme^="console"] #projectModal.active .modal-paste-section,
+    body[data-theme^="console"] #projectModal.active .task-list,
+    body[data-theme^="glass"] #projectModal.active .modal-paste-section,
+    body[data-theme^="glass"] #projectModal.active .task-list,
+    body[data-theme^="blueprint"] #projectModal.active .modal-paste-section,
+    body[data-theme^="blueprint"] #projectModal.active .task-list {
+        touch-action: pan-y !important;
+    }
+}

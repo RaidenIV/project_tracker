@@ -696,6 +696,99 @@ function getLeaderboardUsername(entry) {
     return rawUsername.includes('@') ? rawUsername.split('@')[0] : rawUsername;
 }
 
+function toLeaderboardNumber(value, fallback = 0) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
+}
+
+function getLeaderboardScoreValue(entry) {
+    const score = toLeaderboardNumber(entry?.leaderboardScore ?? entry?.score, NaN);
+    if (Number.isFinite(score)) return Math.max(0, Math.round(score));
+    return Math.max(0, Math.round(toLeaderboardNumber(entry?.totalCompletionPercentage, 0)));
+}
+
+function getLeaderboardCompletionValue(entry) {
+    return Math.max(0, Math.round(toLeaderboardNumber(entry?.totalCompletionPercentage, 0)));
+}
+
+function calculateLocalLeaderboardScore(row) {
+    const taskCompletionRate = row.totalTasks > 0 ? row.completedTasks / row.totalTasks : 0;
+    const projectCompletionRate = row.totalProjects > 0 ? row.completedProjects / row.totalProjects : 0;
+    const sharedCompletionRate = row.sharedTasks > 0 ? row.sharedCompletedTasks / row.sharedTasks : 0;
+    const activeProjectProgressRate = row.activeProjects > 0 ? row.activeProgressRaw / row.activeProjects : 0;
+    const remainingWorkPenalty = row.totalTasks > 0 ? (row.remainingTasks / row.totalTasks) * 5 : 0;
+    return Math.max(0, Math.round(
+        (taskCompletionRate * 40) +
+        (projectCompletionRate * 25) +
+        (sharedCompletionRate * 15) +
+        (activeProjectProgressRate * 15) -
+        remainingWorkPenalty
+    ));
+}
+
+function buildLocalCurrentLeaderboardEntry(currentUserId) {
+    const userId = String(currentUserId || '');
+    if (!userId || !state?.getProjects) return null;
+
+    const row = {
+        userId,
+        username: accountState.user?.username || 'User',
+        profilePic: accountState.user?.profilePic || '',
+        totalProjects: 0,
+        activeProjects: 0,
+        completedProjects: 0,
+        completedTasks: 0,
+        remainingTasks: 0,
+        totalTasks: 0,
+        sharedProjects: 0,
+        sharedTasks: 0,
+        sharedCompletedTasks: 0,
+        sharedRemainingTasks: 0,
+        activeProgressRaw: 0,
+        totalCompletionPercentage: 0,
+        projectCompletionPercentage: 0,
+        activeProjectCompletionPercentage: 0,
+        sharedCompletionPercentage: 0,
+        leaderboardScore: 0
+    };
+
+    state.getProjects().forEach(project => {
+        if (isProjectArchived(project)) return;
+        const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+        const completedTaskCount = tasks.filter(task => task.completed).length;
+        const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
+        const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
+        const completedProject = isProjectCompleted(project);
+        const isSharedProject = project.userRole !== 'owner' || (Array.isArray(project.collaborators) && project.collaborators.length > 0);
+
+        row.totalProjects += 1;
+        row.totalTasks += tasks.length;
+        row.completedTasks += completedTaskCount;
+        row.remainingTasks += remainingTaskCount;
+
+        if (completedProject) {
+            row.completedProjects += 1;
+        } else {
+            row.activeProjects += 1;
+            row.activeProgressRaw += taskCompletionRate;
+        }
+
+        if (isSharedProject) {
+            row.sharedProjects += 1;
+            row.sharedTasks += tasks.length;
+            row.sharedCompletedTasks += completedTaskCount;
+            row.sharedRemainingTasks += remainingTaskCount;
+        }
+    });
+
+    row.totalCompletionPercentage = row.totalTasks > 0 ? Math.round((row.completedTasks / row.totalTasks) * 100) : 0;
+    row.projectCompletionPercentage = row.totalProjects > 0 ? Math.round((row.completedProjects / row.totalProjects) * 100) : 0;
+    row.activeProjectCompletionPercentage = row.activeProjects > 0 ? Math.round((row.activeProgressRaw / row.activeProjects) * 100) : 0;
+    row.sharedCompletionPercentage = row.sharedTasks > 0 ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100) : 0;
+    row.leaderboardScore = calculateLocalLeaderboardScore(row);
+    return row;
+}
+
 function normalizeThemeName(themeName) {
     const normalized = String(themeName || '').trim();
     if (THEME_OPTIONS[normalized]) return normalized;
@@ -1329,35 +1422,29 @@ function renderLeaderboardPanel() {
 
     const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
     const rankedEntries = Array.isArray(accountState.leaderboard) ? [...accountState.leaderboard] : [];
+    const liveCurrentEntry = currentUserId ? buildLocalCurrentLeaderboardEntry(currentUserId) : null;
     let currentEntry = accountState.currentLeaderboardEntry || rankedEntries.find(entry => String(entry.userId) === currentUserId) || null;
 
-    if (!currentEntry && currentUserId) {
-        const ownProjects = state.getProjects().filter(project => String(project.ownerId || project.owner || '') === currentUserId || project.userRole === 'owner');
-        const liveCompletedTasks = ownProjects.reduce((sum, project) => sum + (Array.isArray(project.tasks) ? project.tasks.filter(task => task.completed).length : 0), 0);
-        const liveCompletedProjects = ownProjects.filter(project => isProjectCompleted(project) && !isProjectArchived(project)).length;
+    if (!currentEntry && liveCurrentEntry) {
         currentEntry = {
-            userId: currentUserId,
-            username: accountState.user?.username || 'User',
-            completedProjects: liveCompletedProjects,
-            completedTasks: liveCompletedTasks,
-            totalCompletionPercentage: ownProjects.length ? calculateTotalCompletion() : 0,
+            ...liveCurrentEntry,
             rank: accountState.currentLeaderboardRank || null
         };
     }
 
     if (currentEntry && currentUserId) {
+        const serverScore = Number(currentEntry.leaderboardScore ?? currentEntry.score);
+        const serverRank = Number(currentEntry.rank || accountState.currentLeaderboardRank || 0);
         currentEntry = {
+            ...(liveCurrentEntry || {}),
             ...currentEntry,
             username: currentEntry.username || accountState.user?.username || 'User',
             profilePic: currentEntry.profilePic || accountState.user?.profilePic || '',
-            totalCompletionPercentage: calculateTotalCompletion()
+            totalCompletionPercentage: liveCurrentEntry?.totalCompletionPercentage ?? getLeaderboardCompletionValue(currentEntry),
+            leaderboardScore: Number.isFinite(serverScore) ? Math.round(serverScore) : (liveCurrentEntry?.leaderboardScore ?? getLeaderboardScoreValue(currentEntry)),
+            rank: serverRank || currentEntry.rank || accountState.currentLeaderboardRank || null
         };
     }
-
-    const completionForEntry = (entry) => {
-        const value = Math.round(Number(entry?.totalCompletionPercentage || 0));
-        return Number.isFinite(value) ? value : 0;
-    };
 
     const entriesByUserId = new Map();
     rankedEntries.forEach(entry => {
@@ -1367,18 +1454,20 @@ function renderLeaderboardPanel() {
     });
     if (currentEntry && currentUserId) entriesByUserId.set(currentUserId, currentEntry);
 
-    const rankedByCompletion = Array.from(entriesByUserId.values()).sort((a, b) => {
-        return (completionForEntry(b) - completionForEntry(a))
-            || (Number(b?.completedProjects || 0) - Number(a?.completedProjects || 0))
-            || (Number(b?.completedTasks || 0) - Number(a?.completedTasks || 0))
+    const rankedByScore = Array.from(entriesByUserId.values()).sort((a, b) => {
+        return (getLeaderboardScoreValue(b) - getLeaderboardScoreValue(a))
+            || (toLeaderboardNumber(b?.completedTasks) - toLeaderboardNumber(a?.completedTasks))
+            || (toLeaderboardNumber(b?.completedProjects) - toLeaderboardNumber(a?.completedProjects))
+            || (toLeaderboardNumber(b?.sharedCompletedTasks) - toLeaderboardNumber(a?.sharedCompletedTasks))
+            || (toLeaderboardNumber(a?.remainingTasks) - toLeaderboardNumber(b?.remainingTasks))
             || getLeaderboardUsername(a).localeCompare(getLeaderboardUsername(b));
     }).map((entry, index) => ({
         ...entry,
         rank: index + 1
     }));
 
-    const visibleEntries = rankedByCompletion.slice(0, 10);
-    const visibleCurrentEntry = currentUserId ? rankedByCompletion.find(entry => String(entry.userId) === currentUserId) : null;
+    const visibleEntries = rankedByScore.slice(0, 10);
+    const visibleCurrentEntry = currentUserId ? rankedByScore.find(entry => String(entry.userId) === currentUserId) : null;
     if (visibleCurrentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
         visibleEntries.push(visibleCurrentEntry);
     }
@@ -1393,11 +1482,12 @@ function renderLeaderboardPanel() {
     list.innerHTML = visibleEntries.map(entry => {
         const isCurrent = currentUserId && String(entry.userId) === currentUserId;
         const username = getLeaderboardUsername(entry);
-        const completionPercentage = completionForEntry(entry);
+        const completionPercentage = getLeaderboardCompletionValue(entry);
+        const leaderboardScore = getLeaderboardScoreValue(entry);
         const completedProjects = Number(entry.completedProjects || 0);
         const completedTasks = Number(entry.completedTasks || 0);
         const rank = String(entry.rank || '—').padStart(2, '0');
-        const meta = `${completionPercentage}% • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
+        const meta = `Score ${leaderboardScore} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
         const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
         const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
         const avatarMarkup = profilePic
@@ -1434,14 +1524,19 @@ function buildLeaderboardProfileModalMarkup(entry) {
     const username = getLeaderboardUsername(entry);
     const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
     const rank = Number(entry.rank || entry.leaderboardRank || 0);
-    const completion = Math.round(Number(entry.totalCompletionPercentage || 0));
+    const completion = getLeaderboardCompletionValue(entry);
+    const leaderboardScore = getLeaderboardScoreValue(entry);
     const stats = [
         ['Rank', rank > 0 ? `#${rank}` : '—'],
-        ['Total Completion', `${Number.isFinite(completion) ? completion : 0}%`],
+        ['Leaderboard Score', leaderboardScore],
+        ['Total Completion', `${completion}%`],
         ['Completed Tasks', Number(entry.completedTasks || 0)],
+        ['Remaining Tasks', Number(entry.remainingTasks || 0)],
         ['Completed Projects', Number(entry.completedProjects || 0)],
         ['Active Projects', Number(entry.activeProjects || 0)],
-        ['Shared Projects', Number(entry.sharedProjects || 0)]
+        ['Shared Projects', Number(entry.sharedProjects || 0)],
+        ['Shared Tasks', Number(entry.sharedTasks || 0)],
+        ['Shared Completed', Number(entry.sharedCompletedTasks || 0)]
     ];
     const avatarMarkup = profilePic
         ? `<img class="leaderboard-profile-avatar-img" src="${escapeHtml(profilePic)}" alt="">`
@@ -1462,7 +1557,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
                     <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
                     <div class="leaderboard-profile-summary">
                         <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
-                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • ${Number.isFinite(completion) ? completion : 0}% complete</div>
+                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • Score ${leaderboardScore} • ${completion}% complete</div>
                     </div>
                 </div>
                 <div class="leaderboard-profile-stats-grid">
@@ -5337,10 +5432,8 @@ function getProjectModalDescription(project) {
 }
 
 function formatLeaderboardScore(entry, isCurrent = false) {
-    const percentage = isCurrent
-        ? calculateTotalCompletion()
-        : Math.round(Number(entry?.totalCompletionPercentage || 0));
-    return `${Number.isFinite(percentage) ? percentage : 0}%`;
+    const score = getLeaderboardScoreValue(entry);
+    return `${Number.isFinite(score) ? score : 0} pts`;
 }
 
 function renderProjectDueDateControlMarkup(project, surface = 'card') {

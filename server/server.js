@@ -1139,7 +1139,7 @@ async function getOrCreateStats(userId) {
 async function buildLeaderboardData(currentUserId) {
     const [accounts, projects] = await Promise.all([
         Account.find({}, 'username profilePic').lean(),
-        Project.find({ archived: false }, 'owner completed tasks').lean()
+        Project.find({ archived: false }, 'owner completed tasks collaborators').lean()
     ]);
 
     const rows = new Map();
@@ -1150,41 +1150,140 @@ async function buildLeaderboardData(currentUserId) {
             userId,
             username: account.username || 'User',
             profilePic: account.profilePic || '',
+            totalProjects: 0,
+            activeProjects: 0,
             completedProjects: 0,
             completedTasks: 0,
+            remainingTasks: 0,
             totalTasks: 0,
+            sharedProjects: 0,
+            sharedTasks: 0,
+            sharedCompletedTasks: 0,
+            sharedRemainingTasks: 0,
+            activeProgressRaw: 0,
+            sharedContributionRaw: 0,
             totalCompletionPercentage: 0,
+            projectCompletionPercentage: 0,
+            activeProjectCompletionPercentage: 0,
+            sharedCompletionPercentage: 0,
+            leaderboardScore: 0,
             rank: null
         });
     });
 
     projects.forEach(project => {
         const ownerId = String(project.owner || '');
-        const row = rows.get(ownerId);
-        if (!row) return;
+        const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+        const collaboratorIds = collaborators
+            .map(collaborator => String(collaborator?.userId || ''))
+            .filter(Boolean);
+        const participantIds = [...new Set([ownerId, ...collaboratorIds].filter(Boolean))];
+        const isSharedProject = collaborators.length > 0;
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
-        row.totalTasks += tasks.length;
-        row.completedTasks += tasks.filter(task => task && task.completed).length;
-        if (project.completed) row.completedProjects += 1;
+        const completedTaskCount = tasks.filter(task => task && task.completed).length;
+        const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
+        const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
+        const completedProject = !!project.completed;
+
+        participantIds.forEach(participantId => {
+            const row = rows.get(participantId);
+            if (!row) return;
+
+            row.totalProjects += 1;
+            row.totalTasks += tasks.length;
+            row.completedTasks += completedTaskCount;
+            row.remainingTasks += remainingTaskCount;
+
+            if (completedProject) {
+                row.completedProjects += 1;
+            } else {
+                row.activeProjects += 1;
+                row.activeProgressRaw += taskCompletionRate + 0.1;
+            }
+
+            if (isSharedProject) {
+                row.sharedProjects += 1;
+                row.sharedTasks += tasks.length;
+                row.sharedCompletedTasks += completedTaskCount;
+                row.sharedRemainingTasks += remainingTaskCount;
+                row.sharedContributionRaw += completedTaskCount + (remainingTaskCount * 0.25) + 2;
+            }
+        });
     });
 
-    const leaderboard = Array.from(rows.values()).map(row => ({
+    const rowsWithPercentages = Array.from(rows.values()).map(row => ({
         ...row,
         totalCompletionPercentage: row.totalTasks > 0
             ? Math.round((row.completedTasks / row.totalTasks) * 100)
+            : 0,
+        projectCompletionPercentage: row.totalProjects > 0
+            ? Math.round((row.completedProjects / row.totalProjects) * 100)
+            : 0,
+        activeProjectCompletionPercentage: row.activeProjects > 0
+            ? Math.round(((row.activeProgressRaw / row.activeProjects) - 0.1) * 100)
+            : 0,
+        sharedCompletionPercentage: row.sharedTasks > 0
+            ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100)
             : 0
-    })).sort((a, b) => {
-        return (b.totalCompletionPercentage - a.totalCompletionPercentage)
-            || (b.completedProjects - a.completedProjects)
+    }));
+
+    const maxCompletedTasks = Math.max(1, ...rowsWithPercentages.map(row => row.completedTasks));
+    const maxCompletedProjects = Math.max(1, ...rowsWithPercentages.map(row => row.completedProjects));
+    const maxSharedContributionRaw = Math.max(1, ...rowsWithPercentages.map(row => row.sharedContributionRaw));
+    const maxActiveProgressRaw = Math.max(1, ...rowsWithPercentages.map(row => row.activeProgressRaw));
+
+    const leaderboard = rowsWithPercentages.map(row => {
+        const completedTaskScore = (row.completedTasks / maxCompletedTasks) * 40;
+        const completedProjectScore = (row.completedProjects / maxCompletedProjects) * 25;
+        const sharedContributionScore = (row.sharedContributionRaw / maxSharedContributionRaw) * 15;
+        const activeProjectMomentumScore = (row.activeProgressRaw / maxActiveProgressRaw) * 15;
+        const remainingWorkPenalty = row.totalTasks > 0 ? (row.remainingTasks / row.totalTasks) * 5 : 0;
+        const leaderboardScore = Math.max(0, Math.round(
+            completedTaskScore +
+            completedProjectScore +
+            sharedContributionScore +
+            activeProjectMomentumScore -
+            remainingWorkPenalty
+        ));
+
+        return {
+            ...row,
+            leaderboardScore,
+            scoreBreakdown: {
+                completedTasks: Math.round(completedTaskScore),
+                completedProjects: Math.round(completedProjectScore),
+                sharedContribution: Math.round(sharedContributionScore),
+                activeProjectMomentum: Math.round(activeProjectMomentumScore),
+                remainingWorkPenalty: Math.round(remainingWorkPenalty)
+            }
+        };
+    }).sort((a, b) => {
+        return (b.leaderboardScore - a.leaderboardScore)
             || (b.completedTasks - a.completedTasks)
+            || (b.completedProjects - a.completedProjects)
+            || (b.sharedCompletedTasks - a.sharedCompletedTasks)
+            || (a.remainingTasks - b.remainingTasks)
             || String(a.username || '').localeCompare(String(b.username || ''));
     }).map((row, index) => ({
         userId: row.userId,
         username: row.username,
         profilePic: row.profilePic || '',
+        totalProjects: row.totalProjects,
+        activeProjects: row.activeProjects,
         completedProjects: row.completedProjects,
         completedTasks: row.completedTasks,
+        remainingTasks: row.remainingTasks,
+        totalTasks: row.totalTasks,
+        sharedProjects: row.sharedProjects,
+        sharedTasks: row.sharedTasks,
+        sharedCompletedTasks: row.sharedCompletedTasks,
+        sharedRemainingTasks: row.sharedRemainingTasks,
         totalCompletionPercentage: row.totalCompletionPercentage,
+        projectCompletionPercentage: row.projectCompletionPercentage,
+        activeProjectCompletionPercentage: row.activeProjectCompletionPercentage,
+        sharedCompletionPercentage: row.sharedCompletionPercentage,
+        leaderboardScore: row.leaderboardScore,
+        scoreBreakdown: row.scoreBreakdown,
         rank: index + 1
     }));
 
@@ -1196,6 +1295,16 @@ async function buildLeaderboardData(currentUserId) {
         currentLeaderboardEntry: currentUserEntry
     };
 }
+
+app.get('/api/leaderboard', authenticateToken, async (req, res) => {
+    try {
+        const leaderboardPayload = await buildLeaderboardData(req.user.id);
+        res.json(leaderboardPayload);
+    } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+        res.status(500).json({ error: 'Failed to fetch leaderboard', details: err?.message });
+    }
+});
 
 app.get('/api/stats', authenticateToken, async (req, res) => {
     try {
