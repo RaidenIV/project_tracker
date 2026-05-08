@@ -13962,3 +13962,116 @@ body[data-theme^="blueprint"] #projectModal .task-drag-handle:active,
 body[data-theme^="blueprint"].is-task-dragging #projectModal .task-drag-handle {
     cursor: grabbing !important;
 }
+
+/* Targeted patch: Neumorphism project-note visibility and Console note/date button parity. */
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note),
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):hover,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):focus-visible,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):active {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    border-radius: 0.78rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button::before,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note)::before,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):hover::before,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):focus-visible::before,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):active::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 1rem !important;
+    min-width: 1rem !important;
+    height: 1rem !important;
+    min-height: 1rem !important;
+    margin: 0 !important;
+    background: currentColor !important;
+    background-color: currentColor !important;
+    transform: translate(-50%, -50%) !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M5 4a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h1v3.12L10.68 19H19a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H5Zm3 5h8v2H8V9Zm0 4h6v2H8v-2Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M5 4a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h1v3.12L10.68 19H19a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H5Zm3 5h8v2H8V9Zm0 4h6v2H8v-2Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button.has-note,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button.has-note:hover,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button.has-note:focus-visible,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button.has-note:active {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+}
+
+body[data-theme^="console"] .project-card .project-card-notes-button.task-note-button {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.1rem !important;
+    min-width: 2.1rem !important;
+    max-width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-height: 2.1rem !important;
+    max-height: 2.1rem !important;
+    flex: 0 0 2.1rem !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.24)) 72%, transparent) !important;
+    border-radius: 999px !important;
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.08)) !important;
+    background-color: var(--surface, rgba(127, 127, 127, 0.08)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+body[data-theme^="console"] .project-card .project-card-notes-button.task-note-button:hover,
+body[data-theme^="console"] .project-card .project-card-notes-button.task-note-button:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.08)) !important;
+    background-color: var(--surface, rgba(127, 127, 127, 0.08)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
+    outline: none !important;
+}
+
+body[data-theme^="console"] .project-card .project-card-notes-button.task-note-button.has-note {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 82%, var(--accent, currentColor) 18%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 82%, var(--accent, currentColor) 18%) !important;
+}
+
+body[data-theme^="console"] .project-card .project-card-notes-button.task-note-button .icon,
+body[data-theme^="console"] .project-card .project-card-notes-button.task-note-button svg {
+    width: 1.06rem !important;
+    height: 1.06rem !important;
+    margin: 0 !important;
+    color: currentColor !important;
+    stroke: currentColor !important;
+    pointer-events: none !important;
+}
