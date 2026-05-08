@@ -13796,3 +13796,47 @@ body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date 
 body[data-theme^="blueprint"] .project-due-date-control .project-due-date-value {
     display: none !important;
 }
+
+/* Targeted patch: center Neumorphism project card and modal button icons on their button surfaces. */
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-due-date-control,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-button,
+body[data-theme^="blueprint"] .project-card .edit-button,
+body[data-theme^="blueprint"] .project-card .card-delete-button,
+body[data-theme^="blueprint"] .project-card-notes-button,
+body[data-theme^="blueprint"] .project-due-date-control--card,
+body[data-theme^="blueprint"] #projectModal .project-due-date-control--modal,
+body[data-theme^="blueprint"] .project-priority-card-button {
+    position: relative !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button::before,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button::before,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button::before,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-due-date-control:not(.has-due-date)::before,
+body[data-theme^="blueprint"] .project-card .edit-button::before,
+body[data-theme^="blueprint"] .project-card .card-delete-button::before,
+body[data-theme^="blueprint"] .project-card-notes-button::before,
+body[data-theme^="blueprint"] .project-due-date-control::before {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-button .icon,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-button svg,
+body[data-theme^="blueprint"] .project-priority-card-button .icon,
+body[data-theme^="blueprint"] .project-priority-card-button svg {
+    display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+}
