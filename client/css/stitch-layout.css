@@ -13840,3 +13840,125 @@ body[data-theme^="blueprint"] .project-priority-card-button svg {
     margin: 0 !important;
     transform: translate(-50%, -50%) !important;
 }
+
+/* Targeted patch: Neumorphism task action buttons, copy feedback, and drag-handle cursor scope. */
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-due-date-control:not(.has-due-date),
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-button {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 0 !important;
+    border-radius: 0.78rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+    filter: none !important;
+    text-shadow: none !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-note-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-due-date-control:not(.has-due-date):hover,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-due-date-control:not(.has-due-date):focus-within,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-priority-control.is-open .task-priority-button {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button:hover,
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .delete-button:focus-visible {
+    color: var(--danger, #ef4444) !important;
+    border-color: var(--danger, #ef4444) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-meta-controls .task-copy-button.is-copied::before {
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9.2 16.2 4.95 11.95l-1.4 1.4L9.2 19 20.7 7.5l-1.4-1.4L9.2 16.2Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9.2 16.2 4.95 11.95l-1.4 1.4L9.2 19 20.7 7.5l-1.4-1.4L9.2 16.2Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+    gap: 0 !important;
+}
+
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button:not(.is-copied) svg,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:not(.is-copied) svg,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:not(.is-copied) svg,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:not(.is-copied) svg {
+    display: none !important;
+}
+
+#projectModal .task-item:not(.is-editing),
+#projectModal .task-item:not(.is-editing) .task-main-content,
+#projectModal .task-item:not(.is-editing) .task-text,
+body[data-theme^="console"] #projectModal .task-item:not(.is-editing),
+body[data-theme^="console"] #projectModal .task-item:not(.is-editing) .task-main-content,
+body[data-theme^="console"] #projectModal .task-item:not(.is-editing) .task-text,
+body[data-theme^="glass"] #projectModal .task-item:not(.is-editing),
+body[data-theme^="glass"] #projectModal .task-item:not(.is-editing) .task-main-content,
+body[data-theme^="glass"] #projectModal .task-item:not(.is-editing) .task-text,
+body[data-theme^="blueprint"] #projectModal .task-item:not(.is-editing),
+body[data-theme^="blueprint"] #projectModal .task-item:not(.is-editing) .task-main-content,
+body[data-theme^="blueprint"] #projectModal .task-item:not(.is-editing) .task-text {
+    cursor: default !important;
+}
+
+#projectModal .task-drag-handle,
+body[data-theme^="console"] #projectModal .task-drag-handle,
+body[data-theme^="glass"] #projectModal .task-drag-handle,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle {
+    cursor: grab !important;
+}
+
+#projectModal .task-drag-handle:hover,
+#projectModal .task-drag-handle:focus-visible,
+#projectModal .task-drag-handle:active,
+body.is-task-dragging #projectModal .task-drag-handle,
+body[data-theme^="console"] #projectModal .task-drag-handle:hover,
+body[data-theme^="console"] #projectModal .task-drag-handle:focus-visible,
+body[data-theme^="console"] #projectModal .task-drag-handle:active,
+body[data-theme^="console"].is-task-dragging #projectModal .task-drag-handle,
+body[data-theme^="glass"] #projectModal .task-drag-handle:hover,
+body[data-theme^="glass"] #projectModal .task-drag-handle:focus-visible,
+body[data-theme^="glass"] #projectModal .task-drag-handle:active,
+body[data-theme^="glass"].is-task-dragging #projectModal .task-drag-handle,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle:hover,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle:active,
+body[data-theme^="blueprint"].is-task-dragging #projectModal .task-drag-handle {
+    cursor: grabbing !important;
+}
