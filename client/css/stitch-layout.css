@@ -13161,3 +13161,118 @@ body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-contr
 body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal {
     order: 3 !important;
 }
+
+/* 2026-05 follow-up: neumorphism project card notes/preview spacing and modal due-date title alignment */
+#projectModal .modal-header-centered,
+body[data-theme^="console"] #projectModal .modal-header-centered,
+body[data-theme^="glass"] #projectModal .modal-header-centered,
+body[data-theme^="blueprint"] #projectModal .modal-header-centered {
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+}
+
+#projectModal .modal-title-container,
+body[data-theme^="console"] #projectModal .modal-title-container,
+body[data-theme^="glass"] #projectModal .modal-title-container,
+body[data-theme^="blueprint"] #projectModal .modal-title-container {
+    text-align: left !important;
+}
+
+#projectModal .modal-title-row,
+body[data-theme^="console"] #projectModal .modal-title-row,
+body[data-theme^="glass"] #projectModal .modal-title-row,
+body[data-theme^="blueprint"] #projectModal .modal-title-row {
+    justify-content: flex-start !important;
+    width: 100% !important;
+}
+
+#projectModal .modal-title,
+#projectModal .modal-title-edit-button,
+body[data-theme^="console"] #projectModal .modal-title,
+body[data-theme^="console"] #projectModal .modal-title-edit-button,
+body[data-theme^="glass"] #projectModal .modal-title,
+body[data-theme^="glass"] #projectModal .modal-title-edit-button,
+body[data-theme^="blueprint"] #projectModal .modal-title,
+body[data-theme^="blueprint"] #projectModal .modal-title-edit-button {
+    font-weight: 900 !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    margin-left: 0.15rem !important;
+    padding: 0 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal:hover,
+#projectModal .modal-title-row .project-due-date-control--modal:focus-within,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal:hover,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal:focus-within,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal:hover,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal:focus-within,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal:hover,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal:focus-within {
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    padding: 0 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal .project-due-date-value,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal .project-due-date-value,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal .project-due-date-value,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal .project-due-date-value {
+    display: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-bar {
+    gap: 0.8rem !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note),
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):hover,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button:not(.has-note):focus-visible {
+    color: var(--muted, rgba(148, 163, 184, 0.88)) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note:hover,
+body[data-theme^="blueprint"] .project-card-notes-button.task-note-button.has-note:focus-visible {
+    color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] .project-preview-task,
+body[data-theme^="blueprint"] .project-preview-empty {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
