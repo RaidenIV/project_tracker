@@ -483,6 +483,7 @@ const uiState = {
     creatingTaskCategoryProjectId: null,
     creatingProjectTagProjectId: null,
     editingProjectTag: null,
+    editingProjectNoteTab: null,
     completedTaskDisplayLimits: {}
 };
 
@@ -2478,6 +2479,50 @@ function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = f
     `;
 }
 
+function isEditingProjectNoteTab(projectId, tabId, surface = 'modal') {
+    const editing = uiState.editingProjectNoteTab;
+    return !!editing
+        && String(editing.projectId) === String(projectId)
+        && String(editing.tabId) === String(tabId)
+        && String(editing.surface || 'modal') === String(surface || 'modal');
+}
+
+function clearEditingProjectNoteTab(projectId = null, tabId = null, surface = null) {
+    const editing = uiState.editingProjectNoteTab;
+    if (!editing) return;
+    if (projectId !== null && String(editing.projectId) !== String(projectId)) return;
+    if (tabId !== null && String(editing.tabId) !== String(tabId)) return;
+    if (surface !== null && String(editing.surface || 'modal') !== String(surface || 'modal')) return;
+    uiState.editingProjectNoteTab = null;
+}
+
+function commitProjectNoteTabName(projectId, tabId, surface = 'modal', value = '') {
+    if (!state.canEdit(projectId)) return;
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    const nextTitle = String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 40) || tab.title || 'Note';
+    tab.title = nextTitle;
+    data.activeTabId = tabId;
+    clearEditingProjectNoteTab(projectId, tabId, surface);
+    saveProjectNotesData(projectId, data, { renderSurface: surface });
+}
+
+function cancelProjectNoteTabName(projectId, tabId, surface = 'modal') {
+    clearEditingProjectNoteTab(projectId, tabId, surface);
+    renderProjectNotesSurface(projectId, surface);
+}
+
+function handleProjectNoteTabNameKeydown(projectId, tabId, surface = 'modal', event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitProjectNoteTabName(projectId, tabId, surface, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelProjectNoteTabName(projectId, tabId, surface);
+    }
+}
+
 function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
     const data = normalizeProjectNotesData(project?.notes || '');
     const activeTab = data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
@@ -2486,6 +2531,21 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
     const tabButtons = data.tabs.map(tab => {
         const isActive = tab.id === activeTab.id;
         const hasNote = String(tab.body || '').trim().length > 0;
+        const isEditingTitle = canEdit && isEditingProjectNoteTab(projectId, tab.id, safeSurface);
+        if (isEditingTitle) {
+            return `<span class="project-notes-tab project-notes-tab--input ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}">
+                        <input class="project-notes-tab-input"
+                               type="text"
+                               value="${escapeHtml(tab.title)}"
+                               placeholder="Tab name"
+                               maxlength="40"
+                               aria-label="Name note tab"
+                               onmousedown="event.stopPropagation()"
+                               onclick="event.stopPropagation()"
+                               onkeydown="handleProjectNoteTabNameKeydown('${projectId}', '${tab.id}', '${safeSurface}', event)"
+                               onblur="commitProjectNoteTabName('${projectId}', '${tab.id}', '${safeSurface}', this.value)">
+                    </span>`;
+        }
         return `<button class="project-notes-tab ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}"
                         type="button"
                         onclick="selectProjectNoteTab('${projectId}', '${tab.id}', '${safeSurface}', event)">
@@ -2566,8 +2626,15 @@ function addProjectNoteTab(projectId, surface = 'quick', event) {
     }, nextNumber - 1);
     data.tabs.push(nextTab);
     data.activeTabId = nextTab.id;
+    uiState.editingProjectNoteTab = { projectId, tabId: nextTab.id, surface };
     saveProjectNotesData(projectId, data, { renderSurface: surface });
-    requestAnimationFrame(() => document.getElementById(`project-notes-title-${surface}`)?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => {
+        const input = document.querySelector(`[data-project-notes-editor="${surface}"] .project-notes-tab-input`);
+        if (input) {
+            input.focus({ preventScroll: true });
+            input.select?.();
+        }
+    });
 }
 
 function deleteProjectNoteTab(projectId, tabId, surface = 'quick', event) {
@@ -6211,20 +6278,20 @@ function openProjectModal(projectId, options = {}) {
             <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
         </div>
         
-        <!-- Tabs for Tasks, Notes and Members -->
-        <div class="modal-tabs">
-            <button class="modal-tab active" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
-            <button class="modal-tab modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
+        <!-- Menu bar for Tasks, Notes, Members, and History -->
+        <div class="modal-tabs modal-menu-bar" role="menubar" aria-label="Project modal menu">
+            <button class="modal-tab modal-menu-item active" role="menuitem" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
+            <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
                 <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
                 </svg>
                 Notes
             </button>
-            <button class="modal-tab" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
+            <button class="modal-tab modal-menu-item" role="menuitem" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
                 Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
-            <button class="modal-tab" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
+            <button class="modal-tab modal-menu-item" role="menuitem" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
         </div>
         
         <!-- Tasks Section -->
@@ -6295,9 +6362,9 @@ function openProjectModal(projectId, options = {}) {
                                     Undo
                                 </button>
                             </div>
-                            <div class="task-select-all-control task-select-all-control--below-add" id="task-select-all-control-${project.id}">
-                                ${buildTaskSelectAllControlMarkup(project.id, displayTasks, selectedTasks)}
-                            </div>
+                        </div>
+                        <div class="task-select-all-control task-select-all-control--below-add" id="task-select-all-control-${project.id}">
+                            ${buildTaskSelectAllControlMarkup(project.id, displayTasks, selectedTasks)}
                         </div>
                     </div>
                 </div>

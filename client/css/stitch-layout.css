@@ -14075,3 +14075,175 @@ body[data-theme^="console"] .project-card .project-card-notes-button.task-note-b
     stroke: currentColor !important;
     pointer-events: none !important;
 }
+
+/* Targeted patch: project modal menu bar, note-tab naming input, Select All placement, and project icon hover spacing. */
+#projectModal .modal-paste-section,
+body[data-theme^="console"] #projectModal .modal-paste-section,
+body[data-theme^="glass"] #projectModal .modal-paste-section,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section {
+    margin-bottom: 0.55rem !important;
+}
+
+#projectModal .modal-paste-section + .task-select-all-control--below-add,
+body[data-theme^="console"] #projectModal .modal-paste-section + .task-select-all-control--below-add,
+body[data-theme^="glass"] #projectModal .modal-paste-section + .task-select-all-control--below-add,
+body[data-theme^="blueprint"] #projectModal .modal-paste-section + .task-select-all-control--below-add {
+    order: 0 !important;
+    width: 100% !important;
+    margin: 0 0 0.85rem !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+}
+
+#projectModal .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    margin: 0 0 1.15rem !important;
+    padding: 0.35rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.22)) 82%, transparent) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+}
+
+#projectModal .modal-menu-bar::-webkit-scrollbar,
+body[data-theme^="console"] #projectModal .modal-menu-bar::-webkit-scrollbar,
+body[data-theme^="glass"] #projectModal .modal-menu-bar::-webkit-scrollbar,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar::-webkit-scrollbar {
+    display: none !important;
+}
+
+#projectModal .modal-menu-item,
+body[data-theme^="console"] #projectModal .modal-menu-item,
+body[data-theme^="glass"] #projectModal .modal-menu-item,
+body[data-theme^="blueprint"] #projectModal .modal-menu-item {
+    flex: 1 0 max-content !important;
+    border-radius: 0.72rem !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-menu-item:hover,
+#projectModal .modal-menu-item:focus-visible,
+body[data-theme^="console"] #projectModal .modal-menu-item:hover,
+body[data-theme^="console"] #projectModal .modal-menu-item:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-menu-item:hover,
+body[data-theme^="glass"] #projectModal .modal-menu-item:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-menu-item:hover,
+body[data-theme^="blueprint"] #projectModal .modal-menu-item:focus-visible {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 36%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface-2, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-color: color-mix(in srgb, var(--surface-2, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    outline: none !important;
+}
+
+#projectModal .modal-menu-item.active,
+body[data-theme^="console"] #projectModal .modal-menu-item.active,
+body[data-theme^="glass"] #projectModal .modal-menu-item.active,
+body[data-theme^="blueprint"] #projectModal .modal-menu-item.active {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface-2, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    background-color: color-mix(in srgb, var(--surface-2, transparent) 78%, var(--accent, currentColor) 22%) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    box-shadow: var(--neumo-soft-shadow, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-menu-item.active {
+    box-shadow: var(--neumo-inset-shadow, var(--inset-shadow, none)) !important;
+}
+
+.project-notes-tab--input,
+body[data-theme^="console"] .project-notes-tab--input,
+body[data-theme^="glass"] .project-notes-tab--input,
+body[data-theme^="blueprint"] .project-notes-tab--input {
+    padding: 0.18rem !important;
+    cursor: text !important;
+}
+
+.project-notes-tab-input,
+body[data-theme^="console"] .project-notes-tab-input,
+body[data-theme^="glass"] .project-notes-tab-input,
+body[data-theme^="blueprint"] .project-notes-tab-input {
+    width: min(8.5rem, 34vw) !important;
+    min-width: 5.5rem !important;
+    height: 1.85rem !important;
+    padding: 0 0.55rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 46%, transparent) !important;
+    border-radius: 0.55rem !important;
+    color: var(--heading, currentColor) !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    font: inherit !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 14%, transparent) !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):hover,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):focus-visible,
+body[data-theme^="blueprint"] .project-card .project-due-date-control--card:hover,
+body[data-theme^="blueprint"] .project-card .project-due-date-control--card:focus-within,
+body[data-theme^="blueprint"] .project-card .project-priority-card-button:hover,
+body[data-theme^="blueprint"] .project-card .project-priority-card-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .project-due-date-control--modal:hover,
+body[data-theme^="blueprint"] #projectModal .project-due-date-control--modal:focus-within,
+body[data-theme^="blueprint"] #projectModal .project-priority-button:hover,
+body[data-theme^="blueprint"] #projectModal .project-priority-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .project-priority-control.is-open .project-priority-button {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):hover::before,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):focus-visible::before {
+    background: currentColor !important;
+    background-color: currentColor !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):hover svg,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):focus-visible svg,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):hover .icon,
+body[data-theme^="blueprint"] .project-card .project-card-notes-button.task-note-button:not(.has-note):focus-visible .icon {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    stroke: currentColor !important;
+}
+
+body[data-theme^="blueprint"] .project-card .project-priority-card-button:hover .task-tag-flag,
+body[data-theme^="blueprint"] .project-card .project-priority-card-button:focus-visible .task-tag-flag,
+body[data-theme^="blueprint"] #projectModal .project-priority-button:hover .task-tag-flag,
+body[data-theme^="blueprint"] #projectModal .project-priority-button:focus-visible .task-tag-flag,
+body[data-theme^="blueprint"] #projectModal .project-priority-control.is-open .project-priority-button .task-tag-flag {
+    color: var(--accent, currentColor) !important;
+    background: var(--accent, currentColor) !important;
+    background-color: var(--accent, currentColor) !important;
+    background-image: none !important;
+}
+
+body[data-theme^="console"] .project-card .project-card-notes-bar {
+    gap: 0.6rem !important;
+}
