@@ -1636,7 +1636,95 @@ function toggleSidebarSection(sectionKey) {
     setSidebarSectionExpanded(sectionKey, !uiState.sidebarSections[sectionKey]);
 }
 
+
+function buildSidebarSectionToggle(sectionKey, label) {
+    const button = document.createElement('button');
+    button.className = 'sidebar-section-toggle';
+    button.type = 'button';
+    button.dataset.sidebarToggle = sectionKey;
+    button.setAttribute('aria-expanded', 'false');
+    button.innerHTML = `<span>${escapeHtml(label)}</span><span class="sidebar-section-chevron" aria-hidden="true">⌄</span>`;
+    return button;
+}
+
+function ensureSidebarSettingsDropdown() {
+    const controlPanel = document.getElementById('controlPanel');
+    if (!controlPanel) return;
+
+    let settingsSection = controlPanel.querySelector('[data-sidebar-section="settings"]');
+    if (!settingsSection) {
+        settingsSection = document.createElement('section');
+        settingsSection.className = 'sidebar-collapsible sidebar-collapsible--settings';
+        settingsSection.dataset.sidebarSection = 'settings';
+        const leaderboardSection = controlPanel.querySelector('[data-sidebar-section="leaderboard"]');
+        const insertAfter = leaderboardSection || controlPanel.querySelector('.total-completion-section') || controlPanel.querySelector('.sidebar-nav-list');
+        if (insertAfter?.parentNode) {
+            insertAfter.parentNode.insertBefore(settingsSection, insertAfter.nextSibling);
+        } else {
+            controlPanel.appendChild(settingsSection);
+        }
+    }
+
+    let settingsToggle = settingsSection.querySelector('[data-sidebar-toggle="settings"]');
+    if (!settingsToggle) {
+        settingsToggle = buildSidebarSectionToggle('settings', 'Settings');
+        settingsSection.prepend(settingsToggle);
+    }
+
+    let settingsBody = settingsSection.querySelector('#settingsSectionBody, .sidebar-section-body');
+    if (!settingsBody) {
+        settingsBody = document.createElement('div');
+        settingsBody.id = 'settingsSectionBody';
+        settingsBody.className = 'sidebar-section-body';
+        settingsSection.appendChild(settingsBody);
+    }
+    settingsBody.id = 'settingsSectionBody';
+    settingsBody.classList.add('sidebar-section-body');
+
+    let settingsCard = settingsBody.querySelector('.settings-panel-card');
+    if (!settingsCard) {
+        settingsCard = document.createElement('div');
+        settingsCard.className = 'settings-panel-card';
+        settingsBody.appendChild(settingsCard);
+    }
+
+    let settingsActions = settingsCard.querySelector('.settings-actions');
+    if (!settingsActions) {
+        settingsActions = document.createElement('div');
+        settingsActions.className = 'settings-actions';
+        settingsCard.appendChild(settingsActions);
+    }
+
+    const actionSpecs = [
+        ['sidebarAccountSettingsBtn', 'Account Settings', 'sidebar-action-button'],
+        ['sidebarUiOptionsBtn', 'UI Options', 'sidebar-action-button'],
+        ['sidebarShortcutsBtn', 'Keyboard Shortcuts', 'sidebar-action-button'],
+        ['sidebarHowToGuideBtn', 'How To Guide', 'sidebar-action-button'],
+        ['sidebarSignOutBtn', 'Sign Out', 'sidebar-action-button sidebar-action-button--danger']
+    ];
+
+    actionSpecs.forEach(([id, label, className]) => {
+        let button = document.getElementById(id);
+        if (!button) {
+            button = document.createElement('button');
+            button.type = 'button';
+            button.id = id;
+            button.textContent = label;
+        }
+        button.className = `${className} settings-action-button`.trim();
+        button.type = 'button';
+        settingsActions.appendChild(button);
+    });
+
+    const legacyMoreGroup = document.getElementById('sidebarMoreToggleBtn')?.closest('.sidebar-more-group');
+    if (legacyMoreGroup) {
+        legacyMoreGroup.hidden = true;
+        legacyMoreGroup.setAttribute('aria-hidden', 'true');
+    }
+}
+
 function initializeSidebarSections() {
+    ensureSidebarSettingsDropdown();
     ['leaderboard', 'settings'].forEach(sectionKey => {
         setSidebarSectionExpanded(sectionKey, false);
     });
@@ -7721,7 +7809,7 @@ function syncMobileAppBarHeight() {
     }
 
     const measuredHeight = Math.ceil(topAppBar.getBoundingClientRect().height || 0);
-    const nextHeight = Math.max(measuredHeight, 92);
+    const nextHeight = Math.max(measuredHeight, 54);
     root.style.setProperty('--mobile-app-bar-height', `${nextHeight}px`);
 }
 
@@ -8034,10 +8122,10 @@ function initializeEventHandlers() {
     // Paste button
     document.getElementById('pasteButton')?.addEventListener('click', pasteTasks);
 
+    initializeSidebarSections();
     document.querySelectorAll('[data-sidebar-toggle]').forEach(button => {
         button.addEventListener('click', () => toggleSidebarSection(button.dataset.sidebarToggle));
     });
-    initializeSidebarSections();
 
     const sidebarMoreToggleBtn = document.getElementById('sidebarMoreToggleBtn');
     const sidebarMoreGroup = sidebarMoreToggleBtn?.closest('.sidebar-more-group');
