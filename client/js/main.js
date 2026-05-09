@@ -79,6 +79,7 @@ const PROJECT_TAG_ALL_FILTER = 'all';
 const PROJECT_TAG_MAX_LENGTH = 24;
 const PROJECT_TAG_MAX_COUNT = 5;
 const PROJECT_TITLE_MAX_LENGTH = 24;
+const PROJECT_CALENDAR_NOTE_MAX_LENGTH = 1000;
 const PROJECT_NOTES_TAB_DATA_FLAG = '__projectNotesTabs';
 const PROJECT_NOTES_DEFAULT_TAB_ID = 'notes-general';
 const TASK_TAG_PRIORITY = {
@@ -134,6 +135,226 @@ function getProjectDueDate(project = {}) {
 function formatProjectDueDate(value) {
     const dueDate = normalizeTaskDueDate(value);
     return dueDate ? formatTaskDueDate(dueDate) : 'No project due date';
+}
+
+function parseDateKey(value) {
+    const dateKey = normalizeTaskDueDate(value);
+    if (!dateKey) return null;
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (Number.isNaN(parsed.getTime())) return null;
+    if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) return null;
+    return parsed;
+}
+
+function isValidDateKey(value) {
+    return Boolean(parseDateKey(value));
+}
+
+function formatDateKey(date) {
+    const parsed = date instanceof Date ? date : parseDateKey(date);
+    if (!parsed || Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getMonthKeyFromDate(value = new Date()) {
+    const parsed = value instanceof Date ? value : parseDateKey(value);
+    const safeDate = parsed && !Number.isNaN(parsed.getTime()) ? parsed : new Date();
+    const year = safeDate.getFullYear();
+    const month = String(safeDate.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+}
+
+function normalizeProjectCalendarNotes(value = {}) {
+    const source = value instanceof Map ? Object.fromEntries(value.entries()) : value;
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return {};
+
+    return Object.entries(source).reduce((notes, [rawDate, rawNote]) => {
+        const dateKey = normalizeTaskDueDate(rawDate);
+        if (!isValidDateKey(dateKey)) return notes;
+        const noteText = String(rawNote ?? '').trim().slice(0, PROJECT_CALENDAR_NOTE_MAX_LENGTH);
+        if (!noteText) return notes;
+        notes[dateKey] = noteText;
+        return notes;
+    }, {});
+}
+
+function getProjectCalendarNotes(project) {
+    return normalizeProjectCalendarNotes(project?.calendarNotes || project?.projectCalendarNotes || {});
+}
+
+function getCalendarMonthLabel(monthKey) {
+    const [year, month] = String(monthKey || '').split('-').map(Number);
+    const parsed = new Date(year, month - 1, 1);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
+}
+
+function getProjectCalendarMonthKey(projectId) {
+    const stored = uiState.projectCalendarMonths?.[projectId];
+    if (/^\d{4}-\d{2}$/.test(String(stored || ''))) return stored;
+    return getMonthKeyFromDate(new Date());
+}
+
+function setProjectCalendarMonthKey(projectId, monthKey) {
+    if (!uiState.projectCalendarMonths) uiState.projectCalendarMonths = {};
+    uiState.projectCalendarMonths[projectId] = /^\d{4}-\d{2}$/.test(String(monthKey || '')) ? monthKey : getMonthKeyFromDate(new Date());
+}
+
+function getProjectCalendarSelectedDate(projectId) {
+    const stored = uiState.projectCalendarSelections?.[projectId];
+    if (isValidDateKey(stored)) return normalizeTaskDueDate(stored);
+    return getTodayDateKey();
+}
+
+function setProjectCalendarSelectedDate(projectId, dateKey) {
+    if (!uiState.projectCalendarSelections) uiState.projectCalendarSelections = {};
+    const safeDateKey = normalizeTaskDueDate(dateKey) || getTodayDateKey();
+    uiState.projectCalendarSelections[projectId] = safeDateKey;
+    setProjectCalendarMonthKey(projectId, getMonthKeyFromDate(safeDateKey));
+}
+
+function getTasksDueOnDate(project, dateKey) {
+    const targetDate = normalizeTaskDueDate(dateKey);
+    return (Array.isArray(project?.tasks) ? project.tasks : [])
+        .map((task, index) => normalizeTask(task, index))
+        .filter(task => normalizeTaskDueDate(task.dueDate) === targetDate)
+        .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), undefined, { sensitivity: 'base' }));
+}
+
+function getTasksByDueDate(project) {
+    return (Array.isArray(project?.tasks) ? project.tasks : [])
+        .map((task, index) => normalizeTask(task, index))
+        .filter(task => normalizeTaskDueDate(task.dueDate))
+        .reduce((byDate, task) => {
+            const dueDate = normalizeTaskDueDate(task.dueDate);
+            if (!byDate[dueDate]) byDate[dueDate] = [];
+            byDate[dueDate].push(task);
+            return byDate;
+        }, {});
+}
+
+function getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks = [], note = '', projectDueDate = '' }) {
+    const classes = ['project-calendar-day'];
+    if (dateKey === selectedDate) classes.push('is-selected');
+    if (dateKey === todayKey) classes.push('is-today');
+    if (tasks.length) classes.push('has-tasks');
+    if (note) classes.push('has-note');
+    if (projectDueDate && dateKey === projectDueDate) classes.push('has-project-due');
+    return classes.join(' ');
+}
+
+function getCalendarMonthGridDays(monthKey) {
+    const [year, month] = String(monthKey || '').split('-').map(Number);
+    const firstDay = new Date(year, month - 1, 1);
+    if (Number.isNaN(firstDay.getTime())) return [];
+    const leadingBlankDays = firstDay.getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const days = [];
+    for (let i = 0; i < leadingBlankDays; i++) days.push(null);
+    for (let day = 1; day <= daysInMonth; day++) {
+        days.push(formatDateKey(new Date(year, month - 1, day)));
+    }
+    while (days.length % 7 !== 0) days.push(null);
+    return days;
+}
+
+function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
+    const projectIdLiteral = serializeInlineJsString(project?.id || '');
+    const todayKey = getTodayDateKey();
+    const notes = getProjectCalendarNotes(project);
+    const tasksByDate = getTasksByDueDate(project);
+    const projectDueDate = getProjectDueDate(project);
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const days = getCalendarMonthGridDays(monthKey);
+
+    return `
+        <div class="project-calendar-weekdays" aria-hidden="true">
+            ${weekdays.map(day => `<span>${escapeHtml(day)}</span>`).join('')}
+        </div>
+        <div class="project-calendar-month-grid" role="grid" aria-label="${escapeHtml(getCalendarMonthLabel(monthKey))}">
+            ${days.map(dateKey => {
+                if (!dateKey) return '<div class="project-calendar-day-spacer" aria-hidden="true"></div>';
+                const dayNumber = Number(dateKey.slice(-2));
+                const tasks = tasksByDate[dateKey] || [];
+                const note = notes[dateKey] || '';
+                const taskLabel = tasks.length === 1 ? '1 task due' : `${tasks.length} tasks due`;
+                const ariaParts = [formatTaskDueDate(dateKey)];
+                if (tasks.length) ariaParts.push(taskLabel);
+                if (note) ariaParts.push('has note');
+                if (projectDueDate === dateKey) ariaParts.push('project due date');
+                return `
+                    <button class="${getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks, note, projectDueDate })}"
+                            type="button"
+                            role="gridcell"
+                            aria-pressed="${dateKey === selectedDate ? 'true' : 'false'}"
+                            aria-label="${escapeHtml(ariaParts.join(', '))}"
+                            onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)">
+                        <span class="project-calendar-day-number">${dayNumber}</span>
+                        <span class="project-calendar-day-markers" aria-hidden="true">
+                            ${projectDueDate === dateKey ? '<span class="project-calendar-marker project-calendar-marker--project"></span>' : ''}
+                            ${tasks.length ? '<span class="project-calendar-marker project-calendar-marker--tasks"></span>' : ''}
+                            ${note ? '<span class="project-calendar-marker project-calendar-marker--note"></span>' : ''}
+                        </span>
+                    </button>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
+    const projectIdLiteral = serializeInlineJsString(project?.id || '');
+    const notes = getProjectCalendarNotes(project);
+    const selectedNote = notes[selectedDate] || '';
+    const selectedTasks = getTasksDueOnDate(project, selectedDate);
+    const canEditCalendar = state.canEdit(project?.id);
+    const projectDueDate = getProjectDueDate(project);
+    const selectedDateLiteral = serializeInlineJsString(selectedDate);
+
+    return `
+        <div class="project-calendar-selected-card">
+            <div class="project-calendar-selected-header">
+                <div>
+                    <div class="project-calendar-selected-label">Selected Day</div>
+                    <h4 class="project-calendar-selected-title">${escapeHtml(formatTaskDueDate(selectedDate))}</h4>
+                </div>
+                ${projectDueDate === selectedDate ? '<span class="project-calendar-project-due-pill">Project Due</span>' : ''}
+            </div>
+            <div class="project-calendar-selected-block">
+                <div class="project-calendar-selected-block-title">Tasks Due</div>
+                ${selectedTasks.length ? `
+                    <div class="project-calendar-selected-tasks">
+                        ${selectedTasks.map(task => `
+                            <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''}">
+                                <span class="project-calendar-selected-task-status" aria-hidden="true">${task.completed ? '✓' : '•'}</span>
+                                <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
+                                <span class="project-calendar-selected-task-priority">${escapeHtml(getPriorityTagLabel(task.tag))}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div class="project-calendar-empty">No tasks due on this day</div>'}
+            </div>
+            <div class="project-calendar-selected-block">
+                <label class="project-calendar-selected-block-title" for="project-calendar-note-${escapeHtml(String(project?.id || ''))}">Day Note</label>
+                <textarea class="project-calendar-note-input"
+                          id="project-calendar-note-${escapeHtml(String(project?.id || ''))}"
+                          maxlength="${PROJECT_CALENDAR_NOTE_MAX_LENGTH}"
+                          placeholder="Add a note for this day"
+                          ${canEditCalendar ? '' : 'readonly'}>${escapeHtml(selectedNote)}</textarea>
+                <div class="project-calendar-note-actions">
+                    <span class="project-calendar-note-limit">${selectedNote.length}/${PROJECT_CALENDAR_NOTE_MAX_LENGTH}</span>
+                    ${canEditCalendar ? `
+                        <button class="project-calendar-note-button" type="button" onclick="saveProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)">Save Note</button>
+                        <button class="project-calendar-note-button project-calendar-note-button--secondary" type="button" onclick="deleteProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)" ${selectedNote ? '' : 'disabled'}>Delete Note</button>
+                    ` : '<span class="project-calendar-readonly-note">Read-only</span>'}
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function getTodayDateKey() {
@@ -512,6 +733,8 @@ const uiState = {
     creatingProjectTagProjectId: null,
     editingProjectTag: null,
     editingProjectNoteTab: null,
+    projectCalendarMonths: {},
+    projectCalendarSelections: {},
     completedTaskDisplayLimits: {}
 };
 
@@ -1164,6 +1387,7 @@ function normalizeProject(project) {
         description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
         projectPriorityTag: getProjectPriorityTag(project),
         dueDate: getProjectDueDate(project),
+        calendarNotes: normalizeProjectCalendarNotes(project.calendarNotes || project.projectCalendarNotes || {}),
         tags: normalizeProjectTags(project.tags || project.projectTags || []),
         tasks: normalizedTasks,
         taskCategories: getProjectTaskCategories({ ...project, tasks: normalizedTasks }),
@@ -2288,6 +2512,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
         dueDate: '',
         completed: false,
         notes: '',
+        calendarNotes: {},
         description: requiredDescription,
         tags: [],
         taskCategories: [],
@@ -6546,33 +6771,104 @@ function buildProjectMeatballsMenuMarkup(project, surface = 'card') {
 }
 
 function buildProjectCalendarSectionMarkup(project) {
-    const projectDueDate = getProjectDueDate(project);
-    const dueTasks = (Array.isArray(project?.tasks) ? project.tasks : [])
-        .map((task, index) => normalizeTask(task, index))
-        .filter(task => normalizeTaskDueDate(task.dueDate))
-        .sort((a, b) => normalizeTaskDueDate(a.dueDate).localeCompare(normalizeTaskDueDate(b.dueDate)) || String(a.text || '').localeCompare(String(b.text || ''), undefined, { sensitivity: 'base' }));
+    const projectIdLiteral = serializeInlineJsString(project?.id || '');
+    const currentMonthKey = getProjectCalendarMonthKey(project?.id);
+    const selectedDate = getProjectCalendarSelectedDate(project?.id);
 
     return `
         <div class="project-calendar-panel">
-            <div class="project-calendar-card">
-                <div class="project-calendar-card-title">Project Due Date</div>
-                <div class="project-calendar-card-value">${escapeHtml(projectDueDate ? formatProjectDueDate(projectDueDate) : 'No project due date')}</div>
+            <div class="project-calendar-shell">
+                <div class="project-calendar-toolbar">
+                    <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, -1, event)" aria-label="Previous month">‹</button>
+                    <div class="project-calendar-current-month">${escapeHtml(getCalendarMonthLabel(currentMonthKey))}</div>
+                    <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, 1, event)" aria-label="Next month">›</button>
+                    <button class="project-calendar-today-button" type="button" onclick="goToProjectCalendarToday(${projectIdLiteral}, event)">Today</button>
+                </div>
+                ${buildProjectCalendarGridMarkup(project, currentMonthKey, selectedDate)}
             </div>
-            <div class="project-calendar-card project-calendar-card--tasks">
-                <div class="project-calendar-card-title">Task Due Dates</div>
-                ${dueTasks.length ? `
-                    <div class="project-calendar-list">
-                        ${dueTasks.map(task => `
-                            <div class="project-calendar-item ${task.completed ? 'is-completed' : ''}">
-                                <span class="project-calendar-date">${escapeHtml(formatTaskDueDate(task.dueDate))}</span>
-                                <span class="project-calendar-task">${escapeHtml(task.text || 'Untitled task')}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : '<div class="project-calendar-empty">No task due dates yet</div>'}
-            </div>
+            ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
         </div>
     `;
+}
+
+function renderProjectCalendarSection(projectId) {
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const section = document.getElementById(`calendar-section-${project.id}`);
+    if (!section) return;
+    section.innerHTML = buildProjectCalendarSectionMarkup(project);
+}
+
+function selectProjectCalendarDay(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.findProject(projectId)) return;
+    setProjectCalendarSelectedDate(projectId, normalizeTaskDueDate(dateKey) || getTodayDateKey());
+    renderProjectCalendarSection(projectId);
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function changeProjectCalendarMonth(projectId, direction = 0, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.findProject(projectId)) return;
+    const currentMonthKey = getProjectCalendarMonthKey(projectId);
+    const [year, month] = currentMonthKey.split('-').map(Number);
+    const currentSelection = parseDateKey(getProjectCalendarSelectedDate(projectId));
+    const nextMonth = new Date(year, month - 1 + Number(direction || 0), 1);
+    const selectedDay = currentSelection ? currentSelection.getDate() : 1;
+    const lastDayInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
+    const nextSelectedDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), Math.min(selectedDay, lastDayInNextMonth));
+    setProjectCalendarSelectedDate(projectId, formatDateKey(nextSelectedDate));
+    renderProjectCalendarSection(projectId);
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function goToProjectCalendarToday(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.findProject(projectId)) return;
+    setProjectCalendarSelectedDate(projectId, getTodayDateKey());
+    renderProjectCalendarSection(projectId);
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function saveProjectCalendarNote(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const safeDateKey = normalizeTaskDueDate(dateKey) || getProjectCalendarSelectedDate(projectId);
+    if (!isValidDateKey(safeDateKey)) return;
+
+    const noteInput = document.getElementById(`project-calendar-note-${project.id}`);
+    const noteText = String(noteInput?.value || '').trim().slice(0, PROJECT_CALENDAR_NOTE_MAX_LENGTH);
+    const nextNotes = { ...getProjectCalendarNotes(project) };
+    if (noteText) nextNotes[safeDateKey] = noteText;
+    else delete nextNotes[safeDateKey];
+
+    state.updateProject(projectId, projectUpdate({ calendarNotes: nextNotes }));
+    saveData();
+    renderProjectCalendarSection(projectId);
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function deleteProjectCalendarNote(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+    const safeDateKey = normalizeTaskDueDate(dateKey) || getProjectCalendarSelectedDate(projectId);
+    if (!isValidDateKey(safeDateKey)) return;
+
+    const nextNotes = { ...getProjectCalendarNotes(project) };
+    delete nextNotes[safeDateKey];
+    state.updateProject(projectId, projectUpdate({ calendarNotes: nextNotes }));
+    saveData();
+    renderProjectCalendarSection(projectId);
+    saveOpenProjectModalState(projectId, 'calendar');
 }
 
 function openProjectModal(projectId, options = {}) {
@@ -8524,6 +8820,11 @@ window.confirmDeleteProject = confirmDeleteProject;
 window.confirmDeleteProjectCard = confirmDeleteProjectCard;
 window.openProjectMetadataDetails = openProjectMetadataDetails;
 window.closeProjectMetadataDetails = closeProjectMetadataDetails;
+window.selectProjectCalendarDay = selectProjectCalendarDay;
+window.changeProjectCalendarMonth = changeProjectCalendarMonth;
+window.goToProjectCalendarToday = goToProjectCalendarToday;
+window.saveProjectCalendarNote = saveProjectCalendarNote;
+window.deleteProjectCalendarNote = deleteProjectCalendarNote;
 window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;

@@ -35,6 +35,7 @@ export async function addProject() {
         priority: state.getProjects().length,
         completed: false,
         notes: '',
+        calendarNotes: {},
         description: requiredDescription,
         tags: [],
         userRole: 'owner',

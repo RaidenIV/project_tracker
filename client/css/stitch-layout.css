@@ -18840,3 +18840,468 @@ body[data-theme$="-light"] .stitch-project-card .project-sync-text,
 body[data-theme$="-light"] .project-card-title-stack .project-sync-text {
     color: #000 !important;
 }
+
+/* Targeted patch: interactive project calendar with day notes and due-task view */
+.project-calendar-panel,
+body[data-theme^="console"] .project-calendar-panel,
+body[data-theme^="blueprint"] .project-calendar-panel,
+body[data-theme^="glass"] .project-calendar-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+}
+
+.project-calendar-shell,
+.project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-shell,
+body[data-theme^="console"] .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-shell,
+body[data-theme^="blueprint"] .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-shell,
+body[data-theme^="glass"] .project-calendar-selected-card {
+    display: grid !important;
+    gap: 0.9rem !important;
+    min-width: 0 !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-calendar-toolbar,
+body[data-theme^="console"] .project-calendar-toolbar,
+body[data-theme^="blueprint"] .project-calendar-toolbar,
+body[data-theme^="glass"] .project-calendar-toolbar {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+    gap: 0.55rem !important;
+    align-items: center !important;
+}
+
+.project-calendar-current-month,
+body[data-theme^="console"] .project-calendar-current-month,
+body[data-theme^="blueprint"] .project-calendar-current-month,
+body[data-theme^="glass"] .project-calendar-current-month {
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-nav-button,
+.project-calendar-today-button,
+.project-calendar-note-button,
+body[data-theme^="console"] .project-calendar-nav-button,
+body[data-theme^="console"] .project-calendar-today-button,
+body[data-theme^="console"] .project-calendar-note-button,
+body[data-theme^="blueprint"] .project-calendar-nav-button,
+body[data-theme^="blueprint"] .project-calendar-today-button,
+body[data-theme^="blueprint"] .project-calendar-note-button,
+body[data-theme^="glass"] .project-calendar-nav-button,
+body[data-theme^="glass"] .project-calendar-today-button,
+body[data-theme^="glass"] .project-calendar-note-button {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.25rem !important;
+    padding: 0.5rem 0.75rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-nav-button,
+body[data-theme^="console"] .project-calendar-nav-button,
+body[data-theme^="blueprint"] .project-calendar-nav-button,
+body[data-theme^="glass"] .project-calendar-nav-button {
+    width: 2.25rem !important;
+    padding: 0 !important;
+    color: var(--accent, currentColor) !important;
+    font-size: 1.35rem !important;
+    line-height: 1 !important;
+}
+
+.project-calendar-nav-button:hover,
+.project-calendar-today-button:hover,
+.project-calendar-note-button:hover,
+.project-calendar-nav-button:focus-visible,
+.project-calendar-today-button:focus-visible,
+.project-calendar-note-button:focus-visible,
+body[data-theme^="console"] .project-calendar-nav-button:hover,
+body[data-theme^="console"] .project-calendar-today-button:hover,
+body[data-theme^="console"] .project-calendar-note-button:hover,
+body[data-theme^="blueprint"] .project-calendar-nav-button:hover,
+body[data-theme^="blueprint"] .project-calendar-today-button:hover,
+body[data-theme^="blueprint"] .project-calendar-note-button:hover,
+body[data-theme^="glass"] .project-calendar-nav-button:hover,
+body[data-theme^="glass"] .project-calendar-today-button:hover,
+body[data-theme^="glass"] .project-calendar-note-button:hover {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-calendar-weekdays,
+.project-calendar-month-grid,
+body[data-theme^="console"] .project-calendar-weekdays,
+body[data-theme^="console"] .project-calendar-month-grid,
+body[data-theme^="blueprint"] .project-calendar-weekdays,
+body[data-theme^="blueprint"] .project-calendar-month-grid,
+body[data-theme^="glass"] .project-calendar-weekdays,
+body[data-theme^="glass"] .project-calendar-month-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 0.42rem !important;
+}
+
+.project-calendar-weekdays span,
+body[data-theme^="console"] .project-calendar-weekdays span,
+body[data-theme^="blueprint"] .project-calendar-weekdays span,
+body[data-theme^="glass"] .project-calendar-weekdays span {
+    color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-day,
+.project-calendar-day-spacer,
+body[data-theme^="console"] .project-calendar-day,
+body[data-theme^="console"] .project-calendar-day-spacer,
+body[data-theme^="blueprint"] .project-calendar-day,
+body[data-theme^="blueprint"] .project-calendar-day-spacer,
+body[data-theme^="glass"] .project-calendar-day,
+body[data-theme^="glass"] .project-calendar-day-spacer {
+    min-height: 3.35rem !important;
+    border-radius: 0.75rem !important;
+}
+
+.project-calendar-day,
+body[data-theme^="console"] .project-calendar-day,
+body[data-theme^="blueprint"] .project-calendar-day,
+body[data-theme^="glass"] .project-calendar-day {
+    appearance: none !important;
+    position: relative !important;
+    display: grid !important;
+    align-content: space-between !important;
+    justify-items: start !important;
+    padding: 0.48rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.045)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: pointer !important;
+    font: inherit !important;
+}
+
+.project-calendar-day:hover,
+.project-calendar-day:focus-visible,
+body[data-theme^="console"] .project-calendar-day:hover,
+body[data-theme^="console"] .project-calendar-day:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-day:hover,
+body[data-theme^="blueprint"] .project-calendar-day:focus-visible,
+body[data-theme^="glass"] .project-calendar-day:hover,
+body[data-theme^="glass"] .project-calendar-day:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-calendar-day.is-selected,
+body[data-theme^="console"] .project-calendar-day.is-selected,
+body[data-theme^="blueprint"] .project-calendar-day.is-selected,
+body[data-theme^="glass"] .project-calendar-day.is-selected {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 1px var(--accent, currentColor) inset !important;
+}
+
+.project-calendar-day.is-today .project-calendar-day-number,
+body[data-theme^="console"] .project-calendar-day.is-today .project-calendar-day-number,
+body[data-theme^="blueprint"] .project-calendar-day.is-today .project-calendar-day-number,
+body[data-theme^="glass"] .project-calendar-day.is-today .project-calendar-day-number {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-day-number,
+body[data-theme^="console"] .project-calendar-day-number,
+body[data-theme^="blueprint"] .project-calendar-day-number,
+body[data-theme^="glass"] .project-calendar-day-number {
+    font-size: 0.9rem !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-day-markers,
+body[data-theme^="console"] .project-calendar-day-markers,
+body[data-theme^="blueprint"] .project-calendar-day-markers,
+body[data-theme^="glass"] .project-calendar-day-markers {
+    display: inline-flex !important;
+    gap: 0.22rem !important;
+    align-items: center !important;
+    min-height: 0.4rem !important;
+}
+
+.project-calendar-marker,
+body[data-theme^="console"] .project-calendar-marker,
+body[data-theme^="blueprint"] .project-calendar-marker,
+body[data-theme^="glass"] .project-calendar-marker {
+    width: 0.38rem !important;
+    height: 0.38rem !important;
+    border-radius: 999px !important;
+    background: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+}
+
+.project-calendar-marker--tasks,
+body[data-theme^="console"] .project-calendar-marker--tasks,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks,
+body[data-theme^="glass"] .project-calendar-marker--tasks {
+    background: var(--accent, currentColor) !important;
+}
+
+.project-calendar-marker--note,
+body[data-theme^="console"] .project-calendar-marker--note,
+body[data-theme^="blueprint"] .project-calendar-marker--note,
+body[data-theme^="glass"] .project-calendar-marker--note {
+    background: #f59e0b !important;
+}
+
+.project-calendar-marker--project,
+body[data-theme^="console"] .project-calendar-marker--project,
+body[data-theme^="blueprint"] .project-calendar-marker--project,
+body[data-theme^="glass"] .project-calendar-marker--project {
+    background: #ef4444 !important;
+}
+
+.project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-selected-card {
+    max-height: min(62vh, 34rem) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.project-calendar-selected-header,
+.project-calendar-note-actions,
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-header,
+body[data-theme^="console"] .project-calendar-note-actions,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-header,
+body[data-theme^="blueprint"] .project-calendar-note-actions,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-header,
+body[data-theme^="glass"] .project-calendar-note-actions,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.65rem !important;
+}
+
+.project-calendar-selected-label,
+.project-calendar-selected-block-title,
+.project-calendar-note-limit,
+.project-calendar-readonly-note,
+body[data-theme^="console"] .project-calendar-selected-label,
+body[data-theme^="console"] .project-calendar-selected-block-title,
+body[data-theme^="console"] .project-calendar-note-limit,
+body[data-theme^="console"] .project-calendar-readonly-note,
+body[data-theme^="blueprint"] .project-calendar-selected-label,
+body[data-theme^="blueprint"] .project-calendar-selected-block-title,
+body[data-theme^="blueprint"] .project-calendar-note-limit,
+body[data-theme^="blueprint"] .project-calendar-readonly-note,
+body[data-theme^="glass"] .project-calendar-selected-label,
+body[data-theme^="glass"] .project-calendar-selected-block-title,
+body[data-theme^="glass"] .project-calendar-note-limit,
+body[data-theme^="glass"] .project-calendar-readonly-note {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-selected-title,
+body[data-theme^="console"] .project-calendar-selected-title,
+body[data-theme^="blueprint"] .project-calendar-selected-title,
+body[data-theme^="glass"] .project-calendar-selected-title {
+    margin: 0.2rem 0 0 !important;
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 1.1rem !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-project-due-pill,
+body[data-theme^="console"] .project-calendar-project-due-pill,
+body[data-theme^="blueprint"] .project-calendar-project-due-pill,
+body[data-theme^="glass"] .project-calendar-project-due-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.32rem 0.55rem !important;
+    border-radius: 999px !important;
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #ef4444 !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-selected-block,
+.project-calendar-selected-tasks,
+body[data-theme^="console"] .project-calendar-selected-block,
+body[data-theme^="console"] .project-calendar-selected-tasks,
+body[data-theme^="blueprint"] .project-calendar-selected-block,
+body[data-theme^="blueprint"] .project-calendar-selected-tasks,
+body[data-theme^="glass"] .project-calendar-selected-block,
+body[data-theme^="glass"] .project-calendar-selected-tasks {
+    display: grid !important;
+    gap: 0.55rem !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    padding: 0.58rem 0.65rem !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+}
+
+.project-calendar-selected-task.is-completed,
+body[data-theme^="console"] .project-calendar-selected-task.is-completed,
+body[data-theme^="blueprint"] .project-calendar-selected-task.is-completed,
+body[data-theme^="glass"] .project-calendar-selected-task.is-completed {
+    opacity: 0.62 !important;
+}
+
+.project-calendar-selected-task-status,
+body[data-theme^="console"] .project-calendar-selected-task-status,
+body[data-theme^="blueprint"] .project-calendar-selected-task-status,
+body[data-theme^="glass"] .project-calendar-selected-task-status {
+    color: var(--accent, currentColor) !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-selected-task-text,
+body[data-theme^="console"] .project-calendar-selected-task-text,
+body[data-theme^="blueprint"] .project-calendar-selected-task-text,
+body[data-theme^="glass"] .project-calendar-selected-task-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.project-calendar-selected-task-priority,
+body[data-theme^="console"] .project-calendar-selected-task-priority,
+body[data-theme^="blueprint"] .project-calendar-selected-task-priority,
+body[data-theme^="glass"] .project-calendar-selected-task-priority {
+    flex: 0 0 auto !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-note-input,
+body[data-theme^="console"] .project-calendar-note-input,
+body[data-theme^="blueprint"] .project-calendar-note-input,
+body[data-theme^="glass"] .project-calendar-note-input {
+    width: 100% !important;
+    min-height: 8rem !important;
+    resize: vertical !important;
+    padding: 0.75rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--input-bg, var(--surface-subtle, rgba(255, 255, 255, 0.05))) !important;
+    color: var(--text, currentColor) !important;
+    font: inherit !important;
+    line-height: 1.45 !important;
+}
+
+.project-calendar-note-input:focus,
+body[data-theme^="console"] .project-calendar-note-input:focus,
+body[data-theme^="blueprint"] .project-calendar-note-input:focus,
+body[data-theme^="glass"] .project-calendar-note-input:focus {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-calendar-note-button--secondary,
+body[data-theme^="console"] .project-calendar-note-button--secondary,
+body[data-theme^="blueprint"] .project-calendar-note-button--secondary,
+body[data-theme^="glass"] .project-calendar-note-button--secondary {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+}
+
+.project-calendar-note-button:disabled,
+body[data-theme^="console"] .project-calendar-note-button:disabled,
+body[data-theme^="blueprint"] .project-calendar-note-button:disabled,
+body[data-theme^="glass"] .project-calendar-note-button:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.45 !important;
+}
+
+@media (max-width: 920px) {
+    .project-calendar-panel,
+    body[data-theme^="console"] .project-calendar-panel,
+    body[data-theme^="blueprint"] .project-calendar-panel,
+    body[data-theme^="glass"] .project-calendar-panel {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 620px) {
+    .project-calendar-toolbar,
+    body[data-theme^="console"] .project-calendar-toolbar,
+    body[data-theme^="blueprint"] .project-calendar-toolbar,
+    body[data-theme^="glass"] .project-calendar-toolbar {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+
+    .project-calendar-today-button,
+    body[data-theme^="console"] .project-calendar-today-button,
+    body[data-theme^="blueprint"] .project-calendar-today-button,
+    body[data-theme^="glass"] .project-calendar-today-button {
+        grid-column: 1 / -1 !important;
+    }
+
+    .project-calendar-day,
+    .project-calendar-day-spacer,
+    body[data-theme^="console"] .project-calendar-day,
+    body[data-theme^="console"] .project-calendar-day-spacer,
+    body[data-theme^="blueprint"] .project-calendar-day,
+    body[data-theme^="blueprint"] .project-calendar-day-spacer,
+    body[data-theme^="glass"] .project-calendar-day,
+    body[data-theme^="glass"] .project-calendar-day-spacer {
+        min-height: 2.85rem !important;
+        border-radius: 0.62rem !important;
+    }
+
+    .project-calendar-selected-task,
+    .project-calendar-note-actions,
+    body[data-theme^="console"] .project-calendar-selected-task,
+    body[data-theme^="console"] .project-calendar-note-actions,
+    body[data-theme^="blueprint"] .project-calendar-selected-task,
+    body[data-theme^="blueprint"] .project-calendar-note-actions,
+    body[data-theme^="glass"] .project-calendar-selected-task,
+    body[data-theme^="glass"] .project-calendar-note-actions {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+}

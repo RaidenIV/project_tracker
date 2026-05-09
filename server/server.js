@@ -177,6 +177,7 @@ const projectSchema = new mongoose.Schema({
     completed:     { type: Boolean, default: false },
     completedDate: String,
     notes:         { type: String, default: '' },
+    calendarNotes: { type: Object, default: {} },
     description:   { type: String, default: '' },
     tags:          { type: [String], default: [] },
     archived:      { type: Boolean, default: false },
@@ -530,6 +531,20 @@ function sanitizeProjectTags(tags = []) {
         .filter(tag => tag && tag.toLowerCase() !== 'all'))].slice(0, PROJECT_TAG_MAX_COUNT);
 }
 
+function sanitizeProjectCalendarNotes(value = {}) {
+    const source = value instanceof Map ? Object.fromEntries(value.entries()) : value;
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return {};
+
+    return Object.entries(source).reduce((notes, [rawDate, rawNote]) => {
+        const dateKey = sanitizeDateKey(rawDate);
+        if (!dateKey) return notes;
+        const noteText = String(rawNote ?? '').trim().slice(0, 1000);
+        if (!noteText) return notes;
+        notes[dateKey] = noteText;
+        return notes;
+    }, {});
+}
+
 function sanitizeProjectPriorityTag(value) {
     const raw = String(value || 'none').trim().toLowerCase();
     const tag = raw === 'critical' ? 'high' : raw;
@@ -561,6 +576,9 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.completed !== undefined) sanitized.completed = !!body.completed;
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
     if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
+    if (body.calendarNotes !== undefined || body.projectCalendarNotes !== undefined) {
+        sanitized.calendarNotes = sanitizeProjectCalendarNotes(body.calendarNotes ?? body.projectCalendarNotes);
+    }
     if (body.description !== undefined) sanitized.description = typeof body.description === 'string'
         ? body.description.trim().replace(/\s+/g, ' ').slice(0, 280)
         : String(body.description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
@@ -638,6 +656,10 @@ function summarizeProjectUpdate(existingProject, incomingBody) {
 
     if (typeof update.notes === 'string' && update.notes !== (oldProject.notes || '')) {
         return { type: 'notes_updated', message: 'updated the project notes' };
+    }
+
+    if (update.calendarNotes && projectFieldChanged(update.calendarNotes, oldProject.calendarNotes || {})) {
+        return { type: 'calendar_notes_updated', message: 'updated the project calendar notes' };
     }
 
     const keys = Object.keys(update).filter(key => key !== 'priority');
@@ -772,7 +794,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, dueDate, projectDueDate, deadline, completed, completedDate, notes, description } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, dueDate, projectDueDate, deadline, completed, completedDate, notes, calendarNotes, projectCalendarNotes, description } = req.body;
         const sanitizedDescription = typeof description === 'string'
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
@@ -793,6 +815,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completed:     completed    || false,
             completedDate: completedDate || null,
             notes:         notes        || '',
+            calendarNotes: sanitizeProjectCalendarNotes(calendarNotes ?? projectCalendarNotes),
             description:   sanitizedDescription,
             archived:      false,
             owner:         req.user.id,
@@ -818,7 +841,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'dueDate', 'completed', 'completedDate', 'notes', 'description', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'dueDate', 'completed', 'completedDate', 'notes', 'calendarNotes', 'description', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);
