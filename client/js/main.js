@@ -7260,6 +7260,11 @@ function toggleProjectLayoutMenu(event) {
     event?.stopPropagation?.();
     const controls = document.getElementById('projectLayoutControls');
     if (!controls) return;
+    if (isMobileWebSidebarViewport()) {
+        controls.classList.remove('is-open');
+        controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', 'false');
+        return;
+    }
     const isOpen = !controls.classList.contains('is-open');
     controls.classList.toggle('is-open', isOpen);
     controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', String(isOpen));
@@ -7268,6 +7273,10 @@ function toggleProjectLayoutMenu(event) {
 function setProjectGridLayoutOption(key, value, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    if (isMobileWebSidebarViewport()) {
+        closeProjectLayoutMenu();
+        return;
+    }
     const layout = loadProjectGridLayoutPreference();
     if (key === 'columns') layout.columns = ['auto', '1', '2', '3', '4'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.columns;
     if (key === 'density') layout.density = ['compact', 'comfortable', 'spacious'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.density;
@@ -7844,6 +7853,55 @@ function initializeMobileWebSidebar() {
     syncMobileSidebarState();
 }
 
+
+function initializeMobileToolbarSearch() {
+    const searchInput = document.getElementById('projectSearchInput');
+    const searchWrap = searchInput?.closest?.('.view-toolbar-search-wrap');
+    if (!searchInput || !searchWrap) return;
+
+    const syncSearchState = () => {
+        const shouldStayOpen = isMobileWebSidebarViewport() && (document.activeElement === searchInput || !!searchInput.value.trim());
+        searchWrap.classList.toggle('is-mobile-search-open', shouldStayOpen);
+    };
+
+    searchWrap.addEventListener('click', event => {
+        if (!isMobileWebSidebarViewport()) return;
+        event.stopPropagation();
+        searchInput.focus({ preventScroll: true });
+        searchWrap.classList.add('is-mobile-search-open');
+        syncMobileAppBarHeight();
+    });
+
+    searchInput.addEventListener('focus', () => {
+        if (!isMobileWebSidebarViewport()) return;
+        searchWrap.classList.add('is-mobile-search-open');
+        syncMobileAppBarHeight();
+    });
+
+    searchInput.addEventListener('blur', () => {
+        window.setTimeout(() => {
+            syncSearchState();
+            syncMobileAppBarHeight();
+        }, 90);
+    });
+
+    searchInput.addEventListener('keydown', event => {
+        if (!isMobileWebSidebarViewport() || event.key !== 'Escape') return;
+        if (searchInput.value) {
+            searchInput.value = '';
+            uiState.projectSearch = '';
+            render();
+        }
+        searchInput.blur();
+        searchWrap.classList.remove('is-mobile-search-open');
+        syncMobileAppBarHeight();
+    });
+
+    window.addEventListener('resize', syncSearchState);
+    window.addEventListener('orientationchange', () => requestAnimationFrame(syncSearchState));
+    syncSearchState();
+}
+
 // ============================================================================
 // EVENT HANDLERS
 // ============================================================================
@@ -7953,6 +8011,7 @@ function initializeEventHandlers() {
 
     syncControlPanelState();
     initializeMobileWebSidebar();
+    initializeMobileToolbarSearch();
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
