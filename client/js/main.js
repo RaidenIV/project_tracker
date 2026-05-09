@@ -6462,6 +6462,7 @@ function openProjectCardDetailsModal(projectId, event) {
     event?.stopPropagation?.();
     const project = state.findProject(projectId);
     if (!project) return;
+    closeProjectModalActionsMenu();
     uiState.openProjectCardMenu = null;
 
     let modal = document.getElementById('projectCardDetailsModal');
@@ -6687,17 +6688,6 @@ function openProjectModal(projectId, options = {}) {
                           role="textbox"
                           ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); return false; } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
                     ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
-                </div>
-                <div class="modal-stats">
-                    <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span>Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
-                    <span>•</span>
-                    <span>${totalTasks} tasks</span>
-                    <span>•</span>
-                    <span>${completedTasks} done</span>
-                    <span>•</span>
-                    <span class="modal-tasks-remaining-count">${remainingTasks} remaining</span>
                 </div>
                 ${buildProjectTagControlsMarkup(project.id, project)}
                 <div class="modal-project-priority-row">

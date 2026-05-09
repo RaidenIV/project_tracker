@@ -18722,3 +18722,75 @@ body[data-theme^="blueprint"] .project-card-actions-menu.is-open .project-card-m
         transform: translateX(-50%) !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: project modal meatballs visibility + card status inset
+   ============================================================================ */
+#projectModal .modal-top-menu-shell,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 180 !important;
+    overflow: visible !important;
+}
+
+#projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    position: relative !important;
+    z-index: 181 !important;
+    overflow: visible !important;
+}
+
+#projectModal .modal-actions-menu-wrap,
+body[data-theme^="console"] #projectModal .modal-actions-menu-wrap,
+body[data-theme^="glass"] #projectModal .modal-actions-menu-wrap,
+body[data-theme^="blueprint"] #projectModal .modal-actions-menu-wrap {
+    z-index: 220 !important;
+}
+
+#projectModal .modal-actions-menu-popover,
+body[data-theme^="console"] #projectModal .modal-actions-menu-popover,
+body[data-theme^="glass"] #projectModal .modal-actions-menu-popover,
+body[data-theme^="blueprint"] #projectModal .modal-actions-menu-popover {
+    z-index: 260 !important;
+}
+
+.project-card-details-modal,
+body[data-theme^="console"] .project-card-details-modal,
+body[data-theme^="glass"] .project-card-details-modal,
+body[data-theme^="blueprint"] .project-card-details-modal {
+    z-index: 240 !important;
+}
+
+.project-card.stitch-project-card,
+.stitch-project-card.project-card,
+body[data-theme^="console"] .project-card.stitch-project-card,
+body[data-theme^="glass"] .project-card.stitch-project-card,
+body[data-theme^="blueprint"] .project-card.stitch-project-card {
+    --project-card-status-edge-inset: 1.55rem;
+}
+
+.project-card .project-card-meta,
+.stitch-project-card .project-card-meta,
+body[data-theme^="console"] .project-card .project-card-meta,
+body[data-theme^="glass"] .project-card .project-card-meta,
+body[data-theme^="blueprint"] .project-card .project-card-meta {
+    position: absolute !important;
+    right: var(--project-card-status-edge-inset) !important;
+    bottom: var(--project-card-status-edge-inset) !important;
+    z-index: 8 !important;
+}
+
+@media (max-width: 860px) {
+    .project-card.stitch-project-card,
+    .stitch-project-card.project-card,
+    body[data-theme^="console"] .project-card.stitch-project-card,
+    body[data-theme^="glass"] .project-card.stitch-project-card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card {
+        --project-card-status-edge-inset: 1.35rem;
+    }
+}
