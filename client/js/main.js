@@ -6489,8 +6489,10 @@ function openProjectCardDetailsModal(projectId, event) {
                     </svg>
                 </button>
             </div>
-            <div class="project-details-meta-list">
-                ${buildProjectMetadataListMarkup(project)}
+            <div class="project-details-meta-card">
+                <div class="project-details-meta-list">
+                    ${buildProjectMetadataListMarkup(project)}
+                </div>
             </div>
         </div>
     `;
@@ -6547,6 +6549,13 @@ function buildProjectCardActionsMenuMarkup(project, canEditProject, canOwnerDele
             ` : ''}
         </div>
     `;
+}
+
+function editProjectFromModalMenu(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    closeProjectModalActionsMenu();
+    requestAnimationFrame(() => editModalTitle(projectId));
 }
 
 function buildProjectCalendarTabMarkup(project) {
@@ -6648,6 +6657,7 @@ function openProjectModal(projectId, options = {}) {
                     </svg>
                 </button>
                 <div class="modal-actions-menu-popover" role="menu" aria-label="Project actions">
+                    ${state.canEdit(project.id) ? `<button type="button" role="menuitem" onclick="editProjectFromModalMenu('${project.id}', event)">Edit</button>` : ''}
                     <button type="button" role="menuitem" onclick="openProjectCardDetailsModal('${project.id}', event)">Details</button>
                     ${project.archived ? `<button type="button" role="menuitem" onclick="restoreArchivedProject('${project.id}')">Restore Project</button>` : `<button type="button" role="menuitem" onclick="archiveProject('${project.id}')">Archive Project</button>`}
                     <button type="button" role="menuitem" onclick="completeProjectFromModal('${project.id}')">${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}</button>
@@ -7689,6 +7699,7 @@ function renderProjectCard(project) {
     const canOwnerDelete = project.userRole === 'owner';
     const canShowReorderHandle = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
     const canReorderProject = canShowReorderHandle && uiState.sortMode === 'manual';
+    const previewTasks = getProjectCardPreviewTasks(project);
     const projectTags = getProjectTags(project);
     const accessLabel = isViewer || isEditor
         ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
@@ -7753,6 +7764,15 @@ function renderProjectCard(project) {
                 <div class="project-card-tasks-remaining">Tasks Remaining: ${remainingTasksCount}</div>
                 ${hasOverdueTasks ? `<div class="project-card-overdue-warning">${renderWarningTriangleIcon('project-card-overdue-icon')}<span>OVERDUE TASKS</span></div>` : ''}
             </div>
+
+            <ul class="project-preview-list">
+                ${previewTasks.length ? previewTasks.map(task => `
+                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
+                        <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
+                        <span>${escapeHtml(task.text || 'Untitled task')}</span>
+                    </li>
+                `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
+            </ul>
 
             <div class="project-card-notes-bar">
                 <button class="project-card-notes-button task-note-button ${projectHasNotes(project.notes) ? 'has-note' : ''}"
@@ -8535,6 +8555,7 @@ window.toggleProjectCardMenu = toggleProjectCardMenu;
 window.editProjectTitleFromCardMenu = editProjectTitleFromCardMenu;
 window.deleteProjectFromCardMenu = deleteProjectFromCardMenu;
 window.toggleProjectModalActionsMenu = toggleProjectModalActionsMenu;
+window.editProjectFromModalMenu = editProjectFromModalMenu;
 window.editModalTitle = editModalTitle;
 window.finishEditModalTitle = finishEditModalTitle;
 window.handleProjectTitleInput = handleProjectTitleInput;
