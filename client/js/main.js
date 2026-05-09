@@ -7848,78 +7848,8 @@ function initializeMobileWebSidebar() {
         if (navigationTarget) setMobileWebSidebarOpen(false);
     });
 
-    let sidebarGesture = null;
-    const resetSidebarGesture = () => {
-        sidebarGesture = null;
-    };
-
-    document.addEventListener('touchstart', event => {
-        if (!isMobileWebSidebarViewport() || isModalOpen() || event.touches.length !== 1) {
-            resetSidebarGesture();
-            return;
-        }
-
-        const touch = event.touches[0];
-        const sidebarOpen = isSidebarOpen();
-        const target = event.target;
-
-        if (isInsideSidebar(target) || isInteractiveTarget(target)) {
-            resetSidebarGesture();
-            return;
-        }
-
-        if (!sidebarOpen && touch.clientX > 42) {
-            resetSidebarGesture();
-            return;
-        }
-
-        sidebarGesture = {
-            startX: touch.clientX,
-            startY: touch.clientY,
-            isOpenAtStart: sidebarOpen,
-            isHorizontal: false
-        };
-    }, { passive: true });
-
-    document.addEventListener('touchmove', event => {
-        if (!sidebarGesture || event.touches.length !== 1) return;
-        const touch = event.touches[0];
-        const deltaX = touch.clientX - sidebarGesture.startX;
-        const deltaY = touch.clientY - sidebarGesture.startY;
-        const absX = Math.abs(deltaX);
-        const absY = Math.abs(deltaY);
-
-        if (!sidebarGesture.isHorizontal && absX > 16 && absX > absY * 1.35) {
-            sidebarGesture.isHorizontal = true;
-        }
-
-        if (sidebarGesture.isHorizontal) {
-            event.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', event => {
-        if (!sidebarGesture) return;
-        const touch = event.changedTouches?.[0];
-        if (!touch) {
-            resetSidebarGesture();
-            return;
-        }
-
-        const deltaX = touch.clientX - sidebarGesture.startX;
-        const deltaY = touch.clientY - sidebarGesture.startY;
-        const isHorizontalSwipe = Math.abs(deltaX) > 58 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25;
-
-        if (isHorizontalSwipe && deltaX > 0 && !sidebarGesture.isOpenAtStart) {
-            setMobileWebSidebarOpen(true);
-        } else if (isHorizontalSwipe && deltaX < 0 && sidebarGesture.isOpenAtStart) {
-            setMobileWebSidebarOpen(false);
-        }
-
-        resetSidebarGesture();
-    }, { passive: true });
-
-    document.addEventListener('touchcancel', resetSidebarGesture, { passive: true });
+    // Mobile web uses an explicit menu button and outside-click dismissal.
+    // No edge-swipe listeners are registered so page/card scrolling remains vertical and predictable.
 
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && isMobileWebSidebarViewport() && isSidebarOpen()) {
