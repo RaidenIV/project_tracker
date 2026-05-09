@@ -15071,3 +15071,55 @@ body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-c
         margin-top: 1rem !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: full-size editable project note tab creation
+   ============================================================================ */
+#projectModal .project-notes-tab--input,
+body[data-theme^="console"] #projectModal .project-notes-tab--input,
+body[data-theme^="glass"] #projectModal .project-notes-tab--input,
+body[data-theme^="blueprint"] #projectModal .project-notes-tab--input {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    flex: 0 0 auto !important;
+    width: clamp(7.75rem, 18vw, 11rem) !important;
+    max-width: clamp(7.75rem, 18vw, 11rem) !important;
+    min-height: 2.35rem !important;
+    padding: 0 !important;
+    border-radius: 0.7rem !important;
+    overflow: hidden !important;
+}
+
+#projectModal .project-notes-tab--input .project-notes-tab-input,
+body[data-theme^="console"] #projectModal .project-notes-tab--input .project-notes-tab-input,
+body[data-theme^="glass"] #projectModal .project-notes-tab--input .project-notes-tab-input,
+body[data-theme^="blueprint"] #projectModal .project-notes-tab--input .project-notes-tab-input {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 2.35rem !important;
+    margin: 0 !important;
+    padding: 0 0.8rem !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .project-notes-tab--input {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+}
+
+@media (max-width: 720px) {
+    #projectModal .project-notes-tab--input,
+    body[data-theme^="console"] #projectModal .project-notes-tab--input,
+    body[data-theme^="glass"] #projectModal .project-notes-tab--input,
+    body[data-theme^="blueprint"] #projectModal .project-notes-tab--input {
+        width: min(10rem, 54vw) !important;
+        max-width: min(10rem, 54vw) !important;
+    }
+}
