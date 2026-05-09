@@ -362,6 +362,19 @@ function sortTasks(tasks) {
 
 function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
     const baseOrder = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
+    if (mode === 'ascending' || mode === 'descending') {
+        return [...baseOrder].sort((a, b) => {
+            const textDiff = String(a.text || '').localeCompare(String(b.text || ''), undefined, {
+                numeric: true,
+                sensitivity: 'base'
+            });
+            const nextDiff = mode === 'descending' ? -textDiff : textDiff;
+            if (nextDiff !== 0) return nextDiff;
+            const idDiff = Number(a.id) - Number(b.id);
+            return mode === 'descending' ? -idDiff : idDiff;
+        });
+    }
+
     if (mode === 'tag-priority') {
         return [...baseOrder].sort((a, b) => {
             const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
@@ -659,14 +672,14 @@ function getProjectTaskSortPreference(projectId) {
     const key = String(projectId || '');
     if (!key) return DEFAULT_TASK_SORT_MODE;
     const value = preferences[key];
-    return ['tag-priority', 'due-date'].includes(value) ? value : DEFAULT_TASK_SORT_MODE;
+    return ['tag-priority', 'due-date', 'ascending', 'descending'].includes(value) ? value : DEFAULT_TASK_SORT_MODE;
 }
 
 function setProjectTaskSortPreference(projectId, sortMode) {
     const key = String(projectId || '');
     if (!key) return;
     const preferences = loadProjectTaskSortPreferences();
-    preferences[key] = ['tag-priority', 'due-date'].includes(sortMode) ? sortMode : DEFAULT_TASK_SORT_MODE;
+    preferences[key] = ['tag-priority', 'due-date', 'ascending', 'descending'].includes(sortMode) ? sortMode : DEFAULT_TASK_SORT_MODE;
     saveProjectTaskSortPreferences(preferences);
 }
 
@@ -5215,7 +5228,6 @@ function buildProjectTagControlsMarkup(projectId, project) {
 
     return `
         <div class="project-tag-controls" id="project-tag-controls-${projectId}">
-            <div class="project-tag-controls-label">Project Tags</div>
             <div class="project-tag-chip-list">
                 ${tags.length ? tags.map(tag => {
                     const tagLiteral = serializeInlineJsString(tag);
@@ -6397,6 +6409,172 @@ function handleTaskCategoryCreateKeydown(event, projectId) {
     }
 }
 
+function getProjectMetadataRows(project) {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const collaborators = Array.isArray(project?.collaborators) ? project.collaborators : [];
+    const completedTasks = tasks.filter(task => normalizeTask(task).completed).length;
+    const remainingTasks = Math.max(0, tasks.length - completedTasks);
+    const overdueTasks = tasks.filter(task => isTaskOverdue(normalizeTask(task))).length;
+    const projectTags = getProjectTags(project);
+    const status = isProjectArchived(project)
+        ? 'Archived'
+        : (isProjectCompleted(project) ? 'Completed' : 'Active');
+    const progress = tasks.length > 0 ? `${Math.round((completedTasks / tasks.length) * 100)}%` : '0%';
+    const ownerLabel = project?.ownerName || (project?.userRole === 'owner' ? 'Me' : 'Unknown');
+    const collaboratorLabel = collaborators.length
+        ? collaborators.map(member => member.username || member.email || 'Collaborator').join(', ')
+        : 'None';
+
+    return [
+        ['Project', project?.title || 'Untitled Project'],
+        ['Status', status],
+        ['Role', project?.userRole ? toTitleCase(project.userRole) : 'Owner'],
+        ['Owner', ownerLabel],
+        ['Created', project?.dateCreated ? formatCompactDateTime(project.dateCreated) : 'Unknown'],
+        ['Updated', project?.lastModified ? formatCompactDateTime(project.lastModified) : (project?.dateCreated ? formatCompactDateTime(project.dateCreated) : 'Unknown')],
+        ['Project due date', getProjectDueDate(project) ? formatProjectDueDate(getProjectDueDate(project)) : 'None'],
+        ['Priority', getProjectPriorityLabel(project)],
+        ['Progress', progress],
+        ['Total tasks', String(tasks.length)],
+        ['Completed tasks', String(completedTasks)],
+        ['Remaining tasks', String(remainingTasks)],
+        ['Overdue tasks', String(overdueTasks)],
+        ['Collaborators', collaboratorLabel],
+        ['Tags', projectTags.length ? projectTags.join(', ') : 'None'],
+        ['Project ID', project?.id || 'Unknown']
+    ];
+}
+
+function buildProjectMetadataDetailsCard(project) {
+    const rows = getProjectMetadataRows(project);
+    return `
+        <div class="project-metadata-card">
+            ${rows.map(([label, value]) => `
+                <div class="project-metadata-row">
+                    <span class="project-metadata-label">${escapeHtml(label)}</span>
+                    <span class="project-metadata-value">${escapeHtml(value)}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function ensureProjectMetadataDetailsModal() {
+    let modal = document.getElementById('projectMetadataDetailsModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay project-metadata-details-overlay" id="projectMetadataDetailsModal" aria-hidden="true">
+            <div class="modal-content project-metadata-details-content" role="dialog" aria-modal="true" aria-labelledby="projectMetadataDetailsTitle">
+                <div class="project-metadata-details-header">
+                    <div>
+                        <h3 class="project-metadata-details-title" id="projectMetadataDetailsTitle">Project Details</h3>
+                        <p class="project-metadata-details-subtitle" id="projectMetadataDetailsSubtitle">Project metadata</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeProjectMetadataDetails()" aria-label="Close project details">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="project-metadata-details-body" id="projectMetadataDetailsBody"></div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('projectMetadataDetailsModal');
+    modal.addEventListener('click', event => {
+        if (event.target === modal) closeProjectMetadataDetails();
+    });
+    return modal;
+}
+
+function openProjectMetadataDetails(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    closeProjectMeatballsMenus();
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const modal = ensureProjectMetadataDetailsModal();
+    const title = document.getElementById('projectMetadataDetailsTitle');
+    const subtitle = document.getElementById('projectMetadataDetailsSubtitle');
+    const body = document.getElementById('projectMetadataDetailsBody');
+    if (title) title.textContent = 'Project Details';
+    if (subtitle) subtitle.textContent = project.title || 'Project metadata';
+    if (body) body.innerHTML = buildProjectMetadataDetailsCard(project);
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeProjectMetadataDetails() {
+    const modal = document.getElementById('projectMetadataDetailsModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function closeProjectMeatballsMenus() {
+    document.querySelectorAll('.project-meatballs[open]').forEach(menu => {
+        menu.removeAttribute('open');
+    });
+}
+
+function buildProjectMeatballsMenuMarkup(project, surface = 'card') {
+    const projectIdLiteral = serializeInlineJsString(project?.id || '');
+    const canEditProject = state.canEdit(project?.id);
+    const canDeleteProject = state.isOwner(project?.id);
+    const editAction = surface === 'modal'
+        ? `editModalTitle(${projectIdLiteral})`
+        : `editProjectTitleOnCard(${projectIdLiteral})`;
+    const deleteAction = surface === 'modal'
+        ? `confirmDeleteProject(${projectIdLiteral})`
+        : `confirmDeleteProjectCard(${projectIdLiteral})`;
+
+    return `
+        <details class="project-meatballs project-meatballs--${escapeHtml(surface)}" onclick="event.stopPropagation();">
+            <summary class="project-meatballs-toggle" role="button" aria-label="Project actions" title="Project actions" onclick="event.stopPropagation();">
+                <span aria-hidden="true">⋮</span>
+            </summary>
+            <div class="project-meatballs-dropdown" role="menu" onclick="event.stopPropagation();">
+                ${canEditProject ? `<button class="project-meatballs-item" type="button" role="menuitem" onclick="event.preventDefault(); event.stopPropagation(); closeProjectMeatballsMenus(); ${editAction}">Edit</button>` : ''}
+                <button class="project-meatballs-item" type="button" role="menuitem" onclick="openProjectMetadataDetails(${projectIdLiteral}, event)">Details</button>
+                ${canDeleteProject ? `<button class="project-meatballs-item project-meatballs-item--danger" type="button" role="menuitem" onclick="event.preventDefault(); event.stopPropagation(); closeProjectMeatballsMenus(); ${deleteAction}">Delete Project</button>` : ''}
+            </div>
+        </details>
+    `;
+}
+
+function buildProjectCalendarSectionMarkup(project) {
+    const projectDueDate = getProjectDueDate(project);
+    const dueTasks = (Array.isArray(project?.tasks) ? project.tasks : [])
+        .map((task, index) => normalizeTask(task, index))
+        .filter(task => normalizeTaskDueDate(task.dueDate))
+        .sort((a, b) => normalizeTaskDueDate(a.dueDate).localeCompare(normalizeTaskDueDate(b.dueDate)) || String(a.text || '').localeCompare(String(b.text || ''), undefined, { sensitivity: 'base' }));
+
+    return `
+        <div class="project-calendar-panel">
+            <div class="project-calendar-card">
+                <div class="project-calendar-card-title">Project Due Date</div>
+                <div class="project-calendar-card-value">${escapeHtml(projectDueDate ? formatProjectDueDate(projectDueDate) : 'No project due date')}</div>
+            </div>
+            <div class="project-calendar-card project-calendar-card--tasks">
+                <div class="project-calendar-card-title">Task Due Dates</div>
+                ${dueTasks.length ? `
+                    <div class="project-calendar-list">
+                        ${dueTasks.map(task => `
+                            <div class="project-calendar-item ${task.completed ? 'is-completed' : ''}">
+                                <span class="project-calendar-date">${escapeHtml(formatTaskDueDate(task.dueDate))}</span>
+                                <span class="project-calendar-task">${escapeHtml(task.text || 'Untitled task')}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div class="project-calendar-empty">No task due dates yet</div>'}
+            </div>
+        </div>
+    `;
+}
+
 function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
     if (!project) return;
@@ -6440,6 +6618,8 @@ function openProjectModal(projectId, options = {}) {
                 Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
             <button class="modal-tab modal-menu-item" role="menuitem" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
+            <button class="modal-tab modal-menu-item" role="menuitem" id="calendar-tab-${project.id}" onclick="switchModalTab('${project.id}', 'calendar')">Calendar</button>
+            ${buildProjectMeatballsMenuMarkup(project, 'modal')}
             <button class="modal-close modal-menu-close" onclick="closeProjectModal()" type="button" aria-label="Close project modal">
                 <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -6475,17 +6655,6 @@ function openProjectModal(projectId, options = {}) {
                           ${state.canEdit(project.id) ? `tabindex="0" onclick="editProjectDescription('${project.id}', event)" onfocus="editProjectDescription('${project.id}', event)" onblur="finishEditProjectDescription('${project.id}')" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); finishEditProjectDescription('${project.id}'); return false; } if(event.key === 'Escape'){ event.preventDefault(); cancelEditProjectDescription('${project.id}'); }"` : ''}>${getProjectModalDescription(project) ? escapeHtml(getProjectModalDescription(project)) : 'Add project description'}</span>
                     ${state.canEdit(project.id) ? `<button class="modal-project-description-edit" type="button" onclick="editProjectDescription('${project.id}', event)">Edit</button>` : ''}
                 </div>
-                <div class="modal-stats">
-                    <span>Created ${new Date(project.dateCreated).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span>Updated ${formatCompactDateTime(project.lastModified || project.dateCreated)}</span>
-                    <span>•</span>
-                    <span>${totalTasks} tasks</span>
-                    <span>•</span>
-                    <span>${completedTasks} done</span>
-                    <span>•</span>
-                    <span class="modal-tasks-remaining-count">${remainingTasks} remaining</span>
-                </div>
                 ${buildProjectTagControlsMarkup(project.id, project)}
                 <div class="modal-project-priority-row">
                     ${renderProjectPriorityControlMarkup(project.id, project, 'modal')}
@@ -6519,9 +6688,10 @@ function openProjectModal(projectId, options = {}) {
                             </label>
                         </div>
                         <div class="task-sort-control">
-                            <label class="toggle-label" for="task-sort-select-${project.id}">Sort tasks</label>
-                            <select class="task-sort-select" id="task-sort-select-${project.id}" onchange="setProjectTaskSortMode('${project.id}', this.value)">
+                            <select class="task-sort-select" id="task-sort-select-${project.id}" aria-label="Sort tasks" onchange="setProjectTaskSortMode('${project.id}', this.value)">
                                 <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                                <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>Ascending order</option>
+                                <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>Descending order</option>
                                 <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
                                 <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
                             </select>
@@ -6541,7 +6711,7 @@ function openProjectModal(projectId, options = {}) {
                         
                         <!-- Paste Tasks Section in Modal -->
                         <div class="modal-paste-section">
-                            <h4 class="modal-paste-title">Add Tasks Here</h4>
+                            <h4 class="modal-paste-title">Add Tasks</h4>
                             <textarea 
                                 class="paste-box"
                                 id="modal-paste-box-${project.id}"
@@ -6664,6 +6834,10 @@ function openProjectModal(projectId, options = {}) {
         </div>
 
 
+        <div class="modal-section hidden" id="calendar-section-${project.id}">
+            ${buildProjectCalendarSectionMarkup(project)}
+        </div>
+
         <div class="modal-section hidden" id="history-section-${project.id}">
             <div class="project-activity-list">
                 ${getProjectActivities(project).length ? getProjectActivities(project).map(activity => `
@@ -6695,7 +6869,7 @@ function openProjectModal(projectId, options = {}) {
 
 
 function switchModalTab(projectId, tab) {
-    ['tasks', 'notes', 'members', 'history'].forEach(s => {
+    ['tasks', 'notes', 'members', 'history', 'calendar'].forEach(s => {
         const sec = document.getElementById(`${s}-section-${projectId}`);
         const btn = document.getElementById(`${s}-tab-${projectId}`);
         if (!sec || !btn) return;
@@ -7520,21 +7694,11 @@ function renderProjectCard(project) {
                                oninput="event.stopPropagation(); handleProjectTitleInput(this)"
                                onanimationend="this.classList.remove('project-title-shake')"
                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); cancelEditProjectTitleOnCard('${project.id}'); }">
-                        ${projectDescription ? `<span class="project-card-description project-card-description--header">${escapeHtml(projectDescription)}</span>` : ''}
                         <p class="project-sync-text">${escapeHtml(formatProjectSyncText(project))}</p>
                     </div>
                 </div>
                 <div class="project-actions">
-                    ${canEditProject ? `<button class="edit-button" type="button" title="Edit project name" onclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                    </button>` : ''}
-                    ${canOwnerDelete ? `<button class="card-delete-button" type="button" onclick="event.stopPropagation(); confirmDeleteProjectCard('${project.id}')">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                    </button>` : ''}
+                    ${buildProjectMeatballsMenuMarkup(project, 'card')}
                 </div>
             </div>
 
@@ -8358,6 +8522,9 @@ window.deleteTaskFromModal = deleteTaskFromModal;
 window.completeProjectFromModal = completeProjectFromModal;
 window.confirmDeleteProject = confirmDeleteProject;
 window.confirmDeleteProjectCard = confirmDeleteProjectCard;
+window.openProjectMetadataDetails = openProjectMetadataDetails;
+window.closeProjectMetadataDetails = closeProjectMetadataDetails;
+window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;
 window.pasteTasksInModal = pasteTasksInModal;

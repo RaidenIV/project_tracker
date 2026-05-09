@@ -18370,3 +18370,410 @@ body[data-theme^="blueprint"] .task-note-modal-actions .modal-done-btn {
         transform: none !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: project modal/card meatballs, metadata details, calendar tab
+   ============================================================================ */
+#projectModal .modal-top-menu-shell,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell,
+#projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    overflow: visible !important;
+    z-index: 420 !important;
+}
+
+.project-card,
+.stitch-project-card,
+body[data-theme^="console"] .project-card,
+body[data-theme^="blueprint"] .project-card,
+body[data-theme^="glass"] .project-card {
+    overflow: visible !important;
+}
+
+.project-actions,
+.project-card .project-actions,
+.stitch-project-card .project-actions {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    min-width: 2.35rem !important;
+    z-index: 80 !important;
+}
+
+.project-meatballs,
+body[data-theme^="console"] .project-meatballs,
+body[data-theme^="blueprint"] .project-meatballs,
+body[data-theme^="glass"] .project-meatballs {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 90 !important;
+}
+
+.project-meatballs--modal,
+body[data-theme^="console"] .project-meatballs--modal,
+body[data-theme^="blueprint"] .project-meatballs--modal,
+body[data-theme^="glass"] .project-meatballs--modal {
+    flex: 0 0 2.5rem !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+}
+
+.project-meatballs-toggle,
+body[data-theme^="console"] .project-meatballs-toggle,
+body[data-theme^="blueprint"] .project-meatballs-toggle,
+body[data-theme^="glass"] .project-meatballs-toggle {
+    appearance: none !important;
+    list-style: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.35rem !important;
+    min-width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    padding: 0 !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: pointer !important;
+    font-size: 1.35rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+}
+
+.project-meatballs-toggle::-webkit-details-marker {
+    display: none !important;
+}
+
+.project-meatballs-toggle:hover,
+.project-meatballs-toggle:focus-visible,
+.project-meatballs[open] .project-meatballs-toggle,
+body[data-theme^="console"] .project-meatballs-toggle:hover,
+body[data-theme^="console"] .project-meatballs-toggle:focus-visible,
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-toggle,
+body[data-theme^="blueprint"] .project-meatballs-toggle:hover,
+body[data-theme^="blueprint"] .project-meatballs-toggle:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-toggle,
+body[data-theme^="glass"] .project-meatballs-toggle:hover,
+body[data-theme^="glass"] .project-meatballs-toggle:focus-visible,
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-toggle {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(255, 138, 0, 0.18)) !important;
+    outline: none !important;
+}
+
+.project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs-dropdown {
+    position: absolute !important;
+    top: calc(100% + 0.5rem) !important;
+    right: 0 !important;
+    z-index: 5000 !important;
+    display: grid !important;
+    gap: 0.35rem !important;
+    min-width: 12.25rem !important;
+    padding: 0.55rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.95rem !important;
+    background: var(--surface-strong, var(--surface, #101116)) !important;
+    color: var(--text, currentColor) !important;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38) !important;
+}
+
+.project-meatballs--modal .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs--modal .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs--modal .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs--modal .project-meatballs-dropdown {
+    top: calc(100% + 0.65rem) !important;
+    right: 0 !important;
+}
+
+.project-meatballs-item,
+body[data-theme^="console"] .project-meatballs-item,
+body[data-theme^="blueprint"] .project-meatballs-item,
+body[data-theme^="glass"] .project-meatballs-item {
+    appearance: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    min-height: 2.25rem !important;
+    padding: 0.62rem 0.75rem !important;
+    border: 0 !important;
+    border-radius: 0.7rem !important;
+    background: transparent !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-align: left !important;
+    text-transform: uppercase !important;
+}
+
+.project-meatballs-item:hover,
+.project-meatballs-item:focus-visible,
+body[data-theme^="console"] .project-meatballs-item:hover,
+body[data-theme^="console"] .project-meatballs-item:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs-item:hover,
+body[data-theme^="blueprint"] .project-meatballs-item:focus-visible,
+body[data-theme^="glass"] .project-meatballs-item:hover,
+body[data-theme^="glass"] .project-meatballs-item:focus-visible {
+    background: var(--hover, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-meatballs-item--danger:hover,
+.project-meatballs-item--danger:focus-visible,
+body[data-theme^="console"] .project-meatballs-item--danger:hover,
+body[data-theme^="console"] .project-meatballs-item--danger:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs-item--danger:hover,
+body[data-theme^="blueprint"] .project-meatballs-item--danger:focus-visible,
+body[data-theme^="glass"] .project-meatballs-item--danger:hover,
+body[data-theme^="glass"] .project-meatballs-item--danger:focus-visible {
+    color: #ef4444 !important;
+}
+
+.project-metadata-details-overlay.active,
+body[data-theme^="console"] .project-metadata-details-overlay.active,
+body[data-theme^="blueprint"] .project-metadata-details-overlay.active,
+body[data-theme^="glass"] .project-metadata-details-overlay.active {
+    z-index: 9000 !important;
+}
+
+.project-metadata-details-content,
+body[data-theme^="console"] .project-metadata-details-content,
+body[data-theme^="blueprint"] .project-metadata-details-content,
+body[data-theme^="glass"] .project-metadata-details-content {
+    width: min(92vw, 34rem) !important;
+    max-width: 34rem !important;
+    max-height: min(82vh, 44rem) !important;
+    padding: 1.35rem !important;
+    overflow: hidden !important;
+}
+
+.project-metadata-details-header,
+body[data-theme^="console"] .project-metadata-details-header,
+body[data-theme^="blueprint"] .project-metadata-details-header,
+body[data-theme^="glass"] .project-metadata-details-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.project-metadata-details-title,
+body[data-theme^="console"] .project-metadata-details-title,
+body[data-theme^="blueprint"] .project-metadata-details-title,
+body[data-theme^="glass"] .project-metadata-details-title {
+    margin: 0 !important;
+    color: var(--heading, inherit) !important;
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+}
+
+.project-metadata-details-subtitle,
+body[data-theme^="console"] .project-metadata-details-subtitle,
+body[data-theme^="blueprint"] .project-metadata-details-subtitle,
+body[data-theme^="glass"] .project-metadata-details-subtitle {
+    margin: 0.25rem 0 0 !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+}
+
+.project-metadata-details-body,
+body[data-theme^="console"] .project-metadata-details-body,
+body[data-theme^="blueprint"] .project-metadata-details-body,
+body[data-theme^="glass"] .project-metadata-details-body {
+    max-height: calc(min(82vh, 44rem) - 6.5rem) !important;
+    overflow-y: auto !important;
+    padding-right: 0.2rem !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.project-metadata-card,
+body[data-theme^="console"] .project-metadata-card,
+body[data-theme^="blueprint"] .project-metadata-card,
+body[data-theme^="glass"] .project-metadata-card {
+    display: grid !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-metadata-row,
+body[data-theme^="console"] .project-metadata-row,
+body[data-theme^="blueprint"] .project-metadata-row,
+body[data-theme^="glass"] .project-metadata-row {
+    display: grid !important;
+    grid-template-columns: minmax(7rem, 0.45fr) minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+    align-items: start !important;
+    padding-bottom: 0.55rem !important;
+    border-bottom: 1px solid var(--border, rgba(148, 163, 184, 0.18)) !important;
+}
+
+.project-metadata-row:last-child,
+body[data-theme^="console"] .project-metadata-row:last-child,
+body[data-theme^="blueprint"] .project-metadata-row:last-child,
+body[data-theme^="glass"] .project-metadata-row:last-child {
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+}
+
+.project-metadata-label,
+body[data-theme^="console"] .project-metadata-label,
+body[data-theme^="blueprint"] .project-metadata-label,
+body[data-theme^="glass"] .project-metadata-label {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.74rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-metadata-value,
+body[data-theme^="console"] .project-metadata-value,
+body[data-theme^="blueprint"] .project-metadata-value,
+body[data-theme^="glass"] .project-metadata-value {
+    color: var(--text, currentColor) !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+}
+
+.project-calendar-panel,
+body[data-theme^="console"] .project-calendar-panel,
+body[data-theme^="blueprint"] .project-calendar-panel,
+body[data-theme^="glass"] .project-calendar-panel {
+    display: grid !important;
+    gap: 1rem !important;
+}
+
+.project-calendar-card,
+body[data-theme^="console"] .project-calendar-card,
+body[data-theme^="blueprint"] .project-calendar-card,
+body[data-theme^="glass"] .project-calendar-card {
+    display: grid !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-calendar-card-title,
+body[data-theme^="console"] .project-calendar-card-title,
+body[data-theme^="blueprint"] .project-calendar-card-title,
+body[data-theme^="glass"] .project-calendar-card-title {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-card-value,
+.project-calendar-empty,
+body[data-theme^="console"] .project-calendar-card-value,
+body[data-theme^="console"] .project-calendar-empty,
+body[data-theme^="blueprint"] .project-calendar-card-value,
+body[data-theme^="blueprint"] .project-calendar-empty,
+body[data-theme^="glass"] .project-calendar-card-value,
+body[data-theme^="glass"] .project-calendar-empty {
+    color: var(--text, currentColor) !important;
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+}
+
+.project-calendar-list,
+body[data-theme^="console"] .project-calendar-list,
+body[data-theme^="blueprint"] .project-calendar-list,
+body[data-theme^="glass"] .project-calendar-list {
+    display: grid !important;
+    gap: 0.55rem !important;
+}
+
+.project-calendar-item,
+body[data-theme^="console"] .project-calendar-item,
+body[data-theme^="blueprint"] .project-calendar-item,
+body[data-theme^="glass"] .project-calendar-item {
+    display: grid !important;
+    grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+    padding: 0.62rem 0.75rem !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+}
+
+.project-calendar-item.is-completed,
+body[data-theme^="console"] .project-calendar-item.is-completed,
+body[data-theme^="blueprint"] .project-calendar-item.is-completed,
+body[data-theme^="glass"] .project-calendar-item.is-completed {
+    opacity: 0.62 !important;
+}
+
+.project-calendar-date,
+body[data-theme^="console"] .project-calendar-date,
+body[data-theme^="blueprint"] .project-calendar-date,
+body[data-theme^="glass"] .project-calendar-date {
+    color: var(--accent, currentColor) !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-task,
+body[data-theme^="console"] .project-calendar-task,
+body[data-theme^="blueprint"] .project-calendar-task,
+body[data-theme^="glass"] .project-calendar-task {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 720px) {
+    .project-metadata-row,
+    body[data-theme^="console"] .project-metadata-row,
+    body[data-theme^="blueprint"] .project-metadata-row,
+    body[data-theme^="glass"] .project-metadata-row,
+    .project-calendar-item,
+    body[data-theme^="console"] .project-calendar-item,
+    body[data-theme^="blueprint"] .project-calendar-item,
+    body[data-theme^="glass"] .project-calendar-item {
+        grid-template-columns: 1fr !important;
+        gap: 0.25rem !important;
+    }
+
+    .project-metadata-value,
+    body[data-theme^="console"] .project-metadata-value,
+    body[data-theme^="blueprint"] .project-metadata-value,
+    body[data-theme^="glass"] .project-metadata-value {
+        text-align: left !important;
+    }
+}
