@@ -7664,71 +7664,184 @@ function updateProjectSelect() {
 }
 
 // ============================================================================
-// MOBILE LAYERED DRAWER
+// MOBILE WEB SIDEBAR
 // ============================================================================
 
-function isMobileLayeredDrawerViewport() {
+function isMobileWebSidebarViewport() {
     return window.matchMedia('(max-width: 980px)').matches;
 }
 
-function setMobileLayeredDrawerOpen(isOpen) {
-    const nextOpen = !!isOpen && isMobileLayeredDrawerViewport();
-    document.body.classList.toggle('mobile-drawer-open', nextOpen);
-    document.getElementById('controlPanel')?.setAttribute('aria-hidden', nextOpen ? 'false' : 'true');
+function renderPanelEdgeToggleIcon(isOpen) {
+    const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+    if (!panelEdgeToggle) return;
+
+    if (isMobileWebSidebarViewport()) {
+        panelEdgeToggle.innerHTML = isOpen
+            ? `<svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+               </svg>`
+            : `<svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+               </svg>`;
+        panelEdgeToggle.setAttribute('aria-label', isOpen ? 'Close sidebar' : 'Open sidebar');
+        panelEdgeToggle.setAttribute('aria-expanded', String(isOpen));
+        return;
+    }
+
+    panelEdgeToggle.innerHTML = `<svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>`;
 }
 
-function initializeMobileLayeredDrawer() {
-    const controlPanel = document.getElementById('controlPanel');
+function setMobileWebSidebarOpen(isOpen) {
+    const nextOpen = !!isOpen && isMobileWebSidebarViewport();
+    document.body.classList.toggle('mobile-drawer-open', nextOpen);
+    document.body.classList.remove('mobile-sidebar-open');
+    document.getElementById('controlPanel')?.setAttribute('aria-hidden', nextOpen ? 'false' : 'true');
+    renderPanelEdgeToggleIcon(nextOpen);
+}
+
+function syncMobileAppBarHeight() {
     const topAppBar = document.querySelector('.top-app-bar');
-    const viewport = document.getElementById('viewport');
-    if (!controlPanel || !topAppBar || !viewport) return;
+    const root = document.documentElement;
+    if (!topAppBar || !root) return;
 
-    const foregroundTargets = [topAppBar, viewport];
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchTracking = false;
+    if (!isMobileWebSidebarViewport()) {
+        root.style.removeProperty('--mobile-app-bar-height');
+        return;
+    }
 
-    const isDrawerOpen = () => document.body.classList.contains('mobile-drawer-open');
+    const measuredHeight = Math.ceil(topAppBar.getBoundingClientRect().height || 0);
+    const nextHeight = Math.max(measuredHeight, 92);
+    root.style.setProperty('--mobile-app-bar-height', `${nextHeight}px`);
+}
+
+function initializeMobileWebSidebar() {
+    const controlPanel = document.getElementById('controlPanel');
+    const panelEdgeToggle = document.getElementById('panelEdgeToggle');
+    if (!controlPanel || !panelEdgeToggle) return;
+
+    const isSidebarOpen = () => document.body.classList.contains('mobile-drawer-open');
     const isModalOpen = () => !!document.querySelector('.modal-overlay.active, .auth-overlay:not(.hidden)');
-    const isInDrawer = target => !!target?.closest?.('#controlPanel');
+    const isInsideSidebar = target => !!target?.closest?.('#controlPanel');
+    const isToggle = target => !!target?.closest?.('#panelEdgeToggle');
+    const isInteractiveTarget = target => !!target?.closest?.('input, textarea, select, button, a, [contenteditable="true"], .modal-overlay, .auth-overlay');
 
-    const handleTouchStart = event => {
-        if (!isMobileLayeredDrawerViewport() || isModalOpen() || isInDrawer(event.target)) return;
-        const touch = event.touches?.[0];
-        if (!touch) return;
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-        touchTracking = true;
+    const syncMobileSidebarState = () => {
+        syncMobileAppBarHeight();
+        if (!isMobileWebSidebarViewport()) {
+            setMobileWebSidebarOpen(false);
+            controlPanel.removeAttribute('aria-hidden');
+            renderPanelEdgeToggleIcon(false);
+            return;
+        }
+        controlPanel.setAttribute('aria-hidden', isSidebarOpen() ? 'false' : 'true');
+        renderPanelEdgeToggleIcon(isSidebarOpen());
     };
 
-    const handleTouchEnd = event => {
-        if (!touchTracking || !isMobileLayeredDrawerViewport()) return;
-        const touch = event.changedTouches?.[0];
-        touchTracking = false;
-        if (!touch) return;
+    document.addEventListener('click', event => {
+        if (!isMobileWebSidebarViewport() || !isSidebarOpen() || isModalOpen()) return;
+        if (isInsideSidebar(event.target) || isToggle(event.target)) return;
+        setMobileWebSidebarOpen(false);
+    }, true);
 
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-        if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+    controlPanel.addEventListener('click', event => {
+        if (!isMobileWebSidebarViewport()) return;
+        const navigationTarget = event.target.closest?.('#activeProjectsCard, #sharedProjectsCard, #completedProjectsCard, #archivedProjectsMoreBtn');
+        if (navigationTarget) setMobileWebSidebarOpen(false);
+    });
 
-        if (deltaX > 0) setMobileLayeredDrawerOpen(true);
-        if (deltaX < 0) setMobileLayeredDrawerOpen(false);
+    let sidebarGesture = null;
+    const resetSidebarGesture = () => {
+        sidebarGesture = null;
     };
 
-    foregroundTargets.forEach(target => {
-        target.addEventListener('touchstart', handleTouchStart, { passive: true });
-        target.addEventListener('touchend', handleTouchEnd, { passive: true });
-        target.addEventListener('click', event => {
-            if (!isMobileLayeredDrawerViewport() || !isDrawerOpen()) return;
+    document.addEventListener('touchstart', event => {
+        if (!isMobileWebSidebarViewport() || isModalOpen() || event.touches.length !== 1) {
+            resetSidebarGesture();
+            return;
+        }
+
+        const touch = event.touches[0];
+        const sidebarOpen = isSidebarOpen();
+        const target = event.target;
+
+        if (isInsideSidebar(target) || isInteractiveTarget(target)) {
+            resetSidebarGesture();
+            return;
+        }
+
+        if (!sidebarOpen && touch.clientX > 42) {
+            resetSidebarGesture();
+            return;
+        }
+
+        sidebarGesture = {
+            startX: touch.clientX,
+            startY: touch.clientY,
+            isOpenAtStart: sidebarOpen,
+            isHorizontal: false
+        };
+    }, { passive: true });
+
+    document.addEventListener('touchmove', event => {
+        if (!sidebarGesture || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - sidebarGesture.startX;
+        const deltaY = touch.clientY - sidebarGesture.startY;
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+
+        if (!sidebarGesture.isHorizontal && absX > 16 && absX > absY * 1.35) {
+            sidebarGesture.isHorizontal = true;
+        }
+
+        if (sidebarGesture.isHorizontal) {
             event.preventDefault();
-            event.stopPropagation();
-            setMobileLayeredDrawerOpen(false);
-        }, true);
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', event => {
+        if (!sidebarGesture) return;
+        const touch = event.changedTouches?.[0];
+        if (!touch) {
+            resetSidebarGesture();
+            return;
+        }
+
+        const deltaX = touch.clientX - sidebarGesture.startX;
+        const deltaY = touch.clientY - sidebarGesture.startY;
+        const isHorizontalSwipe = Math.abs(deltaX) > 58 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25;
+
+        if (isHorizontalSwipe && deltaX > 0 && !sidebarGesture.isOpenAtStart) {
+            setMobileWebSidebarOpen(true);
+        } else if (isHorizontalSwipe && deltaX < 0 && sidebarGesture.isOpenAtStart) {
+            setMobileWebSidebarOpen(false);
+        }
+
+        resetSidebarGesture();
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', resetSidebarGesture, { passive: true });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && isMobileWebSidebarViewport() && isSidebarOpen()) {
+            setMobileWebSidebarOpen(false);
+        }
     });
 
-    window.addEventListener('resize', () => {
-        if (!isMobileLayeredDrawerViewport()) setMobileLayeredDrawerOpen(false);
-    });
+    window.addEventListener('resize', syncMobileSidebarState);
+    window.addEventListener('orientationchange', () => requestAnimationFrame(syncMobileSidebarState));
+    if (typeof ResizeObserver !== 'undefined') {
+        const topAppBar = document.querySelector('.top-app-bar');
+        if (topAppBar) {
+            window.__mobileTopBarObserver?.disconnect?.();
+            window.__mobileTopBarObserver = new ResizeObserver(() => syncMobileAppBarHeight());
+            window.__mobileTopBarObserver.observe(topAppBar);
+        }
+    }
+    requestAnimationFrame(syncMobileSidebarState);
+    syncMobileSidebarState();
 }
 
 // ============================================================================
@@ -7827,6 +7940,10 @@ function initializeEventHandlers() {
     // Always-visible edge toggle — toggles between expand/collapse based on current state
     const panelEdgeToggle = document.getElementById('panelEdgeToggle');
     panelEdgeToggle?.addEventListener('click', () => {
+        if (isMobileWebSidebarViewport()) {
+            setMobileWebSidebarOpen(!document.body.classList.contains('mobile-drawer-open'));
+            return;
+        }
         if (controlPanel?.classList.contains('collapsed')) {
             expandControlPanel();
         } else {
@@ -7835,7 +7952,7 @@ function initializeEventHandlers() {
     });
 
     syncControlPanelState();
-    initializeMobileLayeredDrawer();
+    initializeMobileWebSidebar();
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
