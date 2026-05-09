@@ -6219,6 +6219,7 @@ function openProjectModal(projectId, options = {}) {
 
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
+    const remainingTasks = tasks.filter(t => !t.completed).length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
     const modal = document.getElementById('projectModal');
@@ -6282,6 +6283,8 @@ function openProjectModal(projectId, options = {}) {
                     <span>${totalTasks} tasks</span>
                     <span>•</span>
                     <span>${completedTasks} done</span>
+                    <span>•</span>
+                    <span class="modal-tasks-remaining-count">${remainingTasks} remaining</span>
                 </div>
                 ${buildProjectTagControlsMarkup(project.id, project)}
                 <div class="modal-project-priority-row">

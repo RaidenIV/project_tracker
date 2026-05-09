@@ -15355,3 +15355,23 @@ body[data-theme^="blueprint"] #projectModal .task-category-menu-button span {
         padding: 0 !important;
     }
 }
+
+
+/* Targeted patch: accent task remaining counts on cards and modal stats */
+.project-card-tasks-remaining,
+body[data-theme^="console"] .project-card-tasks-remaining,
+body[data-theme^="glass"] .project-card-tasks-remaining,
+body[data-theme^="blueprint"] .project-card-tasks-remaining,
+#projectModal .modal-tasks-remaining-count,
+body[data-theme^="console"] #projectModal .modal-tasks-remaining-count,
+body[data-theme^="glass"] #projectModal .modal-tasks-remaining-count,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-remaining-count {
+    color: var(--accent, currentColor) !important;
+}
+
+#projectModal .modal-tasks-remaining-count,
+body[data-theme^="console"] #projectModal .modal-tasks-remaining-count,
+body[data-theme^="glass"] #projectModal .modal-tasks-remaining-count,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-remaining-count {
+    font-weight: 800 !important;
+}
