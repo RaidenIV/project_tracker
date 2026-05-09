@@ -15375,3 +15375,58 @@ body[data-theme^="glass"] #projectModal .modal-tasks-remaining-count,
 body[data-theme^="blueprint"] #projectModal .modal-tasks-remaining-count {
     font-weight: 800 !important;
 }
+
+/* Targeted project card title metadata ordering */
+.project-card-title-stack,
+body[data-theme^="console"] .project-card-title-stack,
+body[data-theme^="glass"] .project-card-title-stack,
+body[data-theme^="blueprint"] .project-card-title-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 0.18rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+.project-title-container,
+body[data-theme^="console"] .project-title-container,
+body[data-theme^="glass"] .project-title-container,
+body[data-theme^="blueprint"] .project-title-container {
+    min-width: 0 !important;
+    text-align: left !important;
+}
+
+.project-card-description--header,
+body[data-theme^="console"] .project-card-description--header,
+body[data-theme^="glass"] .project-card-description--header,
+body[data-theme^="blueprint"] .project-card-description--header {
+    display: block !important;
+    width: 100% !important;
+    margin: 0.12rem 0 0 !important;
+    text-align: left !important;
+}
+
+.project-card-title-stack .project-sync-text,
+body[data-theme^="console"] .project-card-title-stack .project-sync-text,
+body[data-theme^="glass"] .project-card-title-stack .project-sync-text,
+body[data-theme^="blueprint"] .project-card-title-stack .project-sync-text {
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.project-card-progress-summary,
+body[data-theme^="console"] .project-card-progress-summary,
+body[data-theme^="glass"] .project-card-progress-summary,
+body[data-theme^="blueprint"] .project-card-progress-summary {
+    align-items: center !important;
+}
+
+.project-card-progress-summary strong,
+body[data-theme^="console"] .project-card-progress-summary strong,
+body[data-theme^="glass"] .project-card-progress-summary strong,
+body[data-theme^="blueprint"] .project-card-progress-summary strong {
+    justify-self: end !important;
+}

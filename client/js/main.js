@@ -7284,7 +7284,7 @@ function renderProjectCard(project) {
             </button>` : ''}
             <div class="project-header">
                 <div class="project-title-container">
-                    <div>
+                    <div class="project-card-title-stack">
                         <div class="project-title" id="project-title-${project.id}" ${canEditProject ? `ondblclick="event.stopPropagation(); editProjectTitleOnCard('${project.id}')"` : ''}>${escapeHtml(project.title)}</div>
                         <input type="text"
                                class="project-title-input project-title-input--card"
@@ -7296,6 +7296,7 @@ function renderProjectCard(project) {
                                oninput="event.stopPropagation(); handleProjectTitleInput(this)"
                                onanimationend="this.classList.remove('project-title-shake')"
                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); finishEditProjectTitleOnCard('${project.id}'); } if(event.key==='Escape'){ event.preventDefault(); cancelEditProjectTitleOnCard('${project.id}'); }">
+                        ${projectDescription ? `<span class="project-card-description project-card-description--header">${escapeHtml(projectDescription)}</span>` : ''}
                         <p class="project-sync-text">${escapeHtml(formatProjectSyncText(project))}</p>
                     </div>
                 </div>
@@ -7322,8 +7323,8 @@ function renderProjectCard(project) {
             </div>
 
             <div class="project-card-progress">
-                <div class="project-card-description-row">
-                    <span class="project-card-description">${projectDescription ? escapeHtml(projectDescription) : ''}</span>
+                <div class="project-card-description-row project-card-progress-summary">
+                    <span class="project-card-progress-spacer" aria-hidden="true"></span>
                     <strong>${progressPercentage}%</strong>
                 </div>
                 <div class="progress-bar-container">
