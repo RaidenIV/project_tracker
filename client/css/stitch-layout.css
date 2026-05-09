@@ -16609,3 +16609,52 @@ body[data-theme^="glass"] .project-card .activate-button {
         --project-card-uniform-height: 33.15rem;
     }
 }
+
+/* ============================================================================
+   Targeted patch: TaskCom favicon branding + login title accent
+   ============================================================================ */
+.auth-overlay .auth-title-row,
+body[data-theme] .auth-overlay .auth-title-row,
+body[data-theme^="console"] .auth-overlay .auth-title-row,
+body[data-theme^="blueprint"] .auth-overlay .auth-title-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.48rem !important;
+    line-height: 1 !important;
+}
+
+.auth-overlay .auth-product-title,
+body[data-theme] .auth-overlay .auth-product-title,
+body[data-theme^="console"] .auth-overlay .auth-product-title,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-title {
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+}
+
+.sidebar-title-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.48rem !important;
+    min-width: 0 !important;
+    line-height: 1 !important;
+}
+
+.app-title-favicon {
+    display: inline-block !important;
+    width: 1.05em !important;
+    height: 1.05em !important;
+    flex: 0 0 auto !important;
+    object-fit: contain !important;
+    image-rendering: auto !important;
+}
+
+.auth-title-favicon {
+    width: clamp(1.25rem, 3.2vw, 1.75rem) !important;
+    height: clamp(1.25rem, 3.2vw, 1.75rem) !important;
+}
+
+.sidebar-title-favicon {
+    width: clamp(1.2rem, 1.45vw, 1.55rem) !important;
+    height: clamp(1.2rem, 1.45vw, 1.55rem) !important;
+}
