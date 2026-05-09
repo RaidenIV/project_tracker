@@ -15560,3 +15560,60 @@ body[data-theme^="blueprint"] .project-card .project-card-footer {
         grid-auto-rows: var(--project-card-uniform-height) !important;
     }
 }
+
+/* Targeted patch: reserve exactly three visible preview-task rows on project cards */
+.project-card .project-preview-list,
+.stitch-project-card .project-preview-list,
+body[data-theme^="console"] .project-card .project-preview-list,
+body[data-theme^="console"] .stitch-project-card .project-preview-list,
+body[data-theme^="blueprint"] .project-card .project-preview-list,
+body[data-theme^="blueprint"] .stitch-project-card .project-preview-list,
+body[data-theme^="glass"] .project-card .project-preview-list,
+body[data-theme^="glass"] .stitch-project-card .project-preview-list {
+    --project-preview-row-height: 2.35rem;
+    --project-preview-row-gap: 0.44rem;
+    display: grid !important;
+    grid-template-rows: repeat(3, var(--project-preview-row-height)) !important;
+    gap: var(--project-preview-row-gap) !important;
+    flex: 0 0 calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+    height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+    min-height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+    max-height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+    align-content: start !important;
+    overflow: hidden !important;
+}
+
+.project-card .project-preview-task,
+.project-card .project-preview-empty,
+.stitch-project-card .project-preview-task,
+.stitch-project-card .project-preview-empty,
+body[data-theme^="console"] .project-card .project-preview-task,
+body[data-theme^="console"] .project-card .project-preview-empty,
+body[data-theme^="blueprint"] .project-card .project-preview-task,
+body[data-theme^="blueprint"] .project-card .project-preview-empty,
+body[data-theme^="glass"] .project-card .project-preview-task,
+body[data-theme^="glass"] .project-card .project-preview-empty {
+    min-height: var(--project-preview-row-height, 2.35rem) !important;
+    height: var(--project-preview-row-height, 2.35rem) !important;
+    max-height: var(--project-preview-row-height, 2.35rem) !important;
+    overflow: hidden !important;
+}
+
+.project-card .project-preview-empty,
+.stitch-project-card .project-preview-empty,
+body[data-theme^="console"] .project-card .project-preview-empty,
+body[data-theme^="blueprint"] .project-card .project-preview-empty,
+body[data-theme^="glass"] .project-card .project-preview-empty {
+    grid-row: 1 / 2 !important;
+}
+
+@media (max-width: 860px) {
+    .project-card .project-preview-list,
+    .stitch-project-card .project-preview-list,
+    body[data-theme^="console"] .project-card .project-preview-list,
+    body[data-theme^="blueprint"] .project-card .project-preview-list,
+    body[data-theme^="glass"] .project-card .project-preview-list {
+        --project-preview-row-height: 2.28rem;
+        --project-preview-row-gap: 0.4rem;
+    }
+}
