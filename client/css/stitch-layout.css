@@ -15123,3 +15123,235 @@ body[data-theme^="blueprint"] #projectModal .project-notes-tab--input {
         max-width: min(10rem, 54vw) !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: Neumorphism task category tab display repair
+   ============================================================================ */
+body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 150 !important;
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    overflow: visible !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-toolbar {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tabs {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0.62rem 0.78rem 0.7rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.22)) 82%, transparent) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap--all,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap--create {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 1 !important;
+    overflow: visible !important;
+    clip-path: none !important;
+    isolation: isolate !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-active,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-menu-open,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-drop-target {
+    z-index: 220 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.42rem !important;
+    width: auto !important;
+    min-width: 4.4rem !important;
+    max-width: min(12rem, 44vw) !important;
+    height: 2.38rem !important;
+    min-height: 2.38rem !important;
+    margin: 0 !important;
+    padding: 0 0.78rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.22))) !important;
+    border-radius: 0.82rem !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+    overflow: visible !important;
+    clip-path: none !important;
+    transform: none !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell:hover,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell:focus-within,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-menu-open .task-category-tab-shell {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 42%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    box-shadow: var(--inset-shadow, inset 6px 6px 12px rgba(0, 0, 0, 0.16), inset -6px -6px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell.is-active,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-active .task-category-tab-shell {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    box-shadow: var(--inset-shadow, inset 6px 6px 12px rgba(0, 0, 0, 0.16), inset -6px -6px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell--create {
+    width: 2.38rem !important;
+    min-width: 2.38rem !important;
+    max-width: 2.38rem !important;
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell .task-category-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-inline-input {
+    width: clamp(7.5rem, 18vw, 11rem) !important;
+    min-width: clamp(7.5rem, 18vw, 11rem) !important;
+    height: 100% !important;
+    min-height: 2.38rem !important;
+    margin: 0 !important;
+    padding: 0 0.8rem !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    color: var(--heading, currentColor) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    font: inherit !important;
+    font-weight: 800 !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-tab-shell.is-editing {
+    width: clamp(7.5rem, 18vw, 11rem) !important;
+    min-width: clamp(7.5rem, 18vw, 11rem) !important;
+    max-width: clamp(7.5rem, 18vw, 11rem) !important;
+    padding: 0 !important;
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--inset-shadow, inset 6px 6px 12px rgba(0, 0, 0, 0.16), inset -6px -6px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-menu-button {
+    flex: 0 0 1.55rem !important;
+    width: 1.55rem !important;
+    min-width: 1.55rem !important;
+    height: 1.55rem !important;
+    min-height: 1.55rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.12rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    color: inherit !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .task-category-menu-button span {
+    width: 0.16rem !important;
+    height: 0.16rem !important;
+    border-radius: 999px !important;
+    background: currentColor !important;
+    background-color: currentColor !important;
+}
+
+@media (max-width: 720px) {
+    body[data-theme^="blueprint"] #projectModal .task-category-tabs {
+        gap: 0.48rem !important;
+        padding: 0.52rem 0.62rem 0.62rem !important;
+    }
+
+    body[data-theme^="blueprint"] #projectModal .task-category-tab-shell {
+        min-width: 3.85rem !important;
+        height: 2.25rem !important;
+        min-height: 2.25rem !important;
+        padding: 0 0.68rem !important;
+    }
+
+    body[data-theme^="blueprint"] #projectModal .task-category-tab-shell--create {
+        width: 2.25rem !important;
+        min-width: 2.25rem !important;
+        max-width: 2.25rem !important;
+        padding: 0 !important;
+    }
+}
