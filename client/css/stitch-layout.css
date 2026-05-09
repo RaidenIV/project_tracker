@@ -14956,3 +14956,118 @@ body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-con
         scrollbar-gutter: auto !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: modal title due-date alignment and sticky task-tab flush fit
+   ============================================================================ */
+#projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    padding-top: 0 !important;
+}
+
+#projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child,
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child {
+    margin-top: 1.35rem !important;
+}
+
+#projectModal .modal-title-row,
+body[data-theme^="console"] #projectModal .modal-title-row,
+body[data-theme^="glass"] #projectModal .modal-title-row,
+body[data-theme^="blueprint"] #projectModal .modal-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+}
+
+#projectModal .modal-title-row .modal-title,
+#projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="console"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="console"] #projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="glass"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="glass"] #projectModal .modal-title-row .modal-title-edit-button,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .modal-title,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .modal-title-edit-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 2rem !important;
+    margin: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.2 !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal {
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    margin: 0 0 0 0.1rem !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    transform: none !important;
+    vertical-align: middle !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal .project-due-date-icon,
+body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal .project-due-date-icon,
+body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal .project-due-date-icon,
+body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal .project-due-date-icon {
+    display: block !important;
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+    margin: 0 !important;
+    transform: translateY(0) !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+#projectModal .modal-tasks-card > .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    z-index: 140 !important;
+}
+
+#projectModal .modal-section[id^="tasks-section-"] .task-category-tabs,
+#projectModal .modal-tasks-card > .task-category-controls .task-category-tabs,
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-tabs,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls .task-category-tabs,
+body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-tabs,
+body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls .task-category-tabs,
+body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-tabs,
+body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls .task-category-tabs {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        padding-top: 0 !important;
+    }
+
+    #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child {
+        margin-top: 1rem !important;
+    }
+}
