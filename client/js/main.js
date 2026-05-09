@@ -239,6 +239,20 @@ function getProjectTaskCategories(project) {
     return getTaskCategoryListWith([...explicit, ...fromTasks]);
 }
 
+function getUniqueTaskCategoryName(project, baseName = 'New Tab') {
+    const existing = new Set(getProjectTaskCategories(project).map(category => category.toLowerCase()));
+    const base = sanitizeTaskCategoryName(baseName) || 'New Tab';
+    if (!existing.has(base.toLowerCase())) return base;
+
+    let index = 2;
+    let candidate = `${base} ${index}`;
+    while (existing.has(candidate.toLowerCase())) {
+        index += 1;
+        candidate = `${base} ${index}`;
+    }
+    return candidate;
+}
+
 function getProjectPriorityTag(project = {}) {
     return normalizePriorityTagValue(project?.projectPriorityTag || project?.projectPriority || (typeof project?.priorityTag === 'string' ? project.priorityTag : DEFAULT_TASK_TAG));
 }
@@ -481,6 +495,7 @@ const uiState = {
     openTaskCategoryMenu: null,
     newTaskDraft: null,
     creatingTaskCategoryProjectId: null,
+    editingTaskCategory: null,
     creatingProjectTagProjectId: null,
     editingProjectTag: null,
     editingProjectNoteTab: null,
@@ -4938,6 +4953,9 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
     const categories = getProjectTaskCategories(project);
     const canEdit = state.canEdit(projectId);
     const isCreating = uiState.creatingTaskCategoryProjectId === projectId;
+    const editingCategory = uiState.editingTaskCategory?.projectId === projectId
+        ? uiState.editingTaskCategory.category
+        : null;
     const tabItems = [
         { kind: 'all', label: 'All', category: DEFAULT_TASK_CATEGORY_FILTER }
     ];
@@ -4957,6 +4975,7 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                     const positionClass = getTaskCategoryTabPositionClass(index, tabItems.length);
                     const isAll = tab.kind === 'all';
                     const isCategory = tab.kind === 'category';
+                    const isEditingCategory = isCategory && editingCategory === tab.category;
                     const isCreate = tab.kind === 'create' || tab.kind === 'create-input';
                     const isInput = tab.kind === 'create-input';
                     const isActive = !isCreate && activeCategory === tab.category;
@@ -4964,7 +4983,7 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                     const filterLiteral = serializeInlineJsString(tab.category || DEFAULT_TASK_CATEGORY_FILTER);
                     const menuCategoryValue = isAll ? TASK_CATEGORY_DROP_ALL : (isCategory ? tab.category : null);
                     const menuCategoryLiteral = menuCategoryValue ? serializeInlineJsString(menuCategoryValue) : null;
-                    const canShowTabMenu = canEdit && (isAll || isCategory);
+                    const canShowTabMenu = canEdit && !isEditingCategory && (isAll || isCategory);
                     const menuOpen = canShowTabMenu && isTaskCategoryMenuOpen(projectId, menuCategoryValue);
                     const incompleteInTab = canShowTabMenu ? getIncompleteTaskCountForCategory(project, menuCategoryValue) : 0;
                     const shellClasses = ['task-category-tab-shell', positionClass];
@@ -4977,7 +4996,7 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                         shellClasses.push('task-category-tab-shell--create');
                         wrapClasses.push('task-category-tab-wrap--create');
                     }
-                    if (isInput) {
+                    if (isInput || isEditingCategory) {
                         shellClasses.push('is-editing');
                         wrapClasses.push('is-editing');
                     }
@@ -4995,7 +5014,7 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                     const dropAttributes = dropCategoryValue
                         ? ` data-task-category-drop="${escapeHtml(dropCategoryValue)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
                         : '';
-                    const shellClick = isInput
+                    const shellClick = (isInput || isEditingCategory)
                         ? ''
                         : (tab.kind === 'create'
                             ? ` onclick="startInlineTaskCategoryCreate('${projectId}', event)"`
@@ -5008,12 +5027,21 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                                autocomplete="off"
                                onkeydown="handleInlineTaskCategoryCreateKeydown('${projectId}', event)"
                                onblur="commitInlineTaskCategoryCreate('${projectId}', this.value)">
+                    ` : (isEditingCategory ? `
+                        <input class="task-category-inline-input task-category-inline-input--edit"
+                               type="text"
+                               aria-label="Edit task tab title"
+                               value="${escapeHtml(tab.label)}"
+                               autocomplete="off"
+                               onclick="event.stopPropagation();"
+                               onkeydown="handleInlineTaskCategoryEditKeydown('${projectId}', ${categoryLiteral}, event)"
+                               onblur="commitInlineTaskCategoryEdit('${projectId}', ${categoryLiteral}, this.value)">
                     ` : `
                         <button class="task-category-tab"
                                 type="button"
                                 ${tab.kind === 'category' ? `ondblclick="event.stopPropagation(); renameTaskCategoryPrompt('${projectId}', ${categoryLiteral})"` : ''}
                                 onclick="event.stopPropagation(); ${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
-                    `;
+                    `);
                     return `
                         <div class="${wrapClasses.join(' ')}"${dropAttributes}>
                             <div class="${shellClasses.join(' ')}"${shellClick}>
@@ -5062,10 +5090,13 @@ function renderTaskCategoryControls(projectId) {
         setStoredProjectTaskCategoryFilter(projectId, activeCategory);
     }
     container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
-    if (uiState.creatingTaskCategoryProjectId === projectId) {
+    if (uiState.creatingTaskCategoryProjectId === projectId || uiState.editingTaskCategory?.projectId === projectId) {
         requestAnimationFrame(() => {
             const input = container.querySelector('.task-category-inline-input');
-            if (input) input.focus();
+            if (input) {
+                input.focus();
+                input.select?.();
+            }
         });
     }
 }
@@ -6134,15 +6165,31 @@ function updateTaskCategory(projectId, taskId, categoryValue) {
 function startInlineTaskCategoryCreate(projectId, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const nextCategory = getUniqueTaskCategoryName(project, 'New Tab');
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), nextCategory]);
+
     uiState.openTaskPriorityMenu = null;
     uiState.openTaskCategoryMenu = null;
-    uiState.creatingTaskCategoryProjectId = projectId;
-    renderTaskCategoryControls(projectId);
+    uiState.creatingTaskCategoryProjectId = null;
+    uiState.editingTaskCategory = { projectId, category: nextCategory, isNew: true };
+
+    state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
+    setStoredProjectTaskCategoryFilter(projectId, nextCategory);
+    saveData();
+    renderModalTaskList(projectId);
+    render();
 }
 
 function cancelInlineTaskCategoryCreate(projectId) {
-    if (uiState.creatingTaskCategoryProjectId !== projectId) return;
+    const wasCreating = uiState.creatingTaskCategoryProjectId === projectId;
+    const wasEditingNew = uiState.editingTaskCategory?.projectId === projectId && uiState.editingTaskCategory.isNew;
+    if (!wasCreating && !wasEditingNew) return;
     uiState.creatingTaskCategoryProjectId = null;
+    uiState.editingTaskCategory = null;
     renderTaskCategoryControls(projectId);
 }
 
@@ -6178,6 +6225,56 @@ function handleInlineTaskCategoryCreateKeydown(projectId, event) {
     } else if (event.key === 'Escape') {
         event.preventDefault();
         cancelInlineTaskCategoryCreate(projectId);
+    }
+}
+
+function commitInlineTaskCategoryEdit(projectId, currentCategory, rawValue) {
+    if (uiState.editingTaskCategory?.projectId !== projectId || uiState.editingTaskCategory.category !== currentCategory) return;
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const nextCategory = sanitizeTaskCategoryName(rawValue);
+    uiState.editingTaskCategory = null;
+
+    if (!nextCategory || nextCategory === currentCategory || isDefaultTaskCategoryName(nextCategory)) {
+        renderModalTaskList(projectId);
+        return;
+    }
+
+    const existingCategories = getProjectTaskCategories(project);
+    const existingCategory = existingCategories.find(category => category !== currentCategory && category.toLowerCase() === nextCategory.toLowerCase());
+    const finalCategory = existingCategory || nextCategory;
+
+    const updatedTasks = (project.tasks || []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.category !== currentCategory) return normalizedTask;
+        return { ...normalizedTask, category: finalCategory };
+    });
+    const nextCategories = getTaskCategoryListWith(existingCategories.map(category => category === currentCategory ? finalCategory : category));
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    if (getProjectTaskCategoryFilter(projectId) === currentCategory) {
+        setStoredProjectTaskCategoryFilter(projectId, finalCategory);
+    }
+    saveData();
+    renderModalTaskList(projectId);
+    render();
+}
+
+function cancelInlineTaskCategoryEdit(projectId) {
+    if (uiState.editingTaskCategory?.projectId !== projectId) return;
+    uiState.editingTaskCategory = null;
+    renderModalTaskList(projectId);
+}
+
+function handleInlineTaskCategoryEditKeydown(projectId, currentCategory, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        commitInlineTaskCategoryEdit(projectId, currentCategory, event.currentTarget.value);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelInlineTaskCategoryEdit(projectId);
     }
 }
 
@@ -8022,6 +8119,9 @@ window.startInlineTaskCategoryCreate = startInlineTaskCategoryCreate;
 window.commitInlineTaskCategoryCreate = commitInlineTaskCategoryCreate;
 window.cancelInlineTaskCategoryCreate = cancelInlineTaskCategoryCreate;
 window.handleInlineTaskCategoryCreateKeydown = handleInlineTaskCategoryCreateKeydown;
+window.commitInlineTaskCategoryEdit = commitInlineTaskCategoryEdit;
+window.cancelInlineTaskCategoryEdit = cancelInlineTaskCategoryEdit;
+window.handleInlineTaskCategoryEditKeydown = handleInlineTaskCategoryEditKeydown;
 window.handleTaskCategoryCreateKeydown = handleTaskCategoryCreateKeydown;
 window.setProjectTagFilter = setProjectTagFilter;
 window.startInlineProjectTagCreate = startInlineProjectTagCreate;

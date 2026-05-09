@@ -16198,3 +16198,75 @@ body[data-theme^="glass"] .project-card .project-priority-card-button {
         --project-card-footer-slot: 4.05rem;
     }
 }
+
+/* ============================================================================
+   Targeted patch: project footer spacing and immediate editable task tabs
+   ============================================================================ */
+.project-card .project-card-footer-left,
+.stitch-project-card .project-card-footer-left,
+body[data-theme^="console"] .project-card .project-card-footer-left,
+body[data-theme^="blueprint"] .project-card .project-card-footer-left,
+body[data-theme^="glass"] .project-card .project-card-footer-left {
+    gap: 0.72rem !important;
+}
+
+.project-card .project-card-access,
+.stitch-project-card .project-card-access,
+body[data-theme^="console"] .project-card .project-card-access,
+body[data-theme^="blueprint"] .project-card .project-card-access,
+body[data-theme^="glass"] .project-card .project-card-access {
+    margin-top: 0.08rem !important;
+}
+
+#projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create),
+body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create),
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create),
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) {
+    flex: 0 0 auto !important;
+    width: clamp(7.5rem, 18vw, 11rem) !important;
+    min-width: clamp(7.5rem, 18vw, 11rem) !important;
+    max-width: clamp(7.5rem, 18vw, 11rem) !important;
+}
+
+#projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-tab-shell,
+body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-tab-shell,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-tab-shell,
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-tab-shell {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+#projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-inline-input,
+body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-inline-input,
+body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-inline-input,
+body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) .task-category-inline-input {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 0.8rem !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+}
+
+@media (max-width: 720px) {
+    #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create),
+    body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create),
+    body[data-theme^="blueprint"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create),
+    body[data-theme^="glass"] #projectModal .task-category-tab-wrap.is-editing:not(.task-category-tab-wrap--create) {
+        width: min(10rem, 54vw) !important;
+        min-width: min(10rem, 54vw) !important;
+        max-width: min(10rem, 54vw) !important;
+    }
+}
