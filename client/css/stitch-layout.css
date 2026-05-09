@@ -15877,3 +15877,126 @@ body[data-theme^="glass"] .project-card .project-card-footer {
         --project-card-footer-slot: 2.25rem;
     }
 }
+
+/* ============================================================================
+   Targeted patch: project-card height and metadata spacing refinements
+   ============================================================================ */
+.project-grid,
+body[data-theme^="console"] .project-grid,
+body[data-theme^="blueprint"] .project-grid,
+body[data-theme^="glass"] .project-grid {
+    --project-card-uniform-height: 29.25rem;
+}
+
+.project-card.stitch-project-card,
+.stitch-project-card.project-card,
+body[data-theme^="console"] .project-card.stitch-project-card,
+body[data-theme^="blueprint"] .project-card.stitch-project-card,
+body[data-theme^="glass"] .project-card.stitch-project-card {
+    --project-card-title-slot: 2.1rem;
+    --project-card-description-slot: 1.58rem;
+    --project-card-sync-slot: 0.92rem;
+    --project-card-header-slot: 5.05rem;
+    --project-card-tags-slot: 2.35rem;
+    --project-card-notes-slot: 2.35rem;
+}
+
+.project-card .project-title,
+.stitch-project-card .project-title,
+body[data-theme^="console"] .project-card .project-title,
+body[data-theme^="blueprint"] .project-card .project-title,
+body[data-theme^="glass"] .project-card .project-title {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.project-card .project-card-description--header,
+.stitch-project-card .project-card-description--header,
+body[data-theme^="console"] .project-card .project-card-description--header,
+body[data-theme^="blueprint"] .project-card .project-card-description--header,
+body[data-theme^="glass"] .project-card .project-card-description--header {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.project-card .project-card-tags,
+.stitch-project-card .project-card-tags,
+.project-card .project-card-tags:empty,
+.stitch-project-card .project-card-tags:empty,
+body[data-theme^="console"] .project-card .project-card-tags,
+body[data-theme^="console"] .project-card .project-card-tags:empty,
+body[data-theme^="blueprint"] .project-card .project-card-tags,
+body[data-theme^="blueprint"] .project-card .project-card-tags:empty,
+body[data-theme^="glass"] .project-card .project-card-tags,
+body[data-theme^="glass"] .project-card .project-card-tags:empty {
+    padding-top: 0.26rem !important;
+    box-sizing: border-box !important;
+}
+
+.project-card .project-card-notes-bar,
+.stitch-project-card .project-card-notes-bar,
+body[data-theme^="console"] .project-card .project-card-notes-bar,
+body[data-theme^="blueprint"] .project-card .project-card-notes-bar,
+body[data-theme^="glass"] .project-card .project-card-notes-bar {
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-block: 0.1rem !important;
+    box-sizing: border-box !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid {
+        --project-card-uniform-height: 26.9rem;
+    }
+
+    .project-card.stitch-project-card,
+    .stitch-project-card.project-card,
+    body[data-theme^="console"] .project-card.stitch-project-card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card,
+    body[data-theme^="glass"] .project-card.stitch-project-card {
+        --project-card-title-slot: 1.96rem;
+        --project-card-description-slot: 1.35rem;
+        --project-card-sync-slot: 0.78rem;
+        --project-card-header-slot: 4.42rem;
+        --project-card-tags-slot: 1.95rem;
+        --project-card-notes-slot: 2.12rem;
+    }
+
+    .project-card .project-card-tags,
+    .stitch-project-card .project-card-tags,
+    .project-card .project-card-tags:empty,
+    .stitch-project-card .project-card-tags:empty,
+    body[data-theme^="console"] .project-card .project-card-tags,
+    body[data-theme^="console"] .project-card .project-card-tags:empty,
+    body[data-theme^="blueprint"] .project-card .project-card-tags,
+    body[data-theme^="blueprint"] .project-card .project-card-tags:empty,
+    body[data-theme^="glass"] .project-card .project-card-tags,
+    body[data-theme^="glass"] .project-card .project-card-tags:empty {
+        padding-top: 0.18rem !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid {
+        --project-card-uniform-height: 30.5rem;
+    }
+
+    .project-card.stitch-project-card,
+    .stitch-project-card.project-card,
+    body[data-theme^="console"] .project-card.stitch-project-card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card,
+    body[data-theme^="glass"] .project-card.stitch-project-card {
+        --project-card-title-slot: 2.28rem;
+        --project-card-description-slot: 1.75rem;
+        --project-card-sync-slot: 0.95rem;
+        --project-card-header-slot: 5.28rem;
+        --project-card-tags-slot: 2.38rem;
+        --project-card-notes-slot: 2.35rem;
+    }
+}
