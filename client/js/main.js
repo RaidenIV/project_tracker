@@ -1709,8 +1709,9 @@ function ensureSidebarSettingsDropdown() {
             button = document.createElement('button');
             button.type = 'button';
             button.id = id;
-            button.textContent = label;
         }
+        button.textContent = label;
+        button.setAttribute('aria-label', label);
         button.className = `${className} settings-action-button`.trim();
         button.type = 'button';
         settingsActions.appendChild(button);
@@ -1718,8 +1719,7 @@ function ensureSidebarSettingsDropdown() {
 
     const legacyMoreGroup = document.getElementById('sidebarMoreToggleBtn')?.closest('.sidebar-more-group');
     if (legacyMoreGroup) {
-        legacyMoreGroup.hidden = true;
-        legacyMoreGroup.setAttribute('aria-hidden', 'true');
+        legacyMoreGroup.remove();
     }
 }
 
@@ -7809,7 +7809,7 @@ function syncMobileAppBarHeight() {
     }
 
     const measuredHeight = Math.ceil(topAppBar.getBoundingClientRect().height || 0);
-    const nextHeight = Math.max(measuredHeight, 54);
+    const nextHeight = measuredHeight > 0 ? measuredHeight : 54;
     root.style.setProperty('--mobile-app-bar-height', `${nextHeight}px`);
 }
 
