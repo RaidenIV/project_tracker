@@ -15449,3 +15449,114 @@ body:not([data-theme$="-light"]) .project-card .project-sync-text,
 body:not([data-theme$="-light"]) .stitch-project-card .project-sync-text {
     color: var(--accent, var(--primary, currentColor)) !important;
 }
+
+/* Targeted patch: uniform project card sizing */
+.project-grid,
+body[data-theme^="console"] .project-grid,
+body[data-theme^="blueprint"] .project-grid,
+body[data-theme^="glass"] .project-grid {
+    --project-card-uniform-height: 28rem;
+    grid-auto-rows: var(--project-card-uniform-height) !important;
+    align-items: stretch !important;
+}
+
+.project-card.stitch-project-card,
+.stitch-project-card.project-card,
+body[data-theme^="console"] .project-card.stitch-project-card,
+body[data-theme^="blueprint"] .project-card.stitch-project-card,
+body[data-theme^="glass"] .project-card.stitch-project-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: var(--project-card-uniform-height, 28rem) !important;
+    min-height: var(--project-card-uniform-height, 28rem) !important;
+    max-height: var(--project-card-uniform-height, 28rem) !important;
+    overflow: hidden !important;
+}
+
+.project-card .project-header,
+.project-card .project-card-tags,
+.project-card .project-card-progress,
+.project-card .project-card-notes-bar,
+.project-card .project-card-footer,
+body[data-theme^="console"] .project-card .project-header,
+body[data-theme^="console"] .project-card .project-card-tags,
+body[data-theme^="console"] .project-card .project-card-progress,
+body[data-theme^="console"] .project-card .project-card-notes-bar,
+body[data-theme^="console"] .project-card .project-card-footer,
+body[data-theme^="blueprint"] .project-card .project-header,
+body[data-theme^="blueprint"] .project-card .project-card-tags,
+body[data-theme^="blueprint"] .project-card .project-card-progress,
+body[data-theme^="blueprint"] .project-card .project-card-notes-bar,
+body[data-theme^="blueprint"] .project-card .project-card-footer {
+    flex: 0 0 auto !important;
+}
+
+.project-card .project-title,
+.project-card .project-card-description--header,
+.project-card .project-sync-text,
+body[data-theme^="console"] .project-card .project-title,
+body[data-theme^="console"] .project-card .project-card-description--header,
+body[data-theme^="console"] .project-card .project-sync-text,
+body[data-theme^="blueprint"] .project-card .project-title,
+body[data-theme^="blueprint"] .project-card .project-card-description--header,
+body[data-theme^="blueprint"] .project-card .project-sync-text {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-card .project-title,
+body[data-theme^="console"] .project-card .project-title,
+body[data-theme^="blueprint"] .project-card .project-title {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.project-card .project-card-tags,
+body[data-theme^="console"] .project-card .project-card-tags,
+body[data-theme^="blueprint"] .project-card .project-card-tags {
+    min-height: 2rem !important;
+    max-height: 4.25rem !important;
+    overflow: hidden !important;
+}
+
+.project-card .project-card-progress,
+body[data-theme^="console"] .project-card .project-card-progress,
+body[data-theme^="blueprint"] .project-card .project-card-progress {
+    min-height: 4.35rem !important;
+}
+
+.project-card .project-preview-list,
+body[data-theme^="console"] .project-card .project-preview-list,
+body[data-theme^="blueprint"] .project-card .project-preview-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+}
+
+.project-card .project-card-footer,
+body[data-theme^="console"] .project-card .project-card-footer,
+body[data-theme^="blueprint"] .project-card .project-card-footer {
+    margin-top: auto !important;
+}
+
+@media (min-width: 1800px) and (min-height: 900px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid {
+        --project-card-uniform-height: 25.35rem;
+        grid-auto-rows: var(--project-card-uniform-height) !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid {
+        --project-card-uniform-height: 29rem;
+        grid-auto-rows: var(--project-card-uniform-height) !important;
+    }
+}
