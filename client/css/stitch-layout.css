@@ -18777,3 +18777,66 @@ body[data-theme^="glass"] .project-calendar-task {
         text-align: left !important;
     }
 }
+
+/* Targeted patch: settings spacing, neumorphic task sort spacing, card actions menu visibility, and last sync contrast */
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions,
+body[data-theme^="console"] #settingsSectionBody .settings-actions,
+body[data-theme^="console"] .settings-panel-card .settings-actions {
+    gap: 0.9rem !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+    margin-top: 0.9rem !important;
+}
+
+.project-grid,
+body[data-theme^="console"] .project-grid,
+body[data-theme^="blueprint"] .project-grid,
+body[data-theme^="glass"] .project-grid {
+    overflow: visible !important;
+}
+
+.project-card.stitch-project-card,
+.stitch-project-card.project-card,
+body[data-theme^="console"] .project-card.stitch-project-card,
+body[data-theme^="blueprint"] .project-card.stitch-project-card,
+body[data-theme^="glass"] .project-card.stitch-project-card {
+    overflow: visible !important;
+}
+
+.project-card .project-header,
+.stitch-project-card .project-header,
+body[data-theme^="console"] .project-card .project-header,
+body[data-theme^="blueprint"] .project-card .project-header,
+body[data-theme^="glass"] .project-card .project-header {
+    overflow: visible !important;
+}
+
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) {
+    position: relative !important;
+    z-index: 3000 !important;
+}
+
+.project-card .project-actions:has(.project-meatballs[open]),
+.stitch-project-card .project-actions:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card .project-actions:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card .project-actions:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card .project-actions:has(.project-meatballs[open]) {
+    z-index: 3100 !important;
+}
+
+body:not([data-theme$="-light"]) .project-card .project-sync-text,
+body:not([data-theme$="-light"]) .stitch-project-card .project-sync-text,
+body:not([data-theme$="-light"]) .project-card-title-stack .project-sync-text {
+    color: #fff !important;
+}
+
+body[data-theme$="-light"] .project-card .project-sync-text,
+body[data-theme$="-light"] .stitch-project-card .project-sync-text,
+body[data-theme$="-light"] .project-card-title-stack .project-sync-text {
+    color: #000 !important;
+}
