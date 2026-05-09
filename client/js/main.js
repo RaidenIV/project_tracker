@@ -1192,6 +1192,7 @@ function isProjectArchived(project) {
 
 function getVisibleBaseProjects() {
     return state.getProjects().filter(project => {
+        if (state.getView() === VIEWS.ARCHIVED) return isProjectArchived(project);
         if (isProjectArchived(project)) return false;
         return state.getView() === VIEWS.COMPLETED
             ? isProjectCompleted(project)
@@ -3948,6 +3949,7 @@ function setViewTitle(title) {
 }
 
 function getCurrentProjectCategoryValue() {
+    if (state.getView() === VIEWS.ARCHIVED) return 'archived';
     if (state.getView() === VIEWS.COMPLETED) return 'completed';
     if (uiState.ownerFilter === 'shared') return 'shared';
     return 'active';
@@ -3963,6 +3965,8 @@ function switchProjectCategory(categoryValue) {
         switchToSharedView();
     } else if (categoryValue === 'completed') {
         switchToCompletedView();
+    } else if (categoryValue === 'archived') {
+        switchToArchivedView();
     } else {
         switchToActiveView();
     }
@@ -3976,7 +3980,9 @@ function setProjectCardSortMode(sortMode, persist = true) {
 }
 
 function syncViewTitle() {
-    if (state.getView() === VIEWS.COMPLETED) {
+    if (state.getView() === VIEWS.ARCHIVED) {
+        setViewTitle('Archived Projects');
+    } else if (state.getView() === VIEWS.COMPLETED) {
         setViewTitle('Completed Projects');
     } else if (uiState.ownerFilter === 'shared') {
         setViewTitle('Shared');
@@ -3990,7 +3996,7 @@ function syncViewTitle() {
 // ============================================================================
 
 function setSidebarProjectsNav(activeId) {
-    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard'].forEach(id => {
+    ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard', 'archivedProjectsMoreBtn'].forEach(id => {
         document.getElementById(id)?.classList.toggle('active', id === activeId);
     });
 }
@@ -4010,6 +4016,15 @@ function switchToCompletedView() {
     state.setView(VIEWS.COMPLETED);
     setSidebarProjectsNav('completedProjectsCard');
     setViewTitle('Completed Projects');
+    render();
+}
+
+function switchToArchivedView() {
+    uiState.ownerFilter = 'all';
+    uiState.activeSavedViewId = '';
+    state.setView(VIEWS.ARCHIVED);
+    setSidebarProjectsNav('archivedProjectsMoreBtn');
+    setViewTitle('Archived Projects');
     render();
 }
 
@@ -7025,6 +7040,7 @@ function getCommandPaletteActions() {
         { id: 'new-project', title: 'Create new project', copy: 'Add a project and open it immediately.', run: () => addProject() },
         { id: 'view-active', title: 'Switch to Active Projects', copy: 'Show active projects.', run: () => switchToActiveView() },
         { id: 'view-completed', title: 'Switch to Completed Projects', copy: 'Show completed projects.', run: () => switchToCompletedView() },
+        { id: 'view-archived', title: 'Switch to Archived Projects', copy: 'Show archived projects.', run: () => switchToArchivedView() },
         { id: 'toggle-panel', title: 'Toggle control panel', copy: 'Collapse or expand the side panel.', run: () => {
             document.getElementById('panelEdgeToggle')?.click();
         } },
@@ -7323,15 +7339,27 @@ function render() {
         projectGrid.style.display = 'none';
         const emptyTitle = emptyState.querySelector('.title');
         const emptySubtitle = emptyState.querySelector('.subtitle');
-        if (emptyTitle) emptyTitle.textContent = uiState.projectSearch.trim() ? 'No matching projects' : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects');
-        if (emptySubtitle) emptySubtitle.textContent = uiState.projectSearch.trim() ? 'Try a broader search or different filters' : 'Only projects marked complete will appear here.';
+        if (emptyTitle) {
+            emptyTitle.textContent = uiState.projectSearch.trim()
+                ? 'No matching projects'
+                : (state.getView() === VIEWS.ARCHIVED
+                    ? 'No archived projects'
+                    : (state.getView() === VIEWS.ACTIVE ? 'No active projects' : 'No completed projects'));
+        }
+        if (emptySubtitle) {
+            emptySubtitle.textContent = uiState.projectSearch.trim()
+                ? 'Try a broader search or different filters'
+                : (state.getView() === VIEWS.ARCHIVED
+                    ? 'Archived projects will appear here.'
+                    : (state.getView() === VIEWS.ACTIVE ? 'Click "New Project" to get started.' : 'Only projects marked complete will appear here.'));
+        }
     } else {
         emptyState.style.display = 'none';
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
         applyProjectGridLayoutPreference();
 
-        if (!uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER) {
+        if (state.getView() === VIEWS.ACTIVE && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER) {
             setTimeout(setupProjectDragAndDrop, 100);
         }
     }
@@ -7363,11 +7391,13 @@ function renderProjectCard(project) {
         ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
         : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner: <strong>Me</strong>');
 
-    const statusLabel = isProjectCompleted(project)
-        ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
-        : (isViewer || isEditor
-            ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
-            : '<span class="project-card-status">ACTIVE</span>');
+    const statusLabel = isProjectArchived(project)
+        ? '<span class="project-card-status project-card-status--archived">ARCHIVED</span>'
+        : (isProjectCompleted(project)
+            ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
+            : (isViewer || isEditor
+                ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
+                : '<span class="project-card-status">ACTIVE</span>'));
 
     return `
         <div class="project-card stitch-project-card ${isViewer ? 'project-card--viewer' : ''}"
@@ -7572,7 +7602,9 @@ function openArchivedProjectsModal() {
 
 function closeArchivedProjectsModal() {
     document.getElementById('archivedProjectsModal')?.classList.remove('active');
-    if (uiState.ownerFilter === 'shared' && state.getView() === VIEWS.ACTIVE) {
+    if (state.getView() === VIEWS.ARCHIVED) {
+        setSidebarProjectsNav('archivedProjectsMoreBtn');
+    } else if (uiState.ownerFilter === 'shared' && state.getView() === VIEWS.ACTIVE) {
         setSidebarProjectsNav('sharedProjectsCard');
     } else if (state.getView() === VIEWS.COMPLETED) {
         setSidebarProjectsNav('completedProjectsCard');
@@ -7628,6 +7660,74 @@ function updateProjectSelect() {
 
     projectSelect.addEventListener('change', () => {
         pasteButton.disabled = !projectSelect.value;
+    });
+}
+
+// ============================================================================
+// MOBILE LAYERED DRAWER
+// ============================================================================
+
+function isMobileLayeredDrawerViewport() {
+    return window.matchMedia('(max-width: 980px)').matches;
+}
+
+function setMobileLayeredDrawerOpen(isOpen) {
+    const nextOpen = !!isOpen && isMobileLayeredDrawerViewport();
+    document.body.classList.toggle('mobile-drawer-open', nextOpen);
+    document.getElementById('controlPanel')?.setAttribute('aria-hidden', nextOpen ? 'false' : 'true');
+}
+
+function initializeMobileLayeredDrawer() {
+    const controlPanel = document.getElementById('controlPanel');
+    const topAppBar = document.querySelector('.top-app-bar');
+    const viewport = document.getElementById('viewport');
+    if (!controlPanel || !topAppBar || !viewport) return;
+
+    const foregroundTargets = [topAppBar, viewport];
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchTracking = false;
+
+    const isDrawerOpen = () => document.body.classList.contains('mobile-drawer-open');
+    const isModalOpen = () => !!document.querySelector('.modal-overlay.active, .auth-overlay:not(.hidden)');
+    const isInDrawer = target => !!target?.closest?.('#controlPanel');
+
+    const handleTouchStart = event => {
+        if (!isMobileLayeredDrawerViewport() || isModalOpen() || isInDrawer(event.target)) return;
+        const touch = event.touches?.[0];
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchTracking = true;
+    };
+
+    const handleTouchEnd = event => {
+        if (!touchTracking || !isMobileLayeredDrawerViewport()) return;
+        const touch = event.changedTouches?.[0];
+        touchTracking = false;
+        if (!touch) return;
+
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+
+        if (deltaX > 0) setMobileLayeredDrawerOpen(true);
+        if (deltaX < 0) setMobileLayeredDrawerOpen(false);
+    };
+
+    foregroundTargets.forEach(target => {
+        target.addEventListener('touchstart', handleTouchStart, { passive: true });
+        target.addEventListener('touchend', handleTouchEnd, { passive: true });
+        target.addEventListener('click', event => {
+            if (!isMobileLayeredDrawerViewport() || !isDrawerOpen()) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setMobileLayeredDrawerOpen(false);
+        }, true);
+    });
+
+    window.addEventListener('resize', () => {
+        if (!isMobileLayeredDrawerViewport()) setMobileLayeredDrawerOpen(false);
     });
 }
 
@@ -7735,6 +7835,7 @@ function initializeEventHandlers() {
     });
 
     syncControlPanelState();
+    initializeMobileLayeredDrawer();
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
@@ -7784,7 +7885,7 @@ function initializeEventHandlers() {
     document.getElementById('activeProjectsCard')?.addEventListener('click', switchToActiveView);
     document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
     document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
-    document.getElementById('archivedProjectsMoreBtn')?.addEventListener('click', openArchivedProjectsModal);
+    document.getElementById('archivedProjectsMoreBtn')?.addEventListener('click', switchToArchivedView);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -8039,6 +8140,7 @@ window.copyProjectToClipboard = copyProjectToClipboard;
 window.copyTaskToClipboard = copyTaskToClipboard;
 window.switchToActiveView = switchToActiveView;
 window.switchToCompletedView = switchToCompletedView;
+window.switchToArchivedView = switchToArchivedView;
 window.openProjectModal = openProjectModal;
 window.openAccountSettingsModal = openAccountSettingsModal;
 window.closeAccountSettingsModal = closeAccountSettingsModal;

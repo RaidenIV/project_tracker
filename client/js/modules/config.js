@@ -20,7 +20,8 @@ export const TOKEN_KEY = 'tracker_token';
 
 export const VIEWS = {
     ACTIVE:    'active',
-    COMPLETED: 'completed'
+    COMPLETED: 'completed',
+    ARCHIVED:  'archived'
 };
 
 export const SHORTCUTS = {
