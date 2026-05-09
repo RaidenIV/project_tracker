@@ -15430,3 +15430,22 @@ body[data-theme^="glass"] .project-card-progress-summary strong,
 body[data-theme^="blueprint"] .project-card-progress-summary strong {
     justify-self: end !important;
 }
+
+/* Targeted patch: project card Last Sync accent color */
+.project-card .project-sync-text,
+.stitch-project-card .project-sync-text,
+.project-card-title-stack .project-sync-text,
+body[data-theme^="console"] .project-card .project-sync-text,
+body[data-theme^="console"] .stitch-project-card .project-sync-text,
+body[data-theme^="glass"] .project-card .project-sync-text,
+body[data-theme^="glass"] .stitch-project-card .project-sync-text,
+body[data-theme^="blueprint"] .project-card .project-sync-text,
+body[data-theme^="blueprint"] .stitch-project-card .project-sync-text,
+body[data-theme$="-light"] .project-card .project-sync-text,
+body[data-theme$="-light"] .stitch-project-card .project-sync-text,
+body[data-theme$="-dark"] .project-card .project-sync-text,
+body[data-theme$="-dark"] .stitch-project-card .project-sync-text,
+body:not([data-theme$="-light"]) .project-card .project-sync-text,
+body:not([data-theme$="-light"]) .stitch-project-card .project-sync-text {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
