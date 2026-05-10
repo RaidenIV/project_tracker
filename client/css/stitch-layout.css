@@ -20798,3 +20798,74 @@ body[data-theme^="glass"] .project-calendar-selected-task-actions {
         justify-self: start !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: calendar task checkboxes match Tasks tab, mobile title relocation
+   ============================================================================ */
+@media (max-width: 980px) {
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        padding: calc(0.35rem + env(safe-area-inset-top, 0px)) 0.5rem 0.35rem 3.1rem !important;
+    }
+
+    .top-app-bar-title,
+    .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar > .top-app-bar-title {
+        display: none !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        grid-column: 1 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .viewport-header,
+    body[data-theme^="console"] .viewport-header,
+    body[data-theme^="glass"] .viewport-header,
+    body[data-theme^="blueprint"] .viewport-header {
+        display: block !important;
+        margin: 0 0 0.45rem !important;
+        padding: 0 !important;
+    }
+
+    .viewport-header h1,
+    body[data-theme^="console"] .viewport-header h1,
+    body[data-theme^="glass"] .viewport-header h1,
+    body[data-theme^="blueprint"] .viewport-header h1 {
+        margin: 0 !important;
+        color: var(--accent, currentColor) !important;
+        font-size: clamp(1rem, 5vw, 1.35rem) !important;
+        line-height: 1.1 !important;
+        letter-spacing: 0.03em !important;
+    }
+
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    body[data-theme^="console"] .view-filter-chips,
+    body[data-theme^="console"] .view-filter-chips:not(:empty),
+    body[data-theme^="glass"] .view-filter-chips,
+    body[data-theme^="glass"] .view-filter-chips:not(:empty),
+    body[data-theme^="blueprint"] .view-filter-chips,
+    body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+        margin-top: 0 !important;
+    }
+}

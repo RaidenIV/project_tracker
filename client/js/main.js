@@ -375,16 +375,18 @@ function buildProjectCalendarTaskCompletionControl(projectId, task) {
     }
 
     return `
-        <button class="task-checkbox project-calendar-task-checkbox ${completedClass}"
-                type="button"
-                data-task-checkbox="${normalizedTask.id}"
-                aria-label="${normalizedTask.completed ? 'Mark task incomplete' : 'Mark task complete'}"
-                aria-pressed="${normalizedTask.completed ? 'true' : 'false'}"
-                onclick="event.stopPropagation(); toggleTask(${projectIdLiteral}, ${normalizedTask.id})"
-                onpointerdown="event.stopPropagation();"
-                ondragstart="event.preventDefault(); event.stopPropagation();">
+        <div class="task-checkbox ${completedClass}"
+             data-task-checkbox="${normalizedTask.id}"
+             role="button"
+             tabindex="0"
+             aria-label="${normalizedTask.completed ? 'Mark task incomplete' : 'Mark task complete'}"
+             aria-pressed="${normalizedTask.completed ? 'true' : 'false'}"
+             onclick="event.stopPropagation(); toggleTask(${projectIdLiteral}, ${normalizedTask.id})"
+             onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); toggleTask(${projectIdLiteral}, ${normalizedTask.id}); }"
+             onpointerdown="event.stopPropagation();"
+             ondragstart="event.preventDefault(); event.stopPropagation();">
             ${completedIcon}
-        </button>
+        </div>
     `;
 }
 
