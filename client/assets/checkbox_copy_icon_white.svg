@@ -1,0 +1,8 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Back square -->
+  <rect x="8" y="8" width="55" height="55" rx="10" ry="10" fill="white" stroke="#111" stroke-width="4.5"/>
+  <!-- Front square -->
+  <rect x="37" y="37" width="55" height="55" rx="10" ry="10" fill="white" stroke="#111" stroke-width="4.5"/>
+  <!-- Checkmark on front square -->
+  <polyline points="49,62 59,74 76,52" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -21302,3 +21302,103 @@ body[data-theme^="glass"] .project-meatballs--card .project-meatballs-toggle {
     min-height: 2.1rem !important;
     font-size: 1rem !important;
 }
+
+/* ============================================================================
+   Targeted patch: task reorder cursor scope and menu-bar sort pressed state
+   ============================================================================ */
+#projectModal .task-item:not(.is-editing),
+#projectModal .task-item:not(.is-editing) .task-main-content,
+#projectModal .task-item:not(.is-editing) .task-text,
+body[data-theme^="console"] #projectModal .task-item:not(.is-editing),
+body[data-theme^="console"] #projectModal .task-item:not(.is-editing) .task-main-content,
+body[data-theme^="console"] #projectModal .task-item:not(.is-editing) .task-text,
+body[data-theme^="glass"] #projectModal .task-item:not(.is-editing),
+body[data-theme^="glass"] #projectModal .task-item:not(.is-editing) .task-main-content,
+body[data-theme^="glass"] #projectModal .task-item:not(.is-editing) .task-text,
+body[data-theme^="blueprint"] #projectModal .task-item:not(.is-editing),
+body[data-theme^="blueprint"] #projectModal .task-item:not(.is-editing) .task-main-content,
+body[data-theme^="blueprint"] #projectModal .task-item:not(.is-editing) .task-text,
+.project-calendar-draggable-task,
+.project-calendar-draggable-task *:not(.task-drag-handle),
+body[data-theme^="console"] .project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-draggable-task *:not(.task-drag-handle),
+body[data-theme^="glass"] .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-draggable-task *:not(.task-drag-handle),
+body[data-theme^="blueprint"] .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-draggable-task *:not(.task-drag-handle) {
+    cursor: default !important;
+}
+
+#projectModal .task-drag-handle,
+.project-calendar-task-drag-handle,
+body[data-theme^="console"] #projectModal .task-drag-handle,
+body[data-theme^="console"] .project-calendar-task-drag-handle,
+body[data-theme^="glass"] #projectModal .task-drag-handle,
+body[data-theme^="glass"] .project-calendar-task-drag-handle,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle {
+    cursor: default !important;
+}
+
+#projectModal .task-drag-handle:hover,
+#projectModal .task-drag-handle:focus-visible,
+.project-calendar-task-drag-handle:hover,
+.project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="console"] #projectModal .task-drag-handle:hover,
+body[data-theme^="console"] #projectModal .task-drag-handle:focus-visible,
+body[data-theme^="console"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="console"] .project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="glass"] #projectModal .task-drag-handle:hover,
+body[data-theme^="glass"] #projectModal .task-drag-handle:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle:hover,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:focus-visible {
+    cursor: grab !important;
+}
+
+#projectModal .task-drag-handle:active,
+.project-calendar-task-drag-handle:active,
+#projectModal .task-item.dragging .task-drag-handle,
+.project-calendar-draggable-task.is-calendar-task-reordering .project-calendar-task-drag-handle,
+body[data-theme^="console"] #projectModal .task-drag-handle:active,
+body[data-theme^="console"] .project-calendar-task-drag-handle:active,
+body[data-theme^="glass"] #projectModal .task-drag-handle:active,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:active,
+body[data-theme^="blueprint"] #projectModal .task-drag-handle:active,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:active {
+    cursor: grabbing !important;
+}
+
+#projectSortSelect:hover:not(:active):not(:focus-visible),
+body[data-theme^="console"] #projectSortSelect:hover:not(:active):not(:focus-visible),
+body[data-theme^="glass"] #projectSortSelect:hover:not(:active):not(:focus-visible),
+body[data-theme^="blueprint"] #projectSortSelect:hover:not(:active):not(:focus-visible) {
+    color: var(--text, currentColor) !important;
+    border-color: var(--border, rgba(148, 163, 184, 0.28)) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] #projectSortSelect:hover:not(:active):not(:focus-visible) {
+    color: var(--heading, #f8fafc) !important;
+    border-color: color-mix(in srgb, var(--border, rgba(148, 163, 184, 0.28)) 82%, transparent) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035) !important;
+}
+
+body[data-theme^="blueprint"] #projectSortSelect:hover:not(:active):not(:focus-visible) {
+    color: var(--heading, #f8fafc) !important;
+    border-color: color-mix(in srgb, var(--line, currentColor) 58%, transparent) !important;
+    box-shadow: var(--neumo-inset-shadow, inset 4px 4px 9px rgba(0, 0, 0, 0.22), inset -4px -4px 9px rgba(255, 255, 255, 0.05)) !important;
+}
+
+body[data-theme="blueprint-light"] #projectSortSelect:hover:not(:active):not(:focus-visible) {
+    color: var(--heading, #172033) !important;
+    box-shadow: var(--neumo-inset-shadow, inset 4px 4px 9px rgba(160, 168, 180, 0.38), inset -4px -4px 9px rgba(255, 255, 255, 0.78)) !important;
+}
+
+body[data-theme^="glass"] #projectSortSelect:hover:not(:active):not(:focus-visible) {
+    color: var(--heading, var(--text, #f8fafc)) !important;
+}
+
