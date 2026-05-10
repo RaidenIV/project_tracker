@@ -21739,3 +21739,128 @@ body[data-theme^="blueprint"] #settingsSectionBody .sidebar-action-button {
     font-size: 0.78rem !important;
     line-height: 1.1 !important;
 }
+
+/* ============================================================================
+   Targeted patch: leaderboard rows on card, avatar/username stack, wider avatar button
+   ============================================================================ */
+#leaderboardSectionBody,
+body[data-theme^="console"] #leaderboardSectionBody,
+body[data-theme^="glass"] #leaderboardSectionBody,
+body[data-theme^="blueprint"] #leaderboardSectionBody {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.leaderboard-panel-card,
+body[data-theme^="console"] .leaderboard-panel-card,
+body[data-theme^="glass"] .leaderboard-panel-card,
+body[data-theme^="blueprint"] .leaderboard-panel-card {
+    margin: 0 !important;
+}
+
+.leaderboard-list,
+body[data-theme^="console"] .leaderboard-list,
+body[data-theme^="glass"] .leaderboard-list,
+body[data-theme^="blueprint"] .leaderboard-list {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.leaderboard-list > .leaderboard-row,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+    grid-template-columns: 1.35rem 3.85rem 3.35rem minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+        "rank avatar level score"
+        "rank user level score" !important;
+    min-height: 4.65rem !important;
+    align-items: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-rank,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-rank {
+    grid-area: rank !important;
+    align-self: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
+    grid-area: avatar !important;
+    justify-self: center !important;
+    align-self: end !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main {
+    grid-area: user !important;
+    display: block !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    align-self: start !important;
+    text-align: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+    display: block !important;
+    width: 100% !important;
+    max-width: 3.85rem !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    font-size: 0.62rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.01em !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user-label,
+.leaderboard-list > .leaderboard-row .leaderboard-meta,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-meta {
+    display: none !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge {
+    grid-area: level !important;
+    justify-self: start !important;
+    align-self: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
+    grid-area: score !important;
+    justify-self: end !important;
+    align-self: center !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill {
+    width: 100% !important;
+    max-width: 100% !important;
+}
