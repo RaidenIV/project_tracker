@@ -2714,11 +2714,7 @@ function renderLeaderboardPanel() {
         rank: index + 1
     }));
 
-    const visibleEntries = rankedByScore.slice(0, 10);
-    const visibleCurrentEntry = currentUserId ? rankedByScore.find(entry => String(entry.userId) === currentUserId) : null;
-    if (visibleCurrentEntry && !visibleEntries.some(entry => String(entry.userId) === currentUserId)) {
-        visibleEntries.push(visibleCurrentEntry);
-    }
+    const visibleEntries = rankedByScore.slice(0, 5);
 
     accountState.renderedLeaderboardEntries = visibleEntries;
 
@@ -2748,10 +2744,9 @@ function renderLeaderboardPanel() {
                 <span class="leaderboard-rank${rankClass}">${rank}</span>
                 <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
                 <span class="leaderboard-row-main">
-                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}"><span class="leaderboard-user-label">User:</span> ${escapeHtml(username)}</span>
-                    <span class="leaderboard-meta">lvl ${playerLevel} • ${completionPercentage}% complete</span>
+                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)} <span class="leaderboard-user-level">[lvl ${playerLevel}]</span></span>
+                    <span class="leaderboard-meta">${completionPercentage}% complete</span>
                 </span>
-                <span class="leaderboard-level-badge" title="Level ${playerLevel}">lvl ${playerLevel}</span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
             </button>
         `;

@@ -22186,3 +22186,47 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-
     justify-self: end !important;
     align-self: center !important;
 }
+
+/* ============================================================================
+   Targeted patch: leaderboard top-five list and inline bracket level
+   ============================================================================ */
+.leaderboard-list > .leaderboard-row,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+    grid-template-columns: 1.35rem 2rem minmax(0, 1fr) auto !important;
+    grid-template-areas: "rank avatar user score" !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge {
+    display: none !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    max-width: 100% !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user-level,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-level {
+    flex: 0 0 auto !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
+    text-transform: none !important;
+}
