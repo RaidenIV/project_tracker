@@ -1827,10 +1827,22 @@ function setStoredProjectTaskCategoryFilter(projectId, categoryValue) {
     saveProjectTaskCategoryFilterPreferences(preferences);
 }
 
+function normalizeDisplayName(value, fallback = 'User') {
+    const rawName = String(value || fallback || 'User').trim();
+    if (!rawName) return fallback || 'User';
+    return rawName.includes('@') ? rawName.split('@')[0] : rawName;
+}
+
+function getCurrentAvatarDisplayName() {
+    return normalizeDisplayName(accountState.user?.username || getCurrentUser?.()?.username || 'User');
+}
+
 function getLeaderboardUsername(entry) {
-    const rawUsername = String(entry?.username || entry?.name || entry?.displayName || 'User').trim();
-    if (!rawUsername) return 'User';
-    return rawUsername.includes('@') ? rawUsername.split('@')[0] : rawUsername;
+    return normalizeDisplayName(entry?.username || entry?.name || entry?.displayName || 'User');
+}
+
+function getLeaderboardDisplayName(entry, isCurrent = false) {
+    return isCurrent ? getCurrentAvatarDisplayName() : getLeaderboardUsername(entry);
 }
 
 function toLeaderboardNumber(value, fallback = 0) {
@@ -2672,7 +2684,7 @@ function renderLeaderboardPanel() {
         currentEntry = {
             ...(liveCurrentEntry || {}),
             ...currentEntry,
-            username: currentEntry.username || accountState.user?.username || 'User',
+            username: accountState.user?.username || currentEntry.username || 'User',
             profilePic: currentEntry.profilePic || accountState.user?.profilePic || '',
             totalCompletionPercentage: liveCurrentEntry?.totalCompletionPercentage ?? getLeaderboardCompletionValue(currentEntry),
             playerLevel: currentEntry.playerLevel || liveCurrentEntry?.playerLevel || getCurrentPersonalLevelProgress().level,
@@ -2717,7 +2729,7 @@ function renderLeaderboardPanel() {
 
     list.innerHTML = visibleEntries.map(entry => {
         const isCurrent = currentUserId && String(entry.userId) === currentUserId;
-        const username = getLeaderboardUsername(entry);
+        const username = getLeaderboardDisplayName(entry, isCurrent);
         const completionPercentage = getLeaderboardCompletionValue(entry);
         const leaderboardScore = getLeaderboardScoreValue(entry);
         const completedProjects = Number(entry.completedProjects || 0);
@@ -2766,7 +2778,7 @@ function getLeaderboardModalEntry(userId) {
 function buildLeaderboardProfileModalMarkup(entry) {
     const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
     const isCurrent = currentUserId && String(entry.userId || '') === currentUserId;
-    const username = getLeaderboardUsername(entry);
+    const username = getLeaderboardDisplayName(entry, isCurrent);
     const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
     const rank = Number(entry.rank || entry.leaderboardRank || 0);
     const completion = getLeaderboardCompletionValue(entry);

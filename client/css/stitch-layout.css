@@ -22113,3 +22113,76 @@ body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pil
     letter-spacing: 0.04em !important;
     text-transform: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: leaderboard avatar/name inline standardization
+   ============================================================================ */
+.leaderboard-list > .leaderboard-row,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+    grid-template-columns: 1.35rem 2rem minmax(0, 1fr) auto auto !important;
+    grid-template-rows: auto !important;
+    grid-template-areas: "rank avatar user level score" !important;
+    min-height: 3.6rem !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0 !important;
+    align-items: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
+    grid-area: avatar !important;
+    justify-self: start !important;
+    align-self: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main {
+    grid-area: user !important;
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    align-self: center !important;
+    text-align: left !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+    display: block !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    text-align: left !important;
+    font-size: 0.72rem !important;
+    line-height: 1.1 !important;
+    text-transform: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge {
+    grid-area: level !important;
+    justify-self: start !important;
+    align-self: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
+    grid-area: score !important;
+    justify-self: end !important;
+    align-self: center !important;
+}
