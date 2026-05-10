@@ -20051,3 +20051,172 @@ body[data-theme^="glass"] .project-calendar-remove-task-button:focus-visible {
         justify-self: start !important;
     }
 }
+
+/* Targeted patch: calendar task dock sorting, selected-day actions, mobile card spacing */
+.project-calendar-task-dock-heading,
+body[data-theme^="console"] .project-calendar-task-dock-heading,
+body[data-theme^="blueprint"] .project-calendar-task-dock-heading,
+body[data-theme^="glass"] .project-calendar-task-dock-heading {
+    display: grid !important;
+    gap: 0.12rem !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-task-dock-controls,
+body[data-theme^="console"] .project-calendar-task-dock-controls,
+body[data-theme^="blueprint"] .project-calendar-task-dock-controls,
+body[data-theme^="glass"] .project-calendar-task-dock-controls {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.55rem !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-task-sort-select,
+body[data-theme^="console"] .project-calendar-task-sort-select,
+body[data-theme^="blueprint"] .project-calendar-task-sort-select,
+body[data-theme^="glass"] .project-calendar-task-sort-select {
+    min-height: 2rem !important;
+    width: clamp(8.5rem, 18vw, 11rem) !important;
+    max-width: 11rem !important;
+    padding: 0.42rem 2rem 0.42rem 0.7rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.75rem !important;
+    background-color: var(--surface-2, rgba(255, 255, 255, 0.06)) !important;
+    color: var(--text, #f8fafc) !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-task-sort-select:focus-visible,
+body[data-theme^="console"] .project-calendar-task-sort-select:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-sort-select:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-sort-select:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 1px var(--accent, currentColor) !important;
+}
+
+.project-calendar-task-sort-select option,
+body[data-theme^="console"] .project-calendar-task-sort-select option,
+body[data-theme^="blueprint"] .project-calendar-task-sort-select option,
+body[data-theme^="glass"] .project-calendar-task-sort-select option {
+    color: #f8fafc !important;
+    background: #111827 !important;
+}
+
+body[data-theme$="-light"] .project-calendar-task-sort-select,
+body[data-theme$="-light"] .project-calendar-task-sort-select option {
+    color: #111827 !important;
+    background-color: #ffffff !important;
+    -webkit-text-fill-color: #111827 !important;
+}
+
+.project-calendar-draggable-task-date.has-date,
+body[data-theme^="console"] .project-calendar-draggable-task-date.has-date,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-date.has-date,
+body[data-theme^="glass"] .project-calendar-draggable-task-date.has-date {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start !important;
+    justify-content: stretch !important;
+    gap: 0.58rem !important;
+}
+
+.project-calendar-selected-task-body,
+body[data-theme^="console"] .project-calendar-selected-task-body,
+body[data-theme^="blueprint"] .project-calendar-selected-task-body,
+body[data-theme^="glass"] .project-calendar-selected-task-body {
+    display: grid !important;
+    gap: 0.48rem !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-selected-task-actions,
+body[data-theme^="console"] .project-calendar-selected-task-actions,
+body[data-theme^="blueprint"] .project-calendar-selected-task-actions,
+body[data-theme^="glass"] .project-calendar-selected-task-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task-priority-control,
+.project-calendar-selected-task .project-calendar-remove-task-button,
+body[data-theme^="console"] .project-calendar-selected-task .project-calendar-remove-task-button,
+body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-remove-task-button,
+body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-remove-task-button {
+    grid-column: auto !important;
+    justify-self: start !important;
+}
+
+@media (max-width: 980px) {
+    .stitch-project-card .project-title,
+    .project-card .project-title,
+    body[data-theme^="console"] .stitch-project-card .project-title,
+    body[data-theme^="console"] .project-card .project-title,
+    body[data-theme^="glass"] .stitch-project-card .project-title,
+    body[data-theme^="glass"] .project-card .project-title,
+    body[data-theme^="blueprint"] .stitch-project-card .project-title,
+    body[data-theme^="blueprint"] .project-card .project-title {
+        font-size: clamp(1.1rem, 4.9vw, 1.38rem) !important;
+        line-height: 1.12 !important;
+    }
+
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    body[data-theme^="console"] .view-filter-chips,
+    body[data-theme^="console"] .view-filter-chips:not(:empty),
+    body[data-theme^="glass"] .view-filter-chips,
+    body[data-theme^="glass"] .view-filter-chips:not(:empty),
+    body[data-theme^="blueprint"] .view-filter-chips,
+    body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+        padding-top: 0.35rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .project-calendar-task-dock-header,
+    body[data-theme^="console"] .project-calendar-task-dock-header,
+    body[data-theme^="blueprint"] .project-calendar-task-dock-header,
+    body[data-theme^="glass"] .project-calendar-task-dock-header {
+        align-items: stretch !important;
+        flex-wrap: wrap !important;
+    }
+
+    .project-calendar-task-dock-controls,
+    body[data-theme^="console"] .project-calendar-task-dock-controls,
+    body[data-theme^="blueprint"] .project-calendar-task-dock-controls,
+    body[data-theme^="glass"] .project-calendar-task-dock-controls {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    .project-calendar-task-sort-select,
+    body[data-theme^="console"] .project-calendar-task-sort-select,
+    body[data-theme^="blueprint"] .project-calendar-task-sort-select,
+    body[data-theme^="glass"] .project-calendar-task-sort-select {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+}

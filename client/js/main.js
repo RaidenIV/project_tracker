@@ -387,17 +387,21 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                         return `
                             <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 <span class="project-calendar-selected-task-status" aria-hidden="true">${task.completed ? '✓' : '•'}</span>
-                                <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
-                                ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
-                                ${canEditCalendar ? `
-                                    <button class="project-calendar-remove-task-button"
-                                            type="button"
-                                            title="Remove this task from ${escapeHtml(formatTaskDueDate(selectedDate))}"
-                                            aria-label="Remove task from selected day"
-                                            onclick="removeProjectCalendarTaskFromDay(${projectIdLiteral}, ${taskIdLiteral}, ${selectedDateLiteral}, event)">
-                                        Remove
-                                    </button>
-                                ` : ''}
+                                <div class="project-calendar-selected-task-body">
+                                    <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
+                                    <div class="project-calendar-selected-task-actions">
+                                        ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
+                                        ${canEditCalendar ? `
+                                            <button class="project-calendar-remove-task-button"
+                                                    type="button"
+                                                    title="Remove this task from ${escapeHtml(formatTaskDueDate(selectedDate))}"
+                                                    aria-label="Remove task from selected day"
+                                                    onclick="removeProjectCalendarTaskFromDay(${projectIdLiteral}, ${taskIdLiteral}, ${selectedDateLiteral}, event)">
+                                                Remove
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
                             </div>
                         `;
                     }).join('')}
@@ -443,15 +447,28 @@ function buildProjectCalendarTaskDockMarkup(project) {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const canEditCalendar = state.canEdit(project?.id);
     const tasks = getProjectCalendarDraggableTasks(project);
+    const taskSortMode = getProjectTaskSortPreference(project?.id);
 
     return `
         <div class="project-calendar-task-dock" aria-label="Calendar task drag list">
             <div class="project-calendar-task-dock-header">
-                <div>
+                <div class="project-calendar-task-dock-heading">
                     <div class="project-calendar-selected-label">Incomplete Tasks</div>
                     <h4 class="project-calendar-task-dock-title">Drag tasks to dates</h4>
                 </div>
-                <span class="project-calendar-task-dock-count">${tasks.length}</span>
+                <div class="project-calendar-task-dock-controls">
+                    <select class="task-sort-select project-calendar-task-sort-select"
+                            id="calendar-task-sort-select-${escapeHtml(String(project?.id || ''))}"
+                            aria-label="Sort calendar tasks"
+                            onchange="setProjectTaskSortMode(${projectIdLiteral}, this.value)">
+                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
+                        <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>Ascending order</option>
+                        <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>Descending order</option>
+                        <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
+                        <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                    </select>
+                    <span class="project-calendar-task-dock-count">${tasks.length}</span>
+                </div>
             </div>
             ${tasks.length ? `
                 <div class="project-calendar-task-dock-list">
@@ -466,7 +483,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
                                  ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)">
                                 <span class="project-calendar-draggable-task-dot" aria-hidden="true"></span>
                                 <span class="project-calendar-draggable-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
-                                <span class="project-calendar-draggable-task-date">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
+                                <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
                                 ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                             </div>
                         `;
@@ -6532,6 +6549,7 @@ function renderModalTaskList(projectId) {
 function setProjectTaskSortMode(projectId, sortMode) {
     setProjectTaskSortPreference(projectId, sortMode);
     renderModalTaskList(projectId);
+    refreshProjectCalendarIfPresent(projectId);
 }
 
 function setProjectTaskCategoryFilter(projectId, categoryValue) {
