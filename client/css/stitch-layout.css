@@ -22230,3 +22230,28 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-
     letter-spacing: inherit !important;
     text-transform: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: leaderboard reset caption and hidden row level
+   ============================================================================ */
+.leaderboard-card-caption,
+body[data-theme^="console"] .leaderboard-card-caption,
+body[data-theme^="glass"] .leaderboard-card-caption,
+body[data-theme^="blueprint"] .leaderboard-card-caption {
+    display: block !important;
+    margin: 0 0 0.7rem !important;
+    padding: 0 !important;
+    color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.35 !important;
+    text-transform: uppercase !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user-level,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-level {
+    display: none !important;
+}

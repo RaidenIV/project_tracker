@@ -2666,6 +2666,14 @@ function renderLeaderboardPanel() {
     const list = document.getElementById('leaderboardList');
     if (!list) return;
 
+    const leaderboardCard = list.closest('.leaderboard-panel-card') || list.parentElement;
+    if (leaderboardCard && !leaderboardCard.querySelector('.leaderboard-card-caption')) {
+        const caption = document.createElement('div');
+        caption.className = 'leaderboard-card-caption';
+        caption.textContent = 'Tasks completed over 7 days, then resets.';
+        leaderboardCard.insertBefore(caption, list);
+    }
+
     const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
     const rankedEntries = Array.isArray(accountState.leaderboard) ? [...accountState.leaderboard] : [];
     const liveCurrentEntry = currentUserId ? buildLocalCurrentLeaderboardEntry(currentUserId) : null;
@@ -2730,9 +2738,8 @@ function renderLeaderboardPanel() {
         const leaderboardScore = getLeaderboardScoreValue(entry);
         const completedProjects = Number(entry.completedProjects || 0);
         const completedTasks = Number(entry.completedTasks || 0);
-        const playerLevel = Math.max(1, Number(entry.playerLevel || 1) || 1);
         const rank = String(entry.rank || '—').padStart(2, '0');
-        const meta = `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'} this week • lvl ${playerLevel} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} total tasks`;
+        const meta = `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'} this week • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} total tasks`;
         const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
         const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
         const avatarMarkup = profilePic
@@ -2744,7 +2751,7 @@ function renderLeaderboardPanel() {
                 <span class="leaderboard-rank${rankClass}">${rank}</span>
                 <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
                 <span class="leaderboard-row-main">
-                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)} <span class="leaderboard-user-level">[lvl ${playerLevel}]</span></span>
+                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
                     <span class="leaderboard-meta">${completionPercentage}% complete</span>
                 </span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
