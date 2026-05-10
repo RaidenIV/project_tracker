@@ -327,6 +327,38 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
     `;
 }
 
+function buildProjectCalendarTaskPriorityControl(projectId, task) {
+    const normalizedTask = normalizeTask(task);
+    const canEditCalendar = state.canEdit(projectId);
+    const taskIdLiteral = serializeInlineJsString(normalizedTask.id);
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const tag = normalizePriorityTagValue(normalizedTask.tag);
+
+    if (!canEditCalendar) {
+        return `<span class="project-calendar-selected-task-priority ${getProjectCalendarTaskPriorityClass(normalizedTask)}">${escapeHtml(getPriorityTagLabel(tag))}</span>`;
+    }
+
+    return `
+        <label class="project-calendar-task-priority-control project-calendar-task-priority-control--${tag}"
+               title="Task priority"
+               onclick="event.stopPropagation();"
+               onpointerdown="event.stopPropagation();"
+               ondragstart="event.preventDefault(); event.stopPropagation();">
+            <span class="task-tag-flag task-tag-flag--${tag}" aria-hidden="true"></span>
+            <select class="project-calendar-task-priority-select"
+                    aria-label="Task priority"
+                    onchange="updateProjectCalendarTaskPriority(${projectIdLiteral}, ${taskIdLiteral}, this.value, event)"
+                    onclick="event.stopPropagation();"
+                    onpointerdown="event.stopPropagation();"
+                    ondragstart="event.preventDefault(); event.stopPropagation();">
+                ${TASK_TAG_OPTIONS.map(option => `
+                    <option value="${option.value}" ${tag === option.value ? 'selected' : ''}>${escapeHtml(option.label)}</option>
+                `).join('')}
+            </select>
+        </label>
+    `;
+}
+
 function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const notes = getProjectCalendarNotes(project);
@@ -354,7 +386,7 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                             <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 <span class="project-calendar-selected-task-status" aria-hidden="true">${task.completed ? '✓' : '•'}</span>
                                 <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
-                                <span class="project-calendar-selected-task-priority ${getProjectCalendarTaskPriorityClass(task)}">${escapeHtml(getPriorityTagLabel(task.tag))}</span>
+                                ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                             </div>
                         `).join('')}
                     </div>
@@ -381,16 +413,18 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
 }
 
 function getProjectCalendarDraggableTasks(project) {
-    return (Array.isArray(project?.tasks) ? project.tasks : [])
+    if (!project) return [];
+    const projectId = project?.id;
+    const sortMode = getProjectTaskSortPreference(projectId);
+    let activeCategory = getProjectTaskCategoryFilter(projectId);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
+    }
+
+    return getDisplayTasksForProject(project, { hideCompleted: true, sortMode, activeCategory })
         .map((task, index) => normalizeTask(task, index))
-        .sort((a, b) => {
-            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
-            const aDue = normalizeTaskDueDate(a.dueDate);
-            const bDue = normalizeTaskDueDate(b.dueDate);
-            if (!!aDue !== !!bDue) return aDue ? 1 : -1;
-            if (aDue && bDue && aDue !== bDue) return aDue.localeCompare(bDue);
-            return String(a.text || '').localeCompare(String(b.text || ''), undefined, { sensitivity: 'base' });
-        });
+        .filter(task => !task.completed);
 }
 
 function buildProjectCalendarTaskDockMarkup(project) {
@@ -402,7 +436,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
         <div class="project-calendar-task-dock" aria-label="Calendar task drag list">
             <div class="project-calendar-task-dock-header">
                 <div>
-                    <div class="project-calendar-selected-label">Task List</div>
+                    <div class="project-calendar-selected-label">Incomplete Tasks</div>
                     <h4 class="project-calendar-task-dock-title">Drag tasks to dates</h4>
                 </div>
                 <span class="project-calendar-task-dock-count">${tasks.length}</span>
@@ -413,7 +447,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
                         const taskIdLiteral = serializeInlineJsString(task.id);
                         const dueDate = normalizeTaskDueDate(task.dueDate);
                         return `
-                            <div class="project-calendar-draggable-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}"
+                            <div class="project-calendar-draggable-task ${getProjectCalendarTaskPriorityClass(task)}"
                                  draggable="${canEditCalendar ? 'true' : 'false'}"
                                  role="listitem"
                                  title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}"
@@ -421,16 +455,22 @@ function buildProjectCalendarTaskDockMarkup(project) {
                                 <span class="project-calendar-draggable-task-dot" aria-hidden="true"></span>
                                 <span class="project-calendar-draggable-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
                                 <span class="project-calendar-draggable-task-date">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
+                                ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                             </div>
                         `;
                     }).join('')}
                 </div>
-            ` : '<div class="project-calendar-empty">No tasks available to schedule</div>'}
+            ` : '<div class="project-calendar-empty">No incomplete tasks available to schedule</div>'}
         </div>
     `;
 }
 
 function handleProjectCalendarTaskDragStart(projectId, taskId, event) {
+    if (event?.target?.closest?.('.project-calendar-task-priority-control')) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        return;
+    }
     if (!state.canEdit(projectId)) {
         event?.preventDefault?.();
         return;
@@ -492,6 +532,36 @@ function handleProjectCalendarTaskDrop(projectId, dateKey, event) {
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     setProjectCalendarSelectedDate(projectId, safeDateKey);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function updateProjectCalendarTaskPriority(projectId, taskId, tagValue, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const normalizedTagValue = String(tagValue ?? '').trim().toLowerCase();
+    const nextTag = Object.prototype.hasOwnProperty.call(TASK_TAG_PRIORITY, normalizedTagValue) ? normalizedTagValue : DEFAULT_TASK_TAG;
+    const safeTaskId = String(taskId ?? '');
+    let changed = false;
+
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (String(normalizedTask.id) !== safeTaskId) return normalizedTask;
+        if (normalizePriorityTagValue(normalizedTask.tag) === nextTag) return normalizedTask;
+        changed = true;
+        return { ...normalizedTask, tag: nextTag };
+    });
+
+    if (!changed) return;
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
     renderProjectCalendarSection(projectId, { preserveScroll: true });
     saveOpenProjectModalState(projectId, 'calendar');
 }
@@ -9003,6 +9073,7 @@ window.deleteProjectCalendarNote = deleteProjectCalendarNote;
 window.handleProjectCalendarTaskDragStart = handleProjectCalendarTaskDragStart;
 window.handleProjectCalendarDayDragOver = handleProjectCalendarDayDragOver;
 window.handleProjectCalendarTaskDrop = handleProjectCalendarTaskDrop;
+window.updateProjectCalendarTaskPriority = updateProjectCalendarTaskPriority;
 window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;

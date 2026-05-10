@@ -19656,3 +19656,102 @@ body[data-theme^="glass"] #projectModal.is-calendar-tab-active .project-due-date
         max-height: none !important;
     }
 }
+
+/* Targeted patch: calendar task dock ordering, incomplete-only list, and priority editing */
+.project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-draggable-task {
+    grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+}
+
+.project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-task-priority-control {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    min-width: 0 !important;
+    max-width: 9rem !important;
+    padding: 0.25rem 0.42rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.24)) !important;
+    border-radius: 999px !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: default !important;
+}
+
+.project-calendar-task-priority-control .task-tag-flag,
+body[data-theme^="console"] .project-calendar-task-priority-control .task-tag-flag,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control .task-tag-flag,
+body[data-theme^="glass"] .project-calendar-task-priority-control .task-tag-flag {
+    flex: 0 0 auto !important;
+    width: 0.55rem !important;
+    height: 0.55rem !important;
+}
+
+.project-calendar-task-priority-select,
+body[data-theme^="console"] .project-calendar-task-priority-select,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select,
+body[data-theme^="glass"] .project-calendar-task-priority-select {
+    min-width: 0 !important;
+    max-width: 7rem !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    appearance: auto !important;
+}
+
+.project-calendar-task-priority-select:focus-visible,
+body[data-theme^="console"] .project-calendar-task-priority-select:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-priority-select:focus-visible {
+    box-shadow: none !important;
+}
+
+.project-calendar-task-priority-control:focus-within,
+body[data-theme^="console"] .project-calendar-task-priority-control:focus-within,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control:focus-within,
+body[data-theme^="glass"] .project-calendar-task-priority-control:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+}
+
+.project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task-priority-control {
+    justify-self: end !important;
+}
+
+@media (max-width: 640px) {
+    .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-draggable-task {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+
+    .project-calendar-draggable-task .project-calendar-task-priority-control,
+    body[data-theme^="console"] .project-calendar-draggable-task .project-calendar-task-priority-control,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task .project-calendar-task-priority-control,
+    body[data-theme^="glass"] .project-calendar-draggable-task .project-calendar-task-priority-control {
+        grid-column: 2 / -1 !important;
+        justify-self: start !important;
+    }
+}
