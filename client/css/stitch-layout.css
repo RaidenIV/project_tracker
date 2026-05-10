@@ -19462,3 +19462,197 @@ body[data-theme^="glass"] .project-calendar-note-actions {
     display: none !important;
     visibility: hidden !important;
 }
+
+/* Targeted patch: calendar drag-to-schedule task list and minimized empty day notes */
+.project-calendar-side-panel,
+body[data-theme^="console"] .project-calendar-side-panel,
+body[data-theme^="blueprint"] .project-calendar-side-panel,
+body[data-theme^="glass"] .project-calendar-side-panel {
+    display: grid !important;
+    gap: 1rem !important;
+    align-content: start !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-side-panel .project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-side-panel .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-side-panel .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-side-panel .project-calendar-selected-card {
+    max-height: min(42vh, 28rem) !important;
+}
+
+.project-calendar-task-dock,
+body[data-theme^="console"] .project-calendar-task-dock,
+body[data-theme^="blueprint"] .project-calendar-task-dock,
+body[data-theme^="glass"] .project-calendar-task-dock {
+    display: grid !important;
+    gap: 0.75rem !important;
+    min-width: 0 !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-calendar-task-dock-header,
+body[data-theme^="console"] .project-calendar-task-dock-header,
+body[data-theme^="blueprint"] .project-calendar-task-dock-header,
+body[data-theme^="glass"] .project-calendar-task-dock-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+}
+
+.project-calendar-task-dock-title,
+body[data-theme^="console"] .project-calendar-task-dock-title,
+body[data-theme^="blueprint"] .project-calendar-task-dock-title,
+body[data-theme^="glass"] .project-calendar-task-dock-title {
+    margin: 0.18rem 0 0 !important;
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 0.95rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-task-dock-count,
+body[data-theme^="console"] .project-calendar-task-dock-count,
+body[data-theme^="blueprint"] .project-calendar-task-dock-count,
+body[data-theme^="glass"] .project-calendar-task-dock-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    padding: 0 0.5rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    color: var(--accent, currentColor) !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-task-dock-list,
+body[data-theme^="console"] .project-calendar-task-dock-list,
+body[data-theme^="blueprint"] .project-calendar-task-dock-list,
+body[data-theme^="glass"] .project-calendar-task-dock-list {
+    display: grid !important;
+    gap: 0.5rem !important;
+    max-height: min(32vh, 17rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 0.25rem !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-draggable-task {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    min-width: 0 !important;
+    padding: 0.58rem 0.65rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.24)) !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: grab !important;
+    user-select: none !important;
+}
+
+.project-calendar-draggable-task:active,
+body[data-theme^="console"] .project-calendar-draggable-task:active,
+body[data-theme^="blueprint"] .project-calendar-draggable-task:active,
+body[data-theme^="glass"] .project-calendar-draggable-task:active {
+    cursor: grabbing !important;
+}
+
+.project-calendar-draggable-task.is-completed,
+body[data-theme^="console"] .project-calendar-draggable-task.is-completed,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-completed,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-completed {
+    opacity: 0.62 !important;
+}
+
+.project-calendar-draggable-task-dot,
+body[data-theme^="console"] .project-calendar-draggable-task-dot,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-dot,
+body[data-theme^="glass"] .project-calendar-draggable-task-dot {
+    width: 0.42rem !important;
+    height: 0.42rem !important;
+    border-radius: 999px !important;
+    background: var(--accent, currentColor) !important;
+}
+
+.project-calendar-draggable-task-text,
+body[data-theme^="console"] .project-calendar-draggable-task-text,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-text,
+body[data-theme^="glass"] .project-calendar-draggable-task-text {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+}
+
+.project-calendar-draggable-task-date,
+body[data-theme^="console"] .project-calendar-draggable-task-date,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-date,
+body[data-theme^="glass"] .project-calendar-draggable-task-date {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+
+.project-calendar-note-input.is-minimized,
+.project-calendar-selected-card.is-day-note-empty .project-calendar-note-input,
+body[data-theme^="console"] .project-calendar-note-input.is-minimized,
+body[data-theme^="console"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input,
+body[data-theme^="blueprint"] .project-calendar-note-input.is-minimized,
+body[data-theme^="blueprint"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input,
+body[data-theme^="glass"] .project-calendar-note-input.is-minimized,
+body[data-theme^="glass"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input {
+    min-height: 2.75rem !important;
+    height: 2.75rem !important;
+}
+
+.project-calendar-note-input.is-minimized:focus,
+.project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus,
+body[data-theme^="console"] .project-calendar-note-input.is-minimized:focus,
+body[data-theme^="console"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus,
+body[data-theme^="blueprint"] .project-calendar-note-input.is-minimized:focus,
+body[data-theme^="blueprint"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus,
+body[data-theme^="glass"] .project-calendar-note-input.is-minimized:focus,
+body[data-theme^="glass"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus {
+    min-height: 8rem !important;
+    height: auto !important;
+}
+
+#projectModal.is-calendar-tab-active .project-due-date-control--modal,
+body[data-theme^="console"] #projectModal.is-calendar-tab-active .project-due-date-control--modal,
+body[data-theme^="blueprint"] #projectModal.is-calendar-tab-active .project-due-date-control--modal,
+body[data-theme^="glass"] #projectModal.is-calendar-tab-active .project-due-date-control--modal {
+    display: none !important;
+}
+
+@media (max-width: 920px) {
+    .project-calendar-side-panel,
+    body[data-theme^="console"] .project-calendar-side-panel,
+    body[data-theme^="blueprint"] .project-calendar-side-panel,
+    body[data-theme^="glass"] .project-calendar-side-panel {
+        width: 100% !important;
+    }
+
+    .project-calendar-side-panel .project-calendar-selected-card,
+    body[data-theme^="console"] .project-calendar-side-panel .project-calendar-selected-card,
+    body[data-theme^="blueprint"] .project-calendar-side-panel .project-calendar-selected-card,
+    body[data-theme^="glass"] .project-calendar-side-panel .project-calendar-selected-card {
+        max-height: none !important;
+    }
+}

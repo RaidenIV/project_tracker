@@ -310,7 +310,10 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
                             role="gridcell"
                             aria-pressed="${dateKey === selectedDate ? 'true' : 'false'}"
                             aria-label="${escapeHtml(ariaParts.join(', '))}"
-                            onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)">
+                            onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)"
+                            ondragover="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)"
+                            ondragenter="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)"
+                            ondrop="handleProjectCalendarTaskDrop(${projectIdLiteral}, '${dateKey}', event)">
                         <span class="project-calendar-day-number">${dayNumber}</span>
                         <span class="project-calendar-day-markers" aria-hidden="true">
                             ${projectDueDate === dateKey ? '<span class="project-calendar-marker project-calendar-marker--project"></span>' : ''}
@@ -332,9 +335,10 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
     const canEditCalendar = state.canEdit(project?.id);
     const projectDueDate = getProjectDueDate(project);
     const selectedDateLiteral = serializeInlineJsString(selectedDate);
+    const noteStateClass = selectedNote ? 'has-day-note' : 'is-day-note-empty';
 
     return `
-        <div class="project-calendar-selected-card">
+        <div class="project-calendar-selected-card ${noteStateClass}">
             <div class="project-calendar-selected-header">
                 <div>
                     <div class="project-calendar-selected-label">Selected Day</div>
@@ -356,11 +360,12 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                     </div>
                 ` : '<div class="project-calendar-empty">No tasks due on this day</div>'}
             </div>
-            <div class="project-calendar-selected-block">
+            <div class="project-calendar-selected-block project-calendar-note-block ${noteStateClass}">
                 <label class="project-calendar-selected-block-title" for="project-calendar-note-${escapeHtml(String(project?.id || ''))}">Day Note</label>
-                <textarea class="project-calendar-note-input"
+                <textarea class="project-calendar-note-input ${selectedNote ? '' : 'is-minimized'}"
                           id="project-calendar-note-${escapeHtml(String(project?.id || ''))}"
                           maxlength="${PROJECT_CALENDAR_NOTE_MAX_LENGTH}"
+                          rows="${selectedNote ? '5' : '1'}"
                           placeholder="Add a note for this day"
                           ${canEditCalendar ? '' : 'readonly'}>${escapeHtml(selectedNote)}</textarea>
                 <div class="project-calendar-note-actions">
@@ -373,6 +378,122 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
             </div>
         </div>
     `;
+}
+
+function getProjectCalendarDraggableTasks(project) {
+    return (Array.isArray(project?.tasks) ? project.tasks : [])
+        .map((task, index) => normalizeTask(task, index))
+        .sort((a, b) => {
+            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+            const aDue = normalizeTaskDueDate(a.dueDate);
+            const bDue = normalizeTaskDueDate(b.dueDate);
+            if (!!aDue !== !!bDue) return aDue ? 1 : -1;
+            if (aDue && bDue && aDue !== bDue) return aDue.localeCompare(bDue);
+            return String(a.text || '').localeCompare(String(b.text || ''), undefined, { sensitivity: 'base' });
+        });
+}
+
+function buildProjectCalendarTaskDockMarkup(project) {
+    const projectIdLiteral = serializeInlineJsString(project?.id || '');
+    const canEditCalendar = state.canEdit(project?.id);
+    const tasks = getProjectCalendarDraggableTasks(project);
+
+    return `
+        <div class="project-calendar-task-dock" aria-label="Calendar task drag list">
+            <div class="project-calendar-task-dock-header">
+                <div>
+                    <div class="project-calendar-selected-label">Task List</div>
+                    <h4 class="project-calendar-task-dock-title">Drag tasks to dates</h4>
+                </div>
+                <span class="project-calendar-task-dock-count">${tasks.length}</span>
+            </div>
+            ${tasks.length ? `
+                <div class="project-calendar-task-dock-list">
+                    ${tasks.map(task => {
+                        const taskIdLiteral = serializeInlineJsString(task.id);
+                        const dueDate = normalizeTaskDueDate(task.dueDate);
+                        return `
+                            <div class="project-calendar-draggable-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}"
+                                 draggable="${canEditCalendar ? 'true' : 'false'}"
+                                 role="listitem"
+                                 title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}"
+                                 ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)">
+                                <span class="project-calendar-draggable-task-dot" aria-hidden="true"></span>
+                                <span class="project-calendar-draggable-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
+                                <span class="project-calendar-draggable-task-date">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : '<div class="project-calendar-empty">No tasks available to schedule</div>'}
+        </div>
+    `;
+}
+
+function handleProjectCalendarTaskDragStart(projectId, taskId, event) {
+    if (!state.canEdit(projectId)) {
+        event?.preventDefault?.();
+        return;
+    }
+    event?.stopPropagation?.();
+    const payload = JSON.stringify({ projectId: String(projectId ?? ''), taskId: String(taskId ?? '') });
+    event?.dataTransfer?.setData?.('application/x-project-calendar-task', payload);
+    event?.dataTransfer?.setData?.('text/plain', payload);
+    if (event?.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+}
+
+function handleProjectCalendarDayDragOver(projectId, dateKey, event) {
+    if (!state.canEdit(projectId) || !isValidDateKey(dateKey)) return;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (event?.dataTransfer) event.dataTransfer.dropEffect = 'move';
+}
+
+function handleProjectCalendarTaskDrop(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey)) return;
+
+    let payload = null;
+    const rawPayload = event?.dataTransfer?.getData?.('application/x-project-calendar-task')
+        || event?.dataTransfer?.getData?.('text/plain')
+        || '';
+    try {
+        payload = JSON.parse(rawPayload);
+    } catch (error) {
+        payload = null;
+    }
+
+    const draggedProjectId = String(payload?.projectId ?? '');
+    const draggedTaskId = String(payload?.taskId ?? '');
+    if (!draggedTaskId || draggedProjectId !== String(projectId ?? '')) return;
+
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    let changed = false;
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalized = normalizeTask(task, index);
+        if (String(normalized.id) !== draggedTaskId) return normalized;
+        if (normalizeTaskDueDate(normalized.dueDate) === safeDateKey) return normalized;
+        changed = true;
+        return { ...normalized, dueDate: safeDateKey };
+    });
+
+    if (!changed) {
+        setProjectCalendarSelectedDate(projectId, safeDateKey);
+        renderProjectCalendarSection(projectId, { preserveScroll: true });
+        return;
+    }
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    saveOpenProjectModalState(projectId, 'calendar');
 }
 
 function getTodayDateKey() {
@@ -6809,7 +6930,10 @@ function buildProjectCalendarSectionMarkup(project) {
                 </div>
                 ${buildProjectCalendarGridMarkup(project, currentMonthKey, selectedDate)}
             </div>
-            ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
+            <div class="project-calendar-side-panel">
+                ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
+                ${buildProjectCalendarTaskDockMarkup(project)}
+            </div>
         </div>
     `;
 }
@@ -8876,6 +9000,9 @@ window.changeProjectCalendarMonth = changeProjectCalendarMonth;
 window.goToProjectCalendarToday = goToProjectCalendarToday;
 window.saveProjectCalendarNote = saveProjectCalendarNote;
 window.deleteProjectCalendarNote = deleteProjectCalendarNote;
+window.handleProjectCalendarTaskDragStart = handleProjectCalendarTaskDragStart;
+window.handleProjectCalendarDayDragOver = handleProjectCalendarDayDragOver;
+window.handleProjectCalendarTaskDrop = handleProjectCalendarTaskDrop;
 window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;
