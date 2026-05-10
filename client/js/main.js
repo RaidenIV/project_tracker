@@ -2670,7 +2670,7 @@ function renderLeaderboardPanel() {
     if (leaderboardCard && !leaderboardCard.querySelector('.leaderboard-card-caption')) {
         const caption = document.createElement('div');
         caption.className = 'leaderboard-card-caption';
-        caption.textContent = 'Tasks completed over 7 days, then resets.';
+        caption.textContent = 'Tasks completed over 7 days';
         leaderboardCard.insertBefore(caption, list);
     }
 
