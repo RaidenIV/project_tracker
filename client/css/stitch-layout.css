@@ -21578,3 +21578,164 @@ body[data-theme^="blueprint"] .control-panel .panel-notification-button {
     justify-self: start !important;
     margin-inline: 0 auto !important;
 }
+
+/* ============================================================================
+   Targeted patch: sidebar avatar parity, leaderboard card shell, settings indent
+   ============================================================================ */
+.control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill {
+    grid-area: account !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 50% !important;
+    max-width: 50% !important;
+    min-width: 0 !important;
+    min-height: 34px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin-inline: 0 auto !important;
+    padding: 0 0.7rem !important;
+    gap: 0.45rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 34%, transparent) !important;
+    border-radius: 10px !important;
+    background: var(--surface, transparent) !important;
+    color: var(--heading, currentColor) !important;
+    box-shadow: var(--inset-shadow, none) !important;
+    font: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    overflow: hidden !important;
+    transform: none !important;
+    transition: transform 0.18s ease, color 0.18s ease, border-color 0.18s ease !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill:hover,
+.control-panel .panel-avatar-button.panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill:hover,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill:hover,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface, transparent) !important;
+    box-shadow: var(--inset-shadow, none) !important;
+    outline: none !important;
+    transform: translateY(-1px) !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar {
+    flex: 0 0 1.35rem !important;
+    width: 1.35rem !important;
+    height: 1.35rem !important;
+    min-width: 1.35rem !important;
+    min-height: 1.35rem !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill:hover .panel-avatar,
+.control-panel .panel-avatar-button.panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill:hover .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill:hover .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible .panel-avatar {
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-username {
+    min-width: 0 !important;
+    height: auto !important;
+    color: inherit !important;
+    font: inherit !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge {
+    flex: 0 0 auto !important;
+    color: inherit !important;
+    font-size: inherit !important;
+    line-height: 1 !important;
+}
+
+.leaderboard-panel-card,
+body[data-theme^="console"] .leaderboard-panel-card,
+body[data-theme^="glass"] .leaderboard-panel-card,
+body[data-theme^="blueprint"] .leaderboard-panel-card {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.85rem !important;
+    border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.16)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    box-shadow: var(--card-shadow, none) !important;
+    overflow: hidden !important;
+}
+
+.leaderboard-list,
+body[data-theme^="console"] .leaderboard-list,
+body[data-theme^="glass"] .leaderboard-list,
+body[data-theme^="blueprint"] .leaderboard-list {
+    display: grid !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    justify-items: stretch !important;
+}
+
+.leaderboard-list > .leaderboard-row,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#settingsSectionBody .settings-panel-card,
+body[data-theme^="console"] #settingsSectionBody .settings-panel-card,
+body[data-theme^="glass"] #settingsSectionBody .settings-panel-card,
+body[data-theme^="blueprint"] #settingsSectionBody .settings-panel-card {
+    padding-left: 0.8rem !important;
+}
+
+#settingsSectionBody .settings-actions,
+body[data-theme^="console"] #settingsSectionBody .settings-actions,
+body[data-theme^="glass"] #settingsSectionBody .settings-actions,
+body[data-theme^="blueprint"] #settingsSectionBody .settings-actions {
+    padding-left: 0.35rem !important;
+}
+
+#settingsSectionBody .settings-action-button,
+#settingsSectionBody .sidebar-action-button,
+body[data-theme^="console"] #settingsSectionBody .settings-action-button,
+body[data-theme^="console"] #settingsSectionBody .sidebar-action-button,
+body[data-theme^="glass"] #settingsSectionBody .settings-action-button,
+body[data-theme^="glass"] #settingsSectionBody .sidebar-action-button,
+body[data-theme^="blueprint"] #settingsSectionBody .settings-action-button,
+body[data-theme^="blueprint"] #settingsSectionBody .sidebar-action-button {
+    font-size: 0.78rem !important;
+    line-height: 1.1 !important;
+}
