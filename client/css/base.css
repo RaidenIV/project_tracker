@@ -2452,6 +2452,21 @@ body {
     letter-spacing: 0.02em;
 }
 
+.panel-user-level-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+}
+
 .account-avatar--large {
     width: 88px;
     height: 88px;
@@ -2621,8 +2636,9 @@ body {
     margin-top: 18px;
     padding: 18px;
     border-radius: 16px;
-    background: var(--surface);
-    box-shadow: inset 4px 4px 8px rgba(120,120,130,0.22), inset -4px -4px 8px rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(120,120,130,0.22);
+    box-shadow: none;
 }
 
 .account-progression-header,
@@ -2728,14 +2744,17 @@ body {
 }
 
 .account-achievement-star {
+    display: inline-block;
     width: 28px;
     height: 28px;
-    object-fit: contain;
-    filter: grayscale(1);
+    background: currentColor;
+    color: rgba(120,120,130,0.5);
+    -webkit-mask: url("../assets/star.svg") center / contain no-repeat;
+    mask: url("../assets/star.svg") center / contain no-repeat;
 }
 
 .account-achievement-card.is-unlocked .account-achievement-star {
-    filter: none;
+    color: var(--accent);
 }
 
 .account-achievement-copy {
@@ -2769,9 +2788,12 @@ body {
 }
 
 .personal-progression-modal-star {
+    display: block;
     width: 78px;
     height: 78px;
-    object-fit: contain;
+    background: var(--accent);
+    -webkit-mask: url("../assets/star.svg") center / contain no-repeat;
+    mask: url("../assets/star.svg") center / contain no-repeat;
     margin: 0 auto 18px;
 }
 

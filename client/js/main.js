@@ -347,7 +347,7 @@ function buildPersonalProgressionMetrics() {
     };
 }
 
-function renderAccountProgression() {
+function getCurrentPersonalLevelProgress() {
     const stats = normalizePersonalProgressionStats(state.getStats());
     const progression = stats.progression;
     const unlockedSet = new Set(progression.unlockedAchievementIds || []);
@@ -356,7 +356,17 @@ function renderAccountProgression() {
         .reduce((total, achievement) => total + achievement.points, 0);
     const projectPoints = calculateProjectProgressionPoints(state.getProjects());
     const totalPoints = projectPoints + achievementPoints;
-    const levelProgress = calculateLevelProgress(totalPoints);
+    return { ...calculateLevelProgress(totalPoints), totalPoints, unlockedSet };
+}
+
+function syncPanelUserLevelBadge(level) {
+    const badge = document.getElementById('panelUserLevelBadge');
+    if (badge) badge.textContent = String(Math.max(1, Number(level) || 1));
+}
+
+function renderAccountProgression() {
+    const levelProgress = getCurrentPersonalLevelProgress();
+    const unlockedSet = levelProgress.unlockedSet;
 
     const levelEl = document.getElementById('accountProgressionLevel');
     const barEl = document.getElementById('accountProgressionBar');
@@ -366,8 +376,9 @@ function renderAccountProgression() {
     const listEl = document.getElementById('accountAchievementsList');
 
     if (levelEl) levelEl.textContent = String(levelProgress.level);
+    syncPanelUserLevelBadge(levelProgress.level);
     if (barEl) barEl.style.width = `${levelProgress.percent}%`;
-    if (pointsEl) pointsEl.textContent = `${totalPoints} XP`;
+    if (pointsEl) pointsEl.textContent = `${levelProgress.totalPoints} XP`;
     if (nextEl) nextEl.textContent = `${levelProgress.currentLevelPoints} / ${levelProgress.nextLevelPoints} XP to Level ${levelProgress.level + 1}`;
     if (summaryEl) summaryEl.textContent = `${unlockedSet.size} / ${PERSONAL_ACHIEVEMENTS.length} unlocked`;
     if (listEl) {
@@ -375,7 +386,7 @@ function renderAccountProgression() {
             const unlocked = unlockedSet.has(achievement.id);
             return `
                 <div class="account-achievement-card ${unlocked ? 'is-unlocked' : 'is-locked'}">
-                    <img class="account-achievement-star" src="assets/star.svg" alt="" aria-hidden="true">
+                    <span class="account-achievement-star" aria-hidden="true"></span>
                     <div class="account-achievement-copy">
                         <div class="account-achievement-name">${escapeHtml(achievement.name)}</div>
                         <div class="account-achievement-description">${escapeHtml(achievement.description)}</div>
@@ -399,7 +410,7 @@ function ensurePersonalProgressionModal() {
     document.body.insertAdjacentHTML('beforeend', `
         <div class="modal-overlay personal-progression-modal-overlay" id="personalProgressionModal" aria-hidden="true">
             <div class="modal-content personal-progression-modal-content" role="dialog" aria-modal="true" aria-labelledby="personalProgressionModalTitle">
-                <img class="personal-progression-modal-star" src="assets/star.svg" alt="" aria-hidden="true">
+                <span class="personal-progression-modal-star" aria-hidden="true"></span>
                 <div class="personal-progression-modal-kicker" id="personalProgressionModalKicker">Achievement Unlocked</div>
                 <h3 class="personal-progression-modal-title" id="personalProgressionModalTitle"></h3>
                 <p class="personal-progression-modal-description" id="personalProgressionModalDescription"></p>
@@ -2397,6 +2408,7 @@ function applyAccountUI(user) {
 
     const panelUsername = document.getElementById('panelUsername');
     if (panelUsername) panelUsername.textContent = accountState.user.username || 'User';
+    syncPanelUserLevelBadge(getCurrentPersonalLevelProgress().level);
 
     const panelUserInfo = document.getElementById('panelUserInfo');
     if (panelUserInfo) panelUserInfo.classList.remove('hidden');
@@ -6741,22 +6753,9 @@ function setProjectTagFilter(tagName) {
 }
 
 function getProjectCardPreviewTasks(project) {
-    const tasks = Array.isArray(project?.tasks)
-        ? project.tasks.map((task, index) => ({ ...normalizeTask(task, index), __previewIndex: index }))
+    return Array.isArray(project?.tasks)
+        ? project.tasks.map((task, index) => normalizeTask(task, index)).slice(0, 3)
         : [];
-    const byOriginalOrder = (a, b) => (a.__previewIndex || 0) - (b.__previewIndex || 0);
-    const byDueDateThenOrder = (a, b) => {
-        const aDate = normalizeTaskDueDate(a.dueDate);
-        const bDate = normalizeTaskDueDate(b.dueDate);
-        if (aDate && bDate && aDate !== bDate) return aDate.localeCompare(bDate);
-        if (aDate && !bDate) return -1;
-        if (!aDate && bDate) return 1;
-        return byOriginalOrder(a, b);
-    };
-    const overdue = tasks.filter(task => isTaskOverdue(task)).sort(byDueDateThenOrder);
-    const incomplete = tasks.filter(task => !task.completed && !isTaskOverdue(task)).sort(byOriginalOrder);
-    const completed = tasks.filter(task => task.completed).sort(byOriginalOrder);
-    return [...overdue, ...incomplete, ...completed].slice(0, 3);
 }
 
 function formatProjectSyncText(project) {
