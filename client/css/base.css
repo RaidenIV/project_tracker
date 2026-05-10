@@ -2617,6 +2617,191 @@ body {
     color: var(--muted);
 }
 
+.account-progression-section {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: inset 4px 4px 8px rgba(120,120,130,0.22), inset -4px -4px 8px rgba(255,255,255,0.72);
+}
+
+.account-progression-header,
+.account-achievements-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.account-progression-section h3 {
+    margin: 0 0 4px;
+    color: var(--heading);
+    font-size: 16px;
+}
+
+.account-progression-subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.account-progression-level-pill {
+    flex: 0 0 auto;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 7px 12px;
+    text-transform: uppercase;
+}
+
+.account-progression-bar-shell {
+    height: 12px;
+    overflow: hidden;
+    border-radius: 999px;
+    margin: 16px 0 8px;
+    background: rgba(120,120,130,0.18);
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.16);
+}
+
+.account-progression-bar-fill {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width 220ms ease;
+}
+
+.account-progression-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.account-achievements-header {
+    align-items: center;
+    margin-top: 18px;
+    color: var(--heading);
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.account-achievements-header span:last-child {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.account-achievements-list {
+    display: grid;
+    gap: 10px;
+    max-height: 310px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-top: 12px;
+    scrollbar-width: thin;
+}
+
+.account-achievement-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(120,120,130,0.24);
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(255,255,255,0.04);
+}
+
+.account-achievement-card.is-locked {
+    opacity: 0.58;
+}
+
+.account-achievement-star {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: grayscale(1);
+}
+
+.account-achievement-card.is-unlocked .account-achievement-star {
+    filter: none;
+}
+
+.account-achievement-copy {
+    min-width: 0;
+}
+
+.account-achievement-name {
+    color: var(--heading);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.account-achievement-description {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+
+.account-achievement-points {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.personal-progression-modal-content {
+    max-width: 420px;
+    text-align: center;
+    padding: 32px 30px 28px;
+}
+
+.personal-progression-modal-star {
+    width: 78px;
+    height: 78px;
+    object-fit: contain;
+    margin: 0 auto 18px;
+}
+
+.personal-progression-modal-kicker {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.personal-progression-modal-title {
+    color: var(--heading);
+    font-size: 28px;
+    line-height: 1.05;
+    margin: 0 0 10px;
+}
+
+.personal-progression-modal-description {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0 0 22px;
+}
+
+.personal-progression-modal-button {
+    min-width: 140px;
+}
+
 .account-modal-actions {
     margin-top: 24px;
     display: flex;
@@ -8828,4 +9013,26 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     width: 12px;
     height: 12px;
     flex: 0 0 12px;
+}
+
+
+@media (max-width: 720px) {
+    .account-progression-header,
+    .account-progression-meta,
+    .account-achievements-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .account-achievement-card {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .account-achievement-points {
+        grid-column: 2;
+    }
+
+    .personal-progression-modal-content {
+        width: min(92vw, 420px);
+    }
 }

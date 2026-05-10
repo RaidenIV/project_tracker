@@ -89,6 +89,422 @@ const TASK_TAG_PRIORITY = {
     none: 3
 };
 
+const PERSONAL_PROGRESSION_PROJECT_TASK_POINT = 25;
+const PERSONAL_PROGRESSION_PROJECT_MIN_POINTS = 75;
+const PERSONAL_PROGRESSION_PROJECT_POINT_CAP = 300;
+const PERSONAL_PROGRESSION_BASE_LEVEL_POINTS = 500;
+const PERSONAL_PROGRESSION_LEVEL_STEP_POINTS = 150;
+const PERSONAL_ACHIEVEMENTS = [
+    { id: 'first-strike', name: 'First Strike', description: 'Create your first project.', points: 50, condition: metrics => metrics.totalProjects >= 1 },
+    { id: 'task-initiated', name: 'Task Initiated', description: 'Create your first task.', points: 50, condition: metrics => metrics.totalTasks >= 1 },
+    { id: 'objective-complete', name: 'Objective Complete', description: 'Complete your first task.', points: 75, condition: metrics => metrics.completedTasks.length >= 1 },
+    { id: 'mission-complete', name: 'Mission Complete', description: 'Complete your first project.', points: 100, condition: metrics => metrics.completedProjects.length >= 1 },
+    { id: 'clean-sweep', name: 'Clean Sweep', description: 'Complete every task inside a project.', points: 125, condition: metrics => metrics.hasCleanSweep },
+    { id: 'deadline-operator', name: 'Deadline Operator', description: 'Add your first due date to a task.', points: 50, condition: metrics => metrics.hasTaskDueDate },
+    { id: 'priority-locked', name: 'Priority Locked', description: 'Assign a priority level to a project or task.', points: 50, condition: metrics => metrics.hasPriority },
+    { id: 'tag-operator', name: 'Tag Operator', description: 'Add tags to a project or task.', points: 50, condition: metrics => metrics.hasTag },
+    { id: 'intel-operator', name: 'Intel Operator', description: 'Add your first project note or task note.', points: 50, condition: metrics => metrics.hasNote },
+    { id: 'archiver', name: 'Archiver', description: 'Archive your first completed project.', points: 75, condition: metrics => metrics.hasArchivedCompletedProject },
+    { id: 'daily-operator', name: 'Daily Operator', description: 'Complete at least one task every day for a week.', points: 150, condition: metrics => metrics.taskCompletionStreak >= 7 },
+    { id: 'project-closer', name: 'Project Closer', description: 'Complete 3 or more projects in a week.', points: 175, condition: metrics => metrics.maxProjectsInWeek >= 3 },
+    { id: 'command-output', name: 'Command Output', description: 'Complete 10 or more tasks in a week.', points: 125, condition: metrics => metrics.maxTasksInWeek >= 10 },
+    { id: 'productivity-spike', name: 'Productivity Spike', description: 'Complete 15 or more tasks in one week.', points: 150, condition: metrics => metrics.maxTasksInWeek >= 15 },
+    { id: 'high-tempo', name: 'High Tempo', description: 'Complete 20 or more tasks in one week.', points: 175, condition: metrics => metrics.maxTasksInWeek >= 20 },
+    { id: 'full-send', name: 'Full Send', description: 'Complete 25 or more tasks in one week.', points: 225, condition: metrics => metrics.maxTasksInWeek >= 25 },
+    { id: 'mission-streak', name: 'Mission Streak', description: 'Complete tasks 3 days in a row.', points: 100, condition: metrics => metrics.taskCompletionStreak >= 3 },
+    { id: 'locked-in-streak', name: 'Locked In', description: 'Complete tasks 5 days in a row.', points: 125, condition: metrics => metrics.taskCompletionStreak >= 5 },
+    { id: 'unbroken-chain', name: 'Unbroken Chain', description: 'Complete tasks 14 days in a row.', points: 250, condition: metrics => metrics.taskCompletionStreak >= 14 },
+    { id: 'rapid-execution', name: 'Rapid Execution', description: 'Complete 10 tasks in one day.', points: 150, condition: metrics => metrics.maxTasksInDay >= 10 },
+    { id: 'sprint-mode', name: 'Sprint Mode', description: 'Complete 15 tasks in one day.', points: 200, condition: metrics => metrics.maxTasksInDay >= 15 },
+    { id: 'deadline-crusher', name: 'Deadline Crusher', description: 'Complete 5 overdue tasks in one week.', points: 175, condition: metrics => metrics.maxOverdueTasksInWeek >= 5 },
+    { id: 'zero-overdue', name: 'Zero Overdue', description: 'End the week with no overdue tasks.', points: 125, condition: metrics => metrics.hasWeeklyTaskActivity && metrics.currentOverdueTasks === 0 },
+    { id: 'prioritized', name: 'Prioritized', description: 'Complete 5 high-priority tasks in one week.', points: 150, condition: metrics => metrics.maxHighPriorityTasksInWeek >= 5 },
+    { id: 'mission-critical', name: 'Mission Critical', description: 'Complete 10 high-priority tasks total.', points: 175, condition: metrics => metrics.highPriorityCompletedTasks >= 10 },
+    { id: 'encore', name: 'Encore', description: 'Complete 2 projects in one day.', points: 175, condition: metrics => metrics.maxProjectsInDay >= 2 },
+    { id: 'sprinter', name: 'Sprinter', description: 'Complete 25 tasks in 24 hours.', points: 250, condition: metrics => metrics.maxTasksInTwentyFourHours >= 25 },
+    { id: 'no-misses', name: 'No Misses', description: 'Finish a week with zero overdue tasks.', points: 125, condition: metrics => metrics.hasWeeklyTaskActivity && metrics.currentOverdueTasks === 0 },
+    { id: 'locked-in-total', name: 'Locked In', description: 'Complete 50 tasks total.', points: 175, condition: metrics => metrics.completedTasks.length >= 50 },
+    { id: 'high-output', name: 'High Output', description: 'Complete 100 tasks total.', points: 250, condition: metrics => metrics.completedTasks.length >= 100 },
+    { id: 'elite-output', name: 'Elite Output', description: 'Complete 500 tasks total.', points: 500, condition: metrics => metrics.completedTasks.length >= 500 }
+];
+
+let personalProgressionModalQueue = [];
+let personalProgressionModalActive = false;
+
+function normalizePersonalProgressionStats(stats = {}) {
+    const source = stats && typeof stats === 'object' ? stats : {};
+    const progressionSource = source.progression && typeof source.progression === 'object' ? source.progression : {};
+    const unlockedAchievementIds = Array.isArray(progressionSource.unlockedAchievementIds)
+        ? progressionSource.unlockedAchievementIds.map(id => String(id || '')).filter(Boolean)
+        : [];
+    const lastLevel = Math.max(1, Number(progressionSource.lastLevel || 1) || 1);
+
+    return {
+        ...source,
+        completedTasks: Math.max(0, Number(source.completedTasks || 0) || 0),
+        completedProjects: Math.max(0, Number(source.completedProjects || 0) || 0),
+        progression: {
+            ...progressionSource,
+            unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
+            lastLevel,
+            initialized: Boolean(progressionSource.initialized)
+        }
+    };
+}
+
+function getLocalDayKey(value) {
+    if (!value) return '';
+    if (typeof value === 'string') {
+        const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (dateOnly) return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function dayKeyToTime(dayKey) {
+    const normalized = normalizeTaskDueDate(dayKey);
+    if (!normalized) return NaN;
+    const [year, month, day] = normalized.split('-').map(Number);
+    return new Date(year, month - 1, day, 12).getTime();
+}
+
+function getCompletionTimestamp(value) {
+    const parsed = new Date(value || '');
+    return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
+function hasProjectNoteContent(project) {
+    const notes = String(project?.notes || '').trim();
+    if (!notes) return false;
+    try {
+        const data = normalizeProjectNotesData(notes);
+        return (data.tabs || []).some(tab => String(tab.body || '').trim() || (Array.isArray(tab.links) && tab.links.length > 0));
+    } catch {
+        return Boolean(notes);
+    }
+}
+
+function getMaxRecordsInRollingWindow(records = [], windowMs = 7 * 24 * 60 * 60 * 1000) {
+    const sorted = records
+        .map(record => ({ ...record, timestamp: Number(record.timestamp || 0) }))
+        .filter(record => record.timestamp > 0)
+        .sort((a, b) => a.timestamp - b.timestamp);
+    let max = 0;
+    let start = 0;
+    for (let end = 0; end < sorted.length; end += 1) {
+        while (sorted[end].timestamp - sorted[start].timestamp >= windowMs) start += 1;
+        max = Math.max(max, end - start + 1);
+    }
+    return max;
+}
+
+function getMaxRecordsPerDay(records = []) {
+    const counts = new Map();
+    records.forEach(record => {
+        const dayKey = record.dayKey || getLocalDayKey(record.completedDate);
+        if (!dayKey) return;
+        counts.set(dayKey, (counts.get(dayKey) || 0) + 1);
+    });
+    return Math.max(0, ...Array.from(counts.values()), 0);
+}
+
+function getCompletionDayStreak(records = []) {
+    const dayTimes = [...new Set(records.map(record => record.dayKey).filter(Boolean))]
+        .map(dayKey => dayKeyToTime(dayKey))
+        .filter(time => Number.isFinite(time))
+        .sort((a, b) => a - b);
+    if (!dayTimes.length) return 0;
+    let maxStreak = 1;
+    let currentStreak = 1;
+    for (let index = 1; index < dayTimes.length; index += 1) {
+        const diffDays = Math.round((dayTimes[index] - dayTimes[index - 1]) / (24 * 60 * 60 * 1000));
+        if (diffDays === 1) {
+            currentStreak += 1;
+        } else if (diffDays > 1) {
+            currentStreak = 1;
+        }
+        maxStreak = Math.max(maxStreak, currentStreak);
+    }
+    return maxStreak;
+}
+
+function calculateProjectProgressionPoints(projects = []) {
+    return projects.reduce((total, project) => {
+        if (!isProjectCompleted(project)) return total;
+        const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+        const completedTaskCount = tasks.filter(task => normalizeTask(task).completed).length;
+        const rawPoints = completedTaskCount * PERSONAL_PROGRESSION_PROJECT_TASK_POINT;
+        const projectPoints = Math.min(
+            PERSONAL_PROGRESSION_PROJECT_POINT_CAP,
+            Math.max(PERSONAL_PROGRESSION_PROJECT_MIN_POINTS, rawPoints || PERSONAL_PROGRESSION_PROJECT_MIN_POINTS)
+        );
+        return total + projectPoints;
+    }, 0);
+}
+
+function calculateLevelProgress(totalPoints = 0) {
+    let level = 1;
+    let remaining = Math.max(0, Math.floor(Number(totalPoints || 0)));
+    let needed = PERSONAL_PROGRESSION_BASE_LEVEL_POINTS;
+    while (remaining >= needed) {
+        remaining -= needed;
+        level += 1;
+        needed += PERSONAL_PROGRESSION_LEVEL_STEP_POINTS;
+    }
+    const percent = needed > 0 ? Math.max(0, Math.min(100, Math.round((remaining / needed) * 100))) : 0;
+    return { level, currentLevelPoints: remaining, nextLevelPoints: needed, percent };
+}
+
+function buildPersonalProgressionMetrics() {
+    const projects = state.getProjects().map(normalizeProject).filter(Boolean);
+    const completedTasks = [];
+    const completedProjects = [];
+    let totalTasks = 0;
+    let hasTaskDueDate = false;
+    let hasPriority = false;
+    let hasTag = false;
+    let hasNote = false;
+    let hasCleanSweep = false;
+    let hasArchivedCompletedProject = false;
+    let currentOverdueTasks = 0;
+    const todayKey = getTodayDateKey();
+
+    projects.forEach(project => {
+        const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+        totalTasks += tasks.length;
+        const projectCompleted = isProjectCompleted(project);
+        const projectCompletedDay = getLocalDayKey(project.completedDate);
+        const projectCompletedTimestamp = getCompletionTimestamp(project.completedDate);
+
+        if (projectCompleted) {
+            completedProjects.push({ project, dayKey: projectCompletedDay, timestamp: projectCompletedTimestamp });
+        }
+        if (projectCompleted && tasks.length > 0 && tasks.every(task => task.completed)) hasCleanSweep = true;
+        if (isProjectArchived(project) && projectCompleted) hasArchivedCompletedProject = true;
+        if (normalizePriorityTagValue(project.projectPriorityTag) !== DEFAULT_TASK_TAG) hasPriority = true;
+        if (Array.isArray(project.tags) && project.tags.length > 0) hasTag = true;
+        if (hasProjectNoteContent(project)) hasNote = true;
+
+        tasks.forEach(task => {
+            const dueDate = normalizeTaskDueDate(task.dueDate);
+            const tag = normalizePriorityTagValue(task.tag);
+            if (dueDate) hasTaskDueDate = true;
+            if (tag !== DEFAULT_TASK_TAG) hasPriority = true;
+            if (task.category && task.category !== DEFAULT_TASK_CATEGORY) hasTag = true;
+            if (String(task.note || '').trim()) hasNote = true;
+            if (isTaskOverdue(task)) currentOverdueTasks += 1;
+            if (!task.completed) return;
+
+            const completedDate = task.completedDate || '';
+            const dayKey = getLocalDayKey(completedDate);
+            const timestamp = getCompletionTimestamp(completedDate);
+            const record = {
+                task,
+                project,
+                dayKey,
+                timestamp,
+                completedDate,
+                dueDate,
+                highPriority: tag === 'high',
+                overdueAtCompletion: Boolean(dueDate && dayKey && dueDate < dayKey)
+            };
+            completedTasks.push(record);
+        });
+    });
+
+    const highPriorityCompleted = completedTasks.filter(record => record.highPriority);
+    const overdueCompleted = completedTasks.filter(record => record.overdueAtCompletion);
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+
+    return {
+        projects,
+        totalProjects: projects.length,
+        totalTasks,
+        completedTasks,
+        completedProjects,
+        hasTaskDueDate,
+        hasPriority,
+        hasTag,
+        hasNote,
+        hasCleanSweep,
+        hasArchivedCompletedProject,
+        currentOverdueTasks,
+        hasWeeklyTaskActivity: completedTasks.some(record => record.timestamp >= sevenDaysAgo),
+        taskCompletionStreak: getCompletionDayStreak(completedTasks),
+        maxTasksInWeek: getMaxRecordsInRollingWindow(completedTasks),
+        maxProjectsInWeek: getMaxRecordsInRollingWindow(completedProjects),
+        maxOverdueTasksInWeek: getMaxRecordsInRollingWindow(overdueCompleted),
+        maxHighPriorityTasksInWeek: getMaxRecordsInRollingWindow(highPriorityCompleted),
+        highPriorityCompletedTasks: highPriorityCompleted.length,
+        maxTasksInDay: getMaxRecordsPerDay(completedTasks),
+        maxProjectsInDay: getMaxRecordsPerDay(completedProjects),
+        maxTasksInTwentyFourHours: getMaxRecordsInRollingWindow(completedTasks, 24 * 60 * 60 * 1000)
+    };
+}
+
+function renderAccountProgression() {
+    const stats = normalizePersonalProgressionStats(state.getStats());
+    const progression = stats.progression;
+    const unlockedSet = new Set(progression.unlockedAchievementIds || []);
+    const achievementPoints = PERSONAL_ACHIEVEMENTS
+        .filter(achievement => unlockedSet.has(achievement.id))
+        .reduce((total, achievement) => total + achievement.points, 0);
+    const projectPoints = calculateProjectProgressionPoints(state.getProjects());
+    const totalPoints = projectPoints + achievementPoints;
+    const levelProgress = calculateLevelProgress(totalPoints);
+
+    const levelEl = document.getElementById('accountProgressionLevel');
+    const barEl = document.getElementById('accountProgressionBar');
+    const pointsEl = document.getElementById('accountProgressionPoints');
+    const nextEl = document.getElementById('accountProgressionNext');
+    const summaryEl = document.getElementById('accountAchievementsSummary');
+    const listEl = document.getElementById('accountAchievementsList');
+
+    if (levelEl) levelEl.textContent = String(levelProgress.level);
+    if (barEl) barEl.style.width = `${levelProgress.percent}%`;
+    if (pointsEl) pointsEl.textContent = `${totalPoints} XP`;
+    if (nextEl) nextEl.textContent = `${levelProgress.currentLevelPoints} / ${levelProgress.nextLevelPoints} XP to Level ${levelProgress.level + 1}`;
+    if (summaryEl) summaryEl.textContent = `${unlockedSet.size} / ${PERSONAL_ACHIEVEMENTS.length} unlocked`;
+    if (listEl) {
+        listEl.innerHTML = PERSONAL_ACHIEVEMENTS.map(achievement => {
+            const unlocked = unlockedSet.has(achievement.id);
+            return `
+                <div class="account-achievement-card ${unlocked ? 'is-unlocked' : 'is-locked'}">
+                    <img class="account-achievement-star" src="assets/star.svg" alt="" aria-hidden="true">
+                    <div class="account-achievement-copy">
+                        <div class="account-achievement-name">${escapeHtml(achievement.name)}</div>
+                        <div class="account-achievement-description">${escapeHtml(achievement.description)}</div>
+                    </div>
+                    <div class="account-achievement-points">${achievement.points} XP</div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+function queuePersonalProgressionModal(payload) {
+    personalProgressionModalQueue.push(payload);
+    showNextPersonalProgressionModal();
+}
+
+function ensurePersonalProgressionModal() {
+    let modal = document.getElementById('personalProgressionModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay personal-progression-modal-overlay" id="personalProgressionModal" aria-hidden="true">
+            <div class="modal-content personal-progression-modal-content" role="dialog" aria-modal="true" aria-labelledby="personalProgressionModalTitle">
+                <img class="personal-progression-modal-star" src="assets/star.svg" alt="" aria-hidden="true">
+                <div class="personal-progression-modal-kicker" id="personalProgressionModalKicker">Achievement Unlocked</div>
+                <h3 class="personal-progression-modal-title" id="personalProgressionModalTitle"></h3>
+                <p class="personal-progression-modal-description" id="personalProgressionModalDescription"></p>
+                <button class="modal-done-btn personal-progression-modal-button" type="button" onclick="closePersonalProgressionModal()">Continue</button>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('personalProgressionModal');
+    modal?.addEventListener('click', event => {
+        if (event.target === modal) closePersonalProgressionModal();
+    });
+    return modal;
+}
+
+function showNextPersonalProgressionModal() {
+    if (personalProgressionModalActive || personalProgressionModalQueue.length === 0) return;
+    const payload = personalProgressionModalQueue.shift();
+    const modal = ensurePersonalProgressionModal();
+    if (!modal) return;
+
+    const kickerEl = document.getElementById('personalProgressionModalKicker');
+    const titleEl = document.getElementById('personalProgressionModalTitle');
+    const descriptionEl = document.getElementById('personalProgressionModalDescription');
+    if (kickerEl) kickerEl.textContent = payload.kicker || 'Achievement Unlocked';
+    if (titleEl) titleEl.textContent = payload.title || '';
+    if (descriptionEl) descriptionEl.textContent = payload.description || '';
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    personalProgressionModalActive = true;
+}
+
+function closePersonalProgressionModal() {
+    const modal = document.getElementById('personalProgressionModal');
+    modal?.classList.remove('active');
+    modal?.setAttribute('aria-hidden', 'true');
+    personalProgressionModalActive = false;
+    setTimeout(showNextPersonalProgressionModal, 120);
+}
+
+function evaluatePersonalProgression({ showModals = true, persistStatsOnly = false } = {}) {
+    const stats = normalizePersonalProgressionStats(state.getStats());
+    const progression = stats.progression;
+    const metrics = buildPersonalProgressionMetrics();
+    const unlockedSet = new Set(progression.unlockedAchievementIds || []);
+    const newlyUnlocked = [];
+
+    PERSONAL_ACHIEVEMENTS.forEach(achievement => {
+        if (unlockedSet.has(achievement.id)) return;
+        if (achievement.condition(metrics)) {
+            unlockedSet.add(achievement.id);
+            newlyUnlocked.push(achievement);
+        }
+    });
+
+    const projectPoints = calculateProjectProgressionPoints(metrics.projects);
+    const achievementPoints = PERSONAL_ACHIEVEMENTS
+        .filter(achievement => unlockedSet.has(achievement.id))
+        .reduce((total, achievement) => total + achievement.points, 0);
+    const totalPoints = projectPoints + achievementPoints;
+    const levelProgress = calculateLevelProgress(totalPoints);
+    const previousLevel = Math.max(1, Number(progression.lastLevel || levelProgress.level) || 1);
+    const shouldShowModals = showModals && Boolean(progression.initialized);
+
+    const nextProgression = {
+        ...progression,
+        unlockedAchievementIds: Array.from(unlockedSet),
+        achievementPoints,
+        projectPoints,
+        totalPoints,
+        lastLevel: levelProgress.level,
+        initialized: true
+    };
+
+    const changed = JSON.stringify(progression) !== JSON.stringify(nextProgression);
+    if (changed) {
+        state.setStats({ ...stats, progression: nextProgression });
+        accountState.stats = { ...accountState.stats, ...state.getStats() };
+    }
+
+    if (shouldShowModals) {
+        newlyUnlocked.forEach(achievement => {
+            queuePersonalProgressionModal({
+                kicker: 'Achievement Unlocked',
+                title: achievement.name,
+                description: `${achievement.description} +${achievement.points} XP`
+            });
+        });
+        if (levelProgress.level > previousLevel) {
+            queuePersonalProgressionModal({
+                kicker: 'Level Up',
+                title: `Level ${levelProgress.level}`,
+                description: `You reached Level ${levelProgress.level}. Project points and achievement bonuses increased your rank.`
+            });
+        }
+    }
+
+    renderAccountProgression();
+    if (changed && persistStatsOnly) {
+        saveStatsOnly().catch(err => console.error('Failed to save progression stats:', err));
+    }
+    return { changed, level: levelProgress.level, newlyUnlocked };
+}
+
 function normalizePriorityTagValue(value) {
     const rawValue = String(value ?? DEFAULT_TASK_TAG).trim().toLowerCase();
     const tagValue = rawValue === 'critical' ? 'high' : rawValue;
@@ -2027,7 +2443,7 @@ function applyAccountUI(user) {
 function syncAccountStatsToModal() {
     const derivedSharedProjects = state.getProjects().filter(project => project.userRole !== 'owner' && !project.archived).length;
     const derivedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).length;
-    const syncedStats = syncDerivedCompletedProjectStats();
+    const syncedStats = normalizePersonalProgressionStats(syncDerivedCompletedProjectStats());
     const stats = {
         completedTasks: syncedStats.completedTasks || accountState.stats.completedTasks || 0,
         completedProjects: syncedStats.completedProjects || 0,
@@ -2046,6 +2462,7 @@ function syncAccountStatsToModal() {
         const el = document.getElementById(id);
         if (el) el.textContent = String(value ?? 0);
     });
+    renderAccountProgression();
 }
 
 function setAccountStatus(message = '', type = '') {
@@ -2422,7 +2839,10 @@ async function refreshAccountProfile() {
         const fallbackUser = getCurrentUser?.() || accountState.user;
         if (!response?.user && !fallbackUser) return;
         accountState.user = response?.user || fallbackUser;
-        accountState.stats = response?.stats || accountState.stats;
+        accountState.stats = normalizePersonalProgressionStats(response?.stats || accountState.stats);
+        if (response?.stats) {
+            state.setStats(normalizePersonalProgressionStats({ ...state.getStats(), ...accountState.stats }));
+        }
         accountState.leaderboard = Array.isArray(response?.leaderboard) ? response.leaderboard : [];
         accountState.currentLeaderboardRank = response?.currentLeaderboardRank ?? null;
         accountState.currentLeaderboardEntry = response?.currentLeaderboardEntry || null;
@@ -2634,14 +3054,15 @@ export async function loadData() {
             .map(normalizeProject)
             .filter(Boolean);
         state.setProjects(projects);
-        state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
+        state.setStats(normalizePersonalProgressionStats(data?.stats || { completedTasks: 0, completedProjects: 0 }));
         syncDerivedCompletedProjectStats();
+        evaluatePersonalProgression({ showModals: false, persistStatsOnly: true });
         render();
         restoreOpenProjectModalFromSession();
     } catch (err) {
         console.error('Failed to load project data:', err);
         state.setProjects([]);
-        state.setStats({ completedTasks: 0, completedProjects: 0 });
+        state.setStats(normalizePersonalProgressionStats({ completedTasks: 0, completedProjects: 0 }));
         render();
         setSaveStatus('error', 'Could not load projects');
     }
@@ -2736,6 +3157,7 @@ async function saveData() {
         let finalResult = null;
         do {
             __saveQueued = false;
+            evaluatePersonalProgression({ showModals: true });
             finalResult = await saveDataToServer(state.getProjects(), syncDerivedCompletedProjectStats());
             if (!finalResult?.ok) {
                 if (finalResult?.conflicts?.length) {
@@ -2905,6 +3327,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
     };
 
     state.addProject(newProject);
+    evaluatePersonalProgression({ showModals: true, persistStatsOnly: true });
     render();
 
     // Create on server and get the MongoDB _id back
@@ -9432,6 +9855,7 @@ window.switchToArchivedView = switchToArchivedView;
 window.openProjectModal = openProjectModal;
 window.openAccountSettingsModal = openAccountSettingsModal;
 window.closeAccountSettingsModal = closeAccountSettingsModal;
+window.closePersonalProgressionModal = closePersonalProgressionModal;
 window.triggerProfilePicUpload = triggerProfilePicUpload;
 window.removeProfilePicture = removeProfilePicture;
 window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;

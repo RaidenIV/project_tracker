@@ -206,7 +206,8 @@ const PendingInvitation = mongoose.model('PendingInvitation', pendingInvitationS
 const statsSchema = new mongoose.Schema({
     userId:            { type: String, required: true, unique: true },
     completedTasks:    { type: Number, default: 0 },
-    completedProjects: { type: Number, default: 0 }
+    completedProjects: { type: Number, default: 0 },
+    progression:       { type: mongoose.Schema.Types.Mixed, default: () => ({}) }
 });
 const Stats = mongoose.model('Stats', statsSchema);
 
@@ -1116,6 +1117,7 @@ app.get('/api/account', authenticateToken, async (req, res) => {
             stats: {
                 completedTasks: stats.completedTasks || 0,
                 completedProjects: stats.completedProjects || 0,
+                progression: sanitizeStatsProgression(stats.progression || {}),
                 ownedProjects,
                 sharedProjects,
                 activeProjects
@@ -1177,9 +1179,40 @@ app.put('/api/account', authenticateToken, async (req, res) => {
 
 // ─── Stats Routes ─────────────────────────────────────────────────────────────
 
+function sanitizeStatsProgression(value = {}) {
+    const source = value && typeof value === 'object' ? value : {};
+    const unlockedAchievementIds = Array.isArray(source.unlockedAchievementIds)
+        ? source.unlockedAchievementIds
+            .map(id => String(id || '').trim().replace(/[^a-z0-9-]/gi, '').slice(0, 80))
+            .filter(Boolean)
+            .slice(0, 100)
+        : [];
+    const numberField = (field, fallback = 0) => {
+        const number = Number(source[field]);
+        return Number.isFinite(number) ? Math.max(0, Math.round(number)) : fallback;
+    };
+
+    return {
+        unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
+        achievementPoints: numberField('achievementPoints'),
+        projectPoints: numberField('projectPoints'),
+        totalPoints: numberField('totalPoints'),
+        lastLevel: Math.max(1, numberField('lastLevel', 1)),
+        initialized: Boolean(source.initialized)
+    };
+}
+
+function formatStatsPayload(stats = {}) {
+    return {
+        completedTasks: Number(stats.completedTasks || 0),
+        completedProjects: Number(stats.completedProjects || 0),
+        progression: sanitizeStatsProgression(stats.progression || {})
+    };
+}
+
 async function getOrCreateStats(userId) {
     let s = await Stats.findOne({ userId });
-    if (!s) s = await Stats.create({ userId, completedTasks: 0, completedProjects: 0 });
+    if (!s) s = await Stats.create({ userId, completedTasks: 0, completedProjects: 0, progression: {} });
     return s;
 }
 
@@ -1356,7 +1389,7 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
 app.get('/api/stats', authenticateToken, async (req, res) => {
     try {
         const s = await getOrCreateStats(req.user.id);
-        res.json({ completedTasks: s.completedTasks, completedProjects: s.completedProjects });
+        res.json(formatStatsPayload(s));
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch stats', details: err?.message });
     }
@@ -1364,13 +1397,18 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
 
 app.put('/api/stats', authenticateToken, async (req, res) => {
     try {
-        const { completedTasks, completedProjects } = req.body;
-        await Stats.findOneAndUpdate(
+        const completedTasks = Math.max(0, Number(req.body.completedTasks || 0) || 0);
+        const completedProjects = Math.max(0, Number(req.body.completedProjects || 0) || 0);
+        const updates = { completedTasks, completedProjects };
+        if (req.body.progression !== undefined) {
+            updates.progression = sanitizeStatsProgression(req.body.progression);
+        }
+        const stats = await Stats.findOneAndUpdate(
             { userId: req.user.id },
-            { completedTasks, completedProjects },
+            updates,
             { upsert: true, new: true }
         );
-        res.json({ success: true });
+        res.json(formatStatsPayload(stats));
     } catch (err) {
         res.status(500).json({ error: 'Failed to update stats', details: err?.message });
     }

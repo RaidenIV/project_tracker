@@ -397,6 +397,28 @@
                     </div>
                 </div>
 
+                <div class="account-progression-section">
+                    <div class="account-progression-header">
+                        <div>
+                            <h3>Personal Progression</h3>
+                            <p class="account-progression-subtitle">Level progress and unlocked achievements</p>
+                        </div>
+                        <div class="account-progression-level-pill">Level <span id="accountProgressionLevel">1</span></div>
+                    </div>
+                    <div class="account-progression-bar-shell" aria-label="Level progress">
+                        <div class="account-progression-bar-fill" id="accountProgressionBar"></div>
+                    </div>
+                    <div class="account-progression-meta">
+                        <span id="accountProgressionPoints">0 XP</span>
+                        <span id="accountProgressionNext">0 / 500 XP to Level 2</span>
+                    </div>
+                    <div class="account-achievements-header">
+                        <span>Achievements</span>
+                        <span id="accountAchievementsSummary">0 / 0 unlocked</span>
+                    </div>
+                    <div class="account-achievements-list" id="accountAchievementsList"></div>
+                </div>
+
                 <div class="account-modal-actions">
                     <div class="account-modal-status" id="accountSettingsStatus"></div>
                     <button class="modal-done-btn" type="button" id="accountSettingsSaveBtn" onclick="saveAccountSettingsFromModal()">Save Changes</button>
