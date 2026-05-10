@@ -16659,20 +16659,20 @@ body[data-theme^="blueprint"] .auth-overlay .auth-product-title {
     height: clamp(1.2rem, 1.45vw, 1.55rem) !important;
 }
 
-.sidebar-title-favicon-svg {
+.app-title-favicon-svg {
     overflow: visible !important;
     color: var(--accent, var(--accent-color, #ffc107)) !important;
 }
 
-.sidebar-title-favicon-svg .sidebar-favicon-fill {
+.app-title-favicon-svg .app-favicon-fill {
     fill: var(--accent, var(--accent-color, #ffc107)) !important;
-    stroke: var(--sidebar-icon-mark, #111111) !important;
+    stroke: var(--app-icon-mark, #111111) !important;
     stroke-width: 4.5px !important;
 }
 
-.sidebar-title-favicon-svg .sidebar-favicon-check {
+.app-title-favicon-svg .app-favicon-check {
     fill: none !important;
-    stroke: var(--sidebar-icon-mark, #111111) !important;
+    stroke: var(--app-icon-mark, #111111) !important;
     stroke-width: 6px !important;
     stroke-linecap: round !important;
     stroke-linejoin: round !important;
