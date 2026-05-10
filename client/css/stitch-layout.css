@@ -21220,3 +21220,66 @@ body[data-theme^="blueprint"] .project-calendar-task-priority-select {
         white-space: nowrap !important;
     }
 }
+
+
+/* Targeted patch: smaller centered project-card meatball menu button. */
+.project-card .project-actions,
+.stitch-project-card .project-actions,
+body[data-theme^="console"] .project-card .project-actions,
+body[data-theme^="console"] .stitch-project-card .project-actions,
+body[data-theme^="blueprint"] .project-card .project-actions,
+body[data-theme^="blueprint"] .stitch-project-card .project-actions,
+body[data-theme^="glass"] .project-card .project-actions,
+body[data-theme^="glass"] .stitch-project-card .project-actions {
+    min-width: 2.1rem !important;
+}
+
+.project-meatballs-icon,
+body[data-theme^="console"] .project-meatballs-icon,
+body[data-theme^="blueprint"] .project-meatballs-icon,
+body[data-theme^="glass"] .project-meatballs-icon {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 0.3rem !important;
+    height: 1rem !important;
+    gap: 0.15rem !important;
+    line-height: 1 !important;
+    pointer-events: none !important;
+}
+
+.project-meatballs-icon span,
+body[data-theme^="console"] .project-meatballs-icon span,
+body[data-theme^="blueprint"] .project-meatballs-icon span,
+body[data-theme^="glass"] .project-meatballs-icon span {
+    display: block !important;
+    width: 0.24rem !important;
+    height: 0.24rem !important;
+    min-width: 0.24rem !important;
+    min-height: 0.24rem !important;
+    border-radius: 999px !important;
+    background: currentColor !important;
+}
+
+.project-meatballs--card,
+body[data-theme^="console"] .project-meatballs--card,
+body[data-theme^="blueprint"] .project-meatballs--card,
+body[data-theme^="glass"] .project-meatballs--card {
+    flex: 0 0 2.1rem !important;
+    width: 2.1rem !important;
+    min-width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-height: 2.1rem !important;
+}
+
+.project-meatballs--card .project-meatballs-toggle,
+body[data-theme^="console"] .project-meatballs--card .project-meatballs-toggle,
+body[data-theme^="blueprint"] .project-meatballs--card .project-meatballs-toggle,
+body[data-theme^="glass"] .project-meatballs--card .project-meatballs-toggle {
+    width: 2.1rem !important;
+    min-width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-height: 2.1rem !important;
+    font-size: 1rem !important;
+}

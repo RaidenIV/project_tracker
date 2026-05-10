@@ -7305,7 +7305,7 @@ function closeProjectMeatballsMenus() {
 function buildProjectMeatballsMenuMarkup(project, surface = 'card') {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const canEditProject = state.canEdit(project?.id);
-    const canDeleteProject = state.isOwner(project?.id);
+    const canDeleteProject = project?.userRole === 'owner' || state.isOwner(project?.id);
     const editAction = surface === 'modal'
         ? `editModalTitle(${projectIdLiteral})`
         : `editProjectTitleOnCard(${projectIdLiteral})`;
@@ -7316,7 +7316,7 @@ function buildProjectMeatballsMenuMarkup(project, surface = 'card') {
     return `
         <details class="project-meatballs project-meatballs--${escapeHtml(surface)}" onclick="event.stopPropagation();">
             <summary class="project-meatballs-toggle" role="button" aria-label="Project actions" title="Project actions" onclick="event.stopPropagation();">
-                <span aria-hidden="true">⋮</span>
+                <span class="project-meatballs-icon" aria-hidden="true"><span></span><span></span><span></span></span>
             </summary>
             <div class="project-meatballs-dropdown" role="menu" onclick="event.stopPropagation();">
                 ${canEditProject ? `<button class="project-meatballs-item" type="button" role="menuitem" onclick="event.preventDefault(); event.stopPropagation(); closeProjectMeatballsMenus(); ${editAction}">Edit</button>` : ''}
