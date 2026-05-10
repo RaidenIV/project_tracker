@@ -2775,7 +2775,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
     const competitiveAchievements = Array.isArray(entry.competitiveAchievements) ? entry.competitiveAchievements : [];
     const stats = [
         ['Rank', rank > 0 ? `#${rank}` : '—'],
-        ['Level', `lvl ${playerLevel}`],
+        ['Level', String(playerLevel)],
         ['Weekly Score', `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'}`],
         ['Total Completion', `${completion}%`],
         ['Completed Tasks', Number(entry.completedTasks || 0)],
@@ -2801,23 +2801,25 @@ function buildLeaderboardProfileModalMarkup(entry) {
                         </svg>
                     </button>
                 </div>
-                <div class="leaderboard-profile-top">
-                    <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
-                    <div class="leaderboard-profile-summary">
-                        <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
-                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • lvl ${playerLevel} • ${leaderboardScore} tasks this week</div>
+                <div class="leaderboard-profile-info-card">
+                    <div class="leaderboard-profile-top">
+                        <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
+                        <div class="leaderboard-profile-summary">
+                            <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
+                            <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • Level ${playerLevel} • ${leaderboardScore} tasks this week</div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-profile-stats-grid">
+                        ${stats.map(([label, value]) => `
+                            <div class="account-stat-card leaderboard-profile-stat-card">
+                                <div class="account-stat-value">${escapeHtml(value)}</div>
+                                <div class="account-stat-label">${escapeHtml(label)}</div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
-                <div class="leaderboard-profile-stats-grid">
-                    ${stats.map(([label, value]) => `
-                        <div class="account-stat-card leaderboard-profile-stat-card">
-                            <div class="account-stat-value">${escapeHtml(value)}</div>
-                            <div class="account-stat-label">${escapeHtml(label)}</div>
-                        </div>
-                    `).join('')}
-                </div>
                 <div class="leaderboard-competitive-section">
-                    <div class="leaderboard-competitive-title">Competitive Achievements</div>
+                    <div class="leaderboard-competitive-title">Achievements</div>
                     ${competitiveAchievements.length ? competitiveAchievements.map(achievement => {
                         const achievementDate = getCompetitiveAchievementDateLabel(achievement);
                         return `
@@ -2830,7 +2832,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
                                 </span>
                             </div>
                         `;
-                    }).join('') : '<div class="leaderboard-competitive-empty">No competitive achievements yet.</div>'}
+                    }).join('') : '<div class="leaderboard-competitive-empty">No achievements yet.</div>'}
                 </div>
             </div>
         </div>
