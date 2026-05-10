@@ -1374,6 +1374,7 @@ async function buildLeaderboardData(currentUserId) {
             activeProjectCompletionPercentage: 0,
             sharedCompletionPercentage: 0,
             dailyCompletedTasks: 0,
+            previousDailyCompletedTasks: 0,
             weeklyCompletedTasks: 0,
             monthlyCompletedTasks: 0,
             dailyCompletedProjects: 0,
@@ -1393,11 +1394,14 @@ async function buildLeaderboardData(currentUserId) {
     const now = new Date();
     const dayStart = startOfLocalDay(now);
     const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+    const previousDayStart = new Date(dayStart); previousDayStart.setDate(previousDayStart.getDate() - 1);
+    const previousDayEnd = new Date(dayStart);
     const weekStart = startOfLocalWeek(now);
     const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
     const monthStart = startOfLocalMonth(now);
     const monthEnd = new Date(monthStart); monthEnd.setMonth(monthEnd.getMonth() + 1);
     const todayKey = localDayKey(now);
+    const previousDayKey = localDayKey(previousDayStart);
     const currentWeekKey = periodKey('week', now);
     const currentMonthKey = periodKey('month', now);
 
@@ -1458,6 +1462,7 @@ async function buildLeaderboardData(currentUserId) {
                 const row = rows.get(userId);
                 if (!row) return;
                 if (timestampInRange(task.completedDate, dayStart, dayEnd)) row.dailyCompletedTasks += 1;
+                if (timestampInRange(task.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, weekStart, weekEnd)) row.weeklyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, monthStart, monthEnd)) row.monthlyCompletedTasks += 1;
             });
@@ -1492,12 +1497,13 @@ async function buildLeaderboardData(currentUserId) {
 
     const maxFor = (field, filter = () => true) => Math.max(0, ...leaderboard.filter(filter).map(row => Number(row[field] || 0)));
     const maxEfficiency = maxFor('totalCompletionPercentage', row => row.totalProjects >= 3);
-    const maxDailyTasks = maxFor('dailyCompletedTasks');
+    const maxPreviousDailyTasks = maxFor('previousDailyCompletedTasks');
     const maxDailyProjects = maxFor('dailyCompletedProjects');
     const maxWeeklyTasks = maxFor('weeklyCompletedTasks');
     const maxWeeklyProjects = maxFor('weeklyCompletedProjects');
     const maxMonthlyTasks = maxFor('monthlyCompletedTasks');
     const maxMonthlyProjects = maxFor('monthlyCompletedProjects');
+    const dailyAwardAt = new Date(dayStart);
     const dayAwardAt = new Date(dayEnd.getTime() - 1);
     const weekAwardAt = new Date(weekEnd.getTime() - 1);
     const monthAwardAt = new Date(monthEnd.getTime() - 1);
@@ -1509,7 +1515,7 @@ async function buildLeaderboardData(currentUserId) {
         if (row.finalSharedProjectClosures >= 5) add(COMPETITIVE_ACHIEVEMENTS.closer, `all:${row.finalSharedProjectClosures}`, now);
         if (row.sharedCarryProjects >= 1) add(COMPETITIVE_ACHIEVEMENTS.teamCarry, `all:${row.sharedCarryProjects}`, now);
         if (row.rankOneStreak >= 7) add(COMPETITIVE_ACHIEVEMENTS.domination, `streak:${row.rankOneStreak}`, dayAwardAt);
-        if (maxDailyTasks > 0 && row.dailyCompletedTasks === maxDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${todayKey}`, dayAwardAt);
+        if (maxPreviousDailyTasks > 0 && row.previousDailyCompletedTasks === maxPreviousDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${previousDayKey}`, dailyAwardAt);
         if (maxDailyProjects > 0 && row.dailyCompletedProjects === maxDailyProjects) add(COMPETITIVE_ACHIEVEMENTS.projectHunter, `day:${todayKey}`, dayAwardAt);
         if (row.rank <= 3) add(COMPETITIVE_ACHIEVEMENTS.triumvirate, currentWeekKey, weekAwardAt);
         if (row.previousWeekRank > 0 && row.previousWeekRank - row.rank >= 5) add(COMPETITIVE_ACHIEVEMENTS.risingStar, currentWeekKey, weekAwardAt);

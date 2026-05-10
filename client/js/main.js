@@ -2983,7 +2983,8 @@ function formatCompactDateTime(value) {
         day: 'numeric',
         year: 'numeric',
         hour: 'numeric',
-        minute: '2-digit'
+        minute: '2-digit',
+        hour12: true
     });
 }
 
@@ -10072,9 +10073,20 @@ function initializeEventHandlers() {
     document.getElementById('projectCategorySelect')?.addEventListener('change', (e) => {
         switchProjectCategory(e.target.value || 'active');
     });
-    document.getElementById('projectSortSelect')?.addEventListener('change', (e) => {
+    const projectSortSelect = document.getElementById('projectSortSelect');
+    projectSortSelect?.addEventListener('pointerdown', () => {
+        projectSortSelect.classList.add('is-interacting');
+    });
+    projectSortSelect?.addEventListener('focus', () => {
+        projectSortSelect.classList.add('is-interacting');
+    });
+    projectSortSelect?.addEventListener('blur', () => {
+        projectSortSelect.classList.remove('is-interacting');
+    });
+    projectSortSelect?.addEventListener('change', (e) => {
         uiState.activeSavedViewId = '';
         setProjectCardSortMode(e.target.value || 'recent');
+        window.requestAnimationFrame(() => e.target.blur());
     });
     document.querySelectorAll('[data-theme-family-option]').forEach(button => {
         button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
