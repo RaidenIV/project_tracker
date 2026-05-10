@@ -19581,11 +19581,17 @@ body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder {
 body[data-theme^="console"] .project-calendar-task-drag-handle,
 body[data-theme^="blueprint"] .project-calendar-task-drag-handle,
 body[data-theme^="glass"] .project-calendar-task-drag-handle {
-    width: 1.05rem !important;
-    height: 1.05rem !important;
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-width: 1.65rem !important;
+    padding: 0.28rem !important;
+    border-radius: 0.5rem !important;
     color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
     cursor: grab !important;
     flex: 0 0 auto !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: none !important;
 }
 
 .project-calendar-task-drag-handle:hover,
