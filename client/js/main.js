@@ -359,6 +359,35 @@ function buildProjectCalendarTaskPriorityControl(projectId, task) {
     `;
 }
 
+function buildProjectCalendarTaskCompletionControl(projectId, task) {
+    const normalizedTask = normalizeTask(task);
+    const canEditCalendar = state.canEdit(projectId);
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const completedClass = normalizedTask.completed ? 'checked' : '';
+    const completedIcon = normalizedTask.completed ? `
+        <svg class="icon" fill="none" stroke="#f0f4f8" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"></path>
+        </svg>
+    ` : '';
+
+    if (!canEditCalendar) {
+        return `<span class="project-calendar-selected-task-status" aria-hidden="true">${normalizedTask.completed ? '✓' : '•'}</span>`;
+    }
+
+    return `
+        <button class="task-checkbox project-calendar-task-checkbox ${completedClass}"
+                type="button"
+                data-task-checkbox="${normalizedTask.id}"
+                aria-label="${normalizedTask.completed ? 'Mark task incomplete' : 'Mark task complete'}"
+                aria-pressed="${normalizedTask.completed ? 'true' : 'false'}"
+                onclick="event.stopPropagation(); toggleTask(${projectIdLiteral}, ${normalizedTask.id})"
+                onpointerdown="event.stopPropagation();"
+                ondragstart="event.preventDefault(); event.stopPropagation();">
+            ${completedIcon}
+        </button>
+    `;
+}
+
 function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const notes = getProjectCalendarNotes(project);
@@ -386,9 +415,9 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                         const taskIdLiteral = serializeInlineJsString(task.id);
                         return `
                             <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
-                                <span class="project-calendar-selected-task-status" aria-hidden="true">${task.completed ? '✓' : '•'}</span>
+                                ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <div class="project-calendar-selected-task-body">
-                                    <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
+                                    <span class="project-calendar-selected-task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text || 'Untitled task')}</span>
                                     <div class="project-calendar-selected-task-actions">
                                         ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                                         ${canEditCalendar ? `
@@ -481,7 +510,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
                                  role="listitem"
                                  title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}"
                                  ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)">
-                                <span class="project-calendar-draggable-task-dot" aria-hidden="true"></span>
+                                ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <span class="project-calendar-draggable-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
                                 <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
                                 ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
