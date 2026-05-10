@@ -123,7 +123,7 @@ function formatTaskDueDate(value) {
     const dueDate = normalizeTaskDueDate(value);
     if (!dueDate) return 'No due date';
     const [year, month, day] = dueDate.split('-').map(Number);
-    const parsed = new Date(year, month - 1, day);
+    const parsed = new Date(year, month - 1, day, 12);
     if (Number.isNaN(parsed.getTime())) return dueDate;
     return parsed.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
@@ -141,7 +141,7 @@ function parseDateKey(value) {
     const dateKey = normalizeTaskDueDate(value);
     if (!dateKey) return null;
     const [year, month, day] = dateKey.split('-').map(Number);
-    const parsed = new Date(year, month - 1, day);
+    const parsed = new Date(year, month - 1, day, 12);
     if (Number.isNaN(parsed.getTime())) return null;
     if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) return null;
     return parsed;
@@ -188,7 +188,7 @@ function getProjectCalendarNotes(project) {
 
 function getCalendarMonthLabel(monthKey) {
     const [year, month] = String(monthKey || '').split('-').map(Number);
-    const parsed = new Date(year, month - 1, 1);
+    const parsed = new Date(year, month - 1, 1, 12);
     if (Number.isNaN(parsed.getTime())) return '';
     return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
 }
@@ -237,11 +237,28 @@ function getTasksByDueDate(project) {
         }, {});
 }
 
+function getHighestPriorityTagForTasks(tasks = []) {
+    return (Array.isArray(tasks) ? tasks : [])
+        .map(task => normalizePriorityTagValue(task?.tag))
+        .sort((a, b) => (TASK_TAG_PRIORITY[a] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG]) - (TASK_TAG_PRIORITY[b] ?? TASK_TAG_PRIORITY[DEFAULT_TASK_TAG]))[0] || DEFAULT_TASK_TAG;
+}
+
+function getProjectCalendarDayPriorityClass(tasks = []) {
+    return `project-calendar-day-priority--${getHighestPriorityTagForTasks(tasks)}`;
+}
+
+function getProjectCalendarTaskPriorityClass(task = {}) {
+    return `project-calendar-task-priority--${normalizePriorityTagValue(task?.tag)}`;
+}
+
 function getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks = [], note = '', projectDueDate = '' }) {
     const classes = ['project-calendar-day'];
     if (dateKey === selectedDate) classes.push('is-selected');
     if (dateKey === todayKey) classes.push('is-today');
-    if (tasks.length) classes.push('has-tasks');
+    if (tasks.length) {
+        classes.push('has-tasks');
+        classes.push(getProjectCalendarDayPriorityClass(tasks));
+    }
     if (note) classes.push('has-note');
     if (projectDueDate && dateKey === projectDueDate) classes.push('has-project-due');
     return classes.join(' ');
@@ -249,14 +266,14 @@ function getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks = [
 
 function getCalendarMonthGridDays(monthKey) {
     const [year, month] = String(monthKey || '').split('-').map(Number);
-    const firstDay = new Date(year, month - 1, 1);
+    const firstDay = new Date(year, month - 1, 1, 12);
     if (Number.isNaN(firstDay.getTime())) return [];
     const leadingBlankDays = firstDay.getDay();
     const daysInMonth = new Date(year, month, 0).getDate();
     const days = [];
     for (let i = 0; i < leadingBlankDays; i++) days.push(null);
     for (let day = 1; day <= daysInMonth; day++) {
-        days.push(formatDateKey(new Date(year, month - 1, day)));
+        days.push(formatDateKey(new Date(year, month - 1, day, 12)));
     }
     while (days.length % 7 !== 0) days.push(null);
     return days;
@@ -282,8 +299,9 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
                 const tasks = tasksByDate[dateKey] || [];
                 const note = notes[dateKey] || '';
                 const taskLabel = tasks.length === 1 ? '1 task due' : `${tasks.length} tasks due`;
+                const priorityTag = getHighestPriorityTagForTasks(tasks);
                 const ariaParts = [formatTaskDueDate(dateKey)];
-                if (tasks.length) ariaParts.push(taskLabel);
+                if (tasks.length) ariaParts.push(`${taskLabel}, highest priority ${getPriorityTagLabel(priorityTag)}`);
                 if (note) ariaParts.push('has note');
                 if (projectDueDate === dateKey) ariaParts.push('project due date');
                 return `
@@ -296,7 +314,7 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
                         <span class="project-calendar-day-number">${dayNumber}</span>
                         <span class="project-calendar-day-markers" aria-hidden="true">
                             ${projectDueDate === dateKey ? '<span class="project-calendar-marker project-calendar-marker--project"></span>' : ''}
-                            ${tasks.length ? '<span class="project-calendar-marker project-calendar-marker--tasks"></span>' : ''}
+                            ${tasks.length ? `<span class="project-calendar-marker project-calendar-marker--tasks project-calendar-marker--priority-${priorityTag}"></span>` : ''}
                             ${note ? '<span class="project-calendar-marker project-calendar-marker--note"></span>' : ''}
                         </span>
                     </button>
@@ -329,10 +347,10 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                 ${selectedTasks.length ? `
                     <div class="project-calendar-selected-tasks">
                         ${selectedTasks.map(task => `
-                            <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''}">
+                            <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 <span class="project-calendar-selected-task-status" aria-hidden="true">${task.completed ? '✓' : '•'}</span>
                                 <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
-                                <span class="project-calendar-selected-task-priority">${escapeHtml(getPriorityTagLabel(task.tag))}</span>
+                                <span class="project-calendar-selected-task-priority ${getProjectCalendarTaskPriorityClass(task)}">${escapeHtml(getPriorityTagLabel(task.tag))}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -2159,7 +2177,7 @@ function captureProjectModalState(projectId) {
 
 function restoreProjectModalState(projectId, modalState) {
     if (!modalState || String(modalState.projectId) !== String(projectId)) return;
-    const tab = ['tasks', 'notes', 'members', 'history'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
+    const tab = ['tasks', 'notes', 'members', 'history', 'calendar'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
     switchModalTab(projectId, tab);
     const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
     if (!scrollEl) return;
@@ -2174,7 +2192,7 @@ function getProjectModalActiveTab(projectId) {
     const suffix = `-tab-${projectId}`;
     if (activeTab.id.endsWith(suffix)) {
         const tabName = activeTab.id.slice(0, -suffix.length);
-        return ['tasks', 'notes', 'members', 'history'].includes(tabName) ? tabName : 'tasks';
+        return ['tasks', 'notes', 'members', 'history', 'calendar'].includes(tabName) ? tabName : 'tasks';
     }
     return activeTab.id.replace(/-(.+)$/, '').split('-')[0] || 'tasks';
 }
@@ -2209,7 +2227,7 @@ function getSavedOpenProjectModalState() {
         const parsed = JSON.parse(raw);
         const projectId = String(parsed?.projectId || '');
         if (!projectId) return null;
-        const activeTab = ['tasks', 'notes', 'members', 'history'].includes(parsed?.activeTab) ? parsed.activeTab : 'tasks';
+        const activeTab = ['tasks', 'notes', 'members', 'history', 'calendar'].includes(parsed?.activeTab) ? parsed.activeTab : 'tasks';
         return {
             projectId,
             activeTab,
@@ -3861,6 +3879,7 @@ function setSelectedTasksDueDate(projectId, dueDateValue) {
     if (!changed) return;
     clearSelectedTasksForProject(projectId, false);
     refreshModalTaskUi(projectId, { modalState });
+    refreshProjectCalendarIfPresent(projectId);
 }
 
 function setSelectedTasksPriority(projectId, tagValue) {
@@ -3871,6 +3890,7 @@ function setSelectedTasksPriority(projectId, tagValue) {
     uiState.openTaskPriorityMenu = null;
     clearSelectedTasksForProject(projectId, false);
     refreshModalTaskUi(projectId, { modalState });
+    refreshProjectCalendarIfPresent(projectId);
 }
 
 function completeSelectedTasks(projectId, event) {
@@ -4019,6 +4039,8 @@ function updateTaskDueDate(projectId, taskId, dueDateValue) {
             dueControl.querySelector('.task-due-overdue-icon')?.remove();
         }
     }
+
+    refreshProjectCalendarIfPresent(projectId);
 }
 
 function openTaskDueDatePicker(projectId, taskId, event) {
@@ -6390,6 +6412,7 @@ function updateTaskTag(projectId, taskId, tagValue) {
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     renderModalTaskList(projectId);
+    refreshProjectCalendarIfPresent(projectId);
     render();
 }
 
@@ -6791,12 +6814,35 @@ function buildProjectCalendarSectionMarkup(project) {
     `;
 }
 
-function renderProjectCalendarSection(projectId) {
+function renderProjectCalendarSection(projectId, options = {}) {
     const project = state.findProject(projectId);
     if (!project) return;
     const section = document.getElementById(`calendar-section-${project.id}`);
     if (!section) return;
+    const preserveScroll = options.preserveScroll !== false;
+    const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
+    const previousScrollTop = preserveScroll ? scrollEl?.scrollTop : null;
+    const previousPageScrollX = preserveScroll ? window.scrollX : null;
+    const previousPageScrollY = preserveScroll ? window.scrollY : null;
+
     section.innerHTML = buildProjectCalendarSectionMarkup(project);
+
+    if (preserveScroll) {
+        requestAnimationFrame(() => {
+            if (scrollEl && typeof previousScrollTop === 'number') {
+                scrollEl.scrollTop = previousScrollTop;
+            }
+            if (typeof previousPageScrollX === 'number' && typeof previousPageScrollY === 'number') {
+                window.scrollTo(previousPageScrollX, previousPageScrollY);
+            }
+        });
+    }
+}
+
+function refreshProjectCalendarIfPresent(projectId) {
+    const calendarSection = document.getElementById(`calendar-section-${projectId}`);
+    if (!calendarSection) return;
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
 }
 
 function selectProjectCalendarDay(projectId, dateKey, event) {
@@ -6815,10 +6861,10 @@ function changeProjectCalendarMonth(projectId, direction = 0, event) {
     const currentMonthKey = getProjectCalendarMonthKey(projectId);
     const [year, month] = currentMonthKey.split('-').map(Number);
     const currentSelection = parseDateKey(getProjectCalendarSelectedDate(projectId));
-    const nextMonth = new Date(year, month - 1 + Number(direction || 0), 1);
+    const nextMonth = new Date(year, month - 1 + Number(direction || 0), 1, 12);
     const selectedDay = currentSelection ? currentSelection.getDate() : 1;
     const lastDayInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
-    const nextSelectedDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), Math.min(selectedDay, lastDayInNextMonth));
+    const nextSelectedDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), Math.min(selectedDay, lastDayInNextMonth), 12);
     setProjectCalendarSelectedDate(projectId, formatDateKey(nextSelectedDate));
     renderProjectCalendarSection(projectId);
     saveOpenProjectModalState(projectId, 'calendar');
@@ -6898,6 +6944,7 @@ function openProjectModal(projectId, options = {}) {
     
     const modal = document.getElementById('projectModal');
     const content = document.getElementById('modalContent');
+    modal?.classList.remove('is-calendar-tab-active');
     
     const selectedTasks = state.getSelectedTasks(projectId);
     const modalMenuBarMarkup = `
@@ -7165,16 +7212,20 @@ function openProjectModal(projectId, options = {}) {
 
 
 function switchModalTab(projectId, tab) {
+    const normalizedTab = tab === 'calendar' ? 'calendar' : tab;
     ['tasks', 'notes', 'members', 'history', 'calendar'].forEach(s => {
         const sec = document.getElementById(`${s}-section-${projectId}`);
         const btn = document.getElementById(`${s}-tab-${projectId}`);
         if (!sec || !btn) return;
-        if (s === tab) { sec.classList.remove('hidden'); btn.classList.add('active'); }
-        else           { sec.classList.add('hidden');    btn.classList.remove('active'); }
+        if (s === normalizedTab) { sec.classList.remove('hidden'); btn.classList.add('active'); }
+        else                    { sec.classList.add('hidden');    btn.classList.remove('active'); }
     });
 
-    if (document.getElementById('projectModal')?.classList.contains('active')) {
-        saveOpenProjectModalState(projectId, tab);
+    const projectModal = document.getElementById('projectModal');
+    projectModal?.classList.toggle('is-calendar-tab-active', normalizedTab === 'calendar');
+
+    if (projectModal?.classList.contains('active')) {
+        saveOpenProjectModalState(projectId, normalizedTab);
     }
 }
 
