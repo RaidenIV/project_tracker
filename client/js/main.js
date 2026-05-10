@@ -143,6 +143,19 @@ const COMPETITIVE_ACHIEVEMENT_FALLBACKS = {
     'monthly-project-champion': { name: 'Monthly Project Champion', description: 'Complete the most projects in a month.' }
 };
 
+const COMPETITIVE_CHAMPION_ACHIEVEMENT_IDS = new Set([
+    'weekly-task-champion',
+    'weekly-project-champion',
+    'monthly-task-champion',
+    'monthly-project-champion'
+]);
+
+function getCompetitiveAchievementIconClass(id) {
+    return COMPETITIVE_CHAMPION_ACHIEVEMENT_IDS.has(String(id || ''))
+        ? 'is-competitive-champion'
+        : 'is-competitive-trophy';
+}
+
 let personalProgressionModalQueue = [];
 let personalProgressionModalActive = false;
 
@@ -503,9 +516,14 @@ function showNextPersonalProgressionModal() {
     const kickerEl = document.getElementById('personalProgressionModalKicker');
     const titleEl = document.getElementById('personalProgressionModalTitle');
     const descriptionEl = document.getElementById('personalProgressionModalDescription');
+    const iconEl = modal.querySelector('.personal-progression-modal-star');
     if (kickerEl) kickerEl.textContent = payload.kicker || 'Achievement Unlocked';
     if (titleEl) titleEl.textContent = payload.title || '';
     if (descriptionEl) descriptionEl.textContent = payload.description || '';
+    if (iconEl) {
+        iconEl.classList.remove('is-personal-star', 'is-competitive-champion', 'is-competitive-trophy');
+        iconEl.classList.add(payload.iconClass || 'is-personal-star');
+    }
 
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
@@ -2610,7 +2628,8 @@ function queueCompetitiveAchievementNotifications(entries = []) {
             queuePersonalProgressionModal({
                 kicker: 'Competitive Achievement',
                 title: `${username}: ${achievement.name || fallback.name}`,
-                description: achievement.description || fallback.description
+                description: achievement.description || fallback.description,
+                iconClass: getCompetitiveAchievementIconClass(achievement.id)
             });
         });
     });
@@ -2787,7 +2806,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
                     <div class="leaderboard-competitive-title">Competitive Achievements</div>
                     ${competitiveAchievements.length ? competitiveAchievements.map(achievement => `
                         <div class="leaderboard-competitive-row">
-                            <span class="leaderboard-competitive-star" aria-hidden="true"></span>
+                            <span class="leaderboard-competitive-icon ${getCompetitiveAchievementIconClass(achievement.id)}" aria-hidden="true"></span>
                             <span>
                                 <strong>${escapeHtml(achievement.name || getCompetitiveAchievementFallback(achievement.id).name)}</strong>
                                 <small>${escapeHtml(achievement.description || getCompetitiveAchievementFallback(achievement.id).description)}</small>

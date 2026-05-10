@@ -2797,6 +2797,21 @@ body {
     margin: 0 auto 18px;
 }
 
+.personal-progression-modal-star.is-personal-star {
+    -webkit-mask-image: url("../assets/star.svg");
+    mask-image: url("../assets/star.svg");
+}
+
+.personal-progression-modal-star.is-competitive-champion {
+    -webkit-mask-image: url("../assets/champion.svg");
+    mask-image: url("../assets/champion.svg");
+}
+
+.personal-progression-modal-star.is-competitive-trophy {
+    -webkit-mask-image: url("../assets/trophy.svg");
+    mask-image: url("../assets/trophy.svg");
+}
+
 .personal-progression-modal-kicker {
     color: var(--accent);
     font-size: 12px;
@@ -9151,13 +9166,23 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     border: 1px solid var(--line-soft, rgba(148, 163, 184, 0.16));
 }
 
-.leaderboard-competitive-star {
+.leaderboard-competitive-icon {
     width: 18px;
     height: 18px;
     display: inline-block;
     background: var(--accent);
-    -webkit-mask: url('../assets/star.svg') center / contain no-repeat;
-    mask: url('../assets/star.svg') center / contain no-repeat;
+    -webkit-mask: url('../assets/trophy.svg') center / contain no-repeat;
+    mask: url('../assets/trophy.svg') center / contain no-repeat;
+}
+
+.leaderboard-competitive-icon.is-competitive-champion {
+    -webkit-mask-image: url('../assets/champion.svg');
+    mask-image: url('../assets/champion.svg');
+}
+
+.leaderboard-competitive-icon.is-competitive-trophy {
+    -webkit-mask-image: url('../assets/trophy.svg');
+    mask-image: url('../assets/trophy.svg');
 }
 
 .leaderboard-competitive-row strong,
