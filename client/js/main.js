@@ -2617,8 +2617,17 @@ function saveNotifiedCompetitiveAchievementKeys(keys) {
 
 function queueCompetitiveAchievementNotifications(entries = []) {
     const notifiedKeys = loadNotifiedCompetitiveAchievementKeys();
+    const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
+    const currentUsername = String(accountState.user?.username || getCurrentUser?.()?.username || '').trim().toLowerCase();
     let changed = false;
     entries.forEach(entry => {
+        const entryUserId = String(entry?.userId || '');
+        const entryUsername = String(getLeaderboardUsername(entry) || '').trim().toLowerCase();
+        const isCurrentUserWinner = currentUserId
+            ? entryUserId === currentUserId
+            : (currentUsername && entryUsername === currentUsername);
+        if (!isCurrentUserWinner) return;
+
         const username = getLeaderboardUsername(entry);
         (Array.isArray(entry?.competitiveAchievements) ? entry.competitiveAchievements : []).forEach(achievement => {
             const fallback = getCompetitiveAchievementFallback(achievement.id);
@@ -2628,7 +2637,7 @@ function queueCompetitiveAchievementNotifications(entries = []) {
             changed = true;
             queuePersonalProgressionModal({
                 kicker: 'Competitive Achievement',
-                title: `${username}: ${achievement.name || fallback.name}`,
+                title: achievement.name || fallback.name,
                 description: achievement.description || fallback.description,
                 iconClass: getCompetitiveAchievementIconClass(achievement.id)
             });
@@ -3357,10 +3366,17 @@ function restoreProjectModalState(projectId, modalState) {
     if (!modalState || String(modalState.projectId) !== String(projectId)) return;
     const tab = ['tasks', 'notes', 'members', 'history', 'calendar'].includes(modalState.activeTab) ? modalState.activeTab : 'tasks';
     switchModalTab(projectId, tab);
+    restoreProjectModalScrollPosition(projectId, modalState);
+}
+
+function restoreProjectModalScrollPosition(projectId, modalState) {
+    if (!modalState || String(modalState.projectId) !== String(projectId)) return;
     const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
     if (!scrollEl) return;
+    const scrollTop = modalState.scrollTop || 0;
+    scrollEl.scrollTop = scrollTop;
     requestAnimationFrame(() => {
-        scrollEl.scrollTop = modalState.scrollTop || 0;
+        scrollEl.scrollTop = scrollTop;
     });
 }
 
@@ -4677,6 +4693,11 @@ function toggleTask(projectId, taskId) {
 function performTaskToggle(projectId, taskId) {
     const project = state.findProject(projectId);
     if (!project) return;
+
+    const modalOpen = document.getElementById('projectModal')?.classList.contains('active');
+    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
     
     const updatedTasks = project.tasks.map(t => {
         if (t.id === taskId) {
@@ -4699,18 +4720,22 @@ function performTaskToggle(projectId, taskId) {
     state.updateProject(projectId, projectUpdate({ tasks: sortedTasks }));
     saveData();
     
-    // Re-render to show new order
-    const modalOpen = document.getElementById('projectModal').classList.contains('active');
-    const modalState = modalOpen ? captureProjectModalState(projectId) : null;
+    // Re-render in place so checking off a task does not jump the project modal to the top.
     if (modalOpen) {
-        openProjectModal(projectId, { restoreState: modalState });
+        renderModalTaskList(projectId);
+        updateProjectProgress(projectId);
+        restoreProjectModalScrollPosition(projectId, modalState);
+        render();
+        restoreProjectModalScrollPosition(projectId, modalState);
+        requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
     } else {
         render();
     }
     refreshProjectCalendarIfPresent(projectId);
     
     // Update stats display
-    document.getElementById('completedTasksCount').textContent = state.getStats().completedTasks;
+    const completedTasksCountEl = document.getElementById('completedTasksCount');
+    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
     updateTotalCompletion();
 }
 
