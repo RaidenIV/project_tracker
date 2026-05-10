@@ -21514,3 +21514,67 @@ body[data-theme^="blueprint"] #projectSortSelect:hover {
     color: var(--accent, currentColor) !important;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
 }
+
+/* ============================================================================
+   Targeted patch: leaderboard vertical spacing, avatar ring/glow cleanup
+   ============================================================================ */
+.leaderboard-panel-card,
+body[data-theme^="console"] .leaderboard-panel-card,
+body[data-theme^="glass"] .leaderboard-panel-card,
+body[data-theme^="blueprint"] .leaderboard-panel-card {
+    padding-block: 0.75rem !important;
+}
+
+.leaderboard-profile-avatar,
+body[data-theme^="console"] .leaderboard-profile-avatar,
+body[data-theme^="glass"] .leaderboard-profile-avatar,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar {
+    background: var(--surface-2, transparent) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.leaderboard-profile-avatar-img,
+body[data-theme^="console"] .leaderboard-profile-avatar-img,
+body[data-theme^="glass"] .leaderboard-profile-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar-img {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.control-panel .panel-avatar-button:hover,
+.control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="glass"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="glass"] .control-panel .panel-avatar-button:focus-visible,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button:hover,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button:focus-visible {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-button:hover .panel-avatar,
+.control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button:focus-visible .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button:hover .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button:focus-visible .panel-avatar {
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.control-panel .panel-notification-button,
+body[data-theme^="console"] .control-panel .panel-notification-button,
+body[data-theme^="glass"] .control-panel .panel-notification-button,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button {
+    justify-self: start !important;
+    margin-inline: 0 auto !important;
+}
