@@ -2809,11 +2809,11 @@ function buildLeaderboardProfileModalMarkup(entry) {
                             <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • Level ${playerLevel} • ${leaderboardScore} tasks this week</div>
                         </div>
                     </div>
-                    <div class="leaderboard-profile-stats-grid">
+                    <div class="leaderboard-profile-stats-list">
                         ${stats.map(([label, value]) => `
-                            <div class="account-stat-card leaderboard-profile-stat-card">
-                                <div class="account-stat-value">${escapeHtml(value)}</div>
-                                <div class="account-stat-label">${escapeHtml(label)}</div>
+                            <div class="leaderboard-profile-stat-row">
+                                <span class="leaderboard-profile-stat-label">${escapeHtml(label)}</span>
+                                <span class="leaderboard-profile-stat-value">${escapeHtml(value)}</span>
                             </div>
                         `).join('')}
                     </div>
