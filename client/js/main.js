@@ -1613,6 +1613,7 @@ function renderAccentColorOptions() {
 }
 
 function openUiOptionsModal() {
+    closeMobileWebSidebarForModal();
     renderThemeOptions();
     renderAccentColorOptions();
     const meta = getThemeMeta(uiState.theme);
@@ -2335,6 +2336,7 @@ async function refreshAccountProfile() {
 }
 
 function openAccountSettingsModal() {
+    closeMobileWebSidebarForModal();
     applyAccountUI(accountState.user || getCurrentUser() || { username: 'User', email: '' });
     syncAccountStatsToModal();
     setAccountStatus('');
@@ -7212,13 +7214,7 @@ function openProjectModal(projectId, options = {}) {
     const modalMenuBarMarkup = `
         <div class="modal-menu-bar" role="menubar" aria-label="Project modal menu">
             <button class="modal-tab modal-menu-item active" role="menuitem" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
-            <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">
-                <svg class="modal-tab-note-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
-                </svg>
-                Notes
-            </button>
+            <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">Notes</button>
             <button class="modal-tab modal-menu-item" role="menuitem" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
                 Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
             </button>
@@ -8170,6 +8166,7 @@ function setProjectGridLayoutOption(key, value, event) {
 }
 
 function openHowToGuideModal() {
+    closeMobileWebSidebarForModal();
     document.getElementById('howToGuideModal')?.classList.add('active');
 }
 
@@ -8427,6 +8424,7 @@ function timeAgo(isoString) {
 }
 
 function openShortcutsModal() {
+    closeMobileWebSidebarForModal();
     document.getElementById('shortcutsModal')?.classList.add('active');
 }
 
@@ -8569,6 +8567,11 @@ function setMobileWebSidebarOpen(isOpen) {
     document.body.classList.remove('mobile-sidebar-open');
     document.getElementById('controlPanel')?.setAttribute('aria-hidden', nextOpen ? 'false' : 'true');
     renderPanelEdgeToggleIcon(nextOpen);
+}
+
+function closeMobileWebSidebarForModal() {
+    if (!isMobileWebSidebarViewport()) return;
+    setMobileWebSidebarOpen(false);
 }
 
 function syncMobileAppBarHeight() {
