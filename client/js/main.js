@@ -382,13 +382,25 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                 <div class="project-calendar-selected-block-title">Tasks Due</div>
                 ${selectedTasks.length ? `
                     <div class="project-calendar-selected-tasks">
-                        ${selectedTasks.map(task => `
+                        ${selectedTasks.map(task => {
+                        const taskIdLiteral = serializeInlineJsString(task.id);
+                        return `
                             <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 <span class="project-calendar-selected-task-status" aria-hidden="true">${task.completed ? '✓' : '•'}</span>
                                 <span class="project-calendar-selected-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
                                 ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
+                                ${canEditCalendar ? `
+                                    <button class="project-calendar-remove-task-button"
+                                            type="button"
+                                            title="Remove this task from ${escapeHtml(formatTaskDueDate(selectedDate))}"
+                                            aria-label="Remove task from selected day"
+                                            onclick="removeProjectCalendarTaskFromDay(${projectIdLiteral}, ${taskIdLiteral}, ${selectedDateLiteral}, event)">
+                                        Remove
+                                    </button>
+                                ` : ''}
                             </div>
-                        `).join('')}
+                        `;
+                    }).join('')}
                     </div>
                 ` : '<div class="project-calendar-empty">No tasks due on this day</div>'}
             </div>
@@ -532,7 +544,43 @@ function handleProjectCalendarTaskDrop(projectId, dateKey, event) {
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     setProjectCalendarSelectedDate(projectId, safeDateKey);
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
     renderProjectCalendarSection(projectId, { preserveScroll: true });
+    render();
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function removeProjectCalendarTaskFromDay(projectId, taskId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    const safeTaskId = String(taskId ?? '');
+    if (!safeTaskId || !isValidDateKey(safeDateKey)) return;
+
+    let changed = false;
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (String(normalizedTask.id) !== safeTaskId) return normalizedTask;
+        if (normalizeTaskDueDate(normalizedTask.dueDate) !== safeDateKey) return normalizedTask;
+        changed = true;
+        return { ...normalizedTask, dueDate: '' };
+    });
+
+    if (!changed) return;
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    render();
     saveOpenProjectModalState(projectId, 'calendar');
 }
 
@@ -9076,6 +9124,7 @@ window.handleProjectCalendarTaskDragStart = handleProjectCalendarTaskDragStart;
 window.handleProjectCalendarDayDragOver = handleProjectCalendarDayDragOver;
 window.handleProjectCalendarTaskDrop = handleProjectCalendarTaskDrop;
 window.updateProjectCalendarTaskPriority = updateProjectCalendarTaskPriority;
+window.removeProjectCalendarTaskFromDay = removeProjectCalendarTaskFromDay;
 window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;
