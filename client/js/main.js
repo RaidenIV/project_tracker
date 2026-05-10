@@ -399,6 +399,7 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
     const projectDueDate = getProjectDueDate(project);
     const selectedDateLiteral = serializeInlineJsString(selectedDate);
     const noteStateClass = selectedNote ? 'has-day-note' : 'is-day-note-empty';
+    const createTaskInputId = `project-calendar-create-task-${String(project?.id || '')}`;
 
     return `
         <div class="project-calendar-selected-card ${noteStateClass}">
@@ -438,6 +439,18 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                     }).join('')}
                     </div>
                 ` : '<div class="project-calendar-empty">No tasks due on this day</div>'}
+                ${canEditCalendar ? `
+                    <form class="project-calendar-create-task"
+                          onsubmit="createProjectCalendarTask(${projectIdLiteral}, ${selectedDateLiteral}, event)">
+                        <input class="project-calendar-create-task-input"
+                               id="${escapeHtml(createTaskInputId)}"
+                               type="text"
+                               maxlength="180"
+                               placeholder="New task for this day"
+                               autocomplete="off">
+                        <button class="project-calendar-create-task-button" type="submit">Create Task</button>
+                    </form>
+                ` : ''}
             </div>
             <div class="project-calendar-selected-block project-calendar-note-block ${noteStateClass}">
                 <label class="project-calendar-selected-block-title" for="project-calendar-note-${escapeHtml(String(project?.id || ''))}">Day Note</label>
@@ -492,9 +505,9 @@ function buildProjectCalendarTaskDockMarkup(project) {
                             id="calendar-task-sort-select-${escapeHtml(String(project?.id || ''))}"
                             aria-label="Sort calendar tasks"
                             onchange="setProjectTaskSortMode(${projectIdLiteral}, this.value)">
-                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
-                        <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>Ascending order</option>
-                        <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>Descending order</option>
+                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Manual</option>
+                        <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>A-Z ↑</option>
+                        <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>A-Z ↓</option>
                         <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
                         <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
                     </select>
@@ -623,6 +636,47 @@ function removeProjectCalendarTaskFromDay(projectId, taskId, dateKey, event) {
     if (!changed) return;
 
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    render();
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function createProjectCalendarTask(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey)) return;
+
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const input = document.getElementById(`project-calendar-create-task-${String(projectId || '')}`);
+    const text = String(input?.value || '').trim();
+    if (!text) {
+        input?.focus?.({ preventScroll: true });
+        return;
+    }
+
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const newTask = normalizeTask({
+        id: Date.now(),
+        text,
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        category,
+        dueDate: safeDateKey
+    });
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
+    const updatedTasks = sortTasks([newTask, ...(Array.isArray(project.tasks) ? project.tasks : [])]);
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
     setProjectCalendarSelectedDate(projectId, safeDateKey);
     renderModalTaskList(projectId);
@@ -1733,6 +1787,19 @@ function isProjectArchived(project) {
     return parseProjectBoolean(project?.archived);
 }
 
+function getDerivedCompletedProjectsCount() {
+    return state.getProjects().filter(project => isProjectCompleted(project) && !isProjectArchived(project)).length;
+}
+
+function syncDerivedCompletedProjectStats() {
+    const stats = state.getStats() || {};
+    const completedProjects = getDerivedCompletedProjectsCount();
+    if (Number(stats.completedProjects || 0) !== completedProjects) {
+        state.setStats({ ...stats, completedProjects });
+    }
+    return { ...state.getStats(), completedProjects };
+}
+
 function getVisibleBaseProjects() {
     return state.getProjects().filter(project => {
         if (state.getView() === VIEWS.ARCHIVED) return isProjectArchived(project);
@@ -1866,13 +1933,13 @@ function renderArchivedProjectsPanel() {
         return;
     }
     list.innerHTML = archivedProjects.map(project => `
-        <div class="archived-project-card">
+        <div class="archived-project-card" data-project-id="${escapeHtml(project.id)}">
             <div>
                 <div class="archived-project-title">${escapeHtml(project.title)}</div>
                 <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
             </div>
             <div class="archived-project-actions">
-                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}', event)">Restore</button>
                 <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
             </div>
         </div>
@@ -1952,9 +2019,10 @@ function applyAccountUI(user) {
 function syncAccountStatsToModal() {
     const derivedSharedProjects = state.getProjects().filter(project => project.userRole !== 'owner' && !project.archived).length;
     const derivedActiveProjects = state.getProjects().filter(project => !project.completed && !project.archived).length;
+    const syncedStats = syncDerivedCompletedProjectStats();
     const stats = {
-        completedTasks: state.getStats().completedTasks || accountState.stats.completedTasks || 0,
-        completedProjects: state.getStats().completedProjects || accountState.stats.completedProjects || 0,
+        completedTasks: syncedStats.completedTasks || accountState.stats.completedTasks || 0,
+        completedProjects: syncedStats.completedProjects || 0,
         activeProjects: accountState.stats.activeProjects || derivedActiveProjects,
         sharedProjects: accountState.stats.sharedProjects || derivedSharedProjects
     };
@@ -2559,6 +2627,7 @@ export async function loadData() {
             .filter(Boolean);
         state.setProjects(projects);
         state.setStats(data?.stats || { completedTasks: 0, completedProjects: 0 });
+        syncDerivedCompletedProjectStats();
         render();
         restoreOpenProjectModalFromSession();
     } catch (err) {
@@ -2659,7 +2728,7 @@ async function saveData() {
         let finalResult = null;
         do {
             __saveQueued = false;
-            finalResult = await saveDataToServer(state.getProjects(), state.getStats());
+            finalResult = await saveDataToServer(state.getProjects(), syncDerivedCompletedProjectStats());
             if (!finalResult?.ok) {
                 if (finalResult?.conflicts?.length) {
                     setSaveStatus('conflict', 'Conflict detected — refresh to sync');
@@ -2926,6 +2995,7 @@ function completeProject(projectId) {
     }));
     
     saveData();
+    refreshProjectCalendarIfPresent(projectId);
     render();
 }
 
@@ -3808,6 +3878,7 @@ function performTaskToggle(projectId, taskId) {
     } else {
         render();
     }
+    refreshProjectCalendarIfPresent(projectId);
     
     // Update stats display
     document.getElementById('completedTasksCount').textContent = state.getStats().completedTasks;
@@ -4224,6 +4295,7 @@ function deleteSelectedTasks(projectId, event) {
             clearSelectedTasksForProject(projectId, false);
             saveData();
             refreshModalTaskUi(projectId, { modalState });
+            refreshProjectCalendarIfPresent(projectId);
         }
     });
 }
@@ -4280,6 +4352,7 @@ function deleteTask(projectId, taskId) {
         render();
     }
 
+    refreshProjectCalendarIfPresent(projectId);
     updateUndoButton();
     updateTotalCompletion();
 }
@@ -4296,6 +4369,7 @@ function updateTaskText(projectId, taskId, newText) {
     
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
+    refreshProjectCalendarIfPresent(projectId);
     render();
 }
 
@@ -4364,6 +4438,7 @@ function addTaskToProject(projectId) {
     
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
+    refreshProjectCalendarIfPresent(projectId);
     
     return newTask.id;
 }
@@ -6223,7 +6298,7 @@ function renderProjectDueDateControlMarkup(project, surface = 'card') {
     `;
 }
 
-function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
+function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMode = DEFAULT_TASK_SORT_MODE) {
     const normalizedTask = normalizeTask(task);
     const project = state.findProject(projectId);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
@@ -6233,6 +6308,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
     const dueDateLabel = taskOverdue ? `Overdue: ${formatTaskDueDate(dueDate)}` : (dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
     const priorityBulkCount = getIncompleteTaskCountForPriority(project, normalizedTask.tag);
     const priorityBulkLabel = getPriorityTagLabel(normalizedTask.tag);
+    const canManualReorder = sortMode === DEFAULT_TASK_SORT_MODE;
 
     return `
         <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
@@ -6248,9 +6324,11 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set()) {
                     <span aria-hidden="true"></span>
                 </button>
             ` : ''}
-            <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-            </svg>
+            ${canManualReorder ? `
+                <svg class="task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+            ` : '<span class="task-drag-handle-spacer" aria-hidden="true"></span>'}
             <div class="task-checkbox ${normalizedTask.completed ? 'checked' : ''}"
                  data-task-checkbox="${normalizedTask.id}"
                  onclick="event.stopPropagation(); toggleTask('${projectId}', ${normalizedTask.id})">
@@ -6569,7 +6647,7 @@ function renderModalTaskList(projectId) {
 
     taskList.dataset.sortMode = sortMode;
     taskList.dataset.activeCategory = activeCategory;
-    taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks)).join('');
+    taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks, sortMode)).join('');
     renderCompletedTaskDisplayControls(projectId, completedDisplayState, hideCompleted);
     renderTaskSelectAllControl(projectId, displayTasks);
     renderTaskBulkActions(projectId);
@@ -7321,9 +7399,9 @@ function openProjectModal(projectId, options = {}) {
                         </div>
                         <div class="task-sort-control">
                             <select class="task-sort-select" id="task-sort-select-${project.id}" aria-label="Sort tasks" onchange="setProjectTaskSortMode('${project.id}', this.value)">
-                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Default order</option>
-                                <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>Ascending order</option>
-                                <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>Descending order</option>
+                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Manual</option>
+                                <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>A-Z ↑</option>
+                                <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>A-Z ↓</option>
                                 <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
                                 <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
                             </select>
@@ -7337,8 +7415,8 @@ function openProjectModal(projectId, options = {}) {
                         <div class="completed-task-display-controls-shell" id="completed-task-display-controls-shell-${project.id}">
                             ${buildCompletedTaskDisplayControlsMarkup(project.id, completedDisplayState, hideCompleted)}
                         </div>
-                        <div class="task-list" id="modal-task-list-${project.id}">
-                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks)).join('')}
+                        <div class="task-list" id="modal-task-list-${project.id}" data-sort-mode="${escapeHtml(taskSortMode)}">
+                            ${displayTasks.map(task => renderModalTaskItem(project.id, task, selectedTasks, taskSortMode)).join('')}
                         </div>
                         
                         <!-- Paste Tasks Section in Modal -->
@@ -7388,7 +7466,7 @@ function openProjectModal(projectId, options = {}) {
                 You have viewer access ${project.ownerName ? '— shared by ' + project.ownerName : ''}
             </div>` : `
             <div class="modal-actions">
-                ${project.archived ? `<button class="modal-delete-btn" onclick="restoreArchivedProject('${project.id}')">Restore Project</button>` : `<button class="modal-delete-btn" onclick="archiveProject('${project.id}')">Archive Project</button>`}
+                ${project.archived ? `<button class="modal-delete-btn" onclick="restoreArchivedProject('${project.id}', event)">Restore Project</button>` : `<button class="modal-delete-btn" onclick="archiveProject('${project.id}', event)">Archive Project</button>`}
                 ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
                 <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
                     ${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}
@@ -7883,6 +7961,7 @@ function pasteTasksInModal(projectId) {
     saveData();
     renderModalTaskList(projectId);
     updateProjectProgress(projectId);
+    refreshProjectCalendarIfPresent(projectId);
 
     requestAnimationFrame(() => {
         if (modalScroll && previousScrollTop !== null) {
@@ -7893,21 +7972,59 @@ function pasteTasksInModal(projectId) {
     });
 }
 
-async function archiveProject(projectId) {
-    const project = state.findProject(projectId);
-    if (!project || !project._id) return;
-    state.updateProject(projectId, projectUpdate({ archived: true }));
-    await saveData();
-    closeProjectModal();
-    render();
+function getProjectStatusAnimationElement(projectId, event = null) {
+    const eventElement = event?.currentTarget?.closest?.('.project-card, .archived-project-card');
+    if (eventElement) return eventElement;
+    return Array.from(document.querySelectorAll('.project-card, .archived-project-card'))
+        .find(card => String(card.getAttribute('data-project-id') || '') === String(projectId || '')) || null;
 }
 
-async function restoreArchivedProject(projectId) {
+function animateProjectStatusChange(projectId, className, onComplete, event = null) {
+    const element = getProjectStatusAnimationElement(projectId, event);
+    const reduceMotion = typeof window !== 'undefined'
+        && typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!element || reduceMotion) {
+        onComplete?.();
+        return;
+    }
+
+    element.classList.add(className);
+    window.setTimeout(() => onComplete?.(), 190);
+}
+
+async function archiveProject(projectId, event = null) {
     const project = state.findProject(projectId);
     if (!project || !project._id) return;
-    state.updateProject(projectId, projectUpdate({ archived: false }));
-    await saveData();
-    render();
+    closeProjectModal();
+
+    animateProjectStatusChange(projectId, 'project-card--archive-exit', async () => {
+        state.updateProject(projectId, projectUpdate({ archived: true }));
+        syncDerivedCompletedProjectStats();
+        render();
+        await saveData();
+    }, event);
+}
+
+async function restoreArchivedProject(projectId, event = null) {
+    const project = state.findProject(projectId);
+    if (!project || !project._id) return;
+    closeProjectModal();
+
+    animateProjectStatusChange(projectId, 'project-card--restore-exit', async () => {
+        state.updateProject(projectId, projectUpdate({ archived: false, completed: false, completedDate: null }));
+        if (state.getView() === VIEWS.ARCHIVED) {
+            uiState.ownerFilter = 'all';
+            uiState.activeSavedViewId = '';
+            state.setView(VIEWS.ACTIVE);
+            setSidebarProjectsNav('activeProjectsCard');
+            setViewTitle('Active Projects');
+        }
+        closeArchivedProjectsModal();
+        syncDerivedCompletedProjectStats();
+        render();
+        await saveData();
+    }, event);
 }
 
 function adjustModalPasteBox(pasteBox) {
@@ -8217,7 +8334,7 @@ function render() {
     if (!projectGrid || !emptyState) return;
     ensureProjectLayoutControls();
 
-    const stats = state.getStats() || { completedTasks: 0, completedProjects: 0 };
+    const stats = syncDerivedCompletedProjectStats() || { completedTasks: 0, completedProjects: 0 };
     const activeProjectsCountEl = document.getElementById('activeProjectsCount');
     const completedTasksCountEl = document.getElementById('completedTasksCount');
     const completedProjectsCountEl = document.getElementById('completedProjectsCount');
@@ -8481,13 +8598,13 @@ function renderArchivedProjectsModalList() {
         return;
     }
     list.innerHTML = archivedProjects.map(project => `
-        <div class="archived-project-card">
+        <div class="archived-project-card" data-project-id="${escapeHtml(project.id)}">
             <div>
                 <div class="archived-project-title">${escapeHtml(project.title)}</div>
                 <div class="archived-project-meta">Updated ${escapeHtml(formatCompactDateTime(project.lastModified || project.dateCreated))}</div>
             </div>
             <div class="archived-project-actions">
-                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}')">Restore</button>
+                <button class="icon-button-small" type="button" onclick="restoreArchivedProject('${project.id}', event)">Restore</button>
                 <button class="icon-button-small" type="button" onclick="openProjectModal('${project.id}')">Open</button>
             </div>
         </div>
@@ -9176,6 +9293,7 @@ window.handleProjectCalendarTaskDragStart = handleProjectCalendarTaskDragStart;
 window.handleProjectCalendarDayDragOver = handleProjectCalendarDayDragOver;
 window.handleProjectCalendarTaskDrop = handleProjectCalendarTaskDrop;
 window.updateProjectCalendarTaskPriority = updateProjectCalendarTaskPriority;
+window.createProjectCalendarTask = createProjectCalendarTask;
 window.removeProjectCalendarTaskFromDay = removeProjectCalendarTaskFromDay;
 window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
 window.closeConfirmDialog = closeConfirmDialog;

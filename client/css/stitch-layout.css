@@ -20869,3 +20869,281 @@ body[data-theme^="glass"] .project-calendar-selected-task-actions {
         margin-top: 0 !important;
     }
 }
+
+/* ============================================================================
+   Targeted patch: notes truncation, archive/restore motion, calendar task create,
+   task reorder visibility, neumorphic calendar priority, and mobile toolbar fit
+   ============================================================================ */
+.project-notes-editor,
+.project-notes-active-panel,
+.project-notes-link-preview,
+.project-notes-link-editor,
+.project-notes-legacy-links,
+.project-notes-link-list,
+.project-notes-link-list--editable,
+.project-notes-link-list--tags,
+.project-notes-link-row,
+.project-notes-link-chip,
+.project-notes-link-open,
+.project-notes-link,
+.project-notes-link--tag,
+a.project-notes-link.project-notes-link--tag.project-card-tag {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.project-notes-editor,
+.project-notes-active-panel,
+.project-notes-link-preview,
+.project-notes-link-editor,
+.project-notes-legacy-links,
+.project-notes-link-list--editable,
+.project-notes-link-list--tags {
+    overflow: hidden !important;
+}
+
+.project-notes-link-list--tags,
+.project-notes-link-list {
+    align-items: flex-start !important;
+}
+
+.project-notes-link-row,
+.project-notes-link-chip {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+}
+
+.project-notes-link-open,
+.project-notes-link,
+.project-notes-link--tag,
+a.project-notes-link.project-notes-link--tag.project-card-tag {
+    flex: 0 1 auto !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.project-notes-link-chip .project-notes-link--tag,
+.project-notes-link-chip a.project-notes-link.project-notes-link--tag.project-card-tag,
+.project-notes-legacy-links a.project-notes-link.project-notes-link--tag.project-card-tag {
+    display: inline-flex !important;
+    max-width: 100% !important;
+}
+
+.task-drag-handle-spacer {
+    display: inline-block !important;
+    flex: 0 0 1.2rem !important;
+    width: 1.2rem !important;
+    min-width: 1.2rem !important;
+    height: 1.2rem !important;
+}
+
+.task-list:not([data-sort-mode="default"]) .task-drag-handle,
+body[data-theme^="console"] .task-list:not([data-sort-mode="default"]) .task-drag-handle,
+body[data-theme^="blueprint"] .task-list:not([data-sort-mode="default"]) .task-drag-handle,
+body[data-theme^="glass"] .task-list:not([data-sort-mode="default"]) .task-drag-handle {
+    display: none !important;
+}
+
+@keyframes projectArchiveExit {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(0.45rem) scale(0.975);
+        filter: blur(1px);
+    }
+}
+
+@keyframes projectRestoreExit {
+    0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(1rem) scale(0.985);
+        filter: blur(1px);
+    }
+}
+
+.project-card--archive-exit,
+.archived-project-card.project-card--archive-exit {
+    pointer-events: none !important;
+    animation: projectArchiveExit 180ms ease forwards !important;
+}
+
+.project-card--restore-exit,
+.archived-project-card.project-card--restore-exit {
+    pointer-events: none !important;
+    animation: projectRestoreExit 180ms ease forwards !important;
+}
+
+.project-calendar-create-task,
+body[data-theme^="console"] .project-calendar-create-task,
+body[data-theme^="blueprint"] .project-calendar-create-task,
+body[data-theme^="glass"] .project-calendar-create-task {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin-top: 0.55rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.project-calendar-create-task-input,
+body[data-theme^="console"] .project-calendar-create-task-input,
+body[data-theme^="blueprint"] .project-calendar-create-task-input,
+body[data-theme^="glass"] .project-calendar-create-task-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 2.35rem !important;
+    padding: 0 0.75rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.24)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--text, currentColor) !important;
+    font: inherit !important;
+    outline: none !important;
+}
+
+.project-calendar-create-task-input:focus,
+body[data-theme^="console"] .project-calendar-create-task-input:focus,
+body[data-theme^="blueprint"] .project-calendar-create-task-input:focus,
+body[data-theme^="glass"] .project-calendar-create-task-input:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
+}
+
+.project-calendar-create-task-button,
+body[data-theme^="console"] .project-calendar-create-task-button,
+body[data-theme^="blueprint"] .project-calendar-create-task-button,
+body[data-theme^="glass"] .project-calendar-create-task-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 2.35rem !important;
+    padding: 0 0.85rem !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    border-radius: 0.85rem !important;
+    background: var(--accent, currentColor) !important;
+    background-color: var(--accent, currentColor) !important;
+    background-image: none !important;
+    color: var(--accent-contrast, #fff) !important;
+    font: inherit !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+}
+
+body[data-theme^="blueprint"] .project-calendar-task-priority-control {
+    border-color: var(--line, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-calendar-task-priority-control:hover,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-calendar-task-priority-select {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+    .project-calendar-create-task,
+    body[data-theme^="console"] .project-calendar-create-task,
+    body[data-theme^="blueprint"] .project-calendar-create-task,
+    body[data-theme^="glass"] .project-calendar-create-task {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .project-calendar-create-task-button,
+    body[data-theme^="console"] .project-calendar-create-task-button,
+    body[data-theme^="blueprint"] .project-calendar-create-task-button,
+    body[data-theme^="glass"] .project-calendar-create-task-button {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 980px) {
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        display: grid !important;
+        grid-column: 1 !important;
+        align-items: center !important;
+        gap: 0.38rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        flex: none !important;
+    }
+
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar {
+        grid-template-columns: minmax(0, 1fr) clamp(4rem, 20vw, 5.35rem) !important;
+    }
+
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        grid-template-columns: minmax(0, 0.75fr) clamp(4rem, 20vw, 5.35rem) !important;
+    }
+
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        order: initial !important;
+        grid-column: 1 !important;
+        justify-self: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSortSelect {
+        order: initial !important;
+        grid-column: 2 !important;
+        justify-self: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: none !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
