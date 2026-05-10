@@ -22027,3 +22027,89 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row:focus:not(:fo
     box-shadow: none !important;
     outline: none !important;
 }
+
+
+/* ============================================================================
+   Targeted patch: sidebar avatar hover shell, bracketed level, favicon mode flip
+   ============================================================================ */
+body[data-theme$="-light"] .sidebar-title-favicon.app-title-favicon-svg .app-favicon-fill,
+body[data-theme$="-light"] .sidebar-title-favicon.app-title-favicon-svg .app-favicon-check {
+    stroke: #f8fafc !important;
+}
+
+body:not([data-theme$="-light"]) .sidebar-title-favicon.app-title-favicon-svg .app-favicon-fill,
+body:not([data-theme$="-light"]) .sidebar-title-favicon.app-title-favicon-svg .app-favicon-check {
+    stroke: #111827 !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill {
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: max-content !important;
+    min-height: 44px !important;
+    padding: 0.25rem 0.7rem !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--heading, currentColor) !important;
+    text-transform: none !important;
+    overflow: visible !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill:hover,
+.control-panel .panel-avatar-button.panel-user-pill:focus-visible,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill:hover,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill:hover,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill:hover,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface, transparent) !important;
+    box-shadow: var(--inset-shadow, none) !important;
+    outline: none !important;
+    transform: translateY(-1px) !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar {
+    flex: 0 0 2.025rem !important;
+    width: 2.025rem !important;
+    height: 2.025rem !important;
+    min-width: 2.025rem !important;
+    min-height: 2.025rem !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-username {
+    text-transform: none !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge {
+    min-width: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: none !important;
+}

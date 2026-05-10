@@ -442,7 +442,7 @@ function getCurrentPersonalLevelProgress() {
 
 function syncPanelUserLevelBadge(level) {
     const badge = document.getElementById('panelUserLevelBadge');
-    if (badge) badge.textContent = `lvl ${Math.max(1, Number(level) || 1)}`;
+    if (badge) badge.textContent = `[lvl ${Math.max(1, Number(level) || 1)}]`;
 }
 
 function renderAccountProgression() {
