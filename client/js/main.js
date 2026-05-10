@@ -442,7 +442,7 @@ function getCurrentPersonalLevelProgress() {
 
 function syncPanelUserLevelBadge(level) {
     const badge = document.getElementById('panelUserLevelBadge');
-    if (badge) badge.textContent = String(Math.max(1, Number(level) || 1));
+    if (badge) badge.textContent = `lvl ${Math.max(1, Number(level) || 1)}`;
 }
 
 function renderAccountProgression() {
@@ -1629,7 +1629,8 @@ const LOCAL_STORAGE_KEYS = {
     PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
     PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1',
     PROJECT_GRID_LAYOUT: 'tracker_project_grid_layout_v1',
-    COMPETITIVE_NOTIFICATIONS: 'tracker_competitive_notifications_v1'
+    COMPETITIVE_NOTIFICATIONS: 'tracker_competitive_notifications_v1',
+    NOTIFICATIONS_READ: 'tracker_notifications_read_v1'
 };
 
 const SESSION_STORAGE_KEYS = {
@@ -2633,7 +2634,11 @@ function queueCompetitiveAchievementNotifications(entries = []) {
             });
         });
     });
-    if (changed) saveNotifiedCompetitiveAchievementKeys(notifiedKeys);
+    if (changed) {
+        saveNotifiedCompetitiveAchievementKeys(notifiedKeys);
+        updateNotificationUnreadIndicator();
+        refreshNotificationsModalIfOpen();
+    }
 }
 
 function renderLeaderboardPanel() {
@@ -2710,7 +2715,7 @@ function renderLeaderboardPanel() {
         const completedTasks = Number(entry.completedTasks || 0);
         const playerLevel = Math.max(1, Number(entry.playerLevel || 1) || 1);
         const rank = String(entry.rank || '—').padStart(2, '0');
-        const meta = `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'} this week • Level ${playerLevel} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} total tasks`;
+        const meta = `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'} this week • lvl ${playerLevel} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} total tasks`;
         const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
         const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
         const avatarMarkup = profilePic
@@ -2722,10 +2727,10 @@ function renderLeaderboardPanel() {
                 <span class="leaderboard-rank${rankClass}">${rank}</span>
                 <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
                 <span class="leaderboard-row-main">
-                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
-                    <span class="leaderboard-meta">Level ${playerLevel} • ${completionPercentage}% complete</span>
+                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}"><span class="leaderboard-user-label">User:</span> ${escapeHtml(username)}</span>
+                    <span class="leaderboard-meta">lvl ${playerLevel} • ${completionPercentage}% complete</span>
                 </span>
-                <span class="leaderboard-level-badge" title="Level ${playerLevel}">${playerLevel}</span>
+                <span class="leaderboard-level-badge" title="Level ${playerLevel}">lvl ${playerLevel}</span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
             </button>
         `;
@@ -2761,7 +2766,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
     const competitiveAchievements = Array.isArray(entry.competitiveAchievements) ? entry.competitiveAchievements : [];
     const stats = [
         ['Rank', rank > 0 ? `#${rank}` : '—'],
-        ['Level', playerLevel],
+        ['Level', `lvl ${playerLevel}`],
         ['Weekly Score', `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'}`],
         ['Total Completion', `${completion}%`],
         ['Completed Tasks', Number(entry.completedTasks || 0)],
@@ -2791,7 +2796,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
                     <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
                     <div class="leaderboard-profile-summary">
                         <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
-                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • Level ${playerLevel} • ${leaderboardScore} tasks this week</div>
+                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • lvl ${playerLevel} • ${leaderboardScore} tasks this week</div>
                     </div>
                 </div>
                 <div class="leaderboard-profile-stats-grid">
@@ -2804,15 +2809,19 @@ function buildLeaderboardProfileModalMarkup(entry) {
                 </div>
                 <div class="leaderboard-competitive-section">
                     <div class="leaderboard-competitive-title">Competitive Achievements</div>
-                    ${competitiveAchievements.length ? competitiveAchievements.map(achievement => `
-                        <div class="leaderboard-competitive-row">
-                            <span class="leaderboard-competitive-icon ${getCompetitiveAchievementIconClass(achievement.id)}" aria-hidden="true"></span>
-                            <span>
-                                <strong>${escapeHtml(achievement.name || getCompetitiveAchievementFallback(achievement.id).name)}</strong>
-                                <small>${escapeHtml(achievement.description || getCompetitiveAchievementFallback(achievement.id).description)}</small>
-                            </span>
-                        </div>
-                    `).join('') : '<div class="leaderboard-competitive-empty">No competitive achievements yet.</div>'}
+                    ${competitiveAchievements.length ? competitiveAchievements.map(achievement => {
+                        const achievementDate = getCompetitiveAchievementDateLabel(achievement);
+                        return `
+                            <div class="leaderboard-competitive-row">
+                                <span class="leaderboard-competitive-icon ${getCompetitiveAchievementIconClass(achievement.id)}" aria-hidden="true"></span>
+                                <span>
+                                    <strong>${escapeHtml(achievement.name || getCompetitiveAchievementFallback(achievement.id).name)}</strong>
+                                    <small>${escapeHtml(achievement.description || getCompetitiveAchievementFallback(achievement.id).description)}</small>
+                                    ${achievementDate ? `<small class="leaderboard-competitive-date">Achieved ${escapeHtml(achievementDate)}</small>` : ''}
+                                </span>
+                            </div>
+                        `;
+                    }).join('') : '<div class="leaderboard-competitive-empty">No competitive achievements yet.</div>'}
                 </div>
             </div>
         </div>
@@ -3040,6 +3049,8 @@ async function refreshAccountProfile() {
         syncAccountStatsToModal();
         renderLeaderboardPanel();
         queueCompetitiveAchievementNotifications([...(accountState.leaderboard || []), accountState.currentLeaderboardEntry].filter(Boolean));
+        updateNotificationUnreadIndicator();
+        refreshNotificationsModalIfOpen();
     } catch (err) {
         console.error('Failed to load account profile:', err);
         const fallbackUser = getCurrentUser?.() || accountState.user;
@@ -3048,8 +3059,72 @@ async function refreshAccountProfile() {
             applyAccountUI(accountState.user);
             syncAccountStatsToModal();
             renderLeaderboardPanel();
+            updateNotificationUnreadIndicator();
+            refreshNotificationsModalIfOpen();
         }
     }
+}
+
+
+function loadReadNotificationKeys() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_READ);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+    } catch {
+        return new Set();
+    }
+}
+
+function saveReadNotificationKeys(keys) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_READ, JSON.stringify(Array.from(keys).slice(-500)));
+    } catch {}
+}
+
+function getNotificationItemKey(item) {
+    return String(item?.key || `${item?.title || 'notification'}:${item?.detail || ''}:${item?.time || ''}`);
+}
+
+function markNotificationItemsRead(items = []) {
+    const readKeys = loadReadNotificationKeys();
+    let changed = false;
+    items.forEach(item => {
+        const key = getNotificationItemKey(item);
+        if (!key || readKeys.has(key)) return;
+        readKeys.add(key);
+        changed = true;
+    });
+    if (changed) saveReadNotificationKeys(readKeys);
+}
+
+function formatNotificationTime(value) {
+    if (!value) return '';
+    return formatCompactDateTime(value);
+}
+
+function getCompetitiveAchievementDateLabel(achievement = {}) {
+    const dateValue = achievement.achievedAt || achievement.awardedAt || achievement.date || achievement.createdAt || '';
+    return dateValue ? formatCompactDateTime(dateValue) : '';
+}
+
+function updateNotificationUnreadIndicator() {
+    const badge = document.getElementById('notificationUnreadBadge');
+    const button = document.getElementById('panelNotificationButton');
+    if (!badge || !button) return;
+    const items = buildNotificationItems();
+    const readKeys = loadReadNotificationKeys();
+    const unreadCount = items.reduce((count, item) => count + (readKeys.has(getNotificationItemKey(item)) ? 0 : 1), 0);
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.classList.toggle('hidden', unreadCount <= 0);
+    button.classList.toggle('has-unread', unreadCount > 0);
+    button.setAttribute('aria-label', unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications');
+}
+
+function refreshNotificationsModalIfOpen() {
+    const modal = document.getElementById('notificationsModal');
+    if (!modal?.classList.contains('active')) return;
+    renderNotificationsModalContent(modal, { markRead: true });
 }
 
 function buildNotificationItems() {
@@ -3075,26 +3150,41 @@ function buildNotificationItems() {
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, 5);
     const items = [
-        { title: 'Tasks completed today', detail: `${dailyTasks} task${dailyTasks === 1 ? '' : 's'} completed since midnight.` },
-        { title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Monday at 12:00 AM.` },
-        { title: 'Personal achievements', detail: `${unlockedSet.size} of ${PERSONAL_ACHIEVEMENTS.length} unlocked.` }
+        { key: `daily-tasks:${formatDateKey(dayStart) || dayStart.toISOString()}:${dailyTasks}`, title: 'Tasks completed today', detail: `${dailyTasks} task${dailyTasks === 1 ? '' : 's'} completed since midnight.`, time: now.toISOString() },
+        { key: `weekly-score:${formatDateKey(weekStart) || weekStart.toISOString()}:${weeklyTasks}`, title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Monday at 12:00 AM.`, time: now.toISOString() },
+        { key: `personal-achievements:${unlockedSet.size}`, title: 'Personal achievements', detail: `${unlockedSet.size} of ${PERSONAL_ACHIEVEMENTS.length} unlocked.`, time: now.toISOString() }
     ];
     if (Array.isArray(currentEntry.competitiveAchievements) && currentEntry.competitiveAchievements.length) {
+        const latestCompetitiveDate = currentEntry.competitiveAchievements
+            .map(achievement => achievement.achievedAt || achievement.awardedAt || achievement.date || '')
+            .filter(Boolean)
+            .sort((a, b) => new Date(b || 0) - new Date(a || 0))[0] || now.toISOString();
         items.push({
+            key: `competitive-achievements:${currentEntry.competitiveAchievements.map(achievement => achievement.notificationKey || achievement.id || achievement.name).join('|')}`,
             title: 'Competitive achievements',
-            detail: currentEntry.competitiveAchievements.map(achievement => achievement.name || getCompetitiveAchievementFallback(achievement.id).name).join(', ')
+            detail: currentEntry.competitiveAchievements.map(achievement => {
+                const name = achievement.name || getCompetitiveAchievementFallback(achievement.id).name;
+                const dateLabel = getCompetitiveAchievementDateLabel(achievement);
+                return dateLabel ? `${name} (${dateLabel})` : name;
+            }).join(', '),
+            time: latestCompetitiveDate
         });
     }
     recentCompletedTasks.forEach(record => {
         items.push({
+            key: `task:${record.project?.id || ''}:${record.task?.id || ''}:${record.timestamp || ''}`,
             title: 'Task completed',
-            detail: `${record.task?.text || 'Untitled task'}${record.project?.title ? ` • ${record.project.title}` : ''}`
+            detail: `${record.task?.text || 'Untitled task'}${record.project?.title ? ` • ${record.project.title}` : ''}`,
+            time: record.timestamp ? new Date(record.timestamp).toISOString() : ''
         });
     });
     recentProjects.forEach(project => {
+        const projectTime = project.lastModified || project.dateCreated || '';
         items.push({
+            key: `project:${project.id || project._id || project.title}:${projectTime}`,
             title: 'Project updated',
-            detail: `${project.title} • ${timeAgo(project.lastModified || project.dateCreated)}`
+            detail: `${project.title} • ${timeAgo(projectTime)}`,
+            time: projectTime
         });
     });
     return items;
@@ -3113,10 +3203,11 @@ function ensureNotificationsModal() {
     return modal;
 }
 
-function openNotificationsModal() {
-    closeMobileWebSidebarForModal();
-    const modal = ensureNotificationsModal();
+function renderNotificationsModalContent(modal, options = {}) {
+    if (!modal) return;
     const items = buildNotificationItems();
+    if (options.markRead) markNotificationItemsRead(items);
+    const readKeys = loadReadNotificationKeys();
     modal.innerHTML = `
         <div class="modal-content notifications-modal-content" role="dialog" aria-modal="true" aria-labelledby="notificationsModalTitle">
             <div class="account-modal-scroll">
@@ -3132,18 +3223,31 @@ function openNotificationsModal() {
                     </button>
                 </div>
                 <div class="notifications-modal-list">
-                    ${items.length ? items.map(item => `
-                        <div class="notification-card">
-                            <div class="notification-card-header">
-                                <span class="notification-project">${escapeHtml(item.title)}</span>
+                    ${items.length ? items.map(item => {
+                        const itemKey = getNotificationItemKey(item);
+                        const unreadClass = readKeys.has(itemKey) ? '' : ' notification-card--unread';
+                        const timeLabel = formatNotificationTime(item.time);
+                        return `
+                            <div class="notification-card${unreadClass}">
+                                <div class="notification-card-header">
+                                    <span class="notification-project">${escapeHtml(item.title)}</span>
+                                    ${timeLabel ? `<span class="notification-time">${escapeHtml(timeLabel)}</span>` : ''}
+                                </div>
+                                <div class="notification-message">${escapeHtml(item.detail)}</div>
                             </div>
-                            <div class="notification-message">${escapeHtml(item.detail)}</div>
-                        </div>
-                    `).join('') : '<div class="side-panel-empty">No notifications yet</div>'}
+                        `;
+                    }).join('') : '<div class="side-panel-empty">No notifications yet</div>'}
                 </div>
             </div>
         </div>
     `;
+    if (options.markRead) updateNotificationUnreadIndicator();
+}
+
+function openNotificationsModal() {
+    closeMobileWebSidebarForModal();
+    const modal = ensureNotificationsModal();
+    renderNotificationsModalContent(modal, { markRead: true });
     modal.classList.add('active');
 }
 
@@ -7035,9 +7139,18 @@ function setProjectTagFilter(tagName) {
 }
 
 function getProjectCardPreviewTasks(project) {
-    return Array.isArray(project?.tasks)
-        ? sortTasksForDisplay(project.tasks, getProjectTaskSortPreference(project?.id)).slice(0, 3)
-        : [];
+    if (!Array.isArray(project?.tasks)) return [];
+    const sortMode = getProjectTaskSortPreference(project?.id);
+    let activeCategory = getProjectTaskCategoryFilter(project?.id);
+    const categories = getProjectTaskCategories(project);
+    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
+        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
+    }
+    return getDisplayTasksForProject(project, {
+        hideCompleted: getProjectHideCompletedPreference(project?.id),
+        sortMode,
+        activeCategory
+    }).slice(0, 3);
 }
 
 function formatProjectSyncText(project) {
@@ -9228,6 +9341,7 @@ function render() {
     runRenderStep('shared projects panel', renderSharedProjectsPanel);
     runRenderStep('archived projects panel', renderArchivedProjectsPanel);
     runRenderStep('leaderboard panel', renderLeaderboardPanel);
+    runRenderStep('notifications', () => { updateNotificationUnreadIndicator(); refreshNotificationsModalIfOpen(); });
     runRenderStep('saved views panel', renderSavedViewsPanel);
     runRenderStep('active filter chips', renderActiveFilterChips);
     runRenderStep('account stats', syncAccountStatsToModal);

@@ -1293,9 +1293,11 @@ function getCreditedUserIdsForCompletedTask(task, participantIds, ownerId) {
     return ownerId ? [ownerId] : [];
 }
 
-function makeCompetitiveAchievement(base, userId, unlockKey) {
+function makeCompetitiveAchievement(base, userId, unlockKey, achievedAt = new Date()) {
+    const achievedDate = achievedAt instanceof Date ? achievedAt : new Date(achievedAt || Date.now());
     return {
         ...base,
+        achievedAt: Number.isNaN(achievedDate.getTime()) ? new Date().toISOString() : achievedDate.toISOString(),
         notificationKey: `competitive:${userId}:${base.id}:${unlockKey}`
     };
 }
@@ -1496,22 +1498,25 @@ async function buildLeaderboardData(currentUserId) {
     const maxWeeklyProjects = maxFor('weeklyCompletedProjects');
     const maxMonthlyTasks = maxFor('monthlyCompletedTasks');
     const maxMonthlyProjects = maxFor('monthlyCompletedProjects');
+    const dayAwardAt = new Date(dayEnd.getTime() - 1);
+    const weekAwardAt = new Date(weekEnd.getTime() - 1);
+    const monthAwardAt = new Date(monthEnd.getTime() - 1);
 
     leaderboard = leaderboard.map(row => {
         const achievements = [];
-        const add = (base, key) => achievements.push(makeCompetitiveAchievement(base, row.userId, key));
-        if (row.totalProjects >= 3 && maxEfficiency > 0 && row.totalCompletionPercentage === maxEfficiency) add(COMPETITIVE_ACHIEVEMENTS.efficiencyLead, `all:${todayKey}`);
-        if (row.finalSharedProjectClosures >= 5) add(COMPETITIVE_ACHIEVEMENTS.closer, `all:${row.finalSharedProjectClosures}`);
-        if (row.sharedCarryProjects >= 1) add(COMPETITIVE_ACHIEVEMENTS.teamCarry, `all:${row.sharedCarryProjects}`);
-        if (row.rankOneStreak >= 7) add(COMPETITIVE_ACHIEVEMENTS.domination, `streak:${row.rankOneStreak}`);
-        if (maxDailyTasks > 0 && row.dailyCompletedTasks === maxDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${todayKey}`);
-        if (maxDailyProjects > 0 && row.dailyCompletedProjects === maxDailyProjects) add(COMPETITIVE_ACHIEVEMENTS.projectHunter, `day:${todayKey}`);
-        if (row.rank <= 3) add(COMPETITIVE_ACHIEVEMENTS.triumvirate, currentWeekKey);
-        if (row.previousWeekRank > 0 && row.previousWeekRank - row.rank >= 5) add(COMPETITIVE_ACHIEVEMENTS.risingStar, currentWeekKey);
-        if (maxWeeklyTasks > 0 && row.weeklyCompletedTasks === maxWeeklyTasks) add(COMPETITIVE_ACHIEVEMENTS.weeklyTaskChampion, currentWeekKey);
-        if (maxWeeklyProjects > 0 && row.weeklyCompletedProjects === maxWeeklyProjects) add(COMPETITIVE_ACHIEVEMENTS.weeklyProjectChampion, currentWeekKey);
-        if (maxMonthlyTasks > 0 && row.monthlyCompletedTasks === maxMonthlyTasks) add(COMPETITIVE_ACHIEVEMENTS.monthlyTaskChampion, currentMonthKey);
-        if (maxMonthlyProjects > 0 && row.monthlyCompletedProjects === maxMonthlyProjects) add(COMPETITIVE_ACHIEVEMENTS.monthlyProjectChampion, currentMonthKey);
+        const add = (base, key, achievedAt = now) => achievements.push(makeCompetitiveAchievement(base, row.userId, key, achievedAt));
+        if (row.totalProjects >= 3 && maxEfficiency > 0 && row.totalCompletionPercentage === maxEfficiency) add(COMPETITIVE_ACHIEVEMENTS.efficiencyLead, `all:${todayKey}`, now);
+        if (row.finalSharedProjectClosures >= 5) add(COMPETITIVE_ACHIEVEMENTS.closer, `all:${row.finalSharedProjectClosures}`, now);
+        if (row.sharedCarryProjects >= 1) add(COMPETITIVE_ACHIEVEMENTS.teamCarry, `all:${row.sharedCarryProjects}`, now);
+        if (row.rankOneStreak >= 7) add(COMPETITIVE_ACHIEVEMENTS.domination, `streak:${row.rankOneStreak}`, dayAwardAt);
+        if (maxDailyTasks > 0 && row.dailyCompletedTasks === maxDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${todayKey}`, dayAwardAt);
+        if (maxDailyProjects > 0 && row.dailyCompletedProjects === maxDailyProjects) add(COMPETITIVE_ACHIEVEMENTS.projectHunter, `day:${todayKey}`, dayAwardAt);
+        if (row.rank <= 3) add(COMPETITIVE_ACHIEVEMENTS.triumvirate, currentWeekKey, weekAwardAt);
+        if (row.previousWeekRank > 0 && row.previousWeekRank - row.rank >= 5) add(COMPETITIVE_ACHIEVEMENTS.risingStar, currentWeekKey, weekAwardAt);
+        if (maxWeeklyTasks > 0 && row.weeklyCompletedTasks === maxWeeklyTasks) add(COMPETITIVE_ACHIEVEMENTS.weeklyTaskChampion, currentWeekKey, weekAwardAt);
+        if (maxWeeklyProjects > 0 && row.weeklyCompletedProjects === maxWeeklyProjects) add(COMPETITIVE_ACHIEVEMENTS.weeklyProjectChampion, currentWeekKey, weekAwardAt);
+        if (maxMonthlyTasks > 0 && row.monthlyCompletedTasks === maxMonthlyTasks) add(COMPETITIVE_ACHIEVEMENTS.monthlyTaskChampion, currentMonthKey, monthAwardAt);
+        if (maxMonthlyProjects > 0 && row.monthlyCompletedProjects === maxMonthlyProjects) add(COMPETITIVE_ACHIEVEMENTS.monthlyProjectChampion, currentMonthKey, monthAwardAt);
         return { ...row, competitiveAchievements: achievements };
     });
 
