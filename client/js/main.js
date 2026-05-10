@@ -492,6 +492,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
     const canEditCalendar = state.canEdit(project?.id);
     const tasks = getProjectCalendarDraggableTasks(project);
     const taskSortMode = getProjectTaskSortPreference(project?.id);
+    const canManualReorder = taskSortMode === DEFAULT_TASK_SORT_MODE && canEditCalendar;
 
     return `
         <div class="project-calendar-task-dock" aria-label="Calendar task drag list">
@@ -505,26 +506,33 @@ function buildProjectCalendarTaskDockMarkup(project) {
                             id="calendar-task-sort-select-${escapeHtml(String(project?.id || ''))}"
                             aria-label="Sort calendar tasks"
                             onchange="setProjectTaskSortMode(${projectIdLiteral}, this.value)">
-                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Manual</option>
+                        <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>MANUAL</option>
                         <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>A-Z ↑</option>
                         <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>A-Z ↓</option>
-                        <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
-                        <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                        <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>DUE DATE</option>
+                        <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>TAG PRIORITY</option>
                     </select>
                     <span class="project-calendar-task-dock-count">${tasks.length}</span>
                 </div>
             </div>
             ${tasks.length ? `
-                <div class="project-calendar-task-dock-list">
+                <div class="project-calendar-task-dock-list" data-calendar-task-list="${escapeHtml(String(project?.id || ''))}">
                     ${tasks.map(task => {
                         const taskIdLiteral = serializeInlineJsString(task.id);
                         const dueDate = normalizeTaskDueDate(task.dueDate);
                         return `
-                            <div class="project-calendar-draggable-task ${getProjectCalendarTaskPriorityClass(task)}"
+                            <div class="project-calendar-draggable-task ${getProjectCalendarTaskPriorityClass(task)} ${canManualReorder ? 'has-manual-reorder' : ''}"
+                                 data-calendar-task-item
+                                 data-task-id="${escapeHtml(String(task.id))}"
                                  draggable="${canEditCalendar ? 'true' : 'false'}"
                                  role="listitem"
                                  title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}"
                                  ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)">
+                                ${canManualReorder ? `
+                                    <svg class="task-drag-handle project-calendar-task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" ondragstart="event.preventDefault(); event.stopPropagation();">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                                    </svg>
+                                ` : ''}
                                 ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <span class="project-calendar-draggable-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
                                 <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
@@ -5195,6 +5203,164 @@ function cleanupProjectDrag() {
 
 
 
+
+function applyProjectCalendarManualTaskOrder(projectId, orderedVisibleTaskIds = []) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return;
+
+    const orderedIds = orderedVisibleTaskIds.map(id => String(id)).filter(Boolean);
+    const uniqueOrderedIds = [...new Set(orderedIds)];
+    if (uniqueOrderedIds.length < 2) return;
+
+    const originalTasks = project.tasks.map((task, index) => normalizeTask(task, index));
+    const visibleIdSet = new Set(uniqueOrderedIds);
+    const taskById = new Map(originalTasks.map(task => [String(task.id), task]));
+    const reorderedVisibleTasks = uniqueOrderedIds.map(id => taskById.get(id)).filter(Boolean);
+
+    if (reorderedVisibleTasks.length !== uniqueOrderedIds.length) return;
+
+    const currentVisibleOrder = originalTasks
+        .filter(task => visibleIdSet.has(String(task.id)))
+        .map(task => String(task.id));
+    const nextVisibleOrder = reorderedVisibleTasks.map(task => String(task.id));
+    if (currentVisibleOrder.join('|') === nextVisibleOrder.join('|')) return;
+
+    let visibleCursor = 0;
+    const tasks = originalTasks.map(task => {
+        if (!visibleIdSet.has(String(task.id))) return task;
+        return reorderedVisibleTasks[visibleCursor++] || task;
+    });
+
+    const pageScrollX = window.scrollX;
+    const pageScrollY = window.scrollY;
+    const modalState = captureProjectModalState(projectId);
+
+    state.updateProject(projectId, projectUpdate({ tasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    updateProjectProgress(projectId);
+    restoreProjectModalState(projectId, modalState);
+
+    requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
+}
+
+function setupProjectCalendarTaskDockDrag(projectId) {
+    const calendarSection = document.getElementById(`calendar-section-${projectId}`);
+    const taskList = calendarSection?.querySelector?.('.project-calendar-task-dock-list');
+    if (!taskList) return;
+
+    if (typeof taskList.__calendarTaskDragCleanup === 'function') {
+        taskList.__calendarTaskDragCleanup();
+    }
+
+    if (getProjectTaskSortPreference(projectId) !== DEFAULT_TASK_SORT_MODE) return;
+
+    let draggingItem = null;
+    let originalOrder = [];
+    let moved = false;
+
+    function getPoint(e) {
+        const touch = e.touches?.[0] || e.changedTouches?.[0];
+        return {
+            x: e.clientX ?? touch?.clientX ?? 0,
+            y: e.clientY ?? touch?.clientY ?? 0
+        };
+    }
+
+    function getItems() {
+        return Array.from(taskList.querySelectorAll('[data-calendar-task-item]'));
+    }
+
+    function getTaskIds() {
+        return getItems().map(item => item.dataset.taskId).filter(Boolean);
+    }
+
+    function getAfterElement(pointerY) {
+        const draggableItems = getItems().filter(item => item !== draggingItem);
+        return draggableItems.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = pointerY - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset, element: child };
+            }
+            return closest;
+        }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+    }
+
+    function isIgnoredTarget(target) {
+        return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .project-calendar-task-priority-control, .project-calendar-task-priority-select');
+    }
+
+    function onStart(e) {
+        const handle = e.target.closest?.('.project-calendar-task-drag-handle');
+        if (!handle || isIgnoredTarget(e.target) && !handle.contains(e.target)) return;
+        const item = handle.closest?.('[data-calendar-task-item]');
+        if (!item || !taskList.contains(item) || !state.canEdit(projectId)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        draggingItem = item;
+        originalOrder = getTaskIds();
+        moved = false;
+        item.classList.add('is-calendar-task-reordering');
+        taskList.classList.add('is-calendar-task-reordering');
+        document.body.style.userSelect = 'none';
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
+        document.addEventListener('touchcancel', onEnd);
+    }
+
+    function onMove(e) {
+        if (!draggingItem) return;
+        e.preventDefault();
+        const point = getPoint(e);
+        const afterElement = getAfterElement(point.y);
+        if (!afterElement) taskList.appendChild(draggingItem);
+        else taskList.insertBefore(draggingItem, afterElement);
+        moved = true;
+    }
+
+    function onEnd() {
+        if (!draggingItem) return;
+        const nextOrder = getTaskIds();
+        draggingItem.classList.remove('is-calendar-task-reordering');
+        taskList.classList.remove('is-calendar-task-reordering');
+        document.body.style.userSelect = '';
+        draggingItem = null;
+
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+
+        if (moved && originalOrder.join('|') !== nextOrder.join('|')) {
+            applyProjectCalendarManualTaskOrder(projectId, nextOrder);
+        }
+    }
+
+    taskList.addEventListener('mousedown', onStart);
+    taskList.addEventListener('touchstart', onStart, { passive: false });
+    taskList.__calendarTaskDragCleanup = () => {
+        taskList.removeEventListener('mousedown', onStart);
+        taskList.removeEventListener('touchstart', onStart);
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+        taskList.classList.remove('is-calendar-task-reordering');
+        if (draggingItem) draggingItem.classList.remove('is-calendar-task-reordering');
+        draggingItem = null;
+        document.body.style.userSelect = '';
+    };
+}
+
 function setupTaskDragAndDrop(projectId) {
     const taskList = document.getElementById(`modal-task-list-${projectId}`);
     if (!taskList) return;
@@ -7199,6 +7365,7 @@ function renderProjectCalendarSection(projectId, options = {}) {
     const previousPageScrollY = preserveScroll ? window.scrollY : null;
 
     section.innerHTML = buildProjectCalendarSectionMarkup(project);
+    setupProjectCalendarTaskDockDrag(projectId);
 
     if (preserveScroll) {
         requestAnimationFrame(() => {
@@ -7399,11 +7566,11 @@ function openProjectModal(projectId, options = {}) {
                         </div>
                         <div class="task-sort-control">
                             <select class="task-sort-select" id="task-sort-select-${project.id}" aria-label="Sort tasks" onchange="setProjectTaskSortMode('${project.id}', this.value)">
-                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>Manual</option>
+                                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>MANUAL</option>
                                 <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>A-Z ↑</option>
                                 <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>A-Z ↓</option>
-                                <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>Due date</option>
-                                <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>Tag priority</option>
+                                <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>DUE DATE</option>
+                                <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>TAG PRIORITY</option>
                             </select>
                         </div>
                     </div>
@@ -7574,7 +7741,10 @@ function openProjectModal(projectId, options = {}) {
     saveOpenProjectModalState(project.id);
     
     // Setup task dragging for manual reordering and category-tab drops.
-    setTimeout(() => setupTaskDragAndDrop(project.id), 100);
+    setTimeout(() => {
+        setupTaskDragAndDrop(project.id);
+        setupProjectCalendarTaskDockDrag(project.id);
+    }, 100);
 }
 
 

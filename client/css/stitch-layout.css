@@ -19570,6 +19570,52 @@ body[data-theme^="glass"] .project-calendar-draggable-task:active {
     cursor: grabbing !important;
 }
 
+.project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="console"] .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder {
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto !important;
+}
+
+.project-calendar-task-drag-handle,
+body[data-theme^="console"] .project-calendar-task-drag-handle,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle,
+body[data-theme^="glass"] .project-calendar-task-drag-handle {
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    cursor: grab !important;
+    flex: 0 0 auto !important;
+}
+
+.project-calendar-task-drag-handle:hover,
+.project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="console"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="console"] .project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:focus-visible {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task {
+    transition: transform 0.14s ease, opacity 0.14s ease !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reordering {
+    opacity: 0.88 !important;
+    cursor: grabbing !important;
+    position: relative !important;
+    z-index: 3 !important;
+}
+
 .project-calendar-draggable-task.is-completed,
 body[data-theme^="console"] .project-calendar-draggable-task.is-completed,
 body[data-theme^="blueprint"] .project-calendar-draggable-task.is-completed,
@@ -19747,12 +19793,26 @@ body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task
         grid-template-columns: auto minmax(0, 1fr) auto !important;
     }
 
+    .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="console"] .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder {
+        grid-template-columns: auto auto minmax(0, 1fr) auto !important;
+    }
+
     .project-calendar-draggable-task .project-calendar-task-priority-control,
     body[data-theme^="console"] .project-calendar-draggable-task .project-calendar-task-priority-control,
     body[data-theme^="blueprint"] .project-calendar-draggable-task .project-calendar-task-priority-control,
     body[data-theme^="glass"] .project-calendar-draggable-task .project-calendar-task-priority-control {
         grid-column: 2 / -1 !important;
         justify-self: start !important;
+    }
+
+    .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control,
+    body[data-theme^="console"] .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control,
+    body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control {
+        grid-column: 3 / -1 !important;
     }
 }
 
@@ -19815,6 +19875,13 @@ body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-d
 body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
     grid-template-columns: auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
     padding: 0.7rem 0.8rem !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder {
+    grid-template-columns: auto auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
 }
 
 .project-calendar-task-priority-control,
