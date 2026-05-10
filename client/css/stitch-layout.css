@@ -19755,3 +19755,121 @@ body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task
         justify-self: start !important;
     }
 }
+
+/* Targeted patch: calendar tab vertical layout, hidden progress, and readable priority selects */
+#projectModal.is-calendar-tab-active .modal-progress,
+body[data-theme^="console"] #projectModal.is-calendar-tab-active .modal-progress,
+body[data-theme^="blueprint"] #projectModal.is-calendar-tab-active .modal-progress,
+body[data-theme^="glass"] #projectModal.is-calendar-tab-active .modal-progress {
+    display: none !important;
+}
+
+#projectModal.is-calendar-tab-active .modal-scroll-inner,
+body[data-theme^="console"] #projectModal.is-calendar-tab-active .modal-scroll-inner,
+body[data-theme^="blueprint"] #projectModal.is-calendar-tab-active .modal-scroll-inner,
+body[data-theme^="glass"] #projectModal.is-calendar-tab-active .modal-scroll-inner {
+    gap: 0.8rem !important;
+}
+
+.project-calendar-panel,
+body[data-theme^="console"] .project-calendar-panel,
+body[data-theme^="blueprint"] .project-calendar-panel,
+body[data-theme^="glass"] .project-calendar-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+    width: 100% !important;
+}
+
+.project-calendar-main-row,
+body[data-theme^="console"] .project-calendar-main-row,
+body[data-theme^="blueprint"] .project-calendar-main-row,
+body[data-theme^="glass"] .project-calendar-main-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list {
+    max-height: min(34vh, 22rem) !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+    grid-template-columns: auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
+    padding: 0.7rem 0.8rem !important;
+}
+
+.project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-task-priority-control {
+    max-width: 10.5rem !important;
+}
+
+.project-calendar-task-priority-select,
+body[data-theme^="console"] .project-calendar-task-priority-select,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select,
+body[data-theme^="glass"] .project-calendar-task-priority-select {
+    max-width: 8.5rem !important;
+    color: var(--text, #f8fafc) !important;
+    background: transparent !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+}
+
+.project-calendar-task-priority-select option,
+body[data-theme^="console"] .project-calendar-task-priority-select option,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select option,
+body[data-theme^="glass"] .project-calendar-task-priority-select option {
+    color: #f8fafc !important;
+    background: #111827 !important;
+}
+
+body[data-theme$="-light"] .project-calendar-task-priority-select,
+body[data-theme$="-light"] .project-calendar-task-priority-select option {
+    color: #111827 !important;
+    background: #ffffff !important;
+    -webkit-text-fill-color: #111827 !important;
+}
+
+@media (max-width: 920px) {
+    .project-calendar-main-row,
+    body[data-theme^="console"] .project-calendar-main-row,
+    body[data-theme^="blueprint"] .project-calendar-main-row,
+    body[data-theme^="glass"] .project-calendar-main-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+        grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+}

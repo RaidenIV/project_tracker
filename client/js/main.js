@@ -6991,19 +6991,21 @@ function buildProjectCalendarSectionMarkup(project) {
 
     return `
         <div class="project-calendar-panel">
-            <div class="project-calendar-shell">
-                <div class="project-calendar-toolbar">
-                    <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, -1, event)" aria-label="Previous month">‹</button>
-                    <div class="project-calendar-current-month">${escapeHtml(getCalendarMonthLabel(currentMonthKey))}</div>
-                    <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, 1, event)" aria-label="Next month">›</button>
-                    <button class="project-calendar-today-button" type="button" onclick="goToProjectCalendarToday(${projectIdLiteral}, event)">Today</button>
+            <div class="project-calendar-main-row">
+                <div class="project-calendar-shell">
+                    <div class="project-calendar-toolbar">
+                        <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, -1, event)" aria-label="Previous month">‹</button>
+                        <div class="project-calendar-current-month">${escapeHtml(getCalendarMonthLabel(currentMonthKey))}</div>
+                        <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, 1, event)" aria-label="Next month">›</button>
+                        <button class="project-calendar-today-button" type="button" onclick="goToProjectCalendarToday(${projectIdLiteral}, event)">Today</button>
+                    </div>
+                    ${buildProjectCalendarGridMarkup(project, currentMonthKey, selectedDate)}
                 </div>
-                ${buildProjectCalendarGridMarkup(project, currentMonthKey, selectedDate)}
+                <div class="project-calendar-side-panel">
+                    ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
+                </div>
             </div>
-            <div class="project-calendar-side-panel">
-                ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
-                ${buildProjectCalendarTaskDockMarkup(project)}
-            </div>
+            ${buildProjectCalendarTaskDockMarkup(project)}
         </div>
     `;
 }
