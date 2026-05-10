@@ -146,6 +146,8 @@ const taskSchema = new mongoose.Schema({
     text:          String,
     completed:     Boolean,
     completedDate: String,
+    completedBy:   { type: String, default: '' },
+    completedByName: { type: String, default: '' },
     dueDate:       { type: String, default: '' },
     tag:           { type: String, enum: ['', 'critical', 'high', 'medium', 'low'], default: '' },
     category:      { type: String, default: '' },
@@ -176,6 +178,8 @@ const projectSchema = new mongoose.Schema({
     dueDate:       { type: String, default: '' },
     completed:     { type: Boolean, default: false },
     completedDate: String,
+    completedBy:   { type: String, default: '' },
+    completedByName: { type: String, default: '' },
     notes:         { type: String, default: '' },
     calendarNotes: { type: Object, default: {} },
     description:   { type: String, default: '' },
@@ -519,6 +523,8 @@ function sanitizeTask(task, index = 0) {
         text: typeof task?.text === 'string' ? task.text : '',
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
+        completedBy: task?.completedBy ? String(task.completedBy).slice(0, 80) : '',
+        completedByName: task?.completedByName ? String(task.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '',
         dueDate: sanitizeDateKey(task?.dueDate || task?.due_date || task?.deadline || ''),
         tag,
         category,
@@ -576,6 +582,8 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     }
     if (body.completed !== undefined) sanitized.completed = !!body.completed;
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
+    if (body.completedBy !== undefined) sanitized.completedBy = body.completedBy ? String(body.completedBy).slice(0, 80) : '';
+    if (body.completedByName !== undefined) sanitized.completedByName = body.completedByName ? String(body.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '';
     if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
     if (body.calendarNotes !== undefined || body.projectCalendarNotes !== undefined) {
         sanitized.calendarNotes = sanitizeProjectCalendarNotes(body.calendarNotes ?? body.projectCalendarNotes);
@@ -795,7 +803,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
 // POST /api/projects — create a new project
 app.post('/api/projects', authenticateToken, async (req, res) => {
     try {
-        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, dueDate, projectDueDate, deadline, completed, completedDate, notes, calendarNotes, projectCalendarNotes, description } = req.body;
+        const { title, tasks, taskCategories, tags, dateCreated, priority, projectPriorityTag, projectPriority, priorityTag, dueDate, projectDueDate, deadline, completed, completedDate, completedBy, completedByName, notes, calendarNotes, projectCalendarNotes, description } = req.body;
         const sanitizedDescription = typeof description === 'string'
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
@@ -815,6 +823,8 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             dueDate:       sanitizeDateKey(dueDate ?? projectDueDate ?? deadline),
             completed:     completed    || false,
             completedDate: completedDate || null,
+            completedBy:   completed ? String(completedBy || req.user.id || '') : '',
+            completedByName: completed ? String(completedByName || req.user.username || '') : '',
             notes:         notes        || '',
             calendarNotes: sanitizeProjectCalendarNotes(calendarNotes ?? projectCalendarNotes),
             description:   sanitizedDescription,
@@ -842,7 +852,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
 // PUT /api/projects/:id — update (owner or editor)
 app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (req, res) => {
     try {
-        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'dueDate', 'completed', 'completedDate', 'notes', 'calendarNotes', 'description', 'archived'];
+        const allowed = ['title', 'tasks', 'taskCategories', 'tags', 'priority', 'projectPriorityTag', 'dueDate', 'completed', 'completedDate', 'completedBy', 'completedByName', 'notes', 'calendarNotes', 'description', 'archived'];
         const clientKnownLastModified = req.body.__clientKnownLastModified ? new Date(req.body.__clientKnownLastModified) : null;
         if (clientKnownLastModified && !Number.isNaN(clientKnownLastModified.getTime())) {
             const serverModified = new Date(req.project.lastModified || 0);
@@ -1192,12 +1202,20 @@ function sanitizeStatsProgression(value = {}) {
         return Number.isFinite(number) ? Math.max(0, Math.round(number)) : fallback;
     };
 
+    const competitiveSource = source.competitive && typeof source.competitive === 'object' ? source.competitive : {};
     return {
         unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
         achievementPoints: numberField('achievementPoints'),
         projectPoints: numberField('projectPoints'),
         totalPoints: numberField('totalPoints'),
         lastLevel: Math.max(1, numberField('lastLevel', 1)),
+        competitive: {
+            currentWeekKey: String(competitiveSource.currentWeekKey || '').slice(0, 20),
+            currentWeekRank: Number.isFinite(Number(competitiveSource.currentWeekRank)) ? Math.max(0, Math.round(Number(competitiveSource.currentWeekRank))) : 0,
+            previousWeekRank: Number.isFinite(Number(competitiveSource.previousWeekRank)) ? Math.max(0, Math.round(Number(competitiveSource.previousWeekRank))) : 0,
+            lastRankOneDayKey: String(competitiveSource.lastRankOneDayKey || '').slice(0, 20),
+            rankOneStreak: Number.isFinite(Number(competitiveSource.rankOneStreak)) ? Math.max(0, Math.round(Number(competitiveSource.rankOneStreak))) : 0
+        },
         initialized: Boolean(source.initialized)
     };
 }
@@ -1216,16 +1234,124 @@ async function getOrCreateStats(userId) {
     return s;
 }
 
+const COMPETITIVE_ACHIEVEMENTS = {
+    efficiencyLead: { id: 'efficiency-lead', name: 'Efficiency Lead', description: 'Have the highest completion percentage among users with 3+ projects.' },
+    closer: { id: 'closer', name: 'Closer', description: 'Complete the final task in 5 different shared projects.' },
+    teamCarry: { id: 'team-carry', name: 'Team Carry', description: 'Complete 50%+ of tasks in a shared project.' },
+    domination: { id: 'domination', name: 'Domination', description: 'Hold #1 on the leaderboard for 7 consecutive days.' },
+    taskHunter: { id: 'task-hunter', name: 'Task Hunter', description: 'Complete the most tasks in a single day among all users.' },
+    projectHunter: { id: 'project-hunter', name: 'Project Hunter', description: 'Complete the most projects in a single day among all users.' },
+    triumvirate: { id: 'triumvirate', name: 'Triumvirate', description: 'Finish a week in the top 3.' },
+    risingStar: { id: 'rising-star', name: 'Rising Star', description: 'Move up 5 leaderboard positions or more in one week.' },
+    weeklyTaskChampion: { id: 'weekly-task-champion', name: 'Weekly Task Champion', description: 'Complete the most tasks in a week.' },
+    weeklyProjectChampion: { id: 'weekly-project-champion', name: 'Weekly Project Champion', description: 'Complete the most projects in a week.' },
+    monthlyTaskChampion: { id: 'monthly-task-champion', name: 'Monthly Task Champion', description: 'Complete the most tasks in a month.' },
+    monthlyProjectChampion: { id: 'monthly-project-champion', name: 'Monthly Project Champion', description: 'Complete the most projects in a month.' }
+};
+
+function startOfLocalDay(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfLocalWeek(date = new Date()) {
+    const start = startOfLocalDay(date);
+    const daysSinceMonday = (start.getDay() + 6) % 7;
+    start.setDate(start.getDate() - daysSinceMonday);
+    return start;
+}
+
+function startOfLocalMonth(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function localDayKey(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function periodKey(prefix, date = new Date()) {
+    if (prefix === 'week') return `${prefix}:${localDayKey(startOfLocalWeek(date))}`;
+    if (prefix === 'month') {
+        const d = startOfLocalMonth(date);
+        return `${prefix}:${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+    return `${prefix}:${localDayKey(date)}`;
+}
+
+function timestampInRange(value, start, end) {
+    const parsed = new Date(value || '');
+    if (Number.isNaN(parsed.getTime())) return false;
+    const time = parsed.getTime();
+    return time >= start.getTime() && time < end.getTime();
+}
+
+function getCreditedUserIdsForCompletedTask(task, participantIds, ownerId) {
+    if (!task?.completed) return [];
+    const completedBy = String(task.completedBy || '');
+    if (completedBy && participantIds.includes(completedBy)) return [completedBy];
+    return ownerId ? [ownerId] : [];
+}
+
+function makeCompetitiveAchievement(base, userId, unlockKey) {
+    return {
+        ...base,
+        notificationKey: `competitive:${userId}:${base.id}:${unlockKey}`
+    };
+}
+
+async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey, todayKey) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = localDayKey(yesterday);
+    const updates = [];
+
+    leaderboard.forEach(row => {
+        const stats = statsByUserId.get(row.userId);
+        if (!stats) return;
+        const progression = sanitizeStatsProgression(stats.progression || {});
+        const competitive = progression.competitive || {};
+        const nextCompetitive = { ...competitive };
+
+        if (competitive.currentWeekKey !== weekKey) {
+            nextCompetitive.previousWeekRank = Number(competitive.currentWeekRank || 0) || 0;
+            nextCompetitive.currentWeekKey = weekKey;
+        }
+        nextCompetitive.currentWeekRank = row.rank;
+
+        if (row.rank === 1 && competitive.lastRankOneDayKey !== todayKey) {
+            nextCompetitive.rankOneStreak = competitive.lastRankOneDayKey === yesterdayKey
+                ? (Number(competitive.rankOneStreak || 0) + 1)
+                : 1;
+            nextCompetitive.lastRankOneDayKey = todayKey;
+        }
+
+        const nextProgression = { ...progression, competitive: nextCompetitive };
+        stats.progression = nextProgression;
+        row.playerLevel = Math.max(1, Number(nextProgression.lastLevel || row.playerLevel || 1));
+        row.previousWeekRank = nextCompetitive.previousWeekRank || 0;
+        row.currentWeekRank = nextCompetitive.currentWeekRank || row.rank;
+        row.rankOneStreak = nextCompetitive.rankOneStreak || 0;
+        updates.push(stats.save().catch(err => console.error('Failed to update competitive rank history:', err)));
+    });
+
+    await Promise.all(updates);
+}
+
 async function buildLeaderboardData(currentUserId) {
-    const [accounts, projects] = await Promise.all([
+    const [accounts, projects, statsRecords] = await Promise.all([
         Account.find({}, 'username profilePic').lean(),
-        Project.find({ archived: false }, 'owner completed tasks collaborators').lean()
+        Project.find({ archived: false }, 'owner completed completedDate completedBy completedByName tasks collaborators').lean(),
+        Stats.find({}).lean()
     ]);
 
+    const statsByUserId = new Map(statsRecords.map(stats => [String(stats.userId || ''), stats]).filter(([userId]) => userId));
     const rows = new Map();
     accounts.forEach(account => {
         const userId = account?._id ? String(account._id) : '';
         if (!userId) return;
+        const stats = statsByUserId.get(userId) || {};
+        const progression = sanitizeStatsProgression(stats.progression || {});
         rows.set(userId, {
             userId,
             username: account.username || 'User',
@@ -1241,22 +1367,42 @@ async function buildLeaderboardData(currentUserId) {
             sharedCompletedTasks: 0,
             sharedRemainingTasks: 0,
             activeProgressRaw: 0,
-            sharedContributionRaw: 0,
             totalCompletionPercentage: 0,
             projectCompletionPercentage: 0,
             activeProjectCompletionPercentage: 0,
             sharedCompletionPercentage: 0,
+            dailyCompletedTasks: 0,
+            weeklyCompletedTasks: 0,
+            monthlyCompletedTasks: 0,
+            dailyCompletedProjects: 0,
+            weeklyCompletedProjects: 0,
+            monthlyCompletedProjects: 0,
+            finalSharedProjectClosures: 0,
+            sharedCarryProjects: 0,
+            playerLevel: Math.max(1, Number(progression.lastLevel || 1) || 1),
+            previousWeekRank: Number(progression.competitive?.previousWeekRank || 0) || 0,
+            rankOneStreak: Number(progression.competitive?.rankOneStreak || 0) || 0,
             leaderboardScore: 0,
-            rank: null
+            rank: null,
+            competitiveAchievements: []
         });
     });
+
+    const now = new Date();
+    const dayStart = startOfLocalDay(now);
+    const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+    const weekStart = startOfLocalWeek(now);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+    const monthStart = startOfLocalMonth(now);
+    const monthEnd = new Date(monthStart); monthEnd.setMonth(monthEnd.getMonth() + 1);
+    const todayKey = localDayKey(now);
+    const currentWeekKey = periodKey('week', now);
+    const currentMonthKey = periodKey('month', now);
 
     projects.forEach(project => {
         const ownerId = String(project.owner || '');
         const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-        const collaboratorIds = collaborators
-            .map(collaborator => String(collaborator?.userId || ''))
-            .filter(Boolean);
+        const collaboratorIds = collaborators.map(collaborator => String(collaborator?.userId || '')).filter(Boolean);
         const participantIds = [...new Set([ownerId, ...collaboratorIds].filter(Boolean))];
         const isSharedProject = collaborators.length > 0;
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
@@ -1264,6 +1410,10 @@ async function buildLeaderboardData(currentUserId) {
         const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
         const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
         const completedProject = !!project.completed;
+        const projectCompletedBy = String(project.completedBy || ownerId || '');
+        const latestCompletedTask = tasks
+            .filter(task => task?.completed && task.completedDate)
+            .sort((a, b) => new Date(b.completedDate || 0) - new Date(a.completedDate || 0))[0] || null;
 
         participantIds.forEach(participantId => {
             const row = rows.get(participantId);
@@ -1278,7 +1428,13 @@ async function buildLeaderboardData(currentUserId) {
                 row.completedProjects += 1;
             } else {
                 row.activeProjects += 1;
-                row.activeProgressRaw += taskCompletionRate + 0.1;
+                row.activeProgressRaw += taskCompletionRate;
+            }
+
+            if (completedProject && projectCompletedBy === participantId) {
+                if (timestampInRange(project.completedDate, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
+                if (timestampInRange(project.completedDate, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
+                if (timestampInRange(project.completedDate, monthStart, monthEnd)) row.monthlyCompletedProjects += 1;
             }
 
             if (isSharedProject) {
@@ -1286,56 +1442,38 @@ async function buildLeaderboardData(currentUserId) {
                 row.sharedTasks += tasks.length;
                 row.sharedCompletedTasks += completedTaskCount;
                 row.sharedRemainingTasks += remainingTaskCount;
-                row.sharedContributionRaw += completedTaskCount + (remainingTaskCount * 0.25) + 2;
+                if (completedProject && latestCompletedTask && String(latestCompletedTask.completedBy || ownerId || '') === participantId) {
+                    row.finalSharedProjectClosures += 1;
+                }
+                const creditedSharedTasks = tasks.filter(task => getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
+                if (tasks.length > 0 && creditedSharedTasks / tasks.length >= 0.5) row.sharedCarryProjects += 1;
             }
+        });
+
+        tasks.forEach(task => {
+            const creditedUserIds = getCreditedUserIdsForCompletedTask(task, participantIds, ownerId);
+            creditedUserIds.forEach(userId => {
+                const row = rows.get(userId);
+                if (!row) return;
+                if (timestampInRange(task.completedDate, dayStart, dayEnd)) row.dailyCompletedTasks += 1;
+                if (timestampInRange(task.completedDate, weekStart, weekEnd)) row.weeklyCompletedTasks += 1;
+                if (timestampInRange(task.completedDate, monthStart, monthEnd)) row.monthlyCompletedTasks += 1;
+            });
         });
     });
 
-    const rowsWithPercentages = Array.from(rows.values()).map(row => ({
-        ...row,
-        totalCompletionPercentage: row.totalTasks > 0
-            ? Math.round((row.completedTasks / row.totalTasks) * 100)
-            : 0,
-        projectCompletionPercentage: row.totalProjects > 0
-            ? Math.round((row.completedProjects / row.totalProjects) * 100)
-            : 0,
-        activeProjectCompletionPercentage: row.activeProjects > 0
-            ? Math.round(((row.activeProgressRaw / row.activeProjects) - 0.1) * 100)
-            : 0,
-        sharedCompletionPercentage: row.sharedTasks > 0
-            ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100)
-            : 0
-    }));
-
-    const maxCompletedTasks = Math.max(1, ...rowsWithPercentages.map(row => row.completedTasks));
-    const maxCompletedProjects = Math.max(1, ...rowsWithPercentages.map(row => row.completedProjects));
-    const maxSharedContributionRaw = Math.max(1, ...rowsWithPercentages.map(row => row.sharedContributionRaw));
-    const maxActiveProgressRaw = Math.max(1, ...rowsWithPercentages.map(row => row.activeProgressRaw));
-
-    const leaderboard = rowsWithPercentages.map(row => {
-        const completedTaskScore = (row.completedTasks / maxCompletedTasks) * 40;
-        const completedProjectScore = (row.completedProjects / maxCompletedProjects) * 25;
-        const sharedContributionScore = (row.sharedContributionRaw / maxSharedContributionRaw) * 15;
-        const activeProjectMomentumScore = (row.activeProgressRaw / maxActiveProgressRaw) * 15;
-        const remainingWorkPenalty = row.totalTasks > 0 ? (row.remainingTasks / row.totalTasks) * 5 : 0;
-        const leaderboardScore = Math.max(0, Math.round(
-            completedTaskScore +
-            completedProjectScore +
-            sharedContributionScore +
-            activeProjectMomentumScore -
-            remainingWorkPenalty
-        ));
-
+    let leaderboard = Array.from(rows.values()).map(row => {
+        const activeProjectCompletionPercentage = row.activeProjects > 0
+            ? Math.round((row.activeProgressRaw / row.activeProjects) * 100)
+            : 0;
         return {
             ...row,
-            leaderboardScore,
-            scoreBreakdown: {
-                completedTasks: Math.round(completedTaskScore),
-                completedProjects: Math.round(completedProjectScore),
-                sharedContribution: Math.round(sharedContributionScore),
-                activeProjectMomentum: Math.round(activeProjectMomentumScore),
-                remainingWorkPenalty: Math.round(remainingWorkPenalty)
-            }
+            totalCompletionPercentage: row.totalTasks > 0 ? Math.round((row.completedTasks / row.totalTasks) * 100) : 0,
+            projectCompletionPercentage: row.totalProjects > 0 ? Math.round((row.completedProjects / row.totalProjects) * 100) : 0,
+            activeProjectCompletionPercentage,
+            sharedCompletionPercentage: row.sharedTasks > 0 ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100) : 0,
+            leaderboardScore: Math.max(0, Math.round(row.weeklyCompletedTasks || 0)),
+            scoreBreakdown: { weeklyCompletedTasks: Math.max(0, Math.round(row.weeklyCompletedTasks || 0)) }
         };
     }).sort((a, b) => {
         return (b.leaderboardScore - a.leaderboardScore)
@@ -1344,7 +1482,40 @@ async function buildLeaderboardData(currentUserId) {
             || (b.sharedCompletedTasks - a.sharedCompletedTasks)
             || (a.remainingTasks - b.remainingTasks)
             || String(a.username || '').localeCompare(String(b.username || ''));
-    }).map((row, index) => ({
+    }).map((row, index) => ({ ...row, rank: index + 1 }));
+
+    const statsDocs = await Stats.find({ userId: { $in: leaderboard.map(row => row.userId) } });
+    const statsDocMap = new Map(statsDocs.map(stats => [String(stats.userId || ''), stats]));
+    await updateCompetitiveRankHistory(leaderboard, statsDocMap, currentWeekKey, todayKey);
+
+    const maxFor = (field, filter = () => true) => Math.max(0, ...leaderboard.filter(filter).map(row => Number(row[field] || 0)));
+    const maxEfficiency = maxFor('totalCompletionPercentage', row => row.totalProjects >= 3);
+    const maxDailyTasks = maxFor('dailyCompletedTasks');
+    const maxDailyProjects = maxFor('dailyCompletedProjects');
+    const maxWeeklyTasks = maxFor('weeklyCompletedTasks');
+    const maxWeeklyProjects = maxFor('weeklyCompletedProjects');
+    const maxMonthlyTasks = maxFor('monthlyCompletedTasks');
+    const maxMonthlyProjects = maxFor('monthlyCompletedProjects');
+
+    leaderboard = leaderboard.map(row => {
+        const achievements = [];
+        const add = (base, key) => achievements.push(makeCompetitiveAchievement(base, row.userId, key));
+        if (row.totalProjects >= 3 && maxEfficiency > 0 && row.totalCompletionPercentage === maxEfficiency) add(COMPETITIVE_ACHIEVEMENTS.efficiencyLead, `all:${todayKey}`);
+        if (row.finalSharedProjectClosures >= 5) add(COMPETITIVE_ACHIEVEMENTS.closer, `all:${row.finalSharedProjectClosures}`);
+        if (row.sharedCarryProjects >= 1) add(COMPETITIVE_ACHIEVEMENTS.teamCarry, `all:${row.sharedCarryProjects}`);
+        if (row.rankOneStreak >= 7) add(COMPETITIVE_ACHIEVEMENTS.domination, `streak:${row.rankOneStreak}`);
+        if (maxDailyTasks > 0 && row.dailyCompletedTasks === maxDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${todayKey}`);
+        if (maxDailyProjects > 0 && row.dailyCompletedProjects === maxDailyProjects) add(COMPETITIVE_ACHIEVEMENTS.projectHunter, `day:${todayKey}`);
+        if (row.rank <= 3) add(COMPETITIVE_ACHIEVEMENTS.triumvirate, currentWeekKey);
+        if (row.previousWeekRank > 0 && row.previousWeekRank - row.rank >= 5) add(COMPETITIVE_ACHIEVEMENTS.risingStar, currentWeekKey);
+        if (maxWeeklyTasks > 0 && row.weeklyCompletedTasks === maxWeeklyTasks) add(COMPETITIVE_ACHIEVEMENTS.weeklyTaskChampion, currentWeekKey);
+        if (maxWeeklyProjects > 0 && row.weeklyCompletedProjects === maxWeeklyProjects) add(COMPETITIVE_ACHIEVEMENTS.weeklyProjectChampion, currentWeekKey);
+        if (maxMonthlyTasks > 0 && row.monthlyCompletedTasks === maxMonthlyTasks) add(COMPETITIVE_ACHIEVEMENTS.monthlyTaskChampion, currentMonthKey);
+        if (maxMonthlyProjects > 0 && row.monthlyCompletedProjects === maxMonthlyProjects) add(COMPETITIVE_ACHIEVEMENTS.monthlyProjectChampion, currentMonthKey);
+        return { ...row, competitiveAchievements: achievements };
+    });
+
+    const formattedLeaderboard = leaderboard.map(row => ({
         userId: row.userId,
         username: row.username,
         profilePic: row.profilePic || '',
@@ -1362,15 +1533,23 @@ async function buildLeaderboardData(currentUserId) {
         projectCompletionPercentage: row.projectCompletionPercentage,
         activeProjectCompletionPercentage: row.activeProjectCompletionPercentage,
         sharedCompletionPercentage: row.sharedCompletionPercentage,
+        dailyCompletedTasks: row.dailyCompletedTasks,
+        weeklyCompletedTasks: row.weeklyCompletedTasks,
+        monthlyCompletedTasks: row.monthlyCompletedTasks,
+        dailyCompletedProjects: row.dailyCompletedProjects,
+        weeklyCompletedProjects: row.weeklyCompletedProjects,
+        monthlyCompletedProjects: row.monthlyCompletedProjects,
+        playerLevel: row.playerLevel,
         leaderboardScore: row.leaderboardScore,
         scoreBreakdown: row.scoreBreakdown,
-        rank: index + 1
+        competitiveAchievements: row.competitiveAchievements,
+        rank: row.rank
     }));
 
     const currentUserKey = String(currentUserId || '');
-    const currentUserEntry = leaderboard.find(row => row.userId === currentUserKey) || null;
+    const currentUserEntry = formattedLeaderboard.find(row => row.userId === currentUserKey) || null;
     return {
-        leaderboard: leaderboard.slice(0, 10),
+        leaderboard: formattedLeaderboard.slice(0, 10),
         currentLeaderboardRank: currentUserEntry?.rank || null,
         currentLeaderboardEntry: currentUserEntry
     };

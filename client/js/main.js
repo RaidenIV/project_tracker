@@ -128,6 +128,21 @@ const PERSONAL_ACHIEVEMENTS = [
     { id: 'elite-output', name: 'Elite Output', description: 'Complete 500 tasks total.', points: 500, condition: metrics => metrics.completedTasks.length >= 500 }
 ];
 
+const COMPETITIVE_ACHIEVEMENT_FALLBACKS = {
+    'efficiency-lead': { name: 'Efficiency Lead', description: 'Have the highest completion percentage among users with 3+ projects.' },
+    'closer': { name: 'Closer', description: 'Complete the final task in 5 different shared projects.' },
+    'team-carry': { name: 'Team Carry', description: 'Complete 50%+ of tasks in a shared project.' },
+    'domination': { name: 'Domination', description: 'Hold #1 on the leaderboard for 7 consecutive days.' },
+    'task-hunter': { name: 'Task Hunter', description: 'Complete the most tasks in a single day among all users.' },
+    'project-hunter': { name: 'Project Hunter', description: 'Complete the most projects in a single day among all users.' },
+    'triumvirate': { name: 'Triumvirate', description: 'Finish a week in the top 3.' },
+    'rising-star': { name: 'Rising Star', description: 'Move up 5 leaderboard positions or more in one week.' },
+    'weekly-task-champion': { name: 'Weekly Task Champion', description: 'Complete the most tasks in a week.' },
+    'weekly-project-champion': { name: 'Weekly Project Champion', description: 'Complete the most projects in a week.' },
+    'monthly-task-champion': { name: 'Monthly Task Champion', description: 'Complete the most tasks in a month.' },
+    'monthly-project-champion': { name: 'Monthly Project Champion', description: 'Complete the most projects in a month.' }
+};
+
 let personalProgressionModalQueue = [];
 let personalProgressionModalActive = false;
 
@@ -138,6 +153,9 @@ function normalizePersonalProgressionStats(stats = {}) {
         ? progressionSource.unlockedAchievementIds.map(id => String(id || '')).filter(Boolean)
         : [];
     const lastLevel = Math.max(1, Number(progressionSource.lastLevel || 1) || 1);
+    const competitiveSource = progressionSource.competitive && typeof progressionSource.competitive === 'object'
+        ? progressionSource.competitive
+        : {};
 
     return {
         ...source,
@@ -147,6 +165,7 @@ function normalizePersonalProgressionStats(stats = {}) {
             ...progressionSource,
             unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
             lastLevel,
+            competitive: competitiveSource,
             initialized: Boolean(progressionSource.initialized)
         }
     };
@@ -176,6 +195,55 @@ function dayKeyToTime(dayKey) {
 function getCompletionTimestamp(value) {
     const parsed = new Date(value || '');
     return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
+function getStartOfLocalDay(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function getStartOfLocalWeek(date = new Date()) {
+    const start = getStartOfLocalDay(date);
+    const day = start.getDay();
+    const daysSinceMonday = (day + 6) % 7;
+    start.setDate(start.getDate() - daysSinceMonday);
+    return start;
+}
+
+function getStartOfLocalMonth(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function isTimestampWithinRange(timestamp, startDate, endDate) {
+    return Number.isFinite(timestamp) && timestamp >= startDate.getTime() && timestamp < endDate.getTime();
+}
+
+function getCurrentUserIdentity() {
+    const user = accountState.user || getCurrentUser?.() || {};
+    return {
+        id: String(user.id || user._id || ''),
+        name: String(user.username || user.email || 'User')
+    };
+}
+
+function applyTaskCompletionAttribution(task, completedDate = new Date().toISOString()) {
+    const identity = getCurrentUserIdentity();
+    return {
+        ...task,
+        completed: true,
+        completedDate,
+        completedBy: identity.id,
+        completedByName: identity.name
+    };
+}
+
+function clearTaskCompletionAttribution(task) {
+    return {
+        ...task,
+        completed: false,
+        completedDate: null,
+        completedBy: '',
+        completedByName: ''
+    };
 }
 
 function hasProjectNoteContent(project) {
@@ -1213,6 +1281,8 @@ function normalizeTask(task = {}, index = 0) {
         note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
         completed: !!task?.completed,
         completedDate: task?.completedDate ? String(task.completedDate) : null,
+        completedBy: task?.completedBy ? String(task.completedBy) : '',
+        completedByName: task?.completedByName ? String(task.completedByName) : '',
         dueDate: normalizeTaskDueDate(task?.dueDate || task?.due_date || task?.deadline || ''),
         tag,
         category
@@ -1540,7 +1610,8 @@ const LOCAL_STORAGE_KEYS = {
     PROJECT_HIDE_COMPLETED: 'tracker_project_hide_completed_v1',
     PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
     PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1',
-    PROJECT_GRID_LAYOUT: 'tracker_project_grid_layout_v1'
+    PROJECT_GRID_LAYOUT: 'tracker_project_grid_layout_v1',
+    COMPETITIVE_NOTIFICATIONS: 'tracker_competitive_notifications_v1'
 };
 
 const SESSION_STORAGE_KEYS = {
@@ -1749,9 +1820,9 @@ function toLeaderboardNumber(value, fallback = 0) {
 }
 
 function getLeaderboardScoreValue(entry) {
-    const score = toLeaderboardNumber(entry?.leaderboardScore ?? entry?.score, NaN);
+    const score = toLeaderboardNumber(entry?.weeklyCompletedTasks ?? entry?.leaderboardScore ?? entry?.score, NaN);
     if (Number.isFinite(score)) return Math.max(0, Math.round(score));
-    return Math.max(0, Math.round(toLeaderboardNumber(entry?.totalCompletionPercentage, 0)));
+    return 0;
 }
 
 function getLeaderboardCompletionValue(entry) {
@@ -1759,18 +1830,11 @@ function getLeaderboardCompletionValue(entry) {
 }
 
 function calculateLocalLeaderboardScore(row) {
-    const taskCompletionRate = row.totalTasks > 0 ? row.completedTasks / row.totalTasks : 0;
-    const projectCompletionRate = row.totalProjects > 0 ? row.completedProjects / row.totalProjects : 0;
-    const sharedCompletionRate = row.sharedTasks > 0 ? row.sharedCompletedTasks / row.sharedTasks : 0;
-    const activeProjectProgressRate = row.activeProjects > 0 ? row.activeProgressRaw / row.activeProjects : 0;
-    const remainingWorkPenalty = row.totalTasks > 0 ? (row.remainingTasks / row.totalTasks) * 5 : 0;
-    return Math.max(0, Math.round(
-        (taskCompletionRate * 40) +
-        (projectCompletionRate * 25) +
-        (sharedCompletionRate * 15) +
-        (activeProjectProgressRate * 15) -
-        remainingWorkPenalty
-    ));
+    return Math.max(0, Math.round(Number(row?.weeklyCompletedTasks || 0) || 0));
+}
+
+function countLocalCompletedRecords(records = [], rangeStart, rangeEnd) {
+    return records.filter(record => isTimestampWithinRange(Number(record.timestamp || 0), rangeStart, rangeEnd)).length;
 }
 
 function buildLocalCurrentLeaderboardEntry(currentUserId) {
@@ -1792,6 +1856,14 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         sharedCompletedTasks: 0,
         sharedRemainingTasks: 0,
         activeProgressRaw: 0,
+        dailyCompletedTasks: 0,
+        weeklyCompletedTasks: 0,
+        monthlyCompletedTasks: 0,
+        dailyCompletedProjects: 0,
+        weeklyCompletedProjects: 0,
+        monthlyCompletedProjects: 0,
+        playerLevel: getCurrentPersonalLevelProgress().level,
+        competitiveAchievements: [],
         totalCompletionPercentage: 0,
         projectCompletionPercentage: 0,
         activeProjectCompletionPercentage: 0,
@@ -1799,13 +1871,34 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         leaderboardScore: 0
     };
 
+    const now = new Date();
+    const dayStart = getStartOfLocalDay(now);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    const weekStart = getStartOfLocalWeek(now);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const monthStart = getStartOfLocalMonth(now);
+    const monthEnd = new Date(monthStart);
+    monthEnd.setMonth(monthEnd.getMonth() + 1);
+
     state.getProjects().forEach(project => {
         if (isProjectArchived(project)) return;
         const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
+        const completedProject = isProjectCompleted(project);
         const completedTaskCount = tasks.filter(task => task.completed).length;
+        const creditedCompletedTasks = tasks.filter(task => task.completed && (!task.completedBy || task.completedBy === userId));
+        const completedRecords = creditedCompletedTasks.map(task => ({ timestamp: getCompletionTimestamp(task.completedDate) }));
+        row.dailyCompletedTasks += countLocalCompletedRecords(completedRecords, dayStart, dayEnd);
+        row.weeklyCompletedTasks += countLocalCompletedRecords(completedRecords, weekStart, weekEnd);
+        row.monthlyCompletedTasks += countLocalCompletedRecords(completedRecords, monthStart, monthEnd);
+        const projectCompletedTimestamp = getCompletionTimestamp(project.completedDate);
+        const projectCreditedToUser = completedProject && (!project.completedBy || project.completedBy === userId);
+        if (projectCreditedToUser && isTimestampWithinRange(projectCompletedTimestamp, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
+        if (projectCreditedToUser && isTimestampWithinRange(projectCompletedTimestamp, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
+        if (projectCreditedToUser && isTimestampWithinRange(projectCompletedTimestamp, monthStart, monthEnd)) row.monthlyCompletedProjects += 1;
         const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
         const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
-        const completedProject = isProjectCompleted(project);
         const isSharedProject = project.userRole !== 'owner' || (Array.isArray(project.collaborators) && project.collaborators.length > 0);
 
         row.totalProjects += 1;
@@ -2190,6 +2283,8 @@ function normalizeProject(project) {
         activities: Array.isArray(project.activities) ? project.activities : [],
         archived: isProjectArchived(project),
         completed: isProjectCompleted(project),
+        completedBy: project.completedBy ? String(project.completedBy) : '',
+        completedByName: project.completedByName ? String(project.completedByName) : '',
         dateCreated: project.dateCreated || new Date().toISOString(),
         lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
         __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
@@ -2485,6 +2580,43 @@ function setAccountStatus(message = '', type = '') {
     el.classList.toggle('is-success', type === 'success');
 }
 
+function loadNotifiedCompetitiveAchievementKeys() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.COMPETITIVE_NOTIFICATIONS);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+    } catch {
+        return new Set();
+    }
+}
+
+function saveNotifiedCompetitiveAchievementKeys(keys) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.COMPETITIVE_NOTIFICATIONS, JSON.stringify(Array.from(keys).slice(-400)));
+    } catch {}
+}
+
+function queueCompetitiveAchievementNotifications(entries = []) {
+    const notifiedKeys = loadNotifiedCompetitiveAchievementKeys();
+    let changed = false;
+    entries.forEach(entry => {
+        const username = getLeaderboardUsername(entry);
+        (Array.isArray(entry?.competitiveAchievements) ? entry.competitiveAchievements : []).forEach(achievement => {
+            const fallback = getCompetitiveAchievementFallback(achievement.id);
+            const key = String(achievement.notificationKey || `${entry.userId || username}:${achievement.id || fallback.name}`);
+            if (!key || notifiedKeys.has(key)) return;
+            notifiedKeys.add(key);
+            changed = true;
+            queuePersonalProgressionModal({
+                kicker: 'Competitive Achievement',
+                title: `${username}: ${achievement.name || fallback.name}`,
+                description: achievement.description || fallback.description
+            });
+        });
+    });
+    if (changed) saveNotifiedCompetitiveAchievementKeys(notifiedKeys);
+}
+
 function renderLeaderboardPanel() {
     const list = document.getElementById('leaderboardList');
     if (!list) return;
@@ -2510,6 +2642,8 @@ function renderLeaderboardPanel() {
             username: currentEntry.username || accountState.user?.username || 'User',
             profilePic: currentEntry.profilePic || accountState.user?.profilePic || '',
             totalCompletionPercentage: liveCurrentEntry?.totalCompletionPercentage ?? getLeaderboardCompletionValue(currentEntry),
+            playerLevel: currentEntry.playerLevel || liveCurrentEntry?.playerLevel || getCurrentPersonalLevelProgress().level,
+            competitiveAchievements: Array.isArray(currentEntry.competitiveAchievements) ? currentEntry.competitiveAchievements : (liveCurrentEntry?.competitiveAchievements || []),
             leaderboardScore: Number.isFinite(serverScore) ? Math.round(serverScore) : (liveCurrentEntry?.leaderboardScore ?? getLeaderboardScoreValue(currentEntry)),
             rank: serverRank || currentEntry.rank || accountState.currentLeaderboardRank || null
         };
@@ -2555,8 +2689,9 @@ function renderLeaderboardPanel() {
         const leaderboardScore = getLeaderboardScoreValue(entry);
         const completedProjects = Number(entry.completedProjects || 0);
         const completedTasks = Number(entry.completedTasks || 0);
+        const playerLevel = Math.max(1, Number(entry.playerLevel || 1) || 1);
         const rank = String(entry.rank || '—').padStart(2, '0');
-        const meta = `Score ${leaderboardScore} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} tasks`;
+        const meta = `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'} this week • Level ${playerLevel} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} total tasks`;
         const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
         const profilePic = entry.profilePic || (isCurrent ? accountState.user?.profilePic : '') || '';
         const avatarMarkup = profilePic
@@ -2567,11 +2702,19 @@ function renderLeaderboardPanel() {
             <button class="leaderboard-row ${isCurrent ? 'is-current' : ''}" type="button" onclick="openLeaderboardProfileModal(${userIdLiteral})" aria-label="Open ${escapeHtml(username)} stats">
                 <span class="leaderboard-rank${rankClass}">${rank}</span>
                 <span class="leaderboard-row-avatar" aria-hidden="true">${avatarMarkup}</span>
-                <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
+                <span class="leaderboard-row-main">
+                    <span class="leaderboard-user ${isCurrent ? 'is-current' : ''}" title="${escapeHtml(username)}">${escapeHtml(username)}</span>
+                    <span class="leaderboard-meta">Level ${playerLevel} • ${completionPercentage}% complete</span>
+                </span>
+                <span class="leaderboard-level-badge" title="Level ${playerLevel}">${playerLevel}</span>
                 <span class="leaderboard-row-score" title="${escapeHtml(meta)}">${formatLeaderboardScore(entry, isCurrent)}</span>
             </button>
         `;
     }).join('');
+}
+
+function getCompetitiveAchievementFallback(id) {
+    return COMPETITIVE_ACHIEVEMENT_FALLBACKS[String(id || '')] || { name: 'Competitive Achievement', description: '' };
 }
 
 function getLeaderboardModalEntry(userId) {
@@ -2595,9 +2738,12 @@ function buildLeaderboardProfileModalMarkup(entry) {
     const rank = Number(entry.rank || entry.leaderboardRank || 0);
     const completion = getLeaderboardCompletionValue(entry);
     const leaderboardScore = getLeaderboardScoreValue(entry);
+    const playerLevel = Math.max(1, Number(entry.playerLevel || 1) || 1);
+    const competitiveAchievements = Array.isArray(entry.competitiveAchievements) ? entry.competitiveAchievements : [];
     const stats = [
         ['Rank', rank > 0 ? `#${rank}` : '—'],
-        ['Leaderboard Score', leaderboardScore],
+        ['Level', playerLevel],
+        ['Weekly Score', `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'}`],
         ['Total Completion', `${completion}%`],
         ['Completed Tasks', Number(entry.completedTasks || 0)],
         ['Remaining Tasks', Number(entry.remainingTasks || 0)],
@@ -2626,7 +2772,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
                     <div class="leaderboard-profile-avatar">${avatarMarkup}</div>
                     <div class="leaderboard-profile-summary">
                         <div class="leaderboard-profile-name">${escapeHtml(username)}</div>
-                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • Score ${leaderboardScore} • ${completion}% complete</div>
+                        <div class="leaderboard-profile-meta">${rank > 0 ? `Rank #${rank}` : 'Unranked'} • Level ${playerLevel} • ${leaderboardScore} tasks this week</div>
                     </div>
                 </div>
                 <div class="leaderboard-profile-stats-grid">
@@ -2636,6 +2782,18 @@ function buildLeaderboardProfileModalMarkup(entry) {
                             <div class="account-stat-label">${escapeHtml(label)}</div>
                         </div>
                     `).join('')}
+                </div>
+                <div class="leaderboard-competitive-section">
+                    <div class="leaderboard-competitive-title">Competitive Achievements</div>
+                    ${competitiveAchievements.length ? competitiveAchievements.map(achievement => `
+                        <div class="leaderboard-competitive-row">
+                            <span class="leaderboard-competitive-star" aria-hidden="true"></span>
+                            <span>
+                                <strong>${escapeHtml(achievement.name || getCompetitiveAchievementFallback(achievement.id).name)}</strong>
+                                <small>${escapeHtml(achievement.description || getCompetitiveAchievementFallback(achievement.id).description)}</small>
+                            </span>
+                        </div>
+                    `).join('') : '<div class="leaderboard-competitive-empty">No competitive achievements yet.</div>'}
                 </div>
             </div>
         </div>
@@ -2862,6 +3020,7 @@ async function refreshAccountProfile() {
         applyAccountUI(accountState.user);
         syncAccountStatsToModal();
         renderLeaderboardPanel();
+        queueCompetitiveAchievementNotifications([...(accountState.leaderboard || []), accountState.currentLeaderboardEntry].filter(Boolean));
     } catch (err) {
         console.error('Failed to load account profile:', err);
         const fallbackUser = getCurrentUser?.() || accountState.user;
@@ -2872,6 +3031,105 @@ async function refreshAccountProfile() {
             renderLeaderboardPanel();
         }
     }
+}
+
+function buildNotificationItems() {
+    const metrics = buildPersonalProgressionMetrics();
+    const now = new Date();
+    const dayStart = getStartOfLocalDay(now);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    const weekStart = getStartOfLocalWeek(now);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const unlockedSet = getCurrentPersonalLevelProgress().unlockedSet;
+    const currentEntry = accountState.currentLeaderboardEntry || accountState.renderedLeaderboardEntries.find(entry => String(entry?.userId || '') === String(accountState.user?.id || '')) || {};
+    const dailyTasks = countLocalCompletedRecords(metrics.completedTasks, dayStart, dayEnd);
+    const weeklyTasks = countLocalCompletedRecords(metrics.completedTasks, weekStart, weekEnd);
+    const recentProjects = state.getProjects()
+        .map(normalizeProject)
+        .filter(Boolean)
+        .sort((a, b) => new Date(b.lastModified || 0) - new Date(a.lastModified || 0))
+        .slice(0, 4);
+    const recentCompletedTasks = metrics.completedTasks
+        .filter(record => record.timestamp > 0)
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 5);
+    const items = [
+        { title: 'Tasks completed today', detail: `${dailyTasks} task${dailyTasks === 1 ? '' : 's'} completed since midnight.` },
+        { title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Monday at 12:00 AM.` },
+        { title: 'Personal achievements', detail: `${unlockedSet.size} of ${PERSONAL_ACHIEVEMENTS.length} unlocked.` }
+    ];
+    if (Array.isArray(currentEntry.competitiveAchievements) && currentEntry.competitiveAchievements.length) {
+        items.push({
+            title: 'Competitive achievements',
+            detail: currentEntry.competitiveAchievements.map(achievement => achievement.name || getCompetitiveAchievementFallback(achievement.id).name).join(', ')
+        });
+    }
+    recentCompletedTasks.forEach(record => {
+        items.push({
+            title: 'Task completed',
+            detail: `${record.task?.text || 'Untitled task'}${record.project?.title ? ` • ${record.project.title}` : ''}`
+        });
+    });
+    recentProjects.forEach(project => {
+        items.push({
+            title: 'Project updated',
+            detail: `${project.title} • ${timeAgo(project.lastModified || project.dateCreated)}`
+        });
+    });
+    return items;
+}
+
+function ensureNotificationsModal() {
+    let modal = document.getElementById('notificationsModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay notifications-modal';
+    modal.id = 'notificationsModal';
+    modal.addEventListener('click', event => {
+        if (event.target === modal) closeNotificationsModal();
+    });
+    document.body.appendChild(modal);
+    return modal;
+}
+
+function openNotificationsModal() {
+    closeMobileWebSidebarForModal();
+    const modal = ensureNotificationsModal();
+    const items = buildNotificationItems();
+    modal.innerHTML = `
+        <div class="modal-content notifications-modal-content" role="dialog" aria-modal="true" aria-labelledby="notificationsModalTitle">
+            <div class="account-modal-scroll">
+                <div class="leaderboard-profile-modal-header">
+                    <div>
+                        <h2 class="leaderboard-profile-heading" id="notificationsModalTitle">Notifications</h2>
+                        <p class="account-modal-subtitle">Tasks, projects, achievements, and leaderboard updates</p>
+                    </div>
+                    <button class="modal-close leaderboard-profile-close" type="button" onclick="closeNotificationsModal()" aria-label="Close notifications">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="notifications-modal-list">
+                    ${items.length ? items.map(item => `
+                        <div class="notification-card">
+                            <div class="notification-card-header">
+                                <span class="notification-project">${escapeHtml(item.title)}</span>
+                            </div>
+                            <div class="notification-message">${escapeHtml(item.detail)}</div>
+                        </div>
+                    `).join('') : '<div class="side-panel-empty">No notifications yet</div>'}
+                </div>
+            </div>
+        </div>
+    `;
+    modal.classList.add('active');
+}
+
+function closeNotificationsModal() {
+    document.getElementById('notificationsModal')?.classList.remove('active');
 }
 
 function openAccountSettingsModal() {
@@ -3432,9 +3690,12 @@ function completeProject(projectId) {
         state.decrementCompletedProjects();
     }
     
+    const identity = getCurrentUserIdentity();
     state.updateProject(projectId, projectUpdate({
         completed: newCompleted,
-        completedDate: newCompleted ? new Date().toISOString() : null
+        completedDate: newCompleted ? new Date().toISOString() : null,
+        completedBy: newCompleted ? identity.id : '',
+        completedByName: newCompleted ? identity.name : ''
     }));
     
     saveData();
@@ -4302,7 +4563,9 @@ function performTaskToggle(projectId, taskId) {
             } else {
                 state.decrementCompletedTasks();
             }
-            return { ...t, completed: newCompleted, completedDate: newCompleted ? new Date().toISOString() : null };
+            return newCompleted
+                ? applyTaskCompletionAttribution(t)
+                : clearTaskCompletionAttribution(t);
         }
         return t;
     });
@@ -4339,11 +4602,7 @@ function completeTaskBatch(projectId, shouldCompleteTask) {
         const normalizedTask = normalizeTask(task, index);
         if (normalizedTask.completed || !shouldCompleteTask(normalizedTask)) return normalizedTask;
         completedCount += 1;
-        return {
-            ...normalizedTask,
-            completed: true,
-            completedDate
-        };
+        return applyTaskCompletionAttribution(normalizedTask, completedDate);
     });
 
     if (completedCount <= 0) return;
@@ -4497,7 +4756,9 @@ function getTaskCompletionUndoStates(beforeTasks = [], afterTasks = []) {
         .map(task => ({
             id: task.id,
             completed: !!task.completed,
-            completedDate: task.completedDate || null
+            completedDate: task.completedDate || null,
+            completedBy: task.completedBy || '',
+            completedByName: task.completedByName || ''
         }));
 }
 
@@ -4529,7 +4790,9 @@ function restoreTaskCompletionUndo(undoEntry) {
         return {
             ...normalizedTask,
             completed: !!previousState.completed,
-            completedDate: previousState.completed ? (previousState.completedDate || null) : null
+            completedDate: previousState.completed ? (previousState.completedDate || null) : null,
+            completedBy: previousState.completed ? (previousState.completedBy || '') : '',
+            completedByName: previousState.completed ? (previousState.completedByName || '') : ''
         };
     });
 
@@ -4703,7 +4966,7 @@ function completeSelectedTasks(projectId, event) {
     const modalState = captureProjectModalState(projectId);
     const changed = updateSelectedTasks(projectId, task => task.completed
         ? task
-        : { ...task, completed: true, completedDate });
+        : applyTaskCompletionAttribution(task, completedDate));
     if (!changed) return;
     clearSelectedTasksForProject(projectId, false);
     refreshModalTaskUi(projectId, { modalState });
@@ -6754,7 +7017,7 @@ function setProjectTagFilter(tagName) {
 
 function getProjectCardPreviewTasks(project) {
     return Array.isArray(project?.tasks)
-        ? project.tasks.map((task, index) => normalizeTask(task, index)).slice(0, 3)
+        ? sortTasksForDisplay(project.tasks, getProjectTaskSortPreference(project?.id)).slice(0, 3)
         : [];
 }
 
@@ -6850,7 +7113,7 @@ function getProjectModalDescription(project) {
 
 function formatLeaderboardScore(entry, isCurrent = false) {
     const score = getLeaderboardScoreValue(entry);
-    return `${Number.isFinite(score) ? score : 0} pts`;
+    return `${Number.isFinite(score) ? score : 0} task${score === 1 ? '' : 's'}`;
 }
 
 function renderProjectDueDateControlMarkup(project, surface = 'card') {
@@ -7249,6 +7512,7 @@ function setProjectTaskSortMode(projectId, sortMode) {
     setProjectTaskSortPreference(projectId, sortMode);
     renderModalTaskList(projectId);
     refreshProjectCalendarIfPresent(projectId);
+    render();
 }
 
 function setProjectTaskCategoryFilter(projectId, categoryValue) {
@@ -8604,7 +8868,7 @@ async function restoreArchivedProject(projectId, event = null) {
     closeProjectModal();
 
     animateProjectStatusChange(projectId, 'project-card--restore-exit', async () => {
-        state.updateProject(projectId, projectUpdate({ archived: false, completed: false, completedDate: null }));
+        state.updateProject(projectId, projectUpdate({ archived: false, completed: false, completedDate: null, completedBy: '', completedByName: '' }));
         if (state.getView() === VIEWS.ARCHIVED) {
             uiState.ownerFilter = 'all';
             uiState.activeSavedViewId = '';
@@ -9978,6 +10242,8 @@ window.openArchivedProjectsModal = openArchivedProjectsModal;
 window.closeArchivedProjectsModal = closeArchivedProjectsModal;
 window.openLeaderboardProfileModal = openLeaderboardProfileModal;
 window.closeLeaderboardProfileModal = closeLeaderboardProfileModal;
+window.openNotificationsModal = openNotificationsModal;
+window.closeNotificationsModal = closeNotificationsModal;
 
 window.applySavedView = applySavedView;
 window.deleteSavedView = deleteSavedView;
