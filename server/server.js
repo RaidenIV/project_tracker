@@ -1392,7 +1392,7 @@ async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey,
         nextCompetitive.currentWeekRank = row.rank;
 
         if (row.rank === 1 && competitive.lastRankOneDayKey !== todayKey) {
-            nextCompetitive.rankOneStreak = competitive.lastRankOneDayKey === yesterdayKey
+            nextCompetitive.rankOneStreak = competitive.lastRankOneDayKey === previousDayKey
                 ? (Number(competitive.rankOneStreak || 0) + 1)
                 : 1;
             nextCompetitive.lastRankOneDayKey = todayKey;
