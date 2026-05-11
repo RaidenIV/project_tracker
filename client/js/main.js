@@ -216,9 +216,8 @@ function getStartOfLocalDay(date = new Date()) {
 
 function getStartOfLocalWeek(date = new Date()) {
     const start = getStartOfLocalDay(date);
-    const day = start.getDay();
-    const daysSinceMonday = (day + 6) % 7;
-    start.setDate(start.getDate() - daysSinceMonday);
+    const daysSinceSunday = start.getDay();
+    start.setDate(start.getDate() - daysSinceSunday);
     return start;
 }
 
@@ -3177,7 +3176,7 @@ function buildNotificationItems() {
         .slice(0, 5);
     const items = [
         { key: `daily-tasks:${formatDateKey(dayStart) || dayStart.toISOString()}:${dailyTasks}`, title: 'Tasks completed today', detail: `${dailyTasks} task${dailyTasks === 1 ? '' : 's'} completed since midnight.`, time: now.toISOString() },
-        { key: `weekly-score:${formatDateKey(weekStart) || weekStart.toISOString()}:${weeklyTasks}`, title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Monday at 12:00 AM.`, time: now.toISOString() },
+        { key: `weekly-score:${formatDateKey(weekStart) || weekStart.toISOString()}:${weeklyTasks}`, title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Sunday at 12:00 AM.`, time: now.toISOString() },
         { key: `personal-achievements:${unlockedSet.size}`, title: 'Personal achievements', detail: `${unlockedSet.size} of ${PERSONAL_ACHIEVEMENTS.length} unlocked.`, time: now.toISOString() }
     ];
     if (Array.isArray(currentEntry.competitiveAchievements) && currentEntry.competitiveAchievements.length) {

@@ -1249,32 +1249,105 @@ const COMPETITIVE_ACHIEVEMENTS = {
     monthlyProjectChampion: { id: 'monthly-project-champion', name: 'Monthly Project Champion', description: 'Complete the most projects in a month.' }
 };
 
+const LEADERBOARD_TIME_ZONE = process.env.LEADERBOARD_TIME_ZONE || 'America/New_York';
+const LEADERBOARD_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+    timeZone: LEADERBOARD_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
+const LEADERBOARD_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
+    timeZone: LEADERBOARD_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    hourCycle: 'h23'
+});
+
+function extractLeaderboardDateParts(formatter, date) {
+    return formatter.formatToParts(date).reduce((parts, part) => {
+        if (part.type !== 'literal') parts[part.type] = part.value;
+        return parts;
+    }, {});
+}
+
+function getLeaderboardCalendarParts(date = new Date()) {
+    const source = date instanceof Date ? date : new Date(date);
+    const safeDate = Number.isNaN(source.getTime()) ? new Date() : source;
+    const parts = extractLeaderboardDateParts(LEADERBOARD_DATE_FORMATTER, safeDate);
+    return {
+        year: Number(parts.year),
+        month: Number(parts.month),
+        day: Number(parts.day)
+    };
+}
+
+function getLeaderboardDateTimeParts(date = new Date()) {
+    const source = date instanceof Date ? date : new Date(date);
+    const safeDate = Number.isNaN(source.getTime()) ? new Date() : source;
+    const parts = extractLeaderboardDateParts(LEADERBOARD_DATE_TIME_FORMATTER, safeDate);
+    return {
+        year: Number(parts.year),
+        month: Number(parts.month),
+        day: Number(parts.day),
+        hour: Number(parts.hour || 0) % 24,
+        minute: Number(parts.minute || 0),
+        second: Number(parts.second || 0)
+    };
+}
+
+function leaderboardZonedDateTimeToUtc(year, month, day, hour = 0, minute = 0, second = 0) {
+    const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    const actual = getLeaderboardDateTimeParts(utcGuess);
+    const targetUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+    const actualUtc = Date.UTC(actual.year, actual.month - 1, actual.day, actual.hour, actual.minute, actual.second);
+    return new Date(utcGuess.getTime() + (targetUtc - actualUtc));
+}
+
 function startOfLocalDay(date = new Date()) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const parts = getLeaderboardCalendarParts(date);
+    return leaderboardZonedDateTimeToUtc(parts.year, parts.month, parts.day);
 }
 
 function startOfLocalWeek(date = new Date()) {
-    const start = startOfLocalDay(date);
-    const daysSinceMonday = (start.getDay() + 6) % 7;
-    start.setDate(start.getDate() - daysSinceMonday);
-    return start;
+    const parts = getLeaderboardCalendarParts(date);
+    const calendarDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+    calendarDate.setUTCDate(calendarDate.getUTCDate() - calendarDate.getUTCDay());
+    return leaderboardZonedDateTimeToUtc(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() + 1, calendarDate.getUTCDate());
 }
 
 function startOfLocalMonth(date = new Date()) {
-    return new Date(date.getFullYear(), date.getMonth(), 1);
+    const parts = getLeaderboardCalendarParts(date);
+    return leaderboardZonedDateTimeToUtc(parts.year, parts.month, 1);
+}
+
+function addLocalCalendarDays(date, days) {
+    const parts = getLeaderboardCalendarParts(date);
+    const calendarDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+    calendarDate.setUTCDate(calendarDate.getUTCDate() + Number(days || 0));
+    return leaderboardZonedDateTimeToUtc(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() + 1, calendarDate.getUTCDate());
+}
+
+function addLocalCalendarMonths(date, months) {
+    const parts = getLeaderboardCalendarParts(date);
+    const calendarDate = new Date(Date.UTC(parts.year, parts.month - 1 + Number(months || 0), 1));
+    return leaderboardZonedDateTimeToUtc(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() + 1, 1);
 }
 
 function localDayKey(date = new Date()) {
-    const d = date instanceof Date ? date : new Date(date);
-    if (Number.isNaN(d.getTime())) return '';
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const parts = getLeaderboardCalendarParts(date);
+    return `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
 }
 
 function periodKey(prefix, date = new Date()) {
     if (prefix === 'week') return `${prefix}:${localDayKey(startOfLocalWeek(date))}`;
     if (prefix === 'month') {
-        const d = startOfLocalMonth(date);
-        return `${prefix}:${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const parts = getLeaderboardCalendarParts(startOfLocalMonth(date));
+        return `${prefix}:${parts.year}-${String(parts.month).padStart(2, '0')}`;
     }
     return `${prefix}:${localDayKey(date)}`;
 }
@@ -1302,10 +1375,7 @@ function makeCompetitiveAchievement(base, userId, unlockKey, achievedAt = new Da
     };
 }
 
-async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey, todayKey) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayKey = localDayKey(yesterday);
+async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey, todayKey, previousDayKey) {
     const updates = [];
 
     leaderboard.forEach(row => {
@@ -1393,13 +1463,13 @@ async function buildLeaderboardData(currentUserId) {
 
     const now = new Date();
     const dayStart = startOfLocalDay(now);
-    const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
-    const previousDayStart = new Date(dayStart); previousDayStart.setDate(previousDayStart.getDate() - 1);
-    const previousDayEnd = new Date(dayStart);
+    const dayEnd = addLocalCalendarDays(dayStart, 1);
+    const previousDayStart = addLocalCalendarDays(dayStart, -1);
+    const previousDayEnd = dayStart;
     const weekStart = startOfLocalWeek(now);
-    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekEnd = addLocalCalendarDays(weekStart, 7);
     const monthStart = startOfLocalMonth(now);
-    const monthEnd = new Date(monthStart); monthEnd.setMonth(monthEnd.getMonth() + 1);
+    const monthEnd = addLocalCalendarMonths(monthStart, 1);
     const todayKey = localDayKey(now);
     const previousDayKey = localDayKey(previousDayStart);
     const currentWeekKey = periodKey('week', now);
@@ -1493,7 +1563,7 @@ async function buildLeaderboardData(currentUserId) {
 
     const statsDocs = await Stats.find({ userId: { $in: leaderboard.map(row => row.userId) } });
     const statsDocMap = new Map(statsDocs.map(stats => [String(stats.userId || ''), stats]));
-    await updateCompetitiveRankHistory(leaderboard, statsDocMap, currentWeekKey, todayKey);
+    await updateCompetitiveRankHistory(leaderboard, statsDocMap, currentWeekKey, todayKey, previousDayKey);
 
     const maxFor = (field, filter = () => true) => Math.max(0, ...leaderboard.filter(filter).map(row => Number(row[field] || 0)));
     const maxEfficiency = maxFor('totalCompletionPercentage', row => row.totalProjects >= 3);
