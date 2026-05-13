@@ -22436,3 +22436,75 @@ body[data-theme^="glass"] .project-calendar-day.is-drop-target {
     background: color-mix(in srgb, var(--accent, currentColor) 16%, var(--panel, transparent)) !important;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 46%, transparent), 0 0 18px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
 }
+
+/* ============================================================================
+   Targeted patch: visible calendar scheduling drag, movable tab feedback, and task-entry toolbar
+   ============================================================================ */
+.project-calendar-draggable-task.is-calendar-task-scheduling,
+.project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-scheduling,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-scheduling,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-scheduling,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reordering {
+    position: relative !important;
+    z-index: 40 !important;
+    opacity: 0.96 !important;
+    pointer-events: none !important;
+    cursor: grabbing !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 46%, transparent), 0 16px 30px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.is-calendar-task-dragging,
+body.is-tab-reordering {
+    cursor: grabbing !important;
+}
+
+.modal-tab[data-movable-tab-id],
+.task-category-tab-wrap[data-task-category-reorder],
+.project-notes-tab[data-project-note-tab-reorder] {
+    touch-action: none !important;
+    cursor: grab !important;
+}
+
+.modal-tab.is-tab-dragging,
+.task-category-tab-wrap.is-tab-dragging,
+.project-notes-tab.is-tab-dragging {
+    pointer-events: none !important;
+    opacity: 0.96 !important;
+    z-index: 50 !important;
+}
+
+.modal-paste-section .rich-text-toolbar {
+    margin: 0.25rem 0 0.55rem !important;
+}
+
+.modal-task-entry-editor.paste-box,
+body[data-theme^="console"] .modal-task-entry-editor.paste-box,
+body[data-theme^="blueprint"] .modal-task-entry-editor.paste-box,
+body[data-theme^="glass"] .modal-task-entry-editor.paste-box {
+    display: block !important;
+    min-height: 2.75rem !important;
+    max-height: 14rem !important;
+    padding: 0.85rem 1rem !important;
+    overflow-y: auto !important;
+    outline: none !important;
+    white-space: pre-wrap !important;
+}
+
+.modal-task-entry-editor.paste-box:focus,
+body[data-theme^="console"] .modal-task-entry-editor.paste-box:focus,
+body[data-theme^="blueprint"] .modal-task-entry-editor.paste-box:focus,
+body[data-theme^="glass"] .modal-task-entry-editor.paste-box:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, currentColor) 20%, transparent) !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-scheduling,
+.project-calendar-draggable-task.is-calendar-task-reordering,
+.modal-tab.is-tab-dragging,
+.task-category-tab-wrap.is-tab-dragging,
+.project-notes-tab.is-tab-dragging {
+    transition: none !important;
+}

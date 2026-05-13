@@ -733,7 +733,7 @@ function getTasksDueOnDate(project, dateKey) {
     return (Array.isArray(project?.tasks) ? project.tasks : [])
         .map((task, index) => normalizeTask(task, index))
         .filter(task => normalizeTaskDueDate(task.dueDate) === targetDate)
-        .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), undefined, { sensitivity: 'base' }));
+        .sort((a, b) => getTaskPlainText(a.text).localeCompare(getTaskPlainText(b.text), undefined, { sensitivity: 'base' }));
 }
 
 function getTasksByDueDate(project) {
@@ -933,7 +933,7 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                             <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <div class="project-calendar-selected-task-body">
-                                    <span class="project-calendar-selected-task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text || 'Untitled task')}</span>
+                                    <span class="project-calendar-selected-task-text ${task.completed ? 'completed' : ''}">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                                     <div class="project-calendar-selected-task-actions">
                                         ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                                         ${canEditCalendar ? `
@@ -1048,7 +1048,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
                                     </svg>
                                 ` : ''}
                                 ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
-                                <span class="project-calendar-draggable-task-text">${escapeHtml(task.text || 'Untitled task')}</span>
+                                <span class="project-calendar-draggable-task-text">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                                 <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
                                 ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                             </div>
@@ -1496,7 +1496,7 @@ function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
     const baseOrder = (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
     if (mode === 'ascending' || mode === 'descending') {
         return [...baseOrder].sort((a, b) => {
-            const textDiff = String(a.text || '').localeCompare(String(b.text || ''), undefined, {
+            const textDiff = getTaskPlainText(a.text).localeCompare(getTaskPlainText(b.text), undefined, {
                 numeric: true,
                 sensitivity: 'base'
             });
@@ -1562,9 +1562,11 @@ const LIGHT_MODE_ACCENT_COLOR_OPTIONS = [
     '#8a00ff',
     '#df00ff',
     '#ff00b5',
+    '#ff5fd2',
     '#ff004a'
 ];
 const DARK_MODE_ACCENT_COLOR_OPTIONS = [
+    '#ff5fd2',
     '#ff00b5',
     '#ff2000',
     '#ff8a00',
@@ -1660,7 +1662,8 @@ const LOCAL_STORAGE_KEYS = {
     PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1',
     PROJECT_GRID_LAYOUT: 'tracker_project_grid_layout_v1',
     COMPETITIVE_NOTIFICATIONS: 'tracker_competitive_notifications_v1',
-    NOTIFICATIONS_READ: 'tracker_notifications_read_v1'
+    NOTIFICATIONS_READ: 'tracker_notifications_read_v1',
+    MODAL_TAB_ORDER: 'tracker_modal_tab_order_v1'
 };
 
 const SESSION_STORAGE_KEYS = {
@@ -1778,6 +1781,321 @@ function buildRichTextToolbarMarkup(editorId, disabled = false) {
             <button class="rich-text-toolbar-button rich-text-toolbar-button--italic" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'italic')" aria-label="Italic" title="Italic"><em>I</em></button>
             <button class="rich-text-toolbar-button rich-text-toolbar-button--underline" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'underline')" aria-label="Underline" title="Underline"><span>U</span></button>
         </div>`;
+}
+
+function getTaskPlainText(value = '', fallback = '') {
+    const plainText = getRichTextPlainText(value);
+    return plainText || String(fallback || '');
+}
+
+function getTaskDisplayHtml(value = '', fallback = 'Untitled task') {
+    const displayHtml = getRichTextDisplayHtml(value);
+    return getRichTextPlainText(displayHtml) ? displayHtml : escapeHtml(fallback);
+}
+
+function isRichTextTaskEntryElement(element) {
+    return !!element && element.getAttribute?.('contenteditable') === 'true';
+}
+
+function getTaskEntryPlainText(element) {
+    if (!element) return '';
+    return isRichTextTaskEntryElement(element)
+        ? getRichTextPlainText(element.innerHTML || '')
+        : String(element.value || '');
+}
+
+function clearTaskEntryElement(element) {
+    if (!element) return;
+    if (isRichTextTaskEntryElement(element)) {
+        element.innerHTML = '';
+    } else {
+        element.value = '';
+    }
+}
+
+function getRichTextTaskLineEntries(value = '') {
+    const sanitized = sanitizeRichTextHtml(value);
+    if (!getRichTextPlainText(sanitized)) return [];
+    const normalized = sanitized
+        .replace(/<\/div>\s*<div>/gi, '<br>')
+        .replace(/<\/p>\s*<p>/gi, '<br>')
+        .replace(/<div><br><\/div>/gi, '<br>')
+        .replace(/<p><br><\/p>/gi, '<br>')
+        .replace(/<\/?(?:div|p)>/gi, '');
+
+    return normalized
+        .split(/<br\s*\/?\s*>/i)
+        .map(part => sanitizeRichTextHtml(part).trim())
+        .filter(part => getRichTextPlainText(part).length > 0);
+}
+
+function getModalPasteTaskEntries(pasteBox) {
+    if (!pasteBox) return [];
+    if (isRichTextTaskEntryElement(pasteBox)) {
+        return getRichTextTaskLineEntries(pasteBox.innerHTML || '').map(html => ({
+            text: html,
+            plainText: getTaskPlainText(html)
+        }));
+    }
+    return String(pasteBox.value || '')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => ({ text: line, plainText: line }));
+}
+
+const DEFAULT_MODAL_TAB_ORDER = ['tasks', 'notes', 'members', 'history', 'calendar'];
+const MOVABLE_TAB_LONG_PRESS_MS = 360;
+
+function moveArrayItem(list = [], fromIndex = -1, toIndex = -1) {
+    const nextList = Array.isArray(list) ? [...list] : [];
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= nextList.length || toIndex >= nextList.length || fromIndex === toIndex) {
+        return nextList;
+    }
+    const [item] = nextList.splice(fromIndex, 1);
+    nextList.splice(toIndex, 0, item);
+    return nextList;
+}
+
+function normalizeOrderedList(candidateOrder = [], allowedOrder = []) {
+    const allowed = Array.isArray(allowedOrder) ? allowedOrder.map(String) : [];
+    const seen = new Set();
+    const ordered = (Array.isArray(candidateOrder) ? candidateOrder : [])
+        .map(String)
+        .filter(item => allowed.includes(item) && !seen.has(item) && seen.add(item));
+    return [...ordered, ...allowed.filter(item => !seen.has(item))];
+}
+
+function safeCssIdentifier(value = '') {
+    const raw = String(value ?? '');
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') return CSS.escape(raw);
+    return raw.replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+}
+
+function getProjectModalTabOrder() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.MODAL_TAB_ORDER) || '[]');
+        return normalizeOrderedList(parsed, DEFAULT_MODAL_TAB_ORDER);
+    } catch {
+        return [...DEFAULT_MODAL_TAB_ORDER];
+    }
+}
+
+function saveProjectModalTabOrder(order = DEFAULT_MODAL_TAB_ORDER) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.MODAL_TAB_ORDER, JSON.stringify(normalizeOrderedList(order, DEFAULT_MODAL_TAB_ORDER)));
+    } catch (err) {
+        console.warn('Failed to save modal tab order:', err);
+    }
+}
+
+function suppressClickAfterMovableTabDrag(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    document.removeEventListener('click', suppressClickAfterMovableTabDrag, true);
+}
+
+function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCommitOrder) {
+    if (!container || !itemSelector || typeof onCommitOrder !== 'function') return;
+    if (typeof container.__movableTabCleanup === 'function') {
+        container.__movableTabCleanup();
+    }
+
+    let pressTimer = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let activePointerId = null;
+    let draggingItem = null;
+    let initialOrder = [];
+    let isDragging = false;
+
+    function getPoint(event) {
+        return {
+            x: event.clientX ?? 0,
+            y: event.clientY ?? 0
+        };
+    }
+
+    function getItems() {
+        return Array.from(container.querySelectorAll(itemSelector));
+    }
+
+    function getOrder() {
+        return getItems().map(item => String(getOrderValue(item) || '')).filter(Boolean);
+    }
+
+    function clearTimer() {
+        if (!pressTimer) return;
+        clearTimeout(pressTimer);
+        pressTimer = null;
+    }
+
+    function reset() {
+        clearTimer();
+        if (draggingItem) {
+            draggingItem.classList.remove('is-tab-dragging');
+            draggingItem.style.transform = '';
+            try {
+                if (activePointerId !== null && draggingItem.hasPointerCapture?.(activePointerId)) {
+                    draggingItem.releasePointerCapture(activePointerId);
+                }
+            } catch { /* noop */ }
+        }
+        container.classList.remove('is-tab-reordering');
+        document.body.classList.remove('is-tab-reordering');
+        document.body.style.userSelect = '';
+        draggingItem = null;
+        activePointerId = null;
+        initialOrder = [];
+        isDragging = false;
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerEnd);
+        document.removeEventListener('pointercancel', onPointerEnd);
+    }
+
+    function shouldIgnoreTarget(target) {
+        return !!target.closest?.('input, textarea, select, a, [contenteditable="true"], [role="textbox"], .task-category-menu-button, .task-category-menu-popover, .project-notes-add-tab, .project-notes-delete-tab, .modal-close, .project-card-menu-button, .project-actions-menu, .rich-text-toolbar-button');
+    }
+
+    function getDropTargetAtPoint(x, y) {
+        const hits = typeof document.elementsFromPoint === 'function'
+            ? document.elementsFromPoint(x, y)
+            : [document.elementFromPoint(x, y)].filter(Boolean);
+        for (const hit of hits) {
+            const target = hit?.closest?.(itemSelector);
+            if (!target || target === draggingItem || !container.contains(target)) continue;
+            return target;
+        }
+        return null;
+    }
+
+    function beginDrag() {
+        if (!draggingItem || isDragging) return;
+        clearTimer();
+        isDragging = true;
+        draggingItem.classList.add('is-tab-dragging');
+        container.classList.add('is-tab-reordering');
+        document.body.classList.add('is-tab-reordering');
+        document.body.style.userSelect = 'none';
+    }
+
+    function onPointerDown(event) {
+        if (event.button !== undefined && event.button !== 0) return;
+        const item = event.target.closest?.(itemSelector);
+        if (!item || !container.contains(item) || shouldIgnoreTarget(event.target)) return;
+
+        const point = getPoint(event);
+        draggingItem = item;
+        initialOrder = getOrder();
+        pointerStartX = point.x;
+        pointerStartY = point.y;
+        activePointerId = event.pointerId ?? null;
+        clearTimer();
+        pressTimer = setTimeout(beginDrag, MOVABLE_TAB_LONG_PRESS_MS);
+        try {
+            if (activePointerId !== null) item.setPointerCapture?.(activePointerId);
+        } catch { /* noop */ }
+
+        document.addEventListener('pointermove', onPointerMove, { passive: false });
+        document.addEventListener('pointerup', onPointerEnd);
+        document.addEventListener('pointercancel', onPointerEnd);
+    }
+
+    function onPointerMove(event) {
+        if (!draggingItem) return;
+        const point = getPoint(event);
+        const distance = Math.hypot(point.x - pointerStartX, point.y - pointerStartY);
+
+        if (!isDragging && distance > 22) {
+            reset();
+            return;
+        }
+        if (!isDragging) return;
+
+        event.preventDefault();
+        draggingItem.style.transform = `translate(${point.x - pointerStartX}px, ${point.y - pointerStartY}px)`;
+        const target = getDropTargetAtPoint(point.x, point.y);
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        const insertAfter = point.x > rect.left + rect.width / 2;
+        if (insertAfter) {
+            target.after(draggingItem);
+        } else {
+            target.before(draggingItem);
+        }
+    }
+
+    function onPointerEnd(event) {
+        if (!draggingItem) return;
+        const wasDragging = isDragging;
+        const nextOrder = getOrder();
+        reset();
+
+        if (!wasDragging) return;
+        document.addEventListener('click', suppressClickAfterMovableTabDrag, true);
+        if (initialOrder.join('|') !== nextOrder.join('|')) {
+            onCommitOrder(nextOrder, event);
+        }
+    }
+
+    container.addEventListener('pointerdown', onPointerDown);
+    container.__movableTabCleanup = () => {
+        container.removeEventListener('pointerdown', onPointerDown);
+        reset();
+    };
+}
+
+function setupProjectModalTabReorder(projectId) {
+    const menu = document.querySelector('#projectModal .modal-menu-bar');
+    if (!menu) return;
+    setupLongPressMovableTabs(
+        menu,
+        '.modal-tab[data-movable-tab-id]',
+        item => item.dataset.movableTabId,
+        nextOrder => saveProjectModalTabOrder(nextOrder)
+    );
+}
+
+function setupTaskCategoryTabReorder(projectId) {
+    const container = document.querySelector(`#task-category-controls-${safeCssIdentifier(projectId)} .task-category-tabs`);
+    if (!container || !state.canEdit(projectId)) return;
+    setupLongPressMovableTabs(
+        container,
+        '.task-category-tab-wrap[data-task-category-reorder]',
+        item => item.dataset.taskCategoryReorder,
+        nextOrder => reorderTaskCategories(projectId, nextOrder)
+    );
+}
+
+function captureActiveProjectNoteEdits(projectId, surface = 'modal', data = null) {
+    const notesData = data || getProjectNotesDataForProject(projectId);
+    const activeTab = notesData.tabs.find(item => item.id === notesData.activeTabId) || notesData.tabs[0];
+    if (!activeTab) return notesData;
+
+    const titleInput = document.getElementById(`project-notes-title-${surface}`);
+    const bodyEditor = document.getElementById(`project-notes-body-${surface}`);
+    const tab = notesData.tabs.find(item => item.id === activeTab.id);
+    if (!tab) return notesData;
+
+    if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
+    if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
+    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
+    return notesData;
+}
+
+function setupProjectNotesTabReorder(projectId, surface = 'modal') {
+    const safeSurface = String(surface || 'modal');
+    const editor = document.querySelector(`[data-project-notes-editor="${safeCssIdentifier(safeSurface)}"][data-project-id="${safeCssIdentifier(projectId)}"]`);
+    const container = editor?.querySelector?.('.project-notes-tabs');
+    if (!container || !state.canEdit(projectId)) return;
+    setupLongPressMovableTabs(
+        container,
+        '.project-notes-tab[data-project-note-tab-reorder]',
+        item => item.dataset.projectNoteTabReorder,
+        nextOrder => reorderProjectNoteTabs(projectId, safeSurface, nextOrder)
+    );
 }
 
 
@@ -4086,6 +4404,27 @@ function saveProjectNotesData(projectId, data, options = {}) {
     }
 }
 
+function reorderProjectNoteTabs(projectId, surface = 'modal', orderedTabIds = []) {
+    if (!state.canEdit(projectId)) return;
+    const safeSurface = String(surface || 'modal');
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, safeSurface, data);
+
+    const existingIds = data.tabs.map(tab => String(tab.id));
+    const nextIds = normalizeOrderedList(orderedTabIds, existingIds);
+    if (existingIds.join('|') === nextIds.join('|')) {
+        renderProjectNotesSurface(projectId, safeSurface);
+        return;
+    }
+
+    const tabsById = new Map(data.tabs.map(tab => [String(tab.id), tab]));
+    data.tabs = nextIds.map(id => tabsById.get(id)).filter(Boolean);
+    if (!data.tabs.some(tab => tab.id === data.activeTabId)) {
+        data.activeTabId = data.tabs[0]?.id || '';
+    }
+    saveProjectNotesData(projectId, data, { renderSurface: safeSurface });
+}
+
 function updateProjectNotes(projectId, notes) {
     const data = normalizeProjectNotesData(notes);
     saveProjectNotesData(projectId, data);
@@ -4311,7 +4650,8 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
         const hasNote = getRichTextPlainText(tab.body).length > 0;
         const isEditingTitle = canEdit && isEditingProjectNoteTab(projectId, tab.id, safeSurface);
         if (isEditingTitle) {
-            return `<span class="project-notes-tab project-notes-tab--input ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}">
+            return `<span class="project-notes-tab project-notes-tab--input ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}"
+                        data-project-note-tab-reorder="${escapeHtml(tab.id)}">
                         <input class="project-notes-tab-input"
                                type="text"
                                value="${escapeHtml(tab.title)}"
@@ -4326,6 +4666,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
         }
         return `<button class="project-notes-tab ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}"
                         type="button"
+                        data-project-note-tab-reorder="${escapeHtml(tab.id)}"
                         onmousedown="commitPendingProjectNoteTabName('${projectId}', '${safeSurface}')"
                         onclick="selectProjectNoteTab('${projectId}', '${tab.id}', '${safeSurface}', event)">
                     <span>${escapeHtml(tab.title)}</span>
@@ -4385,6 +4726,7 @@ function renderProjectNotesSurface(projectId, surface = 'modal') {
     if (!target) return;
     target.innerHTML = buildProjectNotesEditorMarkup(projectId, project, safeSurface);
     updateProjectNotesIndicators(projectId);
+    setupProjectNotesTabReorder(projectId, safeSurface);
 }
 
 function selectProjectNoteTab(projectId, tabId, surface = 'modal', event) {
@@ -4833,7 +5175,7 @@ function copyProjectToClipboard(projectId, evt) {
     // Only copy incomplete task text
     const incompleteTasks = project.tasks.filter(t => !t.completed);
 
-    const text = incompleteTasks.map(task => task.text).join('\n');
+    const text = incompleteTasks.map(task => getTaskPlainText(task.text)).join('\n');
 
     writeClipboardText(text).then(() => {
         showCopyButtonFeedback(evt?.target?.closest('button'));
@@ -4852,7 +5194,7 @@ function copyTaskToClipboard(projectId, taskId, evt) {
     const task = (Array.isArray(project.tasks) ? project.tasks : [])
         .map((item, index) => normalizeTask(item, index))
         .find(item => item.id === Number(taskId));
-    const text = String(task?.text || '').trim();
+    const text = getTaskPlainText(task?.text).trim();
     if (!text) return;
 
     writeClipboardText(text).then(() => {
@@ -5438,9 +5780,10 @@ function updateTaskText(projectId, taskId, newText) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const cleanText = String(newText ?? '').trim();
+    const cleanText = sanitizeRichTextHtml(newText).trim();
+    const hasText = getTaskPlainText(cleanText).length > 0;
     const updatedTasks = project.tasks.map(t => 
-        t.id === taskId ? { ...t, text: cleanText } : t
+        t.id === taskId ? { ...t, text: hasText ? cleanText : '' } : t
     );
     
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
@@ -6323,11 +6666,14 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         taskList.__calendarTaskDragCleanup();
     }
 
-    if (getProjectTaskSortPreference(projectId) !== DEFAULT_TASK_SORT_MODE) return;
-
     let draggingItem = null;
+    let dragMode = null;
     let originalOrder = [];
     let moved = false;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let dragScrollContainer = null;
+    let dragStartScrollTop = 0;
 
     function getPoint(e) {
         const touch = e.touches?.[0] || e.changedTouches?.[0];
@@ -6335,6 +6681,19 @@ function setupProjectCalendarTaskDockDrag(projectId) {
             x: e.clientX ?? touch?.clientX ?? 0,
             y: e.clientY ?? touch?.clientY ?? 0
         };
+    }
+
+    function getCalendarScrollContainer() {
+        const modalScroll = taskList.closest('.modal-scroll-inner');
+        if (modalScroll && modalScroll.scrollHeight > modalScroll.clientHeight) return modalScroll;
+        return document.scrollingElement || document.documentElement;
+    }
+
+    function getCalendarScrollTop(scrollEl = getCalendarScrollContainer()) {
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            return window.scrollY || document.documentElement.scrollTop || 0;
+        }
+        return scrollEl?.scrollTop || 0;
     }
 
     function getItems() {
@@ -6361,20 +6720,61 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .project-calendar-task-priority-control, .project-calendar-task-priority-select');
     }
 
+    function getCalendarDropDayAtPoint(x, y) {
+        const hits = typeof document.elementsFromPoint === 'function'
+            ? document.elementsFromPoint(x, y)
+            : [document.elementFromPoint(x, y)].filter(Boolean);
+        return hits
+            ?.map(element => element?.closest?.('.project-calendar-day[data-calendar-date]'))
+            ?.find(Boolean) || null;
+    }
+
+    function markDropDayAtPoint(x, y) {
+        clearProjectCalendarDropTargets();
+        const dropDay = getCalendarDropDayAtPoint(x, y);
+        dropDay?.classList?.add('is-drop-target');
+        return dropDay;
+    }
+
+    function updateCalendarDraggedTaskPosition(x, y) {
+        if (!draggingItem) return;
+        const scrollDelta = getCalendarScrollTop(dragScrollContainer || getCalendarScrollContainer()) - dragStartScrollTop;
+        draggingItem.style.transform = `translate(${x - pointerStartX}px, ${y - pointerStartY + scrollDelta}px)`;
+        markDropDayAtPoint(x, y);
+    }
+
+    function clearCalendarDragClasses() {
+        taskList.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling');
+        if (draggingItem) {
+            draggingItem.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling');
+            draggingItem.style.transform = '';
+        }
+    }
+
     function onStart(e) {
-        const handle = e.target.closest?.('.project-calendar-task-drag-handle');
-        if (!handle || isIgnoredTarget(e.target) && !handle.contains(e.target)) return;
-        const item = handle.closest?.('[data-calendar-task-item]');
+        const item = e.target.closest?.('[data-calendar-task-item]');
         if (!item || !taskList.contains(item) || !state.canEdit(projectId)) return;
 
+        const handle = e.target.closest?.('.project-calendar-task-drag-handle');
+        const isManualReorder = !!handle && getProjectTaskSortPreference(projectId) === DEFAULT_TASK_SORT_MODE;
+        if (!isManualReorder && isIgnoredTarget(e.target)) return;
+        if (isManualReorder && !item.contains(handle)) return;
+
+        const point = getPoint(e);
         e.preventDefault();
         e.stopPropagation();
         draggingItem = item;
+        dragMode = isManualReorder ? 'reorder' : 'schedule';
         originalOrder = getTaskIds();
+        pointerStartX = point.x;
+        pointerStartY = point.y;
+        dragScrollContainer = getCalendarScrollContainer();
+        dragStartScrollTop = getCalendarScrollTop(dragScrollContainer);
         moved = false;
-        item.classList.add('is-calendar-task-reordering');
-        taskList.classList.add('is-calendar-task-reordering');
+        item.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
+        taskList.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
         document.body.style.userSelect = 'none';
+        document.body.classList.add('is-calendar-task-dragging');
 
         document.addEventListener('mousemove', onMove);
         document.addEventListener('touchmove', onMove, { passive: false });
@@ -6387,30 +6787,34 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         if (!draggingItem) return;
         e.preventDefault();
         const point = getPoint(e);
-        const afterElement = getAfterElement(point.y);
-        if (!afterElement) taskList.appendChild(draggingItem);
-        else taskList.insertBefore(draggingItem, afterElement);
-        clearProjectCalendarDropTargets();
-        const dropDay = document.elementsFromPoint?.(point.x, point.y)
-            ?.find(element => element?.matches?.('.project-calendar-day[data-calendar-date]'));
-        dropDay?.classList?.add('is-drop-target');
+
+        if (dragMode === 'reorder') {
+            const afterElement = getAfterElement(point.y);
+            if (!afterElement) taskList.appendChild(draggingItem);
+            else taskList.insertBefore(draggingItem, afterElement);
+        }
+
+        updateCalendarDraggedTaskPosition(point.x, point.y);
         moved = true;
     }
 
     function onEnd(e) {
         if (!draggingItem) return;
         const activeDraggingItem = draggingItem;
+        const activeDragMode = dragMode;
         const nextOrder = getTaskIds();
         const point = getPoint(e || {});
-        const dropDay = document.elementsFromPoint?.(point.x, point.y)
-            ?.find(element => element?.matches?.('.project-calendar-day[data-calendar-date]'));
+        const dropDay = getCalendarDropDayAtPoint(point.x, point.y);
         const dropDate = dropDay?.getAttribute?.('data-calendar-date') || '';
         const droppedTaskId = activeDraggingItem.dataset.taskId;
 
-        activeDraggingItem.classList.remove('is-calendar-task-reordering');
-        taskList.classList.remove('is-calendar-task-reordering');
+        clearCalendarDragClasses();
         document.body.style.userSelect = '';
+        document.body.classList.remove('is-calendar-task-dragging');
         draggingItem = null;
+        dragMode = null;
+        dragScrollContainer = null;
+        dragStartScrollTop = 0;
 
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('touchmove', onMove);
@@ -6424,7 +6828,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         }
 
         clearProjectCalendarDropTargets();
-        if (moved && originalOrder.join('|') !== nextOrder.join('|')) {
+        if (activeDragMode === 'reorder' && moved && originalOrder.join('|') !== nextOrder.join('|')) {
             applyProjectCalendarManualTaskOrder(projectId, nextOrder);
         }
     }
@@ -6439,10 +6843,14 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         document.removeEventListener('mouseup', onEnd);
         document.removeEventListener('touchend', onEnd);
         document.removeEventListener('touchcancel', onEnd);
-        taskList.classList.remove('is-calendar-task-reordering');
-        if (draggingItem) draggingItem.classList.remove('is-calendar-task-reordering');
+        clearCalendarDragClasses();
+        clearProjectCalendarDropTargets();
         draggingItem = null;
+        dragMode = null;
+        dragScrollContainer = null;
+        dragStartScrollTop = 0;
         document.body.style.userSelect = '';
+        document.body.classList.remove('is-calendar-task-dragging');
     };
 }
 
@@ -6992,6 +7400,9 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                     const dropAttributes = dropCategoryValue
                         ? ` data-task-category-drop="${escapeHtml(dropCategoryValue)}" data-task-category-drop-project="${escapeHtml(projectId)}"`
                         : '';
+                    const reorderAttributes = isCategory
+                        ? ` data-task-category-reorder="${escapeHtml(tab.category)}"`
+                        : '';
                     const shellClick = (isInput || isEditingCategory)
                         ? ''
                         : (tab.kind === 'create'
@@ -7021,7 +7432,7 @@ function buildTaskCategoryControlsMarkup(projectId, project, activeCategory) {
                                 onclick="event.stopPropagation(); ${tab.kind === 'create' ? `startInlineTaskCategoryCreate('${projectId}', event)` : `setProjectTaskCategoryFilter('${projectId}', ${filterLiteral})`}">${escapeHtml(tab.label)}</button>
                     `);
                     return `
-                        <div class="${wrapClasses.join(' ')}"${dropAttributes}>
+                        <div class="${wrapClasses.join(' ')}"${dropAttributes}${reorderAttributes}>
                             <div class="${shellClasses.join(' ')}"${shellClick}>
                                 ${tabControl}
                                 ${canShowTabMenu ? `
@@ -7068,6 +7479,7 @@ function renderTaskCategoryControls(projectId) {
         setStoredProjectTaskCategoryFilter(projectId, activeCategory);
     }
     container.innerHTML = buildTaskCategoryControlsMarkup(projectId, project, activeCategory);
+    setupTaskCategoryTabReorder(projectId);
     if (uiState.creatingTaskCategoryProjectId === projectId || uiState.editingTaskCategory?.projectId === projectId) {
         requestAnimationFrame(() => {
             const input = container.querySelector('.task-category-inline-input');
@@ -7589,7 +8001,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                 <span class="task-text ${normalizedTask.completed ? 'completed' : ''}"
                       data-task-text="${normalizedTask.id}"
                       id="modal-task-text-${normalizedTask.id}"
-                      onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${escapeHtml(normalizedTask.text)}</span>
+                      onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${getTaskDisplayHtml(normalizedTask.text, 'New task')}</span>
                 <textarea class="task-input task-input--textarea"
                           id="modal-task-input-${normalizedTask.id}"
                           placeholder="New task"
@@ -7597,7 +8009,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                           style="display: none;"
                           oninput="autoResizeModalTaskInput(this)"
                           onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
-                          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(normalizedTask.text)}</textarea>
+                          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(getTaskPlainText(normalizedTask.text))}</textarea>
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
                 <button class="task-copy-button"
@@ -7727,7 +8139,10 @@ function openTaskNoteModal(projectId, taskId, event) {
     modal.dataset.taskId = String(taskId);
 
     const subtitle = modal.querySelector('#taskNoteModalSubtitle');
-    if (subtitle) subtitle.textContent = task.text ? `Note for: ${task.text}` : 'Add details for this task.';
+    if (subtitle) {
+        const taskLabel = getTaskPlainText(task.text);
+        subtitle.textContent = taskLabel ? `Note for: ${taskLabel}` : 'Add details for this task.';
+    }
 
     const editor = modal.querySelector('#taskNoteEditor');
     if (editor) editor.innerHTML = getRichTextDisplayHtml(task.note || '');
@@ -8148,6 +8563,29 @@ function updateTaskCategory(projectId, taskId, categoryValue) {
     render();
 }
 
+function reorderTaskCategories(projectId, orderedCategories = []) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const existingCategories = getProjectTaskCategories(project);
+    const nextCategories = normalizeOrderedList(
+        (Array.isArray(orderedCategories) ? orderedCategories : []).map(sanitizeTaskCategoryName),
+        existingCategories
+    );
+
+    if (existingCategories.join('|') === nextCategories.join('|')) {
+        renderTaskCategoryControls(projectId);
+        return;
+    }
+
+    state.updateProject(projectId, projectUpdate({ taskCategories: nextCategories }));
+    saveData();
+    renderTaskCategoryControls(projectId);
+    renderModalTaskList(projectId);
+    render();
+}
+
 function startInlineTaskCategoryCreate(projectId, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -8546,6 +8984,50 @@ function deleteProjectCalendarNote(projectId, dateKey, event) {
     saveOpenProjectModalState(projectId, 'calendar');
 }
 
+function buildProjectModalMenuTabs(project, collaborators = []) {
+    const projectId = project?.id || '';
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const tabDefinitions = {
+        tasks: {
+            className: '',
+            title: '',
+            html: 'Tasks'
+        },
+        notes: {
+            className: `modal-tab--notes ${projectHasNotes(project?.notes) ? 'has-note' : ''}`.trim(),
+            title: formatProjectNotesPreview(project?.notes) || 'Project notes',
+            html: 'Notes'
+        },
+        members: {
+            className: '',
+            title: '',
+            html: `Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}`
+        },
+        history: {
+            className: '',
+            title: '',
+            html: 'History'
+        },
+        calendar: {
+            className: '',
+            title: '',
+            html: 'Calendar'
+        }
+    };
+
+    return getProjectModalTabOrder().map(tabId => {
+        const tab = tabDefinitions[tabId];
+        if (!tab) return '';
+        const titleAttr = tab.title ? ` title="${escapeHtml(tab.title)}"` : '';
+        return `<button class="modal-tab modal-menu-item ${tabId === 'tasks' ? 'active' : ''} ${tab.className}"
+                       role="menuitem"
+                       id="${tabId}-tab-${escapeHtml(String(projectId))}"
+                       data-movable-tab-id="${escapeHtml(tabId)}"
+                       type="button"
+                       onclick="switchModalTab(${projectIdLiteral}, '${tabId}')"${titleAttr}>${tab.html}</button>`;
+    }).join('');
+}
+
 function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
     if (!project) return;
@@ -8578,13 +9060,7 @@ function openProjectModal(projectId, options = {}) {
     const selectedTasks = state.getSelectedTasks(projectId);
     const modalMenuBarMarkup = `
         <div class="modal-menu-bar" role="menubar" aria-label="Project modal menu">
-            <button class="modal-tab modal-menu-item active" role="menuitem" id="tasks-tab-${project.id}" onclick="switchModalTab('${project.id}', 'tasks')">Tasks</button>
-            <button class="modal-tab modal-menu-item modal-tab--notes ${projectHasNotes(project.notes) ? 'has-note' : ''}" role="menuitem" id="notes-tab-${project.id}" onclick="switchModalTab('${project.id}', 'notes')" title="${escapeHtml(formatProjectNotesPreview(project.notes) || 'Project notes')}">Notes</button>
-            <button class="modal-tab modal-menu-item" role="menuitem" id="members-tab-${project.id}" onclick="switchModalTab('${project.id}', 'members')">
-                Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}
-            </button>
-            <button class="modal-tab modal-menu-item" role="menuitem" id="history-tab-${project.id}" onclick="switchModalTab('${project.id}', 'history')">History</button>
-            <button class="modal-tab modal-menu-item" role="menuitem" id="calendar-tab-${project.id}" onclick="switchModalTab('${project.id}', 'calendar')">Calendar</button>
+            ${buildProjectModalMenuTabs(project, collaborators)}
             ${buildProjectMeatballsMenuMarkup(project, 'modal')}
             <button class="modal-close modal-menu-close" onclick="closeProjectModal()" type="button" aria-label="Close project modal">
                 <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8678,13 +9154,15 @@ function openProjectModal(projectId, options = {}) {
                         <!-- Paste Tasks Section in Modal -->
                         <div class="modal-paste-section">
                             <h4 class="modal-paste-title">Add Tasks</h4>
-                            <textarea 
-                                class="paste-box"
-                                id="modal-paste-box-${project.id}"
-                                rows="1"
-                                placeholder="Enter tasks here"
-                                oninput="handleModalPasteInput('${project.id}', event)"
-                                onkeydown="handleModalPasteKeydown('${project.id}', event)"></textarea>
+                            ${buildRichTextToolbarMarkup(`modal-paste-box-${project.id}`)}
+                            <div class="paste-box modal-task-entry-editor rich-text-editor"
+                                 id="modal-paste-box-${project.id}"
+                                 role="textbox"
+                                 aria-multiline="true"
+                                 data-placeholder="Enter tasks here"
+                                 contenteditable="true"
+                                 oninput="handleModalPasteInput('${project.id}', event)"
+                                 onkeydown="handleModalPasteKeydown('${project.id}', event)"></div>
                             <div class="modal-paste-actions">
                                 <button 
                                     class="paste-button"
@@ -8809,6 +9287,10 @@ function openProjectModal(projectId, options = {}) {
         </div>
     </div>`;
     
+    setupProjectModalTabReorder(project.id);
+    setupTaskCategoryTabReorder(project.id);
+    setupProjectNotesTabReorder(project.id, 'modal');
+
     modal.classList.add('active');
     updateUndoButton();
 
@@ -9014,7 +9496,7 @@ function finishEditModalTask(projectId, taskId) {
         }
         if (wasNewTaskDraft) uiState.newTaskDraft = null;
         updateTaskText(projectId, taskId, trimmed);
-        taskText.textContent = trimmed;
+        taskText.innerHTML = getTaskDisplayHtml(trimmed, 'New task');
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
         taskInput.style.height = '';
@@ -9177,14 +9659,8 @@ function pasteTasksInModal(projectId) {
     const pasteBox = document.getElementById(`modal-paste-box-${projectId}`);
     if (!pasteBox) return;
 
-    const taskText = pasteBox.value.trim();
-    if (!taskText) return;
-
-    const taskLines = taskText.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-
-    if (taskLines.length === 0) return;
+    const taskEntries = getModalPasteTaskEntries(pasteBox);
+    if (taskEntries.length === 0) return;
 
     const project = state.findProject(projectId);
     if (!project) return;
@@ -9193,9 +9669,9 @@ function pasteTasksInModal(projectId) {
     const previousScrollTop = modalScroll?.scrollTop ?? null;
     const activeCategory = getProjectTaskCategoryFilter(projectId);
     const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
-    const newTasks = taskLines.map(text => normalizeTask({
+    const newTasks = taskEntries.map(entry => normalizeTask({
         id: Date.now() + Math.random(),
-        text,
+        text: entry.text,
         completed: false,
         tag: DEFAULT_TASK_TAG,
         category
@@ -9205,7 +9681,7 @@ function pasteTasksInModal(projectId) {
     const updatedTasks = sortTasks([...newTasks, ...project.tasks]);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
 
-    pasteBox.value = '';
+    clearTaskEntryElement(pasteBox);
     adjustModalPasteBox(pasteBox);
     saveData();
     renderModalTaskList(projectId);
@@ -9278,7 +9754,7 @@ async function restoreArchivedProject(projectId, event = null) {
 
 function adjustModalPasteBox(pasteBox) {
     if (!pasteBox) return;
-    const hasText = pasteBox.value.trim().length > 0;
+    const hasText = getTaskEntryPlainText(pasteBox).trim().length > 0;
     pasteBox.classList.toggle('has-task-text', hasText);
     if (!hasText) {
         pasteBox.style.setProperty('height', '2.75rem', 'important');
@@ -9730,7 +10206,7 @@ function renderProjectCard(project) {
                 ${previewTasks.length ? previewTasks.map(task => `
                     <li class="project-preview-task ${task.completed ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
                         <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
-                        <span>${escapeHtml(task.text || 'Untitled task')}</span>
+                        <span>${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                     </li>
                 `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
             </ul>
