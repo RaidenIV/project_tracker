@@ -820,11 +820,13 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
                     <button class="${getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks, note, projectDueDate })}"
                             type="button"
                             role="gridcell"
+                            data-calendar-date="${dateKey}"
                             aria-pressed="${dateKey === selectedDate ? 'true' : 'false'}"
                             aria-label="${escapeHtml(ariaParts.join(', '))}"
                             onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)"
                             ondragover="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)"
                             ondragenter="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)"
+                            ondragleave="handleProjectCalendarDayDragLeave(event)"
                             ondrop="handleProjectCalendarTaskDrop(${projectIdLiteral}, '${dateKey}', event)">
                         <span class="project-calendar-day-number">${dayNumber}</span>
                         <span class="project-calendar-day-markers" aria-hidden="true">
@@ -1039,7 +1041,8 @@ function buildProjectCalendarTaskDockMarkup(project) {
                                  draggable="${canEditCalendar ? 'true' : 'false'}"
                                  role="listitem"
                                  title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}"
-                                 ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)">
+                                 ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)"
+                                 ondragend="handleProjectCalendarTaskDragEnd(event)">
                                 ${canManualReorder ? `
                                     <svg class="task-drag-handle project-calendar-task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" ondragstart="event.preventDefault(); event.stopPropagation();">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
@@ -1069,10 +1072,26 @@ function handleProjectCalendarTaskDragStart(projectId, taskId, event) {
         return;
     }
     event?.stopPropagation?.();
+    event?.currentTarget?.classList?.add('is-calendar-task-scheduling');
     const payload = JSON.stringify({ projectId: String(projectId ?? ''), taskId: String(taskId ?? '') });
     event?.dataTransfer?.setData?.('application/x-project-calendar-task', payload);
     event?.dataTransfer?.setData?.('text/plain', payload);
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+}
+
+function clearProjectCalendarDropTargets() {
+    document.querySelectorAll('.project-calendar-day.is-drop-target').forEach(day => {
+        day.classList.remove('is-drop-target');
+    });
+}
+
+function handleProjectCalendarTaskDragEnd(event) {
+    clearProjectCalendarDropTargets();
+    event?.currentTarget?.classList?.remove('is-calendar-task-scheduling');
+}
+
+function handleProjectCalendarDayDragLeave(event) {
+    event?.currentTarget?.classList?.remove('is-drop-target');
 }
 
 function handleProjectCalendarDayDragOver(projectId, dateKey, event) {
@@ -1080,15 +1099,52 @@ function handleProjectCalendarDayDragOver(projectId, dateKey, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (event?.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    event?.currentTarget?.classList?.add('is-drop-target');
+}
+
+function scheduleProjectCalendarTask(projectId, taskId, dateKey, options = {}) {
+    if (!state.canEdit(projectId)) return false;
+
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey)) return false;
+
+    const draggedTaskId = String(taskId ?? '');
+    if (!draggedTaskId) return false;
+
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks)) return false;
+
+    let changed = false;
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalized = normalizeTask(task, index);
+        if (String(normalized.id) !== draggedTaskId) return normalized;
+        if (normalizeTaskDueDate(normalized.dueDate) === safeDateKey) return normalized;
+        changed = true;
+        return { ...normalized, dueDate: safeDateKey };
+    });
+
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+
+    if (!changed) {
+        renderProjectCalendarSection(projectId, { preserveScroll: options.preserveScroll !== false });
+        saveOpenProjectModalState(projectId, 'calendar');
+        return true;
+    }
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+    renderProjectCalendarSection(projectId, { preserveScroll: options.preserveScroll !== false });
+    render();
+    saveOpenProjectModalState(projectId, 'calendar');
+    return true;
 }
 
 function handleProjectCalendarTaskDrop(projectId, dateKey, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    if (!state.canEdit(projectId)) return;
-
-    const safeDateKey = normalizeTaskDueDate(dateKey);
-    if (!isValidDateKey(safeDateKey)) return;
+    clearProjectCalendarDropTargets();
 
     let payload = null;
     const rawPayload = event?.dataTransfer?.getData?.('application/x-project-calendar-task')
@@ -1104,32 +1160,7 @@ function handleProjectCalendarTaskDrop(projectId, dateKey, event) {
     const draggedTaskId = String(payload?.taskId ?? '');
     if (!draggedTaskId || draggedProjectId !== String(projectId ?? '')) return;
 
-    const project = state.findProject(projectId);
-    if (!project || !Array.isArray(project.tasks)) return;
-
-    let changed = false;
-    const updatedTasks = project.tasks.map((task, index) => {
-        const normalized = normalizeTask(task, index);
-        if (String(normalized.id) !== draggedTaskId) return normalized;
-        if (normalizeTaskDueDate(normalized.dueDate) === safeDateKey) return normalized;
-        changed = true;
-        return { ...normalized, dueDate: safeDateKey };
-    });
-
-    if (!changed) {
-        setProjectCalendarSelectedDate(projectId, safeDateKey);
-        renderProjectCalendarSection(projectId, { preserveScroll: true });
-        return;
-    }
-
-    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
-    saveData();
-    setProjectCalendarSelectedDate(projectId, safeDateKey);
-    renderModalTaskList(projectId);
-    updateProjectProgress(projectId);
-    renderProjectCalendarSection(projectId, { preserveScroll: true });
-    render();
-    saveOpenProjectModalState(projectId, 'calendar');
+    scheduleProjectCalendarTask(projectId, draggedTaskId, dateKey, { preserveScroll: true });
 }
 
 function removeProjectCalendarTaskFromDay(projectId, taskId, dateKey, event) {
@@ -2510,6 +2541,35 @@ function getProjectActivities(project) {
     return Array.isArray(project?.activities) ? project.activities : [];
 }
 
+function buildProjectHistoryMarkup(project) {
+    const activities = getProjectActivities(project);
+    return `
+        <div class="project-activity-list">
+            ${activities.length ? activities.map(activity => `
+                <div class="project-activity-item">
+                    <div class="project-activity-meta">
+                        <span>${escapeHtml(activity.actorName || 'System')}</span>
+                        <span>${escapeHtml(formatCompactDateTime(activity.createdAt))}</span>
+                    </div>
+                    <div class="project-activity-message">${escapeHtml(activity.message || 'Updated the project')}</div>
+                </div>
+            `).join('') : '<div class="side-panel-empty">No activity yet</div>'}
+        </div>
+    `;
+}
+
+function renderProjectHistorySection(projectId) {
+    const project = state.findProject(projectId);
+    const section = document.getElementById(`history-section-${projectId}`);
+    if (!project || !section) return;
+    section.innerHTML = buildProjectHistoryMarkup(project);
+}
+
+function refreshProjectHistoryIfPresent(projectId) {
+    if (!document.getElementById(`history-section-${projectId}`)) return;
+    renderProjectHistorySection(projectId);
+}
+
 function getUserInitials(name) {
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return 'U';
@@ -3603,6 +3663,7 @@ async function saveData() {
                         __syncedLastModified: savedProject.lastModified || state.findProject(projectId)?.__syncedLastModified || null,
                         activities: savedProject.activities || state.findProject(projectId)?.activities || []
                     }, { skipTouch: true }));
+                    refreshProjectHistoryIfPresent(projectId);
                 });
             }
             try {
@@ -4078,16 +4139,47 @@ function clearEditingProjectNoteTab(projectId = null, tabId = null, surface = nu
     uiState.editingProjectNoteTab = null;
 }
 
+function getSafeProjectNotesSurface(surface = 'modal') {
+    return String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '') || 'modal';
+}
+
+function commitPendingProjectNoteTabName(projectId, surface = 'modal') {
+    const safeSurface = getSafeProjectNotesSurface(surface);
+    const editing = uiState.editingProjectNoteTab;
+    if (!editing || String(editing.projectId) !== String(projectId) || String(editing.surface || 'modal') !== safeSurface) return false;
+    if (!state.canEdit(projectId)) return false;
+
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === editing.tabId);
+    if (!tab) {
+        clearEditingProjectNoteTab(projectId, null, safeSurface);
+        return false;
+    }
+
+    const input = document.querySelector(`[data-project-notes-editor="${safeSurface}"] .project-notes-tab-input`);
+    const nextTitle = String(input?.value ?? tab.title ?? '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .slice(0, 40) || tab.title || 'Note';
+    tab.title = nextTitle;
+    data.activeTabId = tab.id;
+    clearEditingProjectNoteTab(projectId, tab.id, safeSurface);
+    saveProjectNotesData(projectId, data);
+    return true;
+}
+
 function commitProjectNoteTabName(projectId, tabId, surface = 'modal', value = '') {
     if (!state.canEdit(projectId)) return;
+    const safeSurface = getSafeProjectNotesSurface(surface);
+    const wasEditing = isEditingProjectNoteTab(projectId, tabId, safeSurface);
     const data = getProjectNotesDataForProject(projectId);
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
     const nextTitle = String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 40) || tab.title || 'Note';
     tab.title = nextTitle;
     data.activeTabId = tabId;
-    clearEditingProjectNoteTab(projectId, tabId, surface);
-    saveProjectNotesData(projectId, data, { renderSurface: surface });
+    clearEditingProjectNoteTab(projectId, tabId, safeSurface);
+    saveProjectNotesData(projectId, data, wasEditing ? { renderSurface: safeSurface } : {});
 }
 
 function cancelProjectNoteTabName(projectId, tabId, surface = 'modal') {
@@ -4130,6 +4222,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
         }
         return `<button class="project-notes-tab ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}"
                         type="button"
+                        onmousedown="commitPendingProjectNoteTabName('${projectId}', '${safeSurface}')"
                         onclick="selectProjectNoteTab('${projectId}', '${tab.id}', '${safeSurface}', event)">
                     <span>${escapeHtml(tab.title)}</span>
                 </button>`;
@@ -4149,7 +4242,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
             </div>
             <div class="project-notes-tab-strip">
                 <div class="project-notes-tabs" role="tablist">${tabButtons}</div>
-                ${canEdit ? `<button class="project-notes-add-tab" type="button" onclick="addProjectNoteTab('${projectId}', '${safeSurface}', event)" title="Add note tab" aria-label="Add note tab">+</button>` : ''}
+                ${canEdit ? `<button class="project-notes-add-tab" type="button" onmousedown="commitPendingProjectNoteTabName('${projectId}', '${safeSurface}')" onclick="addProjectNoteTab('${projectId}', '${safeSurface}', event)" title="Add note tab" aria-label="Add note tab">+</button>` : ''}
             </div>
             <div class="project-notes-active-panel">
                 <div class="project-notes-active-title-row">
@@ -4166,7 +4259,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
                           placeholder="Write project notes here..."
                           ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')"` : 'readonly'}>${escapeHtml(activeTab.body || '')}</textarea>
                 ${renderProjectNotesLinksMarkup(projectId, activeTab.id, activeTab.links || [], canEdit, safeSurface, activeTab.body || '')}
-                ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
+                ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onmousedown="commitPendingProjectNoteTabName('${projectId}', '${safeSurface}')" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
             </div>
         </div>`;
 }
@@ -4189,6 +4282,7 @@ function renderProjectNotesSurface(projectId, surface = 'modal') {
 function selectProjectNoteTab(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    commitPendingProjectNoteTabName(projectId, surface);
     const data = getProjectNotesDataForProject(projectId);
     if (!data.tabs.some(tab => tab.id === tabId)) return;
     data.activeTabId = tabId;
@@ -4199,6 +4293,7 @@ function addProjectNoteTab(projectId, surface = 'quick', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
+    commitPendingProjectNoteTabName(projectId, surface);
     const data = getProjectNotesDataForProject(projectId);
     const nextNumber = data.tabs.length + 1;
     const nextTab = normalizeProjectNotesTab({
@@ -4512,10 +4607,12 @@ function deleteProjectNoteLink(projectId, tabId, linkId, surface = 'modal', even
 
 function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!state.canEdit(projectId)) return;
-    const activeTab = getProjectNotesActiveTab(projectId);
+    commitPendingProjectNoteTabName(projectId, surface);
+    const data = getProjectNotesDataForProject(projectId);
+    const activeTab = data.tabs.find(item => item.id === data.activeTabId) || data.tabs[0];
+    if (!activeTab) return;
     const titleInput = document.getElementById(`project-notes-title-${surface}`);
     const bodyTextarea = document.getElementById(`project-notes-body-${surface}`);
-    const data = getProjectNotesDataForProject(projectId);
     const tab = data.tabs.find(item => item.id === activeTab.id);
     if (!tab) return;
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
@@ -6184,13 +6281,24 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         const afterElement = getAfterElement(point.y);
         if (!afterElement) taskList.appendChild(draggingItem);
         else taskList.insertBefore(draggingItem, afterElement);
+        clearProjectCalendarDropTargets();
+        const dropDay = document.elementsFromPoint?.(point.x, point.y)
+            ?.find(element => element?.matches?.('.project-calendar-day[data-calendar-date]'));
+        dropDay?.classList?.add('is-drop-target');
         moved = true;
     }
 
-    function onEnd() {
+    function onEnd(e) {
         if (!draggingItem) return;
+        const activeDraggingItem = draggingItem;
         const nextOrder = getTaskIds();
-        draggingItem.classList.remove('is-calendar-task-reordering');
+        const point = getPoint(e || {});
+        const dropDay = document.elementsFromPoint?.(point.x, point.y)
+            ?.find(element => element?.matches?.('.project-calendar-day[data-calendar-date]'));
+        const dropDate = dropDay?.getAttribute?.('data-calendar-date') || '';
+        const droppedTaskId = activeDraggingItem.dataset.taskId;
+
+        activeDraggingItem.classList.remove('is-calendar-task-reordering');
         taskList.classList.remove('is-calendar-task-reordering');
         document.body.style.userSelect = '';
         draggingItem = null;
@@ -6201,6 +6309,12 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         document.removeEventListener('touchend', onEnd);
         document.removeEventListener('touchcancel', onEnd);
 
+        if (dropDate && scheduleProjectCalendarTask(projectId, droppedTaskId, dropDate, { preserveScroll: true })) {
+            clearProjectCalendarDropTargets();
+            return;
+        }
+
+        clearProjectCalendarDropTargets();
         if (moved && originalOrder.join('|') !== nextOrder.join('|')) {
             applyProjectCalendarManualTaskOrder(projectId, nextOrder);
         }
@@ -8575,17 +8689,7 @@ function openProjectModal(projectId, options = {}) {
         </div>
 
         <div class="modal-section hidden" id="history-section-${project.id}">
-            <div class="project-activity-list">
-                ${getProjectActivities(project).length ? getProjectActivities(project).map(activity => `
-                    <div class="project-activity-item">
-                        <div class="project-activity-meta">
-                            <span>${escapeHtml(activity.actorName || 'System')}</span>
-                            <span>${escapeHtml(formatCompactDateTime(activity.createdAt))}</span>
-                        </div>
-                        <div class="project-activity-message">${escapeHtml(activity.message || 'Updated the project')}</div>
-                    </div>
-                `).join('') : '<div class="side-panel-empty">No activity yet</div>'}
-            </div>
+            ${buildProjectHistoryMarkup(project)}
         </div>
     </div>`;
     
@@ -10332,7 +10436,9 @@ window.goToProjectCalendarToday = goToProjectCalendarToday;
 window.saveProjectCalendarNote = saveProjectCalendarNote;
 window.deleteProjectCalendarNote = deleteProjectCalendarNote;
 window.handleProjectCalendarTaskDragStart = handleProjectCalendarTaskDragStart;
+window.handleProjectCalendarTaskDragEnd = handleProjectCalendarTaskDragEnd;
 window.handleProjectCalendarDayDragOver = handleProjectCalendarDayDragOver;
+window.handleProjectCalendarDayDragLeave = handleProjectCalendarDayDragLeave;
 window.handleProjectCalendarTaskDrop = handleProjectCalendarTaskDrop;
 window.updateProjectCalendarTaskPriority = updateProjectCalendarTaskPriority;
 window.createProjectCalendarTask = createProjectCalendarTask;
@@ -10349,6 +10455,7 @@ window.closeProjectNotesModal = closeProjectNotesModal;
 window.selectProjectNoteTab = selectProjectNoteTab;
 window.addProjectNoteTab = addProjectNoteTab;
 window.deleteProjectNoteTab = deleteProjectNoteTab;
+window.commitPendingProjectNoteTabName = commitPendingProjectNoteTabName;
 window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
 window.addProjectNoteLink = addProjectNoteLink;

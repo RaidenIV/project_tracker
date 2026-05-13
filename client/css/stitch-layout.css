@@ -22269,3 +22269,44 @@ body[data-theme^="blueprint"] #projectSortSelect {
     padding-right: 2.35rem !important;
     background-image: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: calendar task scheduling feedback and mobile notification fit
+   ============================================================================ */
+.project-calendar-day.is-drop-target,
+body[data-theme^="console"] .project-calendar-day.is-drop-target,
+body[data-theme^="blueprint"] .project-calendar-day.is-drop-target,
+body[data-theme^="glass"] .project-calendar-day.is-drop-target {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, currentColor) 42%, transparent) inset,
+                0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-scheduling,
+.project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-scheduling,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-scheduling,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-scheduling,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reordering {
+    cursor: grabbing !important;
+}
+
+@media (max-width: 640px) {
+    .control-panel .panel-notification-button,
+    body[data-theme^="console"] .control-panel .panel-notification-button,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button,
+    body[data-theme^="glass"] .control-panel .panel-notification-button {
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-inline: 0.75rem !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: clamp(9px, 2.8vw, 11px) !important;
+        letter-spacing: 0.08em !important;
+        line-height: 1 !important;
+    }
+}
