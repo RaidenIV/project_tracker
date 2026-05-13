@@ -22392,3 +22392,47 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reor
 .rich-text-editor u {
     text-underline-offset: 0.12em !important;
 }
+
+/* Targeted patch: long-press movable tabs and calendar task scheduling */
+.modal-tab[data-movable-tab-id],
+.task-category-tab-wrap[data-task-category-reorder],
+.project-notes-tab[data-project-note-tab-reorder] {
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.modal-menu-bar.is-tab-reordering .modal-tab[data-movable-tab-id],
+.task-category-tabs.is-tab-reordering .task-category-tab-wrap[data-task-category-reorder],
+.project-notes-tabs.is-tab-reordering .project-notes-tab[data-project-note-tab-reorder] {
+    cursor: grabbing !important;
+}
+
+.modal-tab.is-tab-dragging,
+.task-category-tab-wrap.is-tab-dragging,
+.project-notes-tab.is-tab-dragging {
+    opacity: 0.82 !important;
+    transform: translateY(-1px) !important;
+    z-index: 8 !important;
+    cursor: grabbing !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 46%, transparent), 0 10px 24px rgba(0, 0, 0, 0.24) !important;
+}
+
+.project-calendar-task-dock-list.is-calendar-task-scheduling .project-calendar-draggable-task:not(.is-calendar-task-scheduling) {
+    opacity: 0.72 !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-scheduling {
+    cursor: grabbing !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 62%, transparent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 38%, transparent), 0 10px 24px rgba(0, 0, 0, 0.22) !important;
+}
+
+.project-calendar-day.is-drop-target,
+body[data-theme^="console"] .project-calendar-day.is-drop-target,
+body[data-theme^="blueprint"] .project-calendar-day.is-drop-target,
+body[data-theme^="glass"] .project-calendar-day.is-drop-target {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 72%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 16%, var(--panel, transparent)) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 46%, transparent), 0 0 18px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
