@@ -22508,3 +22508,41 @@ body[data-theme^="glass"] .modal-task-entry-editor.paste-box:focus {
 .project-notes-tab.is-tab-dragging {
     transition: none !important;
 }
+
+/* ============================================================================
+   Targeted patch: smooth tab reorder motion and calendar drag stacking
+   ============================================================================ */
+.modal-menu-bar.is-tab-reordering .modal-tab[data-movable-tab-id]:not(.is-tab-dragging),
+.task-category-tabs.is-tab-reordering .task-category-tab-wrap[data-task-category-reorder]:not(.is-tab-dragging),
+.project-notes-tabs.is-tab-reordering .project-notes-tab[data-project-note-tab-reorder]:not(.is-tab-dragging) {
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    will-change: transform !important;
+}
+
+.modal-tab.is-tab-settling,
+.task-category-tab-wrap.is-tab-settling,
+.project-notes-tab.is-tab-settling {
+    pointer-events: none !important;
+    will-change: transform !important;
+}
+
+.project-calendar-drag-ghost,
+body[data-theme^="console"] .project-calendar-drag-ghost,
+body[data-theme^="blueprint"] .project-calendar-drag-ghost,
+body[data-theme^="glass"] .project-calendar-drag-ghost {
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    opacity: 0.98 !important;
+    cursor: grabbing !important;
+    will-change: transform !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 48%, transparent), 0 18px 34px rgba(0, 0, 0, 0.34) !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-scheduling-source,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-scheduling-source,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-scheduling-source,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-scheduling-source {
+    opacity: 0.42 !important;
+}
