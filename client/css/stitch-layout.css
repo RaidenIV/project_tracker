@@ -22546,3 +22546,59 @@ body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-
 body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-scheduling-source {
     opacity: 0.42 !important;
 }
+
+/* ============================================================================
+   Targeted patch: cursor-following tab drags and top-layer calendar drags
+   ============================================================================ */
+.movable-tab-placeholder {
+    display: inline-flex !important;
+    flex-shrink: 0 !important;
+    opacity: 0.18 !important;
+    pointer-events: none !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 28%, transparent) !important;
+    border: 1px dashed color-mix(in srgb, var(--accent, currentColor) 46%, transparent) !important;
+}
+
+.modal-tab.is-tab-dragging,
+.task-category-tab-wrap.is-tab-dragging,
+.project-notes-tab.is-tab-dragging,
+body[data-theme^="console"] .modal-tab.is-tab-dragging,
+body[data-theme^="console"] .task-category-tab-wrap.is-tab-dragging,
+body[data-theme^="console"] .project-notes-tab.is-tab-dragging,
+body[data-theme^="blueprint"] .modal-tab.is-tab-dragging,
+body[data-theme^="blueprint"] .task-category-tab-wrap.is-tab-dragging,
+body[data-theme^="blueprint"] .project-notes-tab.is-tab-dragging,
+body[data-theme^="glass"] .modal-tab.is-tab-dragging,
+body[data-theme^="glass"] .task-category-tab-wrap.is-tab-dragging,
+body[data-theme^="glass"] .project-notes-tab.is-tab-dragging {
+    position: fixed !important;
+    z-index: 2147483646 !important;
+    pointer-events: none !important;
+    opacity: 0.98 !important;
+    cursor: grabbing !important;
+    transition: none !important;
+    will-change: transform !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 52%, transparent), 0 18px 36px rgba(0, 0, 0, 0.34) !important;
+}
+
+.project-calendar-drag-layer {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    isolation: isolate !important;
+    contain: layout style !important;
+}
+
+.project-calendar-drag-layer .project-calendar-drag-ghost,
+body[data-theme^="console"] .project-calendar-drag-layer .project-calendar-drag-ghost,
+body[data-theme^="blueprint"] .project-calendar-drag-layer .project-calendar-drag-ghost,
+body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-drag-ghost {
+    position: fixed !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    opacity: 0.99 !important;
+    overflow: visible !important;
+    transform-origin: top left !important;
+}

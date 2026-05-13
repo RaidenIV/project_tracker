@@ -1037,11 +1037,9 @@ function buildProjectCalendarTaskDockMarkup(project) {
                             <div class="project-calendar-draggable-task ${getProjectCalendarTaskPriorityClass(task)} ${canManualReorder ? 'has-manual-reorder' : ''}"
                                  data-calendar-task-item
                                  data-task-id="${escapeHtml(String(task.id))}"
-                                 draggable="${canEditCalendar ? 'true' : 'false'}"
+                                 draggable="false"
                                  role="listitem"
-                                 title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}"
-                                 ondragstart="handleProjectCalendarTaskDragStart(${projectIdLiteral}, ${taskIdLiteral}, event)"
-                                 ondragend="handleProjectCalendarTaskDragEnd(event)">
+                                 title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}">
                                 ${canManualReorder ? `
                                     <svg class="task-drag-handle project-calendar-task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" ondragstart="event.preventDefault(); event.stopPropagation();">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
@@ -1905,10 +1903,16 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
     let pressTimer = null;
     let pointerStartX = 0;
     let pointerStartY = 0;
+    let latestPointerX = 0;
+    let latestPointerY = 0;
     let activePointerId = null;
     let draggingItem = null;
+    let dragPlaceholder = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
     let initialOrder = [];
     let isDragging = false;
+    let tabAnimationFrame = null;
 
     function getPoint(event) {
         return {
@@ -1925,17 +1929,124 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         return getItems().map(item => String(getOrderValue(item) || '')).filter(Boolean);
     }
 
+    function animateMovableTabLayout(mutator) {
+        const itemsBefore = getItems();
+        const firstRects = new Map(itemsBefore.map(item => [item, item.getBoundingClientRect()]));
+        mutator();
+
+        const itemsAfter = getItems();
+        if (tabAnimationFrame) cancelAnimationFrame(tabAnimationFrame);
+        itemsAfter.forEach(item => {
+            if (!item || item === draggingItem) return;
+            const firstRect = firstRects.get(item);
+            if (!firstRect) return;
+            const lastRect = item.getBoundingClientRect();
+            const deltaX = firstRect.left - lastRect.left;
+            const deltaY = firstRect.top - lastRect.top;
+            if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return;
+
+            if (item.__tabReorderTimer) {
+                clearTimeout(item.__tabReorderTimer);
+                item.__tabReorderTimer = null;
+            }
+            item.classList.add('is-tab-settling');
+            item.style.setProperty('transition', 'none', 'important');
+            item.style.setProperty('transform', `translate3d(${deltaX}px, ${deltaY}px, 0)`, 'important');
+        });
+
+        tabAnimationFrame = requestAnimationFrame(() => {
+            itemsAfter.forEach(item => {
+                if (!item || item === draggingItem) return;
+                if (!item.classList.contains('is-tab-settling')) return;
+                item.style.setProperty('transition', 'transform 180ms cubic-bezier(0.22, 1, 0.36, 1)', 'important');
+                item.style.removeProperty('transform');
+                item.__tabReorderTimer = window.setTimeout(() => {
+                    item.classList.remove('is-tab-settling');
+                    item.style.removeProperty('transition');
+                    item.style.removeProperty('transform');
+                    item.__tabReorderTimer = null;
+                }, 205);
+            });
+            tabAnimationFrame = null;
+        });
+    }
+
     function clearTimer() {
         if (!pressTimer) return;
         clearTimeout(pressTimer);
         pressTimer = null;
     }
 
-    function reset() {
+    function clearDraggingItemStyles(item) {
+        if (!item) return;
+        ['position', 'left', 'top', 'width', 'height', 'margin', 'transform', 'z-index', 'pointer-events', 'transition', 'will-change'].forEach(prop => {
+            item.style.removeProperty(prop);
+        });
+    }
+
+    function removePlaceholder() {
+        if (dragPlaceholder?.parentNode) {
+            dragPlaceholder.remove();
+        }
+        dragPlaceholder = null;
+    }
+
+    function returnDraggingItemToFlow() {
+        if (!draggingItem) return;
+        if (dragPlaceholder?.parentNode) {
+            dragPlaceholder.replaceWith(draggingItem);
+            dragPlaceholder = null;
+        } else if (!container.contains(draggingItem)) {
+            container.appendChild(draggingItem);
+        }
+    }
+
+    function updateFloatingTabPosition(x = latestPointerX, y = latestPointerY) {
+        if (!draggingItem || !isDragging) return;
+        draggingItem.style.setProperty('transform', `translate3d(${x - dragOffsetX}px, ${y - dragOffsetY}px, 0)`, 'important');
+    }
+
+    function createPlaceholderForDraggingItem() {
+        if (!draggingItem || dragPlaceholder) return;
+        const rect = draggingItem.getBoundingClientRect();
+        const computed = window.getComputedStyle(draggingItem);
+        dragOffsetX = Math.max(0, Math.min(rect.width, latestPointerX - rect.left));
+        dragOffsetY = Math.max(0, Math.min(rect.height, latestPointerY - rect.top));
+
+        dragPlaceholder = document.createElement('span');
+        dragPlaceholder.className = 'movable-tab-placeholder';
+        dragPlaceholder.setAttribute('aria-hidden', 'true');
+        dragPlaceholder.style.setProperty('width', `${rect.width}px`, 'important');
+        dragPlaceholder.style.setProperty('height', `${rect.height}px`, 'important');
+        dragPlaceholder.style.setProperty('min-width', `${rect.width}px`, 'important');
+        dragPlaceholder.style.setProperty('flex', `0 0 ${rect.width}px`, 'important');
+        dragPlaceholder.style.setProperty('border-radius', computed.borderRadius || '999px');
+        draggingItem.before(dragPlaceholder);
+
+        draggingItem.style.setProperty('position', 'fixed', 'important');
+        draggingItem.style.setProperty('left', '0', 'important');
+        draggingItem.style.setProperty('top', '0', 'important');
+        draggingItem.style.setProperty('width', `${rect.width}px`, 'important');
+        draggingItem.style.setProperty('height', `${rect.height}px`, 'important');
+        draggingItem.style.setProperty('margin', '0', 'important');
+        draggingItem.style.setProperty('z-index', '2147483646', 'important');
+        draggingItem.style.setProperty('pointer-events', 'none', 'important');
+        draggingItem.style.setProperty('transition', 'none', 'important');
+        draggingItem.style.setProperty('will-change', 'transform', 'important');
+        document.body.appendChild(draggingItem);
+        updateFloatingTabPosition();
+    }
+
+    function reset({ restoreFlow = true } = {}) {
         clearTimer();
+        if (restoreFlow) {
+            returnDraggingItemToFlow();
+        } else {
+            removePlaceholder();
+        }
         if (draggingItem) {
             draggingItem.classList.remove('is-tab-dragging');
-            draggingItem.style.transform = '';
+            clearDraggingItemStyles(draggingItem);
             try {
                 if (activePointerId !== null && draggingItem.hasPointerCapture?.(activePointerId)) {
                     draggingItem.releasePointerCapture(activePointerId);
@@ -1945,10 +2056,28 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         container.classList.remove('is-tab-reordering');
         document.body.classList.remove('is-tab-reordering');
         document.body.style.userSelect = '';
+        if (tabAnimationFrame) {
+            cancelAnimationFrame(tabAnimationFrame);
+            tabAnimationFrame = null;
+        }
+        getItems().forEach(item => {
+            if (item.__tabReorderTimer) {
+                clearTimeout(item.__tabReorderTimer);
+                item.__tabReorderTimer = null;
+            }
+            item.classList.remove('is-tab-settling');
+            if (item !== draggingItem) {
+                item.style.removeProperty('transition');
+                item.style.removeProperty('transform');
+            }
+        });
+        removePlaceholder();
         draggingItem = null;
         activePointerId = null;
         initialOrder = [];
         isDragging = false;
+        dragOffsetX = 0;
+        dragOffsetY = 0;
         document.removeEventListener('pointermove', onPointerMove);
         document.removeEventListener('pointerup', onPointerEnd);
         document.removeEventListener('pointercancel', onPointerEnd);
@@ -1978,6 +2107,7 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         container.classList.add('is-tab-reordering');
         document.body.classList.add('is-tab-reordering');
         document.body.style.userSelect = 'none';
+        createPlaceholderForDraggingItem();
     }
 
     function onPointerDown(event) {
@@ -1990,6 +2120,8 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         initialOrder = getOrder();
         pointerStartX = point.x;
         pointerStartY = point.y;
+        latestPointerX = point.x;
+        latestPointerY = point.y;
         activePointerId = event.pointerId ?? null;
         clearTimer();
         pressTimer = setTimeout(beginDrag, MOVABLE_TAB_LONG_PRESS_MS);
@@ -2005,6 +2137,8 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
     function onPointerMove(event) {
         if (!draggingItem) return;
         const point = getPoint(event);
+        latestPointerX = point.x;
+        latestPointerY = point.y;
         const distance = Math.hypot(point.x - pointerStartX, point.y - pointerStartY);
 
         if (!isDragging && distance > 22) {
@@ -2014,24 +2148,32 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         if (!isDragging) return;
 
         event.preventDefault();
-        draggingItem.style.transform = `translate(${point.x - pointerStartX}px, ${point.y - pointerStartY}px)`;
+        updateFloatingTabPosition(point.x, point.y);
         const target = getDropTargetAtPoint(point.x, point.y);
-        if (!target) return;
+        if (!target || !dragPlaceholder) return;
 
         const rect = target.getBoundingClientRect();
-        const insertAfter = point.x > rect.left + rect.width / 2;
+        const insertAfter = rect.width >= rect.height
+            ? point.x > rect.left + rect.width / 2
+            : point.y > rect.top + rect.height / 2;
         if (insertAfter) {
-            target.after(draggingItem);
+            if (target.nextElementSibling === dragPlaceholder) return;
+            animateMovableTabLayout(() => target.after(dragPlaceholder));
         } else {
-            target.before(draggingItem);
+            if (target.previousElementSibling === dragPlaceholder) return;
+            animateMovableTabLayout(() => target.before(dragPlaceholder));
         }
     }
 
     function onPointerEnd(event) {
         if (!draggingItem) return;
         const wasDragging = isDragging;
-        const nextOrder = getOrder();
-        reset();
+        let nextOrder = initialOrder;
+        if (wasDragging) {
+            returnDraggingItemToFlow();
+            nextOrder = getOrder();
+        }
+        reset({ restoreFlow: false });
 
         if (!wasDragging) return;
         document.addEventListener('click', suppressClickAfterMovableTabDrag, true);
@@ -6674,6 +6816,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     let pointerStartY = 0;
     let dragScrollContainer = null;
     let dragStartScrollTop = 0;
+    let calendarDragGhost = null;
 
     function getPoint(e) {
         const touch = e.touches?.[0] || e.changedTouches?.[0];
@@ -6736,19 +6879,60 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         return dropDay;
     }
 
+    function getCalendarDragLayer() {
+        let layer = document.getElementById('project-calendar-drag-layer');
+        if (!layer) {
+            layer = document.createElement('div');
+            layer.id = 'project-calendar-drag-layer';
+            layer.className = 'project-calendar-drag-layer';
+            layer.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(layer);
+        }
+        return layer;
+    }
+
+    function createCalendarDragGhost(item) {
+        if (!item) return null;
+        const rect = item.getBoundingClientRect();
+        const ghost = item.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.querySelectorAll?.('[id]').forEach(child => child.removeAttribute('id'));
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.classList.add('project-calendar-drag-ghost', 'is-calendar-task-scheduling');
+        ghost.style.setProperty('left', `${rect.left}px`, 'important');
+        ghost.style.setProperty('top', `${rect.top}px`, 'important');
+        ghost.style.setProperty('width', `${rect.width}px`, 'important');
+        ghost.style.setProperty('height', `${rect.height}px`, 'important');
+        ghost.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
+        getCalendarDragLayer().appendChild(ghost);
+        item.classList.add('is-calendar-task-scheduling-source');
+        return ghost;
+    }
+
+    function removeCalendarDragGhost() {
+        if (calendarDragGhost) {
+            const layer = calendarDragGhost.closest?.('.project-calendar-drag-layer');
+            calendarDragGhost.remove();
+            calendarDragGhost = null;
+            if (layer && !layer.children.length) layer.remove();
+        }
+    }
+
     function updateCalendarDraggedTaskPosition(x, y) {
         if (!draggingItem) return;
-        const scrollDelta = getCalendarScrollTop(dragScrollContainer || getCalendarScrollContainer()) - dragStartScrollTop;
-        draggingItem.style.transform = `translate(${x - pointerStartX}px, ${y - pointerStartY + scrollDelta}px)`;
+        const dragVisual = calendarDragGhost || draggingItem;
+        const scrollDelta = calendarDragGhost ? 0 : getCalendarScrollTop(dragScrollContainer || getCalendarScrollContainer()) - dragStartScrollTop;
+        dragVisual.style.setProperty('transform', `translate3d(${x - pointerStartX}px, ${y - pointerStartY + scrollDelta}px, 0)`, 'important');
         markDropDayAtPoint(x, y);
     }
 
     function clearCalendarDragClasses() {
         taskList.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling');
         if (draggingItem) {
-            draggingItem.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling');
+            draggingItem.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling', 'is-calendar-task-scheduling-source');
             draggingItem.style.transform = '';
         }
+        removeCalendarDragGhost();
     }
 
     function onStart(e) {
@@ -6772,6 +6956,9 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         dragStartScrollTop = getCalendarScrollTop(dragScrollContainer);
         moved = false;
         item.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
+        if (dragMode === 'schedule') {
+            calendarDragGhost = createCalendarDragGhost(item);
+        }
         taskList.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
         document.body.style.userSelect = 'none';
         document.body.classList.add('is-calendar-task-dragging');
@@ -6845,6 +7032,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         document.removeEventListener('touchcancel', onEnd);
         clearCalendarDragClasses();
         clearProjectCalendarDropTargets();
+        removeCalendarDragGhost();
         draggingItem = null;
         dragMode = null;
         dragScrollContainer = null;
