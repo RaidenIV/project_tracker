@@ -262,10 +262,9 @@ function hasProjectNoteContent(project) {
     const notes = String(project?.notes || '').trim();
     if (!notes) return false;
     try {
-        const data = normalizeProjectNotesData(notes);
-        return (data.tabs || []).some(tab => String(tab.body || '').trim() || (Array.isArray(tab.links) && tab.links.length > 0));
+        return projectHasNotes(notes);
     } catch {
-        return Boolean(notes);
+        return Boolean(getRichTextPlainText(notes));
     }
 }
 
@@ -376,7 +375,7 @@ function buildPersonalProgressionMetrics() {
             if (dueDate) hasTaskDueDate = true;
             if (tag !== DEFAULT_TASK_TAG) hasPriority = true;
             if (task.category && task.category !== DEFAULT_TASK_CATEGORY) hasTag = true;
-            if (String(task.note || '').trim()) hasNote = true;
+            if (getRichTextPlainText(task.note || '')) hasNote = true;
             if (isTaskOverdue(task)) currentOverdueTasks += 1;
             if (!task.completed) return;
 
@@ -1566,6 +1565,7 @@ const LIGHT_MODE_ACCENT_COLOR_OPTIONS = [
     '#ff004a'
 ];
 const DARK_MODE_ACCENT_COLOR_OPTIONS = [
+    '#ff00b5',
     '#ff2000',
     '#ff8a00',
     '#fff400',
@@ -1674,6 +1674,110 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+
+function hasRichTextMarkup(value) {
+    return /<\/?(?:strong|b|em|i|u|br|div|p)\b/i.test(String(value ?? ''));
+}
+
+function plainTextToRichTextHtml(value = '') {
+    return escapeHtml(String(value ?? '')).replace(/\r\n|\r|\n/g, '<br>');
+}
+
+function sanitizeRichTextHtml(value = '') {
+    const raw = String(value ?? '');
+    if (!raw.trim()) return '';
+    if (!hasRichTextMarkup(raw)) return plainTextToRichTextHtml(raw);
+
+    if (typeof document === 'undefined') {
+        return raw
+            .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+            .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+            .replace(/<(?!\/?(?:strong|b|em|i|u|br|div|p)\b)[^>]*>/gi, '');
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = raw;
+
+    const sanitizeNode = node => {
+        if (node.nodeType === Node.TEXT_NODE) return escapeHtml(node.textContent || '');
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+        const sourceTag = node.tagName.toLowerCase();
+        const tag = sourceTag === 'b' ? 'strong' : (sourceTag === 'i' ? 'em' : sourceTag);
+        const childHtml = Array.from(node.childNodes).map(sanitizeNode).join('');
+
+        if (tag === 'br') return '<br>';
+        if (tag === 'strong' || tag === 'em' || tag === 'u') return `<${tag}>${childHtml}</${tag}>`;
+        if (tag === 'div' || tag === 'p') return `<div>${childHtml || '<br>'}</div>`;
+        return childHtml;
+    };
+
+    return Array.from(template.content.childNodes).map(sanitizeNode).join('').trim();
+}
+
+function getRichTextDisplayHtml(value = '') {
+    return sanitizeRichTextHtml(value);
+}
+
+function getRichTextPlainText(value = '') {
+    const raw = String(value ?? '');
+    if (!raw) return '';
+
+    if (typeof document === 'undefined') {
+        return raw
+            .replace(/<br\s*\/?\s*>/gi, ' ')
+            .replace(/<\/(?:div|p)>/gi, ' ')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = hasRichTextMarkup(raw) ? sanitizeRichTextHtml(raw) : plainTextToRichTextHtml(raw);
+    return (container.innerText || container.textContent || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function getRichTextEditorValue(editorOrId) {
+    const editor = typeof editorOrId === 'string' ? document.getElementById(editorOrId) : editorOrId;
+    if (!editor) return '';
+    const html = sanitizeRichTextHtml(editor.innerHTML || '');
+    return getRichTextPlainText(html) ? html : '';
+}
+
+function applyRichTextCommand(editorId, command) {
+    const editor = document.getElementById(editorId);
+    if (!editor || editor.getAttribute('contenteditable') !== 'true') return;
+    const safeCommand = { bold: 'bold', italic: 'italic', underline: 'underline' }[command];
+    if (!safeCommand) return;
+    editor.focus({ preventScroll: true });
+    try {
+        document.execCommand('styleWithCSS', false, false);
+    } catch {
+        // Some browsers no-op or reject styleWithCSS. The formatting command still runs below.
+    }
+    document.execCommand(safeCommand, false, null);
+}
+
+function buildRichTextToolbarMarkup(editorId, disabled = false) {
+    if (disabled) return '';
+    const safeEditorId = String(editorId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    return `
+        <div class="rich-text-toolbar" role="toolbar" aria-label="Text formatting tools">
+            <button class="rich-text-toolbar-button rich-text-toolbar-button--bold" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'bold')" aria-label="Bold" title="Bold"><strong>B</strong></button>
+            <button class="rich-text-toolbar-button rich-text-toolbar-button--italic" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'italic')" aria-label="Italic" title="Italic"><em>I</em></button>
+            <button class="rich-text-toolbar-button rich-text-toolbar-button--underline" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'underline')" aria-label="Underline" title="Underline"><span>U</span></button>
+        </div>`;
 }
 
 
@@ -4047,7 +4151,7 @@ function normalizeProjectNoteLinks(links = []) {
 }
 
 function extractLinksFromText(text = '') {
-    const rawText = String(text || '');
+    const rawText = getRichTextPlainText(text || '');
     const links = [];
     const seen = new Set();
     const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
@@ -4204,7 +4308,7 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
     const tabButtons = data.tabs.map(tab => {
         const isActive = tab.id === activeTab.id;
-        const hasNote = String(tab.body || '').trim().length > 0;
+        const hasNote = getRichTextPlainText(tab.body).length > 0;
         const isEditingTitle = canEdit && isEditingProjectNoteTab(projectId, tab.id, safeSurface);
         if (isEditingTitle) {
             return `<span class="project-notes-tab project-notes-tab--input ${isActive ? 'is-active' : ''} ${hasNote ? 'has-note' : ''}">
@@ -4254,10 +4358,14 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
                            ${canEdit ? `onblur="updateProjectNoteTitle('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"` : 'readonly'}>
                     ${canEdit && data.tabs.length > 1 ? `<button class="project-notes-delete-tab" type="button" onclick="deleteProjectNoteTab('${projectId}', '${activeTab.id}', '${safeSurface}', event)" title="Delete this note tab">Delete tab</button>` : ''}
                 </div>
-                <textarea class="project-notes-textarea"
-                          id="project-notes-body-${safeSurface}"
-                          placeholder="Write project notes here..."
-                          ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', this.value, '${safeSurface}')"` : 'readonly'}>${escapeHtml(activeTab.body || '')}</textarea>
+                ${buildRichTextToolbarMarkup(`project-notes-body-${safeSurface}`, !canEdit)}
+                <div class="project-notes-textarea rich-text-editor"
+                     id="project-notes-body-${safeSurface}"
+                     role="textbox"
+                     aria-multiline="true"
+                     data-placeholder="Write project notes here..."
+                     contenteditable="${canEdit ? 'true' : 'false'}"
+                     ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', getRichTextEditorValue(this), '${safeSurface}')"` : ''}>${getRichTextDisplayHtml(activeTab.body || '')}</div>
                 ${renderProjectNotesLinksMarkup(projectId, activeTab.id, activeTab.links || [], canEdit, safeSurface, activeTab.body || '')}
                 ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onmousedown="commitPendingProjectNoteTabName('${projectId}', '${safeSurface}')" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
             </div>
@@ -4351,9 +4459,10 @@ function updateProjectNoteBody(projectId, tabId, bodyValue, surface = 'modal') {
     const data = getProjectNotesDataForProject(projectId);
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
-    const nextBody = String(bodyValue ?? '').trim();
-    if (nextBody === String(tab.body || '')) return;
-    tab.body = nextBody;
+    const nextBody = sanitizeRichTextHtml(bodyValue).trim();
+    const currentBody = sanitizeRichTextHtml(tab.body || '').trim();
+    if (nextBody === currentBody) return;
+    tab.body = getRichTextPlainText(nextBody) ? nextBody : '';
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
@@ -4612,11 +4721,11 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     const activeTab = data.tabs.find(item => item.id === data.activeTabId) || data.tabs[0];
     if (!activeTab) return;
     const titleInput = document.getElementById(`project-notes-title-${surface}`);
-    const bodyTextarea = document.getElementById(`project-notes-body-${surface}`);
+    const bodyEditor = document.getElementById(`project-notes-body-${surface}`);
     const tab = data.tabs.find(item => item.id === activeTab.id);
     if (!tab) return;
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
-    if (bodyTextarea) tab.body = String(bodyTextarea.value || '').trim();
+    if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
     tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
@@ -7377,7 +7486,7 @@ function serializeProjectNotesData(data) {
 function getProjectNotesPlainText(notes) {
     const data = normalizeProjectNotesData(notes);
     return data.tabs
-        .map(tab => `${tab.title} ${tab.body} ${(tab.links || []).map(link => `${link.label} ${link.href}`).join(' ')}`.trim())
+        .map(tab => `${tab.title} ${getRichTextPlainText(tab.body)} ${(tab.links || []).map(link => `${link.label} ${link.href}`).join(' ')}`.trim())
         .filter(Boolean)
         .join(' ')
         .trim();
@@ -7385,7 +7494,7 @@ function getProjectNotesPlainText(notes) {
 
 function projectHasNotes(notes) {
     const data = normalizeProjectNotesData(notes);
-    return data.tabs.some(tab => String(tab.body || '').trim().length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+    return data.tabs.some(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
 }
 
 function formatProjectNotesPreview(notes) {
@@ -7440,7 +7549,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
     const normalizedTask = normalizeTask(task);
     const project = state.findProject(projectId);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
-    const hasTaskNote = normalizedTask.note.trim().length > 0;
+    const hasTaskNote = getRichTextPlainText(normalizedTask.note).length > 0;
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
     const taskOverdue = isTaskOverdue(normalizedTask);
     const dueDateLabel = taskOverdue ? `Overdue: ${formatTaskDueDate(dueDate)}` : (dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
@@ -7580,7 +7689,13 @@ function ensureTaskNoteModal() {
                         </svg>
                     </button>
                 </div>
-                <textarea class="task-note-textarea" id="taskNoteTextarea" placeholder="Write a note for this task..."></textarea>
+                ${buildRichTextToolbarMarkup('taskNoteEditor')}
+                <div class="task-note-textarea rich-text-editor"
+                     id="taskNoteEditor"
+                     role="textbox"
+                     aria-multiline="true"
+                     data-placeholder="Write a note for this task..."
+                     contenteditable="true"></div>
                 <div class="task-note-modal-actions">
                     <button class="confirm-cancel" type="button" onclick="closeTaskNoteModal()">Cancel</button>
                     <button class="modal-done-btn" type="button" onclick="saveTaskNoteFromModal()">Save Note</button>
@@ -7614,12 +7729,12 @@ function openTaskNoteModal(projectId, taskId, event) {
     const subtitle = modal.querySelector('#taskNoteModalSubtitle');
     if (subtitle) subtitle.textContent = task.text ? `Note for: ${task.text}` : 'Add details for this task.';
 
-    const textarea = modal.querySelector('#taskNoteTextarea');
-    if (textarea) textarea.value = task.note || '';
+    const editor = modal.querySelector('#taskNoteEditor');
+    if (editor) editor.innerHTML = getRichTextDisplayHtml(task.note || '');
 
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => textarea?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => editor?.focus({ preventScroll: true }));
 }
 
 function closeTaskNoteModal() {
@@ -7636,9 +7751,9 @@ function saveTaskNoteFromModal() {
     if (!modal) return;
     const projectId = modal.dataset.projectId;
     const taskId = Number(modal.dataset.taskId);
-    const textarea = modal.querySelector('#taskNoteTextarea');
-    if (!projectId || !Number.isFinite(taskId) || !textarea) return;
-    updateTaskNote(projectId, taskId, textarea.value);
+    const editor = modal.querySelector('#taskNoteEditor');
+    if (!projectId || !Number.isFinite(taskId) || !editor) return;
+    updateTaskNote(projectId, taskId, getRichTextEditorValue(editor));
     closeTaskNoteModal();
 }
 
@@ -7650,9 +7765,10 @@ function updateTaskNote(projectId, taskId, noteValue) {
     const updatedTasks = (project.tasks || []).map((task, index) => {
         const normalizedTask = normalizeTask(task, index);
         if (normalizedTask.id !== taskId) return normalizedTask;
+        const nextNote = sanitizeRichTextHtml(noteValue).trim();
         return {
             ...normalizedTask,
-            note: String(noteValue ?? '').trim()
+            note: getRichTextPlainText(nextNote) ? nextNote : ''
         };
     });
 
@@ -10458,6 +10574,8 @@ window.deleteProjectNoteTab = deleteProjectNoteTab;
 window.commitPendingProjectNoteTabName = commitPendingProjectNoteTabName;
 window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
+window.getRichTextEditorValue = getRichTextEditorValue;
+window.applyRichTextCommand = applyRichTextCommand;
 window.addProjectNoteLink = addProjectNoteLink;
 window.closeProjectNoteLinkModal = closeProjectNoteLinkModal;
 window.editProjectNoteLink = editProjectNoteLink;

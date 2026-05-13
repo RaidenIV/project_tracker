@@ -22310,3 +22310,85 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reor
         line-height: 1 !important;
     }
 }
+
+/* Rich text formatting controls for project and task notes */
+.rich-text-toolbar {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    width: max-content !important;
+    max-width: 100% !important;
+    padding: 0.28rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.24))) !important;
+    border-radius: 0.75rem !important;
+    background: color-mix(in srgb, var(--panel, var(--surface, transparent)) 88%, var(--accent, currentColor) 6%) !important;
+}
+
+.rich-text-toolbar-button {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 0.55rem !important;
+    background: transparent !important;
+    color: var(--heading, currentColor) !important;
+    font: inherit !important;
+    font-size: 0.9rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+}
+
+.rich-text-toolbar-button:hover,
+.rich-text-toolbar-button:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 48%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 12%, transparent) !important;
+    outline: none !important;
+}
+
+.rich-text-toolbar-button--italic em {
+    font-style: italic !important;
+}
+
+.rich-text-toolbar-button--underline span {
+    text-decoration: underline !important;
+    text-underline-offset: 0.12em !important;
+}
+
+.rich-text-editor {
+    white-space: pre-wrap !important;
+    overflow-y: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+.rich-text-editor:empty::before {
+    content: attr(data-placeholder) !important;
+    color: var(--muted, currentColor) !important;
+    opacity: 0.72 !important;
+    pointer-events: none !important;
+}
+
+.rich-text-editor[contenteditable="false"] {
+    cursor: default !important;
+}
+
+.project-notes-textarea.rich-text-editor {
+    resize: none !important;
+}
+
+.task-note-textarea.rich-text-editor {
+    resize: none !important;
+}
+
+.rich-text-editor u {
+    text-underline-offset: 0.12em !important;
+}
