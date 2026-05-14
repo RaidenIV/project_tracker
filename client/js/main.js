@@ -1888,6 +1888,8 @@ function saveProjectModalTabOrder(order = DEFAULT_MODAL_TAB_ORDER) {
 }
 
 let __movableTabClickSuppressTimer = null;
+let __movableTabDragEndX = 0;
+let __movableTabDragEndY = 0;
 
 function clearMovableTabClickSuppression() {
     document.removeEventListener('click', suppressClickAfterMovableTabDrag, true);
@@ -1898,14 +1900,25 @@ function clearMovableTabClickSuppression() {
 }
 
 function suppressClickAfterMovableTabDrag(event) {
+    // Only suppress clicks near where the drag ended (ghost-clicks from pointer-up).
+    // Intentional clicks on a different tab elsewhere must go through so the user
+    // can switch tabs immediately after a reorder without needing a second click.
+    const dx = Math.abs((event.clientX ?? 0) - __movableTabDragEndX);
+    const dy = Math.abs((event.clientY ?? 0) - __movableTabDragEndY);
+    if (dx > 12 || dy > 12) {
+        clearMovableTabClickSuppression();
+        return;
+    }
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation?.();
     clearMovableTabClickSuppression();
 }
 
-function suppressNextMovableTabClickBriefly() {
+function suppressNextMovableTabClickBriefly(endX = 0, endY = 0) {
     clearMovableTabClickSuppression();
+    __movableTabDragEndX = endX;
+    __movableTabDragEndY = endY;
     document.addEventListener('click', suppressClickAfterMovableTabDrag, true);
     __movableTabClickSuppressTimer = window.setTimeout(clearMovableTabClickSuppression, 275);
 }
@@ -2192,7 +2205,7 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         reset({ restoreFlow: false });
 
         if (!wasDragging) return;
-        suppressNextMovableTabClickBriefly();
+        suppressNextMovableTabClickBriefly(latestPointerX, latestPointerY);
         if (initialOrder.join('|') !== nextOrder.join('|')) {
             onCommitOrder(nextOrder, event);
         }
@@ -4222,19 +4235,28 @@ function mergeRealtimeProjectWithExisting(existingProject, incomingProject, rawP
     if (!existingProject || !incomingProject) return incomingProject;
     const mergedProject = { ...incomingProject };
 
-    if (!realtimePayloadHasField(rawPayload, 'tasks')) {
+    // If the local project has been modified after its last server sync
+    // (lastModified > __syncedLastModified), those edits are still in-flight
+    // or queued. Overwriting tasks/categories/notes from a realtime snapshot
+    // that pre-dates those changes would briefly remove locally-added data
+    // until the queued save completes. Preserve the local copy in that window.
+    const localModified = getProjectTimestampValue(existingProject.lastModified);
+    const localSynced   = getProjectTimestampValue(existingProject.__syncedLastModified);
+    const hasLocalUnsynced = localModified > 0 && localSynced > 0 && localModified > localSynced;
+
+    if (!realtimePayloadHasField(rawPayload, 'tasks') || hasLocalUnsynced) {
         mergedProject.tasks = Array.isArray(existingProject.tasks) ? existingProject.tasks : [];
     }
-    if (!realtimePayloadHasField(rawPayload, 'taskCategories')) {
+    if (!realtimePayloadHasField(rawPayload, 'taskCategories') || hasLocalUnsynced) {
         mergedProject.taskCategories = Array.isArray(existingProject.taskCategories) ? existingProject.taskCategories : [];
     }
-    if (!realtimePayloadHasField(rawPayload, 'notes')) {
+    if (!realtimePayloadHasField(rawPayload, 'notes') || hasLocalUnsynced) {
         mergedProject.notes = typeof existingProject.notes === 'string' ? existingProject.notes : '';
     }
-    if (!realtimePayloadHasField(rawPayload, 'calendarNotes', 'projectCalendarNotes')) {
+    if (!realtimePayloadHasField(rawPayload, 'calendarNotes', 'projectCalendarNotes') || hasLocalUnsynced) {
         mergedProject.calendarNotes = normalizeProjectCalendarNotes(existingProject.calendarNotes || existingProject.projectCalendarNotes || {});
     }
-    if (!realtimePayloadHasField(rawPayload, 'tags', 'projectTags')) {
+    if (!realtimePayloadHasField(rawPayload, 'tags', 'projectTags') || hasLocalUnsynced) {
         mergedProject.tags = normalizeProjectTags(existingProject.tags || existingProject.projectTags || []);
     }
 
@@ -6940,18 +6962,6 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         return dropDay;
     }
 
-    function getCalendarDragLayer() {
-        let layer = document.getElementById('project-calendar-drag-layer');
-        if (!layer) {
-            layer = document.createElement('div');
-            layer.id = 'project-calendar-drag-layer';
-            layer.className = 'project-calendar-drag-layer';
-            layer.setAttribute('aria-hidden', 'true');
-            document.body.appendChild(layer);
-        }
-        return layer;
-    }
-
     function createCalendarDragGhost(item, point = { x: pointerStartX, y: pointerStartY }) {
         if (!item) return null;
         const rect = item.getBoundingClientRect();
@@ -6969,22 +6979,30 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         ghost.classList.add('project-calendar-drag-ghost');
         calendarDragOffsetX = Math.max(0, Math.min(rect.width, point.x - rect.left));
         calendarDragOffsetY = Math.max(0, Math.min(rect.height, point.y - rect.top));
+        // Apply positioning inline so the ghost sits at the exact source position on
+        // first paint, then follows the pointer via updateCalendarDraggedTaskPosition.
+        ghost.style.setProperty('position', 'fixed', 'important');
         ghost.style.setProperty('left', '0', 'important');
         ghost.style.setProperty('top', '0', 'important');
         ghost.style.setProperty('width', `${rect.width}px`, 'important');
         ghost.style.setProperty('height', `${rect.height}px`, 'important');
+        ghost.style.setProperty('margin', '0', 'important');
+        ghost.style.setProperty('z-index', '2147483647', 'important');
+        ghost.style.setProperty('pointer-events', 'none', 'important');
         ghost.style.setProperty('transform', `translate3d(${rect.left}px, ${rect.top}px, 0)`, 'important');
-        getCalendarDragLayer().appendChild(ghost);
+        ghost.style.setProperty('will-change', 'transform', 'important');
+        // Attach directly to body — avoids any nested stacking context (isolation,
+        // contain, transform on an ancestor) that could prevent the ghost from
+        // painting above the modal overlay.
+        document.body.appendChild(ghost);
         item.classList.add('is-calendar-task-scheduling-source');
         return ghost;
     }
 
     function removeCalendarDragGhost() {
         if (calendarDragGhost) {
-            const layer = calendarDragGhost.closest?.('.project-calendar-drag-layer');
             calendarDragGhost.remove();
             calendarDragGhost = null;
-            if (layer && !layer.children.length) layer.remove();
         }
         calendarDragOffsetX = 0;
         calendarDragOffsetY = 0;
