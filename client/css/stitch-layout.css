@@ -22651,7 +22651,7 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
    intermediate laptop, tablet-landscape, 16:10, and high-resolution desktops
    fluid instead of relying on isolated resolution-specific fixes.
    ============================================================================ */
-@media (min-width: 981px) and (max-width: 1799px) {
+@media (min-width: 981px) and (max-width: 1919px) {
     html,
     body {
         width: 100% !important;
@@ -22781,7 +22781,7 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
     body[data-theme^="console"].control-panel-is-collapsed .project-grid,
     body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
     body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
         justify-content: stretch !important;
         justify-items: stretch !important;
@@ -22839,8 +22839,8 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
     }
 }
 
-/* Follow-up patch: keep sub-1920 non-mobile desktop project grids at three cards per row. */
-@media (min-width: 981px) and (max-width: 1799px) {
+/* Follow-up patch: keep sub-1920 non-mobile desktop project grids at two cards per row. */
+@media (min-width: 981px) and (max-width: 1919px) {
     .project-grid,
     body.has-sidebar .project-grid,
     body.sidebar-collapsed .project-grid,
@@ -22851,7 +22851,7 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
     body[data-theme^="console"].control-panel-is-collapsed .project-grid,
     body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
     body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
         justify-content: stretch !important;
         justify-items: stretch !important;
