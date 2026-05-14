@@ -22777,9 +22777,12 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
     body.control-panel-is-collapsed .project-grid,
     body[data-theme^="console"] .project-grid,
     body[data-theme^="blueprint"] .project-grid,
-    body[data-theme^="glass"] .project-grid {
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, clamp(17.5rem, 29vw, 21.75rem)), 1fr)) !important;
-        gap: clamp(1rem, 1.2vw, 1.5rem) !important;
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
         justify-content: stretch !important;
         justify-items: stretch !important;
         align-content: start !important;
@@ -22833,6 +22836,27 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
 
     .top-app-logo {
         display: none !important;
+    }
+}
+
+/* Follow-up patch: keep sub-1920 non-mobile desktop project grids at three cards per row. */
+@media (min-width: 981px) and (max-width: 1799px) {
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
     }
 }
 
