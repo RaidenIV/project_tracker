@@ -6954,6 +6954,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     let dragScrollContainer = null;
     let dragStartScrollTop = 0;
     let calendarDragGhost = null;
+    let calendarDragLayer = null;
     let calendarDragOffsetX = 0;
     let calendarDragOffsetY = 0;
 
@@ -7018,6 +7019,18 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         return dropDay;
     }
 
+    function getOrCreateCalendarDragLayer() {
+        if (calendarDragLayer?.isConnected) return calendarDragLayer;
+        calendarDragLayer = document.querySelector('.project-calendar-drag-layer');
+        if (!calendarDragLayer) {
+            calendarDragLayer = document.createElement('div');
+            calendarDragLayer.className = 'project-calendar-drag-layer';
+            calendarDragLayer.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(calendarDragLayer);
+        }
+        return calendarDragLayer;
+    }
+
     function createCalendarDragGhost(item, point = { x: pointerStartX, y: pointerStartY }) {
         if (!item) return null;
         const rect = item.getBoundingClientRect();
@@ -7047,10 +7060,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         ghost.style.setProperty('pointer-events', 'none', 'important');
         ghost.style.setProperty('transform', `translate3d(${rect.left}px, ${rect.top}px, 0)`, 'important');
         ghost.style.setProperty('will-change', 'transform', 'important');
-        // Attach directly to body — avoids any nested stacking context (isolation,
-        // contain, transform on an ancestor) that could prevent the ghost from
-        // painting above the modal overlay.
-        document.body.appendChild(ghost);
+        getOrCreateCalendarDragLayer().appendChild(ghost);
         item.classList.add('is-calendar-task-scheduling-source');
         return ghost;
     }
@@ -7059,6 +7069,10 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         if (calendarDragGhost) {
             calendarDragGhost.remove();
             calendarDragGhost = null;
+        }
+        if (calendarDragLayer && !calendarDragLayer.children.length) {
+            calendarDragLayer.remove();
+            calendarDragLayer = null;
         }
         calendarDragOffsetX = 0;
         calendarDragOffsetY = 0;
@@ -7108,10 +7122,8 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         dragStartScrollTop = getCalendarScrollTop(dragScrollContainer);
         moved = false;
         item.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
-        if (dragMode === 'schedule') {
-            calendarDragGhost = createCalendarDragGhost(item, point);
-            updateCalendarDraggedTaskPosition(point.x, point.y);
-        }
+        calendarDragGhost = createCalendarDragGhost(item, point);
+        updateCalendarDraggedTaskPosition(point.x, point.y);
         taskList.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
         document.body.style.userSelect = 'none';
         document.body.classList.add('is-calendar-task-dragging');
