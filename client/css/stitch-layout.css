@@ -22602,3 +22602,45 @@ body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-drag-gh
     overflow: visible !important;
     transform-origin: top left !important;
 }
+
+/* ============================================================================
+   Targeted patch: stable calendar drag layer and tab click recovery
+   ============================================================================ */
+.project-calendar-drag-layer,
+body[data-theme^="console"] .project-calendar-drag-layer,
+body[data-theme^="blueprint"] .project-calendar-drag-layer,
+body[data-theme^="glass"] .project-calendar-drag-layer {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    isolation: isolate !important;
+    contain: none !important;
+}
+
+.project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme^="console"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme^="blueprint"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 2147483647 !important;
+    display: flex !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    cursor: grabbing !important;
+    transform-origin: top left !important;
+    will-change: transform !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 52%, transparent), 0 22px 42px rgba(0, 0, 0, 0.38) !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-scheduling-source,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-scheduling-source,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-scheduling-source,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-scheduling-source {
+    opacity: 0.78 !important;
+}

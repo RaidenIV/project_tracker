@@ -1887,11 +1887,27 @@ function saveProjectModalTabOrder(order = DEFAULT_MODAL_TAB_ORDER) {
     }
 }
 
+let __movableTabClickSuppressTimer = null;
+
+function clearMovableTabClickSuppression() {
+    document.removeEventListener('click', suppressClickAfterMovableTabDrag, true);
+    if (__movableTabClickSuppressTimer) {
+        clearTimeout(__movableTabClickSuppressTimer);
+        __movableTabClickSuppressTimer = null;
+    }
+}
+
 function suppressClickAfterMovableTabDrag(event) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation?.();
-    document.removeEventListener('click', suppressClickAfterMovableTabDrag, true);
+    clearMovableTabClickSuppression();
+}
+
+function suppressNextMovableTabClickBriefly() {
+    clearMovableTabClickSuppression();
+    document.addEventListener('click', suppressClickAfterMovableTabDrag, true);
+    __movableTabClickSuppressTimer = window.setTimeout(clearMovableTabClickSuppression, 275);
 }
 
 function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCommitOrder) {
@@ -2176,7 +2192,7 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         reset({ restoreFlow: false });
 
         if (!wasDragging) return;
-        document.addEventListener('click', suppressClickAfterMovableTabDrag, true);
+        suppressNextMovableTabClickBriefly();
         if (initialOrder.join('|') !== nextOrder.join('|')) {
             onCommitOrder(nextOrder, event);
         }
@@ -4125,13 +4141,16 @@ function getOpenProjectModalId() {
 }
 
 function upsertRealtimeProject(projectPayload) {
-    const incoming = normalizeProject(projectPayload);
-    if (!incoming) return;
+    const normalizedIncoming = normalizeProject(projectPayload);
+    if (!normalizedIncoming) return;
 
     const existing = state.getProjects().find(project =>
-        String(project.id) === String(incoming.id) ||
-        String(project._id || '') === String(incoming._id || '')
+        String(project.id) === String(normalizedIncoming.id) ||
+        String(project._id || '') === String(normalizedIncoming._id || '')
     );
+    if (existing && isIncomingRealtimeProjectStale(existing, normalizedIncoming)) return;
+
+    const incoming = mergeRealtimeProjectWithExisting(existing, normalizedIncoming, projectPayload);
     const openProjectId = getOpenProjectModalId();
     const shouldRestoreModal = openProjectId && existing && String(existing.id) === String(openProjectId);
     const modalState = shouldRestoreModal ? captureProjectModalState(existing.id) : null;
@@ -4180,6 +4199,46 @@ function isRealtimeFromCurrentUser(payload = {}) {
     const sourceUserId = payload?.sourceUserId ? String(payload.sourceUserId) : '';
     const currentUserId = String(state.getCurrentUser?.()?.id || getCurrentUser?.()?.id || '');
     return !!sourceUserId && !!currentUserId && sourceUserId === currentUserId;
+}
+
+function getProjectTimestampValue(value) {
+    const timestamp = Date.parse(String(value || ''));
+    return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function isIncomingRealtimeProjectStale(existingProject, incomingProject) {
+    if (!existingProject || !incomingProject) return false;
+    const existingModified = getProjectTimestampValue(existingProject.lastModified || existingProject.__syncedLastModified || existingProject.updatedAt);
+    const incomingModified = getProjectTimestampValue(incomingProject.lastModified || incomingProject.__syncedLastModified || incomingProject.updatedAt);
+    return Boolean(existingModified && incomingModified && incomingModified < existingModified);
+}
+
+function realtimePayloadHasField(payload, ...fieldNames) {
+    if (!payload || typeof payload !== 'object') return false;
+    return fieldNames.some(fieldName => Object.prototype.hasOwnProperty.call(payload, fieldName));
+}
+
+function mergeRealtimeProjectWithExisting(existingProject, incomingProject, rawPayload = {}) {
+    if (!existingProject || !incomingProject) return incomingProject;
+    const mergedProject = { ...incomingProject };
+
+    if (!realtimePayloadHasField(rawPayload, 'tasks')) {
+        mergedProject.tasks = Array.isArray(existingProject.tasks) ? existingProject.tasks : [];
+    }
+    if (!realtimePayloadHasField(rawPayload, 'taskCategories')) {
+        mergedProject.taskCategories = Array.isArray(existingProject.taskCategories) ? existingProject.taskCategories : [];
+    }
+    if (!realtimePayloadHasField(rawPayload, 'notes')) {
+        mergedProject.notes = typeof existingProject.notes === 'string' ? existingProject.notes : '';
+    }
+    if (!realtimePayloadHasField(rawPayload, 'calendarNotes', 'projectCalendarNotes')) {
+        mergedProject.calendarNotes = normalizeProjectCalendarNotes(existingProject.calendarNotes || existingProject.projectCalendarNotes || {});
+    }
+    if (!realtimePayloadHasField(rawPayload, 'tags', 'projectTags')) {
+        mergedProject.tags = normalizeProjectTags(existingProject.tags || existingProject.projectTags || []);
+    }
+
+    return mergedProject;
 }
 
 function startRealtimeSync() {
@@ -6817,6 +6876,8 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     let dragScrollContainer = null;
     let dragStartScrollTop = 0;
     let calendarDragGhost = null;
+    let calendarDragOffsetX = 0;
+    let calendarDragOffsetY = 0;
 
     function getPoint(e) {
         const touch = e.touches?.[0] || e.changedTouches?.[0];
@@ -6891,19 +6952,28 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         return layer;
     }
 
-    function createCalendarDragGhost(item) {
+    function createCalendarDragGhost(item, point = { x: pointerStartX, y: pointerStartY }) {
         if (!item) return null;
         const rect = item.getBoundingClientRect();
         const ghost = item.cloneNode(true);
         ghost.removeAttribute('id');
+        ghost.removeAttribute('draggable');
         ghost.querySelectorAll?.('[id]').forEach(child => child.removeAttribute('id'));
+        ghost.querySelectorAll?.('button, input, select, textarea').forEach(control => {
+            control.setAttribute('tabindex', '-1');
+            control.setAttribute('aria-hidden', 'true');
+            control.disabled = true;
+        });
         ghost.setAttribute('aria-hidden', 'true');
-        ghost.classList.add('project-calendar-drag-ghost', 'is-calendar-task-scheduling');
-        ghost.style.setProperty('left', `${rect.left}px`, 'important');
-        ghost.style.setProperty('top', `${rect.top}px`, 'important');
+        ghost.classList.remove('is-calendar-task-scheduling', 'is-calendar-task-reordering', 'is-calendar-task-scheduling-source');
+        ghost.classList.add('project-calendar-drag-ghost');
+        calendarDragOffsetX = Math.max(0, Math.min(rect.width, point.x - rect.left));
+        calendarDragOffsetY = Math.max(0, Math.min(rect.height, point.y - rect.top));
+        ghost.style.setProperty('left', '0', 'important');
+        ghost.style.setProperty('top', '0', 'important');
         ghost.style.setProperty('width', `${rect.width}px`, 'important');
         ghost.style.setProperty('height', `${rect.height}px`, 'important');
-        ghost.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
+        ghost.style.setProperty('transform', `translate3d(${rect.left}px, ${rect.top}px, 0)`, 'important');
         getCalendarDragLayer().appendChild(ghost);
         item.classList.add('is-calendar-task-scheduling-source');
         return ghost;
@@ -6916,13 +6986,18 @@ function setupProjectCalendarTaskDockDrag(projectId) {
             calendarDragGhost = null;
             if (layer && !layer.children.length) layer.remove();
         }
+        calendarDragOffsetX = 0;
+        calendarDragOffsetY = 0;
     }
 
     function updateCalendarDraggedTaskPosition(x, y) {
         if (!draggingItem) return;
-        const dragVisual = calendarDragGhost || draggingItem;
-        const scrollDelta = calendarDragGhost ? 0 : getCalendarScrollTop(dragScrollContainer || getCalendarScrollContainer()) - dragStartScrollTop;
-        dragVisual.style.setProperty('transform', `translate3d(${x - pointerStartX}px, ${y - pointerStartY + scrollDelta}px, 0)`, 'important');
+        if (calendarDragGhost) {
+            calendarDragGhost.style.setProperty('transform', `translate3d(${x - calendarDragOffsetX}px, ${y - calendarDragOffsetY}px, 0)`, 'important');
+        } else {
+            const scrollDelta = getCalendarScrollTop(dragScrollContainer || getCalendarScrollContainer()) - dragStartScrollTop;
+            draggingItem.style.setProperty('transform', `translate3d(${x - pointerStartX}px, ${y - pointerStartY + scrollDelta}px, 0)`, 'important');
+        }
         markDropDayAtPoint(x, y);
     }
 
@@ -6932,6 +7007,9 @@ function setupProjectCalendarTaskDockDrag(projectId) {
             draggingItem.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling', 'is-calendar-task-scheduling-source');
             draggingItem.style.transform = '';
         }
+        taskList.querySelectorAll('.is-calendar-task-scheduling-source').forEach(item => {
+            item.classList.remove('is-calendar-task-scheduling-source');
+        });
         removeCalendarDragGhost();
     }
 
@@ -6957,7 +7035,8 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         moved = false;
         item.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
         if (dragMode === 'schedule') {
-            calendarDragGhost = createCalendarDragGhost(item);
+            calendarDragGhost = createCalendarDragGhost(item, point);
+            updateCalendarDraggedTaskPosition(point.x, point.y);
         }
         taskList.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
         document.body.style.userSelect = 'none';
