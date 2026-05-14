@@ -1128,6 +1128,7 @@ function scheduleProjectCalendarTask(projectId, taskId, dateKey, options = {}) {
         return true;
     }
 
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     renderModalTaskList(projectId);
@@ -1183,6 +1184,7 @@ function removeProjectCalendarTaskFromDay(projectId, taskId, dateKey, event) {
 
     if (!changed) return;
 
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     setProjectCalendarSelectedDate(projectId, safeDateKey);
@@ -1224,6 +1226,7 @@ function createProjectCalendarTask(projectId, dateKey, event) {
     const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
     const updatedTasks = sortTasks([newTask, ...(Array.isArray(project.tasks) ? project.tasks : [])]);
 
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     saveData();
     setProjectCalendarSelectedDate(projectId, safeDateKey);
@@ -1257,6 +1260,7 @@ function updateProjectCalendarTaskPriority(projectId, taskId, tagValue, event) {
 
     if (!changed) return;
 
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     renderModalTaskList(projectId);
@@ -4264,6 +4268,50 @@ function removeRealtimeProject(projectId) {
     updateTotalCompletion();
 }
 
+
+const RECENT_LOCAL_TASK_SYNC_GUARD_MS = 60000;
+const recentLocalTaskSnapshots = new Map();
+
+function getProjectIdentityKeys(projectOrId) {
+    const keys = new Set();
+    if (projectOrId && typeof projectOrId === 'object') {
+        if (projectOrId.id !== undefined && projectOrId.id !== null) keys.add(String(projectOrId.id));
+        if (projectOrId._id !== undefined && projectOrId._id !== null) keys.add(String(projectOrId._id));
+    } else if (projectOrId !== undefined && projectOrId !== null) {
+        keys.add(String(projectOrId));
+        const project = state.findProject?.(projectOrId);
+        if (project?.id !== undefined && project.id !== null) keys.add(String(project.id));
+        if (project?._id !== undefined && project._id !== null) keys.add(String(project._id));
+    }
+    return [...keys].filter(Boolean);
+}
+
+function rememberRecentLocalTaskSnapshot(projectOrId, tasks = []) {
+    const normalizedTasks = Array.isArray(tasks) ? tasks.map((task, index) => normalizeTask(task, index)) : [];
+    if (!normalizedTasks.length) return;
+    const snapshot = {
+        tasks: normalizedTasks,
+        expiresAt: Date.now() + RECENT_LOCAL_TASK_SYNC_GUARD_MS
+    };
+    getProjectIdentityKeys(projectOrId).forEach(key => {
+        recentLocalTaskSnapshots.set(key, snapshot);
+    });
+}
+
+function getRecentLocalTaskSnapshot(projectOrId) {
+    const now = Date.now();
+    for (const key of getProjectIdentityKeys(projectOrId)) {
+        const snapshot = recentLocalTaskSnapshots.get(key);
+        if (!snapshot) continue;
+        if (snapshot.expiresAt <= now) {
+            recentLocalTaskSnapshots.delete(key);
+            continue;
+        }
+        return snapshot.tasks.map((task, index) => normalizeTask(task, index));
+    }
+    return null;
+}
+
 function isRealtimeFromCurrentUser(payload = {}) {
     const sourceUserId = payload?.sourceUserId ? String(payload.sourceUserId) : '';
     const currentUserId = String(state.getCurrentUser?.()?.id || getCurrentUser?.()?.id || '');
@@ -4300,8 +4348,19 @@ function mergeRealtimeProjectWithExisting(existingProject, incomingProject, rawP
     const localSynced   = getProjectTimestampValue(existingProject.__syncedLastModified);
     const hasLocalUnsynced = localModified > 0 && localSynced > 0 && localModified > localSynced;
 
-    if (!realtimePayloadHasField(rawPayload, 'tasks') || hasLocalUnsynced) {
-        mergedProject.tasks = Array.isArray(existingProject.tasks) ? existingProject.tasks : [];
+    const recentTaskSnapshot = getRecentLocalTaskSnapshot(existingProject);
+    const existingTasks = Array.isArray(existingProject.tasks) ? existingProject.tasks : [];
+    const rawTasks = rawPayload?.tasks;
+    const incomingTasks = Array.isArray(rawTasks) ? rawTasks : (Array.isArray(incomingProject.tasks) ? incomingProject.tasks : null);
+    const incomingTasksLookLikeTransientEmpty = realtimePayloadHasField(rawPayload, 'tasks')
+        && Array.isArray(incomingTasks)
+        && incomingTasks.length === 0
+        && existingTasks.length > 0
+        && Array.isArray(recentTaskSnapshot)
+        && recentTaskSnapshot.length > 0;
+
+    if (!realtimePayloadHasField(rawPayload, 'tasks') || hasLocalUnsynced || incomingTasksLookLikeTransientEmpty) {
+        mergedProject.tasks = Array.isArray(recentTaskSnapshot) && recentTaskSnapshot.length ? recentTaskSnapshot : existingTasks;
     }
     if (!realtimePayloadHasField(rawPayload, 'taskCategories') || hasLocalUnsynced) {
         mergedProject.taskCategories = Array.isArray(existingProject.taskCategories) ? existingProject.taskCategories : [];
