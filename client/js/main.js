@@ -1974,6 +1974,7 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
     let activePointerId = null;
     let draggingItem = null;
     let dragPlaceholder = null;
+    let dragGhost = null;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
     let initialOrder = [];
@@ -2045,7 +2046,7 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
 
     function clearDraggingItemStyles(item) {
         if (!item) return;
-        ['position', 'left', 'top', 'width', 'height', 'margin', 'transform', 'z-index', 'pointer-events', 'transition', 'will-change'].forEach(prop => {
+        ['position', 'left', 'top', 'width', 'height', 'margin', 'display', 'visibility', 'opacity', 'transform', 'z-index', 'pointer-events', 'transition', 'will-change'].forEach(prop => {
             item.style.removeProperty(prop);
         });
     }
@@ -2059,21 +2060,30 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
 
     function returnDraggingItemToFlow() {
         if (!draggingItem) return;
+        clearDraggingItemStyles(draggingItem);
         if (dragPlaceholder?.parentNode) {
             dragPlaceholder.replaceWith(draggingItem);
             dragPlaceholder = null;
         } else if (!container.contains(draggingItem)) {
             container.appendChild(draggingItem);
         }
+        removeDragGhost();
     }
 
     function updateFloatingTabPosition(x = latestPointerX, y = latestPointerY) {
-        if (!draggingItem || !isDragging) return;
-        draggingItem.style.setProperty('transform', `translate3d(${x - dragOffsetX}px, ${y - dragOffsetY}px, 0)`, 'important');
+        if (!dragGhost || !isDragging) return;
+        dragGhost.style.setProperty('transform', `translate3d(${x - dragOffsetX}px, ${y - dragOffsetY}px, 0)`, 'important');
+    }
+
+    function removeDragGhost() {
+        if (dragGhost?.parentNode) {
+            dragGhost.remove();
+        }
+        dragGhost = null;
     }
 
     function createPlaceholderForDraggingItem() {
-        if (!draggingItem || dragPlaceholder) return;
+        if (!draggingItem || dragPlaceholder || dragGhost) return;
         const rect = draggingItem.getBoundingClientRect();
         const computed = window.getComputedStyle(draggingItem);
         dragOffsetX = Math.max(0, Math.min(rect.width, latestPointerX - rect.left));
@@ -2089,17 +2099,24 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         dragPlaceholder.style.setProperty('border-radius', computed.borderRadius || '999px');
         draggingItem.before(dragPlaceholder);
 
-        draggingItem.style.setProperty('position', 'fixed', 'important');
-        draggingItem.style.setProperty('left', '0', 'important');
-        draggingItem.style.setProperty('top', '0', 'important');
-        draggingItem.style.setProperty('width', `${rect.width}px`, 'important');
-        draggingItem.style.setProperty('height', `${rect.height}px`, 'important');
-        draggingItem.style.setProperty('margin', '0', 'important');
-        draggingItem.style.setProperty('z-index', '2147483646', 'important');
-        draggingItem.style.setProperty('pointer-events', 'none', 'important');
-        draggingItem.style.setProperty('transition', 'none', 'important');
-        draggingItem.style.setProperty('will-change', 'transform', 'important');
-        document.body.appendChild(draggingItem);
+        dragGhost = draggingItem.cloneNode(true);
+        dragGhost.removeAttribute('id');
+        dragGhost.querySelectorAll?.('[id]').forEach(node => node.removeAttribute('id'));
+        dragGhost.setAttribute('aria-hidden', 'true');
+        dragGhost.classList.add('is-tab-dragging');
+        dragGhost.style.setProperty('position', 'fixed', 'important');
+        dragGhost.style.setProperty('left', '0', 'important');
+        dragGhost.style.setProperty('top', '0', 'important');
+        dragGhost.style.setProperty('width', `${rect.width}px`, 'important');
+        dragGhost.style.setProperty('height', `${rect.height}px`, 'important');
+        dragGhost.style.setProperty('margin', '0', 'important');
+        dragGhost.style.setProperty('z-index', '2147483646', 'important');
+        dragGhost.style.setProperty('pointer-events', 'none', 'important');
+        dragGhost.style.setProperty('transition', 'none', 'important');
+        dragGhost.style.setProperty('will-change', 'transform', 'important');
+        document.body.appendChild(dragGhost);
+
+        draggingItem.style.setProperty('display', 'none', 'important');
         updateFloatingTabPosition();
     }
 
@@ -2119,6 +2136,7 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
                 }
             } catch { /* noop */ }
         }
+        removeDragGhost();
         container.classList.remove('is-tab-reordering');
         document.body.classList.remove('is-tab-reordering');
         document.querySelectorAll('.modal-menu-bar.is-tab-reordering, .task-category-tabs.is-tab-reordering, .project-notes-tabs.is-tab-reordering').forEach(tabContainer => {
@@ -2172,7 +2190,6 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         if (!draggingItem || isDragging) return;
         clearTimer();
         isDragging = true;
-        draggingItem.classList.add('is-tab-dragging');
         container.classList.add('is-tab-reordering');
         document.body.classList.add('is-tab-reordering');
         document.body.style.userSelect = 'none';
@@ -2194,10 +2211,6 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         activePointerId = event.pointerId ?? null;
         clearTimer();
         pressTimer = setTimeout(beginDrag, MOVABLE_TAB_LONG_PRESS_MS);
-        try {
-            if (activePointerId !== null) item.setPointerCapture?.(activePointerId);
-        } catch { /* noop */ }
-
         document.addEventListener('pointermove', onPointerMove, { passive: false });
         document.addEventListener('pointerup', onPointerEnd);
         document.addEventListener('pointercancel', onPointerEnd);
@@ -2240,6 +2253,8 @@ function setupLongPressMovableTabs(container, itemSelector, getOrderValue, onCom
         const releasedItem = draggingItem;
         let nextOrder = initialOrder;
         if (wasDragging) {
+            event.preventDefault?.();
+            event.stopPropagation?.();
             returnDraggingItemToFlow();
             nextOrder = getOrder();
         }
