@@ -3084,7 +3084,7 @@ function normalizeProject(project) {
         id: project.id || project._id || String(Date.now()),
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
-        notes: typeof project.notes === 'string' ? project.notes : '',
+        notes: normalizeProjectNotesValue(project.notes ?? project.projectNotes ?? project.notesData ?? project.noteTabs ?? ''),
         description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
         projectPriorityTag: getProjectPriorityTag(project),
         dueDate: getProjectDueDate(project),
@@ -4378,7 +4378,9 @@ function removeRealtimeProject(projectId) {
 
 
 const RECENT_LOCAL_TASK_SYNC_GUARD_MS = 60000;
+const RECENT_LOCAL_PROJECT_NOTES_SYNC_GUARD_MS = 60000;
 const recentLocalTaskSnapshots = new Map();
+const recentLocalProjectNotesSnapshots = new Map();
 
 function getProjectIdentityKeys(projectOrId) {
     const keys = new Set();
@@ -4419,6 +4421,64 @@ function getRecentLocalTaskSnapshot(projectOrId) {
     }
     return null;
 }
+
+function rememberRecentLocalProjectNotesSnapshot(projectOrId, notes = '') {
+    const normalizedNotes = normalizeProjectNotesValue(notes);
+    const snapshot = {
+        notes: normalizedNotes,
+        expiresAt: Date.now() + RECENT_LOCAL_PROJECT_NOTES_SYNC_GUARD_MS
+    };
+    getProjectIdentityKeys(projectOrId).forEach(key => {
+        recentLocalProjectNotesSnapshots.set(key, snapshot);
+    });
+}
+
+function getRecentLocalProjectNotesSnapshot(projectOrId) {
+    const now = Date.now();
+    for (const key of getProjectIdentityKeys(projectOrId)) {
+        const snapshot = recentLocalProjectNotesSnapshots.get(key);
+        if (!snapshot) continue;
+        if (snapshot.expiresAt <= now) {
+            recentLocalProjectNotesSnapshots.delete(key);
+            continue;
+        }
+        return normalizeProjectNotesValue(snapshot.notes);
+    }
+    return null;
+}
+
+function taskPayloadHasNoteField(task = {}) {
+    return !!task && typeof task === 'object' && (
+        Object.prototype.hasOwnProperty.call(task, 'note') ||
+        Object.prototype.hasOwnProperty.call(task, 'notes')
+    );
+}
+
+function mergeTaskNotesFromExisting(incomingTasks = [], existingTasks = [], rawTasks = null) {
+    if (!Array.isArray(incomingTasks) || !Array.isArray(existingTasks) || !existingTasks.length) {
+        return Array.isArray(incomingTasks) ? incomingTasks : [];
+    }
+
+    const existingById = new Map(existingTasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        return [String(normalizedTask.id), normalizedTask];
+    }));
+
+    return incomingTasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        const rawTask = Array.isArray(rawTasks) ? rawTasks[index] : task;
+        const existingTask = existingById.get(String(normalizedTask.id));
+        const existingNote = sanitizeRichTextHtml(existingTask?.note || '').trim();
+        const incomingNote = sanitizeRichTextHtml(normalizedTask.note || '').trim();
+        const rawHasNote = taskPayloadHasNoteField(rawTask);
+
+        if (!rawHasNote && !incomingNote && existingNote) {
+            return { ...normalizedTask, note: existingNote };
+        }
+        return normalizedTask;
+    });
+}
+
 
 function isRealtimeFromCurrentUser(payload = {}) {
     const sourceUserId = payload?.sourceUserId ? String(payload.sourceUserId) : '';
@@ -4469,12 +4529,19 @@ function mergeRealtimeProjectWithExisting(existingProject, incomingProject, rawP
 
     if (!realtimePayloadHasField(rawPayload, 'tasks') || hasLocalUnsynced || incomingTasksLookLikeTransientEmpty) {
         mergedProject.tasks = Array.isArray(recentTaskSnapshot) && recentTaskSnapshot.length ? recentTaskSnapshot : existingTasks;
+    } else if (Array.isArray(mergedProject.tasks)) {
+        mergedProject.tasks = mergeTaskNotesFromExisting(mergedProject.tasks, existingTasks, rawTasks);
     }
     if (!realtimePayloadHasField(rawPayload, 'taskCategories') || hasLocalUnsynced) {
         mergedProject.taskCategories = Array.isArray(existingProject.taskCategories) ? existingProject.taskCategories : [];
     }
-    if (!realtimePayloadHasField(rawPayload, 'notes') || hasLocalUnsynced) {
-        mergedProject.notes = typeof existingProject.notes === 'string' ? existingProject.notes : '';
+    const recentNotesSnapshot = getRecentLocalProjectNotesSnapshot(existingProject);
+    if (!realtimePayloadHasField(rawPayload, 'notes') || hasLocalUnsynced || recentNotesSnapshot !== null) {
+        mergedProject.notes = recentNotesSnapshot !== null
+            ? recentNotesSnapshot
+            : normalizeProjectNotesValue(existingProject.notes ?? existingProject.projectNotes ?? '');
+    } else {
+        mergedProject.notes = normalizeProjectNotesValue(mergedProject.notes ?? rawPayload.notes ?? '');
     }
     if (!realtimePayloadHasField(rawPayload, 'calendarNotes', 'projectCalendarNotes') || hasLocalUnsynced) {
         mergedProject.calendarNotes = normalizeProjectCalendarNotes(existingProject.calendarNotes || existingProject.projectCalendarNotes || {});
@@ -4838,12 +4905,20 @@ function getProjectNotesDataForProject(projectId) {
     return normalizeProjectNotesData(project?.notes || '');
 }
 
-function saveProjectNotesData(projectId, data, options = {}) {
-    if (!state.canEdit(projectId)) return;
+function stageProjectNotesData(projectId, data, options = {}) {
+    if (!state.canEdit(projectId)) return '';
     const serializedNotes = serializeProjectNotesData(data);
+    rememberRecentLocalProjectNotesSnapshot(projectId, serializedNotes);
     state.updateProject(projectId, projectUpdate({ notes: serializedNotes }));
-    saveData();
     updateProjectNotesIndicators(projectId, serializedNotes);
+    if (options.persist) saveData();
+    return serializedNotes;
+}
+
+function saveProjectNotesData(projectId, data, options = {}) {
+    const serializedNotes = stageProjectNotesData(projectId, data);
+    if (!serializedNotes) return;
+    saveData();
 
     if (options.renderSurface) {
         renderProjectNotesSurface(projectId, options.renderSurface);
@@ -5179,7 +5254,8 @@ function selectProjectNoteTab(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     commitPendingProjectNoteTabName(projectId, surface);
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     if (!data.tabs.some(tab => tab.id === tabId)) return;
     data.activeTabId = tabId;
     saveProjectNotesData(projectId, data, { renderSurface: surface });
@@ -5190,7 +5266,8 @@ function addProjectNoteTab(projectId, surface = 'quick', event) {
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
     commitPendingProjectNoteTabName(projectId, surface);
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     const nextNumber = data.tabs.length + 1;
     const nextTab = normalizeProjectNotesTab({
         id: `notes-${Date.now()}`,
@@ -5214,7 +5291,8 @@ function deleteProjectNoteTab(projectId, tabId, surface = 'quick', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     if (data.tabs.length <= 1) return;
     const tab = data.tabs.find(item => item.id === tabId);
     openConfirmationDialog({
@@ -5324,9 +5402,11 @@ function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
+    stageProjectNotesData(projectId, data, { persist: true });
 
     const modal = ensureProjectNoteLinkModal();
     const textInput = document.getElementById('projectNoteLinkTextInput');
@@ -5350,7 +5430,9 @@ function editProjectNoteLink(projectId, tabId, linkId, surface = 'modal', event)
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
+    stageProjectNotesData(projectId, data, { persist: true });
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
     const link = normalizeProjectNoteLinks(tab.links || []).find(item => item.id === linkId);
@@ -8373,6 +8455,40 @@ function createDefaultProjectNotesTab(body = '') {
     };
 }
 
+function normalizeProjectNotesValue(value = '') {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+
+    if (value[PROJECT_NOTES_TAB_DATA_FLAG] === true || Array.isArray(value.tabs)) {
+        try {
+            return JSON.stringify({
+                [PROJECT_NOTES_TAB_DATA_FLAG]: true,
+                activeTabId: value.activeTabId || '',
+                tabs: Array.isArray(value.tabs) ? value.tabs : []
+            });
+        } catch {
+            return '';
+        }
+    }
+
+    const legacyBody = value.body ?? value.text ?? value.note ?? value.notes ?? '';
+    const legacyTitle = value.title ?? 'Notes';
+    if (typeof legacyBody === 'string' && legacyBody.trim()) {
+        return serializeProjectNotesData({
+            activeTabId: PROJECT_NOTES_DEFAULT_TAB_ID,
+            tabs: [{
+                id: PROJECT_NOTES_DEFAULT_TAB_ID,
+                title: legacyTitle,
+                body: legacyBody,
+                links: value.links ?? value.hyperlinks ?? []
+            }]
+        });
+    }
+
+    return '';
+}
+
+
 function normalizeProjectNotesTab(tab, index = 0) {
     const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-${Date.now()}-${index}`;
     const id = String(tab?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
@@ -8383,7 +8499,7 @@ function normalizeProjectNotesTab(tab, index = 0) {
 }
 
 function normalizeProjectNotesData(notes) {
-    const raw = String(notes ?? '');
+    const raw = normalizeProjectNotesValue(notes);
     if (raw.trim()) {
         try {
             const parsed = JSON.parse(raw);
@@ -8712,6 +8828,7 @@ function updateTaskNote(projectId, taskId, noteValue) {
         };
     });
 
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     renderModalTaskList(projectId);

@@ -99,6 +99,64 @@ async function getLatestServerProjectForRetry(project) {
     }
 }
 
+function hasTextContent(value) {
+    return String(value ?? '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\s+/g, ' ')
+        .trim().length > 0;
+}
+
+function projectNotesHaveContent(notes) {
+    const raw = String(notes ?? '');
+    if (!raw.trim()) return false;
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.tabs)) {
+            return parsed.tabs.some(tab => hasTextContent(tab?.body) || (Array.isArray(tab?.links) && tab.links.length > 0));
+        }
+    } catch {
+        // Plain-text legacy notes are handled below.
+    }
+    return hasTextContent(raw);
+}
+
+function mergeLatestNotesForConflictRetry(localProject = {}, latestProject = {}) {
+    const localHasNotes = projectNotesHaveContent(localProject.notes);
+    const latestHasNotes = projectNotesHaveContent(latestProject.notes);
+    return !localHasNotes && latestHasNotes ? latestProject.notes : localProject.notes;
+}
+
+function taskHasNoteField(task = {}) {
+    return !!task && typeof task === 'object' && (
+        Object.prototype.hasOwnProperty.call(task, 'note') ||
+        Object.prototype.hasOwnProperty.call(task, 'notes')
+    );
+}
+
+function mergeLatestTaskNotesForConflictRetry(localTasks = [], latestTasks = []) {
+    if (!Array.isArray(localTasks) || !Array.isArray(latestTasks) || !latestTasks.length) {
+        return Array.isArray(localTasks) ? localTasks : [];
+    }
+
+    const latestById = new Map(latestTasks.map(task => [String(task?.id ?? ''), task]));
+    return localTasks.map(task => {
+        const latestTask = latestById.get(String(task?.id ?? ''));
+        const localNote = task?.note ?? task?.notes ?? '';
+        const latestNote = latestTask?.note ?? latestTask?.notes ?? '';
+        if (!hasTextContent(localNote) && hasTextContent(latestNote)) {
+            return { ...task, note: latestNote };
+        }
+        return task;
+    });
+}
+
+
 export async function saveProjectToServer(project) {
     if (!project._id) {
         return { ok: false, skipped: true };
@@ -123,6 +181,8 @@ export async function saveProjectToServer(project) {
                     const retryEndpointId = latestProject?._id || projectEndpointId;
                     const retryPayload = {
                         ...buildPayload(latestModified),
+                        notes: mergeLatestNotesForConflictRetry(project, latestProject),
+                        tasks: mergeLatestTaskNotesForConflictRetry(project.tasks, latestProject?.tasks),
                         _id: latestProject?._id || project._id,
                         id: project.id || latestProject?.id || latestProject?._id
                     };

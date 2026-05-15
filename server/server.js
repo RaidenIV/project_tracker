@@ -568,6 +568,51 @@ function sanitizeProjectCalendarNotes(value = {}) {
     }, {});
 }
 
+function sanitizeProjectNotesValue(value = '') {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+
+    try {
+        if (value.__projectNotesTabs === true || Array.isArray(value.tabs)) {
+            return JSON.stringify({
+                __projectNotesTabs: true,
+                activeTabId: value.activeTabId || '',
+                tabs: Array.isArray(value.tabs) ? value.tabs : []
+            });
+        }
+    } catch {
+        return '';
+    }
+
+    const legacyText = value.body ?? value.text ?? value.note ?? value.notes ?? '';
+    return typeof legacyText === 'string' ? legacyText : String(legacyText ?? '');
+}
+
+function taskPayloadHasNoteField(task = {}) {
+    return !!task && typeof task === 'object' && (
+        Object.prototype.hasOwnProperty.call(task, 'note') ||
+        Object.prototype.hasOwnProperty.call(task, 'notes')
+    );
+}
+
+function mergeExistingTaskNotes(sanitizedTasks = [], rawTasks = [], existingTasks = []) {
+    if (!Array.isArray(sanitizedTasks) || !Array.isArray(existingTasks) || !existingTasks.length) {
+        return Array.isArray(sanitizedTasks) ? sanitizedTasks : [];
+    }
+
+    const existingById = new Map(existingTasks.map(task => [String(task?.id ?? ''), task]));
+    return sanitizedTasks.map((task, index) => {
+        const rawTask = Array.isArray(rawTasks) ? rawTasks[index] : null;
+        const existingTask = existingById.get(String(task?.id ?? ''));
+        const existingNote = typeof existingTask?.note === 'string' ? existingTask.note : '';
+        if (!taskPayloadHasNoteField(rawTask) && !task.note && existingNote) {
+            return { ...task, note: existingNote };
+        }
+        return task;
+    });
+}
+
+
 function sanitizeProjectPriorityTag(value) {
     const raw = String(value || 'none').trim().toLowerCase();
     const tag = raw === 'critical' ? 'high' : raw;
@@ -600,7 +645,7 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
     if (body.completedBy !== undefined) sanitized.completedBy = body.completedBy ? String(body.completedBy).slice(0, 80) : '';
     if (body.completedByName !== undefined) sanitized.completedByName = body.completedByName ? String(body.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '';
-    if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
+    if (body.notes !== undefined) sanitized.notes = sanitizeProjectNotesValue(body.notes);
     if (body.calendarNotes !== undefined || body.projectCalendarNotes !== undefined) {
         sanitized.calendarNotes = sanitizeProjectCalendarNotes(body.calendarNotes ?? body.projectCalendarNotes);
     }
@@ -841,7 +886,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completedDate: completedDate || null,
             completedBy:   completed ? String(completedBy || req.user.id || '') : '',
             completedByName: completed ? String(completedByName || req.user.username || '') : '',
-            notes:         notes        || '',
+            notes:         sanitizeProjectNotesValue(notes),
             calendarNotes: sanitizeProjectCalendarNotes(calendarNotes ?? projectCalendarNotes),
             description:   sanitizedDescription,
             archived:      false,
@@ -879,6 +924,9 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
 
         const incoming = sanitizeIncomingProjectUpdate(req.body || {});
         const currentProject = req.project.toObject({ depopulate: true, versionKey: false });
+        if (Array.isArray(incoming.tasks)) {
+            incoming.tasks = mergeExistingTaskNotes(incoming.tasks, req.body?.tasks, currentProject.tasks || []);
+        }
         const changedFields = {};
         allowed.forEach(key => {
             if (incoming[key] === undefined) return;
