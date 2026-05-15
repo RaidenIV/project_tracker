@@ -4654,14 +4654,9 @@ async function addProject() {
         const projectTitle = normalizeProjectTitleInput(nameInput?.value);
         if (!validateProjectTitleInput(nameInput)) return;
 
-        const requiredDescription = normalizeProjectDescription(descriptionInput.value);
-        if (!requiredDescription) {
-            showNewProjectDescriptionWarning(true);
-            descriptionInput.focus({ preventScroll: true });
-            return;
-        }
+        const description = normalizeProjectDescription(descriptionInput.value);
 
-        await createProjectWithDescription(requiredDescription, projectTitle);
+        await createProjectWithDescription(description, projectTitle);
         resetNewProjectCreatePanel();
         return;
     }
@@ -8507,8 +8502,17 @@ function getProjectCardPreviewTasks(project) {
         .map((task, index) => ({ task: normalizeTask(task, index), index }))
         .filter(entry => !isTaskCompleted(entry.task));
 
+    const hasPriorityTasks = orderedTasks.some(entry =>
+        entry.task.tag && entry.task.tag !== 'none'
+    );
+
     return orderedTasks
         .sort((a, b) => {
+            if (hasPriorityTasks) {
+                const aPriority = TASK_TAG_PRIORITY[a.task.tag] ?? TASK_TAG_PRIORITY['none'];
+                const bPriority = TASK_TAG_PRIORITY[b.task.tag] ?? TASK_TAG_PRIORITY['none'];
+                if (aPriority !== bPriority) return aPriority - bPriority;
+            }
             const aOverdue = isTaskOverdue(a.task);
             const bOverdue = isTaskOverdue(b.task);
             if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;

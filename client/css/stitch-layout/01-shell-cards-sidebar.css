@@ -99,8 +99,8 @@ body.control-panel-is-collapsed .container {
 }
 
 .top-app-logo {
-    width: clamp(4.25rem, 6vw, 6.5rem) !important;
-    max-width: 6.5rem !important;
+    width: clamp(2.125rem, 3vw, 3.25rem) !important;
+    max-width: 3.25rem !important;
     height: auto !important;
     object-fit: contain !important;
     justify-self: end !important;
@@ -873,8 +873,8 @@ body[data-theme^="console"] .top-app-logo {
     grid-column: 3 !important;
     grid-row: 1 !important;
     justify-self: end !important;
-    width: clamp(4.5rem, 6vw, 6.5rem) !important;
-    max-width: 6.5rem !important;
+    width: clamp(2.25rem, 3vw, 3.25rem) !important;
+    max-width: 3.25rem !important;
     height: auto !important;
 }
 
@@ -1567,8 +1567,8 @@ body.control-panel-is-collapsed .project-grid {
         grid-row: 1 !important;
         justify-self: end !important;
         align-self: center !important;
-        width: clamp(4.25rem, 5vw, 5.75rem) !important;
-        max-width: 5.75rem !important;
+        width: clamp(2.125rem, 2.5vw, 2.875rem) !important;
+        max-width: 2.875rem !important;
         height: auto !important;
         margin: 0 !important;
         position: static !important;
