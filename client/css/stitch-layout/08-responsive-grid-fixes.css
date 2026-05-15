@@ -1422,31 +1422,47 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-
     body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
     body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
     body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
-        grid-template-columns: 1.15rem 2.35rem minmax(0, 1fr) max-content !important;
-        grid-template-rows: auto !important;
-        grid-template-areas: "rank avatar user score" !important;
+        grid-template-columns: 1.15rem 2.35rem minmax(0, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        grid-template-areas:
+            "rank avatar user"
+            "rank avatar score" !important;
         column-gap: 0.55rem !important;
-        min-height: 4.15rem !important;
+        row-gap: 0.18rem !important;
+        min-height: 4.25rem !important;
         padding: 0.72rem 0.68rem !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-rank {
+        grid-area: rank !important;
+        align-self: center !important;
+        justify-self: start !important;
     }
 
     .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
     body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
     body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
     body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
+        grid-area: avatar !important;
         width: 2.35rem !important;
         height: 2.35rem !important;
         justify-self: start !important;
+        align-self: center !important;
     }
 
     .leaderboard-list > .leaderboard-row .leaderboard-row-main,
     body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
     body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
     body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main {
+        grid-area: user !important;
         display: block !important;
         min-width: 0 !important;
         width: 100% !important;
         text-align: left !important;
+        align-self: end !important;
     }
 
     .leaderboard-list > .leaderboard-row .leaderboard-user,
@@ -1458,25 +1474,41 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-
         max-width: none !important;
         margin: 0 !important;
         text-align: left !important;
-        font-size: clamp(0.66rem, 0.56vw, 0.76rem) !important;
-        line-height: 1.08 !important;
+        font-size: clamp(0.7rem, 0.6vw, 0.82rem) !important;
+        line-height: 1.1 !important;
         letter-spacing: 0 !important;
-        white-space: normal !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        overflow-wrap: anywhere !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        overflow-wrap: normal !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-meta {
+        display: none !important;
     }
 
     .leaderboard-list > .leaderboard-row .leaderboard-row-score,
     body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
     body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
     body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
-        justify-self: end !important;
-        min-width: max-content !important;
+        grid-area: score !important;
+        justify-self: start !important;
+        align-self: start !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
         font-size: clamp(0.7rem, 0.58vw, 0.82rem) !important;
         line-height: 1.1 !important;
         letter-spacing: 0.01em !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         color: var(--accent, currentColor) !important;
     }
 }
