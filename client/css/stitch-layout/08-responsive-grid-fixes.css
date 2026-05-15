@@ -591,7 +591,8 @@
 
 /* ============================================================================
    Targeted 1920x1200-and-below desktop patch
-   - Enlarges the notifications modal on constrained desktop displays.
+   - Enlarges the notifications modal and sidebar notification button on
+     constrained desktop displays.
    - Restores fixed project-card slots so elements keep the same anchored layout
      used by the 1920x1080 card baseline instead of expanding naturally.
    - Scales the fixed slots down slightly so the full card stack remains visible.
@@ -601,8 +602,8 @@
     body[data-theme^="console"] .notifications-modal-content,
     body[data-theme^="blueprint"] .notifications-modal-content,
     body[data-theme^="glass"] .notifications-modal-content {
-        width: min(88vw, 860px) !important;
-        max-width: min(88vw, 860px) !important;
+        width: min(92vw, 920px) !important;
+        max-width: min(92vw, 920px) !important;
     }
 
     .notifications-modal-content .account-modal-scroll,
@@ -630,10 +631,28 @@
     body[data-theme^="console"] .control-panel .panel-notification-button,
     body[data-theme^="blueprint"] .control-panel .panel-notification-button,
     body[data-theme^="glass"] .control-panel .panel-notification-button {
-        width: clamp(10.25rem, 65%, 13rem) !important;
+        width: clamp(12.25rem, 72%, 15rem) !important;
         max-width: 100% !important;
-        min-width: min(10.25rem, 100%) !important;
+        min-width: min(12.25rem, 100%) !important;
+        min-height: 2.65rem !important;
+        padding-inline: 1.05rem !important;
         box-sizing: border-box !important;
+        overflow: visible !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+    }
+
+
+    .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge {
+        top: -0.72rem !important;
+        right: 0.62rem !important;
+        min-width: 1.45rem !important;
+        height: 1.45rem !important;
+        font-size: 0.72rem !important;
+        line-height: 1 !important;
     }
 
     .project-grid,
@@ -644,7 +663,7 @@
     body[data-theme^="console"].control-panel-is-collapsed .project-grid,
     body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
     body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
-        --project-card-uniform-height: 28.65rem;
+        --project-card-uniform-height: 28.35rem;
         grid-auto-rows: var(--project-card-uniform-height) !important;
         align-items: stretch !important;
         gap: clamp(0.82rem, 0.95vw, 1.12rem) !important;
@@ -655,23 +674,23 @@
     body[data-theme^="console"] .project-card.stitch-project-card,
     body[data-theme^="blueprint"] .project-card.stitch-project-card,
     body[data-theme^="glass"] .project-card.stitch-project-card {
-        --project-card-slot-gap: 0.3rem;
-        --project-card-title-slot: 1.88rem;
-        --project-card-description-slot: 1.28rem;
-        --project-card-sync-slot: 0.76rem;
-        --project-card-header-slot: 4.28rem;
-        --project-card-tags-slot: 1.82rem;
-        --project-card-progress-slot: 4.12rem;
-        --project-preview-row-height: 1.82rem;
-        --project-preview-row-gap: 0.28rem;
-        --project-card-notes-slot: 1.98rem;
-        --project-card-footer-action-gap: 0.6rem;
-        --project-card-footer-status-height: 1.72rem;
-        --project-card-footer-slot: 4.48rem;
+        --project-card-slot-gap: 0.28rem;
+        --project-card-title-slot: 1.86rem;
+        --project-card-description-slot: 1.26rem;
+        --project-card-sync-slot: 0.74rem;
+        --project-card-header-slot: 4.2rem;
+        --project-card-tags-slot: 1.78rem;
+        --project-card-progress-slot: 4.05rem;
+        --project-preview-row-height: 1.79rem;
+        --project-preview-row-gap: 0.27rem;
+        --project-card-notes-slot: 1.94rem;
+        --project-card-footer-action-gap: 0.58rem;
+        --project-card-footer-status-height: 1.68rem;
+        --project-card-footer-slot: 4.4rem;
         height: var(--project-card-uniform-height) !important;
         min-height: var(--project-card-uniform-height) !important;
         max-height: var(--project-card-uniform-height) !important;
-        padding: 0.95rem !important;
+        padding: 0.92rem !important;
         overflow: hidden !important;
         display: grid !important;
         grid-template-rows:
@@ -911,5 +930,105 @@
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
         line-height: 1.12 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted screenshot follow-up: sidebar level stack, borderless viewport menu,
+   and 1920x1200-and-below card bottom spacing
+   ============================================================================ */
+.control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, max-content) !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+        "avatar username"
+        "avatar level" !important;
+    column-gap: 0.72rem !important;
+    row-gap: 0.14rem !important;
+    align-items: center !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-avatar {
+    grid-area: avatar !important;
+    align-self: center !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-username {
+    grid-area: username !important;
+    display: block !important;
+    align-self: end !important;
+    line-height: 1.05 !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge {
+    grid-area: level !important;
+    display: block !important;
+    align-self: start !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    line-height: 1.05 !important;
+}
+
+.top-app-bar,
+.view-toolbar.top-view-toolbar,
+.top-view-toolbar,
+body[data-theme^="console"] .top-app-bar,
+body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+body[data-theme^="console"] .top-view-toolbar,
+body[data-theme^="blueprint"] .top-app-bar,
+body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar,
+body[data-theme^="blueprint"] .top-view-toolbar,
+body[data-theme^="glass"] .top-app-bar,
+body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+body[data-theme^="glass"] .top-view-toolbar {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1200px) {
+    .project-card.stitch-project-card,
+    .stitch-project-card.project-card,
+    body[data-theme^="console"] .project-card.stitch-project-card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card,
+    body[data-theme^="glass"] .project-card.stitch-project-card {
+        --project-card-slot-gap: 0.34rem;
+        --project-preview-row-height: 2.08rem;
+        --project-preview-row-gap: 0.34rem;
+        --project-card-notes-slot: 2.22rem;
+        --project-card-footer-slot: 4.58rem;
+        align-content: start !important;
+    }
+
+    .project-card .project-card-notes-bar,
+    .stitch-project-card .project-card-notes-bar,
+    body[data-theme^="console"] .project-card .project-card-notes-bar,
+    body[data-theme^="blueprint"] .project-card .project-card-notes-bar,
+    body[data-theme^="glass"] .project-card .project-card-notes-bar {
+        padding-top: 0.28rem !important;
+        padding-bottom: 0.1rem !important;
+        align-items: flex-start !important;
+    }
+
+    .project-card .project-card-footer,
+    .stitch-project-card .project-card-footer,
+    body[data-theme^="console"] .project-card .project-card-footer,
+    body[data-theme^="blueprint"] .project-card .project-card-footer,
+    body[data-theme^="glass"] .project-card .project-card-footer {
+        padding-top: 0.78rem !important;
+        align-content: start !important;
     }
 }
