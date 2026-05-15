@@ -1338,3 +1338,26 @@ body.project-card-task-preview-disabled .stitch-project-card .project-preview-li
         --project-card-uniform-height: 23.8rem;
     }
 }
+
+/* ============================================================================
+   Targeted follow-up: four-column project-card title fit
+   ============================================================================ */
+.project-grid[data-layout-effective-columns="4"] .project-card .project-title,
+.project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
+body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
+body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
+body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title {
+    font-size: clamp(0.78rem, 0.62vw, 0.88rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.035em !important;
+}
+
+.project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+.project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title-input--card,
+body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card {
+    font-size: clamp(0.78rem, 0.62vw, 0.88rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.035em !important;
+}
