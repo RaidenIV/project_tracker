@@ -112,9 +112,54 @@ function hasTextContent(value) {
         .trim().length > 0;
 }
 
+function normalizeProjectNotesCandidate(value = '') {
+    if (typeof value === 'string') {
+        const raw = value.trim();
+        if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    if (parsed.__projectNotesTabs === true || Array.isArray(parsed.tabs)) return value;
+                    return normalizeProjectNotesCandidate(parsed);
+                }
+            } catch {
+                // Keep plain text that happens to contain braces/brackets.
+            }
+        }
+        return value;
+    }
+    if (Array.isArray(value)) {
+        try {
+            return JSON.stringify({
+                __projectNotesTabs: true,
+                activeTabId: value[0]?.id || 'notes-general',
+                tabs: value
+            });
+        } catch {
+            return '';
+        }
+    }
+    if (!value || typeof value !== 'object') return '';
+    if (value.__projectNotesTabs === true || Array.isArray(value.tabs)) {
+        try {
+            return JSON.stringify({
+                __projectNotesTabs: true,
+                activeTabId: value.activeTabId || '',
+                tabs: Array.isArray(value.tabs) ? value.tabs : []
+            });
+        } catch {
+            return '';
+        }
+    }
+    const legacyText = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? '';
+    if (typeof legacyText === 'string') return legacyText;
+    if (legacyText && typeof legacyText === 'object') return normalizeProjectNotesCandidate(legacyText);
+    return '';
+}
+
 function projectNotesHaveContent(notes) {
-    const raw = String(notes ?? '');
-    if (!raw.trim()) return false;
+    const raw = normalizeProjectNotesCandidate(notes);
+    if (!String(raw ?? '').trim()) return false;
     try {
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.tabs)) {
@@ -126,10 +171,31 @@ function projectNotesHaveContent(notes) {
     return hasTextContent(raw);
 }
 
+function getBestProjectNotesValue(projectOrValue = {}, ...extraValues) {
+    const values = projectOrValue && typeof projectOrValue === 'object' && !Array.isArray(projectOrValue)
+        ? [
+            projectOrValue.notes,
+            projectOrValue.projectNotes,
+            projectOrValue.projectNote,
+            projectOrValue.notesData,
+            projectOrValue.noteTabs,
+            projectOrValue.noteTabsData,
+            projectOrValue.note,
+            ...extraValues
+        ]
+        : [projectOrValue, ...extraValues];
+    const normalizedValues = values
+        .map(normalizeProjectNotesCandidate)
+        .filter(value => String(value ?? '').trim().length > 0);
+    return normalizedValues.find(projectNotesHaveContent) || normalizedValues[0] || '';
+}
+
 function mergeLatestNotesForConflictRetry(localProject = {}, latestProject = {}) {
-    const localHasNotes = projectNotesHaveContent(localProject.notes);
-    const latestHasNotes = projectNotesHaveContent(latestProject.notes);
-    return !localHasNotes && latestHasNotes ? latestProject.notes : localProject.notes;
+    const localNotes = getBestProjectNotesValue(localProject);
+    const latestNotes = getBestProjectNotesValue(latestProject);
+    const localHasNotes = projectNotesHaveContent(localNotes);
+    const latestHasNotes = projectNotesHaveContent(latestNotes);
+    return !localHasNotes && latestHasNotes ? latestNotes : localNotes;
 }
 
 function taskHasNoteField(task = {}) {

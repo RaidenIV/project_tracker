@@ -181,6 +181,12 @@ const projectSchema = new mongoose.Schema({
     completedBy:   { type: String, default: '' },
     completedByName: { type: String, default: '' },
     notes:         { type: String, default: '' },
+    projectNotes:  { type: mongoose.Schema.Types.Mixed, default: undefined },
+    projectNote:   { type: mongoose.Schema.Types.Mixed, default: undefined },
+    notesData:     { type: mongoose.Schema.Types.Mixed, default: undefined },
+    noteTabs:      { type: mongoose.Schema.Types.Mixed, default: undefined },
+    noteTabsData:  { type: mongoose.Schema.Types.Mixed, default: undefined },
+    note:          { type: mongoose.Schema.Types.Mixed, default: undefined },
     calendarNotes: { type: Object, default: {} },
     description:   { type: String, default: '' },
     tags:          { type: [String], default: [] },
@@ -268,6 +274,7 @@ function requireRole(minRole) {
 async function enrichProject(project, userId, accountMap) {
     const pObj = project.toObject ? project.toObject() : { ...project };
     pObj.id = project._id ? project._id.toString() : project.id;
+    pObj.notes = getBestProjectNotesValue(pObj);
 
     const collab = project.collaborators.find(c => c.userId === userId);
     pObj.userRole  = project.owner === userId ? 'owner' : (collab?.role || 'viewer');
@@ -569,7 +576,33 @@ function sanitizeProjectCalendarNotes(value = {}) {
 }
 
 function sanitizeProjectNotesValue(value = '') {
-    if (typeof value === 'string') return value;
+    if (typeof value === 'string') {
+        const raw = value.trim();
+        if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    if (parsed.__projectNotesTabs === true || Array.isArray(parsed.tabs)) return value;
+                    const normalizedParsed = sanitizeProjectNotesValue(parsed);
+                    if (String(normalizedParsed || '').trim()) return normalizedParsed;
+                }
+            } catch {
+                // Keep plain text that happens to contain braces/brackets.
+            }
+        }
+        return value;
+    }
+    if (Array.isArray(value)) {
+        try {
+            return JSON.stringify({
+                __projectNotesTabs: true,
+                activeTabId: value[0]?.id || 'notes-general',
+                tabs: value
+            });
+        } catch {
+            return '';
+        }
+    }
     if (!value || typeof value !== 'object') return '';
 
     try {
@@ -584,8 +617,88 @@ function sanitizeProjectNotesValue(value = '') {
         return '';
     }
 
-    const legacyText = value.body ?? value.text ?? value.note ?? value.notes ?? '';
-    return typeof legacyText === 'string' ? legacyText : String(legacyText ?? '');
+    const legacyText = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? '';
+    if (typeof legacyText === 'string') return legacyText;
+    if (legacyText && typeof legacyText === 'object') return sanitizeProjectNotesValue(legacyText);
+
+    const mappedTabs = Object.entries(value)
+        .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'links', 'hyperlinks'].includes(key))
+        .map(([key, entry], index) => {
+            const bodyValue = typeof entry === 'string'
+                ? entry
+                : (entry?.body ?? entry?.text ?? entry?.note ?? entry?.notes ?? entry?.content ?? entry?.html ?? '');
+            const body = typeof bodyValue === 'string' ? bodyValue : sanitizeProjectNotesValue(bodyValue);
+            const links = typeof entry === 'object' && entry !== null ? (entry.links ?? entry.hyperlinks ?? []) : [];
+            return {
+                id: index === 0 ? 'notes-general' : `notes-legacy-${index}`,
+                title: String(key || `Note ${index + 1}`).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40) || `Note ${index + 1}`,
+                body,
+                links: Array.isArray(links) ? links : []
+            };
+        })
+        .filter(tab => projectNotesPlainText(tab.body).length > 0 || tab.links.length > 0);
+
+    if (mappedTabs.length) {
+        try {
+            return JSON.stringify({
+                __projectNotesTabs: true,
+                activeTabId: mappedTabs[0].id,
+                tabs: mappedTabs
+            });
+        } catch {
+            return '';
+        }
+    }
+
+    return '';
+}
+
+function projectNotesPlainText(value = '') {
+    return String(value ?? '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function projectNotesHaveContent(value = '') {
+    const normalized = sanitizeProjectNotesValue(value);
+    if (!String(normalized || '').trim()) return false;
+    try {
+        const parsed = JSON.parse(normalized);
+        if (parsed && Array.isArray(parsed.tabs)) {
+            return parsed.tabs.some(tab => projectNotesPlainText(tab?.body).length > 0 || (Array.isArray(tab?.links) && tab.links.length > 0));
+        }
+    } catch {
+        // Legacy plain-text notes are handled below.
+    }
+    return projectNotesPlainText(normalized).length > 0;
+}
+
+function getBestProjectNotesValue(projectOrValue = {}, ...extraValues) {
+    const values = projectOrValue && typeof projectOrValue === 'object' && !Array.isArray(projectOrValue)
+        ? [
+            projectOrValue.notes,
+            projectOrValue.projectNotes,
+            projectOrValue.projectNote,
+            projectOrValue.notesData,
+            projectOrValue.noteTabs,
+            projectOrValue.noteTabsData,
+            projectOrValue.note,
+            ...extraValues
+        ]
+        : [projectOrValue, ...extraValues];
+
+    const normalizedValues = values
+        .map(value => sanitizeProjectNotesValue(value))
+        .filter(value => String(value ?? '').trim().length > 0);
+
+    return normalizedValues.find(projectNotesHaveContent) || normalizedValues[0] || '';
 }
 
 function taskPayloadHasNoteField(task = {}) {
@@ -645,7 +758,17 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
     if (body.completedBy !== undefined) sanitized.completedBy = body.completedBy ? String(body.completedBy).slice(0, 80) : '';
     if (body.completedByName !== undefined) sanitized.completedByName = body.completedByName ? String(body.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '';
-    if (body.notes !== undefined) sanitized.notes = sanitizeProjectNotesValue(body.notes);
+    if (body.notes !== undefined || body.projectNotes !== undefined || body.projectNote !== undefined || body.notesData !== undefined || body.noteTabs !== undefined || body.noteTabsData !== undefined || body.note !== undefined) {
+        sanitized.notes = getBestProjectNotesValue({
+            notes: body.notes,
+            projectNotes: body.projectNotes,
+            projectNote: body.projectNote,
+            notesData: body.notesData,
+            noteTabs: body.noteTabs,
+            noteTabsData: body.noteTabsData,
+            note: body.note
+        });
+    }
     if (body.calendarNotes !== undefined || body.projectCalendarNotes !== undefined) {
         sanitized.calendarNotes = sanitizeProjectCalendarNotes(body.calendarNotes ?? body.projectCalendarNotes);
     }
@@ -886,7 +1009,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completedDate: completedDate || null,
             completedBy:   completed ? String(completedBy || req.user.id || '') : '',
             completedByName: completed ? String(completedByName || req.user.username || '') : '',
-            notes:         sanitizeProjectNotesValue(notes),
+            notes:         getBestProjectNotesValue({ notes, projectNotes: req.body.projectNotes, projectNote: req.body.projectNote, notesData: req.body.notesData, noteTabs: req.body.noteTabs, noteTabsData: req.body.noteTabsData, note: req.body.note }),
             calendarNotes: sanitizeProjectCalendarNotes(calendarNotes ?? projectCalendarNotes),
             description:   sanitizedDescription,
             archived:      false,
@@ -926,6 +1049,23 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
         const currentProject = req.project.toObject({ depopulate: true, versionKey: false });
         if (Array.isArray(incoming.tasks)) {
             incoming.tasks = mergeExistingTaskNotes(incoming.tasks, req.body?.tasks, currentProject.tasks || []);
+        }
+        if (Object.prototype.hasOwnProperty.call(incoming, 'notes')) {
+            const existingNotes = getBestProjectNotesValue(currentProject);
+            const incomingNotes = getBestProjectNotesValue({
+                notes: incoming.notes,
+                projectNotes: req.body?.projectNotes,
+                projectNote: req.body?.projectNote,
+                notesData: req.body?.notesData,
+                noteTabs: req.body?.noteTabs,
+                noteTabsData: req.body?.noteTabsData,
+                note: req.body?.note
+            });
+            incoming.notes = incomingNotes;
+            const changedNonNoteFields = Object.keys(incoming).filter(key => key !== 'notes' && projectFieldChanged(currentProject[key], incoming[key]));
+            if (!projectNotesHaveContent(incomingNotes) && projectNotesHaveContent(existingNotes) && changedNonNoteFields.length > 0) {
+                incoming.notes = existingNotes;
+            }
         }
         const changedFields = {};
         allowed.forEach(key => {

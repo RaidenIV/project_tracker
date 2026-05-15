@@ -3084,7 +3084,7 @@ function normalizeProject(project) {
         id: project.id || project._id || String(Date.now()),
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
-        notes: normalizeProjectNotesValue(project.notes ?? project.projectNotes ?? project.notesData ?? project.noteTabs ?? ''),
+        notes: getProjectNotesValueFromProject(project),
         description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
         projectPriorityTag: getProjectPriorityTag(project),
         dueDate: getProjectDueDate(project),
@@ -3162,7 +3162,7 @@ function matchesProjectSearch(project, query) {
     const haystack = [
         project.title,
         project.description,
-        project.notes,
+        getProjectNotesValueFromProject(project),
         ...getProjectTags(project),
         ...(project.tasks || []).map(task => task.text)
     ].join(' ').toLowerCase();
@@ -4536,12 +4536,25 @@ function mergeRealtimeProjectWithExisting(existingProject, incomingProject, rawP
         mergedProject.taskCategories = Array.isArray(existingProject.taskCategories) ? existingProject.taskCategories : [];
     }
     const recentNotesSnapshot = getRecentLocalProjectNotesSnapshot(existingProject);
-    if (!realtimePayloadHasField(rawPayload, 'notes') || hasLocalUnsynced || recentNotesSnapshot !== null) {
+    const existingNotesValue = getProjectNotesValueFromProject(existingProject);
+    if (!realtimePayloadHasField(rawPayload, 'notes', 'projectNotes', 'notesData', 'noteTabs', 'noteTabsData', 'note', 'projectNote') || hasLocalUnsynced || recentNotesSnapshot !== null) {
         mergedProject.notes = recentNotesSnapshot !== null
             ? recentNotesSnapshot
-            : normalizeProjectNotesValue(existingProject.notes ?? existingProject.projectNotes ?? '');
+            : existingNotesValue;
     } else {
-        mergedProject.notes = normalizeProjectNotesValue(mergedProject.notes ?? rawPayload.notes ?? '');
+        const incomingNotesValue = getProjectNotesValueFromProject({
+            ...incomingProject,
+            notes: mergedProject.notes ?? rawPayload.notes ?? incomingProject.notes,
+            projectNotes: rawPayload.projectNotes ?? incomingProject.projectNotes,
+            notesData: rawPayload.notesData ?? incomingProject.notesData,
+            noteTabs: rawPayload.noteTabs ?? incomingProject.noteTabs,
+            noteTabsData: rawPayload.noteTabsData ?? incomingProject.noteTabsData,
+            note: rawPayload.note ?? incomingProject.note,
+            projectNote: rawPayload.projectNote ?? incomingProject.projectNote
+        });
+        mergedProject.notes = projectHasNotes(incomingNotesValue) || !projectHasNotes(existingNotesValue)
+            ? incomingNotesValue
+            : existingNotesValue;
     }
     if (!realtimePayloadHasField(rawPayload, 'calendarNotes', 'projectCalendarNotes') || hasLocalUnsynced) {
         mergedProject.calendarNotes = normalizeProjectCalendarNotes(existingProject.calendarNotes || existingProject.projectCalendarNotes || {});
@@ -4902,7 +4915,7 @@ function updateProjectDescription(projectId, descriptionValue) {
 
 function getProjectNotesDataForProject(projectId) {
     const project = state.findProject(projectId);
-    return normalizeProjectNotesData(project?.notes || '');
+    return normalizeProjectNotesData(getProjectNotesValueFromProject(project));
 }
 
 function stageProjectNotesData(projectId, data, options = {}) {
@@ -5162,7 +5175,7 @@ function handleProjectNoteTabNameKeydown(projectId, tabId, surface = 'modal', ev
 }
 
 function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
-    const data = normalizeProjectNotesData(project?.notes || '');
+    const data = normalizeProjectNotesData(getProjectNotesValueFromProject(project));
     const activeTab = data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
     const canEdit = state.canEdit(projectId);
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
@@ -8455,8 +8468,81 @@ function createDefaultProjectNotesTab(body = '') {
     };
 }
 
+function noteCandidateHasContent(value) {
+    const normalized = normalizeProjectNotesValue(value);
+    if (!String(normalized || '').trim()) return false;
+    try {
+        const data = normalizeProjectNotesData(normalized);
+        return data.tabs.some(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+    } catch {
+        return getRichTextPlainText(normalized).length > 0;
+    }
+}
+
+function getBestProjectNotesValue(...values) {
+    const normalizedValues = values
+        .map(value => normalizeProjectNotesValue(value))
+        .filter(value => String(value ?? '').trim().length > 0);
+
+    const withContent = normalizedValues.find(noteCandidateHasContent);
+    return withContent || normalizedValues[0] || '';
+}
+
+function getProjectNotesValueFromProject(project = {}) {
+    if (!project || typeof project !== 'object') return '';
+    return getBestProjectNotesValue(
+        project.notes,
+        project.projectNotes,
+        project.projectNote,
+        project.notesData,
+        project.noteTabs,
+        project.noteTabsData,
+        project.note
+    );
+}
+
+function buildProjectNotesTabsFromMap(value = {}) {
+    return Object.entries(value)
+        .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'links', 'hyperlinks'].includes(key))
+        .map(([key, entry], index) => {
+            const bodyValue = typeof entry === 'string'
+                ? entry
+                : (entry?.body ?? entry?.text ?? entry?.note ?? entry?.notes ?? entry?.content ?? entry?.html ?? '');
+            const body = typeof bodyValue === 'string' ? bodyValue : normalizeProjectNotesValue(bodyValue);
+            const links = typeof entry === 'object' && entry !== null ? (entry.links ?? entry.hyperlinks ?? []) : [];
+            return normalizeProjectNotesTab({
+                id: index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-legacy-${index}`,
+                title: key.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || `Note ${index + 1}`,
+                body,
+                links
+            }, index);
+        })
+        .filter(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+}
+
 function normalizeProjectNotesValue(value = '') {
-    if (typeof value === 'string') return value;
+    if (typeof value === 'string') {
+        const raw = value.trim();
+        if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    if (parsed[PROJECT_NOTES_TAB_DATA_FLAG] === true || Array.isArray(parsed.tabs)) return value;
+                    const normalizedParsed = normalizeProjectNotesValue(parsed);
+                    if (String(normalizedParsed || '').trim()) return normalizedParsed;
+                }
+            } catch {
+                // Keep plain text that happens to contain braces/brackets.
+            }
+        }
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return serializeProjectNotesData({
+            activeTabId: value[0]?.id || PROJECT_NOTES_DEFAULT_TAB_ID,
+            tabs: value
+        });
+    }
     if (!value || typeof value !== 'object') return '';
 
     if (value[PROJECT_NOTES_TAB_DATA_FLAG] === true || Array.isArray(value.tabs)) {
@@ -8471,8 +8557,8 @@ function normalizeProjectNotesValue(value = '') {
         }
     }
 
-    const legacyBody = value.body ?? value.text ?? value.note ?? value.notes ?? '';
-    const legacyTitle = value.title ?? 'Notes';
+    const legacyBody = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? '';
+    const legacyTitle = value.title ?? value.name ?? 'Notes';
     if (typeof legacyBody === 'string' && legacyBody.trim()) {
         return serializeProjectNotesData({
             activeTabId: PROJECT_NOTES_DEFAULT_TAB_ID,
@@ -8482,6 +8568,19 @@ function normalizeProjectNotesValue(value = '') {
                 body: legacyBody,
                 links: value.links ?? value.hyperlinks ?? []
             }]
+        });
+    }
+
+    if (legacyBody && typeof legacyBody === 'object') {
+        const nestedNotes = normalizeProjectNotesValue(legacyBody);
+        if (String(nestedNotes || '').trim()) return nestedNotes;
+    }
+
+    const mappedTabs = buildProjectNotesTabsFromMap(value);
+    if (mappedTabs.length) {
+        return serializeProjectNotesData({
+            activeTabId: mappedTabs[0].id,
+            tabs: mappedTabs
         });
     }
 
