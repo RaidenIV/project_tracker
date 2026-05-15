@@ -4737,7 +4737,7 @@ function validateProjectTitleInput(input) {
     return !message;
 }
 
-async function createProjectWithDescription(requiredDescription, projectTitle = '') {
+async function createProjectWithDescription(descriptionValue = '', projectTitle = '') {
     const tempId = Date.now();
     const createdAt = new Date().toISOString();
     const newProject = {
@@ -4752,7 +4752,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
         completed: false,
         notes: '',
         calendarNotes: {},
-        description: requiredDescription,
+        description: descriptionValue,
         tags: [],
         taskCategories: [],
         userRole: 'owner',
@@ -4771,7 +4771,7 @@ async function createProjectWithDescription(requiredDescription, projectTitle = 
             id:  created.id  || created._id,
             lastModified: created.lastModified || createdAt,
             __syncedLastModified: created.lastModified || createdAt,
-            description: typeof created.description === 'string' ? created.description : requiredDescription,
+            description: typeof created.description === 'string' ? created.description : descriptionValue,
             projectPriorityTag: getProjectPriorityTag(created),
             dueDate: getProjectDueDate(created),
             userRole: 'owner',
@@ -8503,21 +8503,19 @@ function getProjectCardPreviewTasks(project) {
         .filter(entry => !isTaskCompleted(entry.task));
 
     const hasPriorityTasks = orderedTasks.some(entry =>
-        entry.task.tag && entry.task.tag !== 'none'
+        normalizePriorityTagValue(entry.task.tag) !== DEFAULT_TASK_TAG
     );
 
-    return orderedTasks
-        .sort((a, b) => {
-            if (hasPriorityTasks) {
-                const aPriority = TASK_TAG_PRIORITY[a.task.tag] ?? TASK_TAG_PRIORITY['none'];
-                const bPriority = TASK_TAG_PRIORITY[b.task.tag] ?? TASK_TAG_PRIORITY['none'];
-                if (aPriority !== bPriority) return aPriority - bPriority;
-            }
-            const aOverdue = isTaskOverdue(a.task);
-            const bOverdue = isTaskOverdue(b.task);
-            if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+    const previewEntries = hasPriorityTasks
+        ? [...orderedTasks].sort((a, b) => {
+            const aPriority = getTaskTagPriority(a.task);
+            const bPriority = getTaskTagPriority(b.task);
+            if (aPriority !== bPriority) return aPriority - bPriority;
             return a.index - b.index;
         })
+        : orderedTasks;
+
+    return previewEntries
         .slice(0, 3)
         .map(entry => entry.task);
 }

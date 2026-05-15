@@ -213,7 +213,7 @@
                                 <span class="panel-username" id="panelUsername"></span>
                                 <span class="panel-user-level-badge" id="panelUserLevelBadge">LEVEL 1</span>
                             </button>
-                            <button class="panel-notification-button" id="panelNotificationButton" type="button" onclick="openNotificationsModal()">Notifications<span class="notification-unread-badge hidden" id="notificationUnreadBadge">0</span></button>
+                            <button class="panel-notification-button" id="panelNotificationButton" type="button" onclick="openNotificationsModal()"><span class="panel-notification-label">Notifications</span><span class="notification-unread-badge hidden" id="notificationUnreadBadge">0</span></button>
                             <div class="save-status save-status--idle save-status--inline" id="saveStatusPill">All changes saved</div>
                         </div>
                     </div>
@@ -235,13 +235,13 @@
                            type="text"
                            maxlength="80"
                            placeholder="Project name">
-                    <label class="new-project-create-label" for="newProjectDescriptionInput">Project description</label>
+                    <label class="new-project-create-label" for="newProjectDescriptionInput">Project description <span class="new-project-create-label-optional">Optional</span></label>
                     <textarea class="new-project-description-input"
                               id="newProjectDescriptionInput"
                               rows="3"
                               maxlength="280"
-                              placeholder="Describe this project"></textarea>
-                    <div class="new-project-description-warning hidden" id="newProjectDescriptionWarning">Add a project description</div>
+                              placeholder="Describe this project (optional)"></textarea>
+                    <div class="new-project-description-warning hidden" id="newProjectDescriptionWarning">Project description is optional</div>
                     <div class="new-project-create-actions">
                         <button class="new-project-confirm-button" id="confirmNewProjectButton" type="button">Create Project</button>
                         <button class="new-project-cancel-button" id="cancelNewProjectButton" type="button">Cancel</button>
