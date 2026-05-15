@@ -1639,3 +1639,134 @@ body[data-theme^="blueprint"] .notifications-modal .notification-card--unread {
     border-color: color-mix(in srgb, var(--accent, var(--primary, #0099ff)) 48%, var(--line, transparent)) !important;
     box-shadow: var(--inset-shadow, var(--shadow-inset, inset 2px 2px 5px rgba(0, 0, 0, 0.55), inset -1px -1px 4px rgba(255, 255, 255, 0.06))) !important;
 }
+
+/* ============================================================================
+   Targeted follow-up: constrained desktop leaderboard 2-line fit
+   - Applies to 1920x1200-style displays only.
+   - Excludes 1920x1080 by requiring viewport height above 1080px.
+   ============================================================================ */
+@media (max-width: 1920px) and (min-height: 1081px) and (max-height: 1200px) {
+    .leaderboard-list,
+    body[data-theme^="console"] .leaderboard-list,
+    body[data-theme^="glass"] .leaderboard-list,
+    body[data-theme^="blueprint"] .leaderboard-list {
+        gap: 0.74rem !important;
+    }
+
+    .leaderboard-list > .leaderboard-row,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+        grid-template-columns: 1.18rem 2.42rem minmax(0, 1fr) !important;
+        grid-template-rows: minmax(1rem, auto) minmax(1rem, auto) !important;
+        grid-template-areas:
+            "rank avatar user"
+            "rank avatar score" !important;
+        align-items: center !important;
+        column-gap: 0.68rem !important;
+        row-gap: 0.12rem !important;
+        min-height: 4.42rem !important;
+        padding: 0.74rem 0.72rem !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-rank {
+        grid-area: rank !important;
+        align-self: center !important;
+        justify-self: start !important;
+        min-width: 0 !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
+        grid-area: avatar !important;
+        width: 2.42rem !important;
+        height: 2.42rem !important;
+        justify-self: center !important;
+        align-self: center !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main {
+        grid-area: user !important;
+        display: block !important;
+        align-self: end !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        text-align: left !important;
+        font-size: clamp(0.72rem, 0.6vw, 0.84rem) !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        overflow-wrap: normal !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-meta {
+        display: none !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
+        grid-area: score !important;
+        justify-self: start !important;
+        align-self: start !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        font-size: clamp(0.72rem, 0.58vw, 0.84rem) !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0.01em !important;
+        color: var(--accent, currentColor) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
