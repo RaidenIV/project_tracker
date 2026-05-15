@@ -10306,14 +10306,40 @@ async function saveProjectGridLayoutPreference(layout) {
     return normalizedLayout;
 }
 
+function getProjectGridViewportMetrics() {
+    const cssWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+    const cssHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+    const deviceScale = Math.max(window.devicePixelRatio || 1, 1);
+    return {
+        cssWidth,
+        cssHeight,
+        physicalWidth: Math.round(cssWidth * deviceScale),
+        physicalHeight: Math.round(cssHeight * deviceScale)
+    };
+}
+
+function isProjectGridLargeDesktopViewport(metrics = getProjectGridViewportMetrics()) {
+    if (metrics.cssWidth <= 860) return false;
+    return (metrics.physicalWidth >= 1920 && metrics.physicalHeight >= 1080)
+        || (metrics.cssWidth >= 1800 && metrics.cssHeight >= 900);
+}
+
+function getAutoProjectGridColumns(metrics = getProjectGridViewportMetrics()) {
+    if (metrics.cssWidth <= 860) return null;
+    return isProjectGridLargeDesktopViewport(metrics) ? 3 : 2;
+}
+
 function getEffectiveProjectGridColumns(columns) {
     const raw = String(columns || PROJECT_GRID_LAYOUT_DEFAULT.columns);
-    if (raw === 'auto') return null;
+    const metrics = getProjectGridViewportMetrics();
+    if (raw === 'auto') return getAutoProjectGridColumns(metrics);
     const requested = Number(raw);
     if (!Number.isFinite(requested) || requested < 1) return null;
-    if (window.innerWidth <= 860) return 1;
-    if (window.innerWidth <= 1450) return Math.min(requested, 2);
-    return Math.min(Math.max(Math.floor(requested), 1), 4);
+    if (metrics.cssWidth <= 860) return 1;
+    const maximumColumns = isProjectGridLargeDesktopViewport(metrics)
+        ? (metrics.physicalWidth >= 2400 || metrics.cssWidth >= 2400 ? 4 : 3)
+        : 2;
+    return Math.min(Math.max(Math.floor(requested), 1), maximumColumns);
 }
 
 function applyProjectGridLayoutPreference() {
@@ -10323,7 +10349,8 @@ function applyProjectGridLayoutPreference() {
     const effectiveColumns = getEffectiveProjectGridColumns(layout.columns);
     grid.dataset.layoutColumns = layout.columns;
     grid.dataset.layoutDensity = layout.density;
-    grid.classList.toggle('project-grid--manual-layout', !!effectiveColumns);
+    grid.dataset.layoutEffectiveColumns = effectiveColumns || 'auto';
+    grid.classList.toggle('project-grid--manual-layout', layout.columns !== 'auto' && !!effectiveColumns);
 
     if (effectiveColumns) {
         grid.style.setProperty('grid-template-columns', `repeat(${effectiveColumns}, minmax(0, 1fr))`, 'important');

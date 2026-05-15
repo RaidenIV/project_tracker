@@ -134,7 +134,6 @@
     body[data-theme^="console"].control-panel-is-collapsed .project-grid,
     body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
     body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
         justify-content: stretch !important;
         justify-items: stretch !important;
@@ -302,8 +301,8 @@
     }
 }
 
-/* Final desktop grid breakpoint correction: avoid broad sub-1920 overrides. */
-@media (min-width: 981px) and (max-width: 1679px) {
+/* Final desktop grid fallback: JS applies the exact column count after load. */
+@media (min-width: 981px) and (max-width: 1799px) {
     .project-grid,
     body.has-sidebar .project-grid,
     body.sidebar-collapsed .project-grid,
@@ -323,7 +322,10 @@
     }
 }
 
-@media (min-width: 1680px) {
+@media (min-width: 1800px) and (min-height: 900px),
+       (min-width: 1500px) and (min-height: 900px) and (min-resolution: 1.2dppx),
+       (min-width: 1280px) and (min-height: 800px) and (min-resolution: 1.45dppx),
+       (min-width: 981px) and (min-height: 720px) and (min-resolution: 1.9dppx) {
     .project-grid,
     body.has-sidebar .project-grid,
     body.sidebar-collapsed .project-grid,
