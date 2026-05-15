@@ -302,7 +302,7 @@
 }
 
 /* Final desktop grid fallback: JS applies the exact column count after load. */
-@media (min-width: 981px) and (max-width: 1799px) {
+@media (min-width: 981px) and (max-width: 1679px) {
     .project-grid,
     body.has-sidebar .project-grid,
     body.sidebar-collapsed .project-grid,
@@ -322,7 +322,7 @@
     }
 }
 
-@media (min-width: 1800px) and (min-height: 900px),
+@media (min-width: 1680px) and (min-height: 900px),
        (min-width: 1500px) and (min-height: 900px) and (min-resolution: 1.2dppx),
        (min-width: 1280px) and (min-height: 800px) and (min-resolution: 1.45dppx),
        (min-width: 981px) and (min-height: 720px) and (min-resolution: 1.9dppx) {

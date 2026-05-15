@@ -10260,6 +10260,9 @@ const PROJECT_GRID_LAYOUT_DEFAULT = Object.freeze({
     density: 'comfortable'
 });
 
+const PROJECT_GRID_DESKTOP_MIN_WIDTH = 861;
+const PROJECT_GRID_LARGE_LAYOUT_WIDTH = 1760;
+
 function normalizeProjectGridLayoutPreference(layout) {
     const columns = ['auto', '1', '2', '3', '4'].includes(String(layout?.columns))
         ? String(layout.columns)
@@ -10306,49 +10309,60 @@ async function saveProjectGridLayoutPreference(layout) {
     return normalizedLayout;
 }
 
-function getProjectGridViewportMetrics() {
+function getProjectGridViewportMetrics(grid = document.getElementById('projectGrid')) {
     const cssWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
     const cssHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
     const deviceScale = Math.max(window.devicePixelRatio || 1, 1);
+    const gridRect = grid?.getBoundingClientRect?.();
+    const computedGridStyle = grid ? window.getComputedStyle(grid) : null;
+    const parsedColumnGap = parseFloat(computedGridStyle?.columnGap || computedGridStyle?.gap || '0');
     return {
         cssWidth,
         cssHeight,
         physicalWidth: Math.round(cssWidth * deviceScale),
-        physicalHeight: Math.round(cssHeight * deviceScale)
+        physicalHeight: Math.round(cssHeight * deviceScale),
+        gridWidth: Math.max(0, Math.floor(gridRect?.width || 0)),
+        columnGap: Number.isFinite(parsedColumnGap) ? parsedColumnGap : 0
     };
 }
 
+function getMaximumProjectGridColumns(metrics = getProjectGridViewportMetrics()) {
+    if (metrics.cssWidth < PROJECT_GRID_DESKTOP_MIN_WIDTH) return 1;
+    const availableGridWidth = metrics.gridWidth || metrics.cssWidth;
+    if (metrics.cssWidth >= 2400 || availableGridWidth >= PROJECT_GRID_LARGE_LAYOUT_WIDTH || metrics.physicalWidth >= 3000) return 4;
+    if (metrics.cssWidth >= 1680 || metrics.physicalWidth >= 1900) return 3;
+    return 2;
+}
+
 function isProjectGridLargeDesktopViewport(metrics = getProjectGridViewportMetrics()) {
-    if (metrics.cssWidth <= 860) return false;
-    return (metrics.physicalWidth >= 1920 && metrics.physicalHeight >= 1080)
-        || (metrics.cssWidth >= 1800 && metrics.cssHeight >= 900);
+    return getMaximumProjectGridColumns(metrics) >= 3;
 }
 
 function getAutoProjectGridColumns(metrics = getProjectGridViewportMetrics()) {
-    if (metrics.cssWidth <= 860) return null;
-    return isProjectGridLargeDesktopViewport(metrics) ? 3 : 2;
+    if (metrics.cssWidth < PROJECT_GRID_DESKTOP_MIN_WIDTH) return null;
+    return Math.min(getMaximumProjectGridColumns(metrics), 3);
 }
 
-function getEffectiveProjectGridColumns(columns) {
+function getEffectiveProjectGridColumns(columns, grid = document.getElementById('projectGrid')) {
     const raw = String(columns || PROJECT_GRID_LAYOUT_DEFAULT.columns);
-    const metrics = getProjectGridViewportMetrics();
+    const metrics = getProjectGridViewportMetrics(grid);
+    if (metrics.cssWidth < PROJECT_GRID_DESKTOP_MIN_WIDTH) return null;
     if (raw === 'auto') return getAutoProjectGridColumns(metrics);
     const requested = Number(raw);
     if (!Number.isFinite(requested) || requested < 1) return null;
-    if (metrics.cssWidth <= 860) return 1;
-    const maximumColumns = isProjectGridLargeDesktopViewport(metrics)
-        ? (metrics.physicalWidth >= 2400 || metrics.cssWidth >= 2400 ? 4 : 3)
-        : 2;
-    return Math.min(Math.max(Math.floor(requested), 1), maximumColumns);
+    return Math.min(Math.max(Math.floor(requested), 1), 4);
 }
 
 function applyProjectGridLayoutPreference() {
     const grid = document.getElementById('projectGrid');
     if (!grid) return;
     const layout = loadProjectGridLayoutPreference();
-    const effectiveColumns = getEffectiveProjectGridColumns(layout.columns);
+    const metrics = getProjectGridViewportMetrics(grid);
+    const maximumColumns = getMaximumProjectGridColumns(metrics);
+    const effectiveColumns = getEffectiveProjectGridColumns(layout.columns, grid);
     grid.dataset.layoutColumns = layout.columns;
     grid.dataset.layoutDensity = layout.density;
+    grid.dataset.layoutMaxColumns = maximumColumns || 'auto';
     grid.dataset.layoutEffectiveColumns = effectiveColumns || 'auto';
     grid.classList.toggle('project-grid--manual-layout', layout.columns !== 'auto' && !!effectiveColumns);
 
@@ -10445,6 +10459,9 @@ function toggleProjectLayoutMenu(event) {
         return;
     }
     const isOpen = !controls.classList.contains('is-open');
+    if (isOpen) {
+        controls.innerHTML = buildProjectLayoutControlsMarkup(loadProjectGridLayoutPreference());
+    }
     controls.classList.toggle('is-open', isOpen);
     controls.querySelector('.project-layout-toggle')?.setAttribute('aria-expanded', String(isOpen));
 }
@@ -10457,7 +10474,9 @@ function setProjectGridLayoutOption(key, value, event) {
         return;
     }
     const layout = loadProjectGridLayoutPreference();
-    if (key === 'columns') layout.columns = ['auto', '1', '2', '3', '4'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.columns;
+    if (key === 'columns') {
+        layout.columns = ['auto', '1', '2', '3', '4'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.columns;
+    }
     if (key === 'density') layout.density = ['compact', 'comfortable', 'spacious'].includes(String(value)) ? String(value) : PROJECT_GRID_LAYOUT_DEFAULT.density;
     const normalizedLayout = normalizeProjectGridLayoutPreference(layout);
     accountState.user = {
