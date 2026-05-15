@@ -1479,3 +1479,121 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-
         display: none !important;
     }
 }
+
+/* ============================================================================
+   Targeted follow-up: notification modal depth, top-bar grid control, sidebar
+   logo placement, progress spacing, and safe text display refinements
+   ============================================================================ */
+.top-app-bar,
+body[data-theme^="console"] .top-app-bar,
+body[data-theme^="glass"] .top-app-bar,
+body[data-theme^="blueprint"] .top-app-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+}
+
+.top-app-layout-control-slot,
+body[data-theme^="console"] .top-app-layout-control-slot,
+body[data-theme^="glass"] .top-app-layout-control-slot,
+body[data-theme^="blueprint"] .top-app-layout-control-slot {
+    grid-column: 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    z-index: 75 !important;
+}
+
+.top-app-layout-control-slot .project-layout-controls,
+body[data-theme^="console"] .top-app-layout-control-slot .project-layout-controls,
+body[data-theme^="glass"] .top-app-layout-control-slot .project-layout-controls,
+body[data-theme^="blueprint"] .top-app-layout-control-slot .project-layout-controls {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    inset: auto !important;
+    z-index: 80 !important;
+    pointer-events: none !important;
+}
+
+.top-app-layout-control-slot .project-layout-toggle,
+body[data-theme^="console"] .top-app-layout-control-slot .project-layout-toggle,
+body[data-theme^="glass"] .top-app-layout-control-slot .project-layout-toggle,
+body[data-theme^="blueprint"] .top-app-layout-control-slot .project-layout-toggle {
+    pointer-events: auto !important;
+}
+
+.top-app-layout-control-slot .project-layout-menu,
+body[data-theme^="console"] .top-app-layout-control-slot .project-layout-menu,
+body[data-theme^="glass"] .top-app-layout-control-slot .project-layout-menu,
+body[data-theme^="blueprint"] .top-app-layout-control-slot .project-layout-menu {
+    top: calc(100% + 0.7rem) !important;
+    right: 0 !important;
+}
+
+.control-panel-scroll-inner,
+body[data-theme^="console"] .control-panel-scroll-inner,
+body[data-theme^="glass"] .control-panel-scroll-inner,
+body[data-theme^="blueprint"] .control-panel-scroll-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100% !important;
+}
+
+.sidebar-bottom-logo-wrap,
+body[data-theme^="console"] .sidebar-bottom-logo-wrap,
+body[data-theme^="glass"] .sidebar-bottom-logo-wrap,
+body[data-theme^="blueprint"] .sidebar-bottom-logo-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    padding: 1.35rem 0 0.25rem !important;
+}
+
+.sidebar-bottom-logo,
+body[data-theme^="console"] .sidebar-bottom-logo,
+body[data-theme^="glass"] .sidebar-bottom-logo,
+body[data-theme^="blueprint"] .sidebar-bottom-logo {
+    display: block !important;
+    width: clamp(5.25rem, 7.5vw, 7.75rem) !important;
+    max-width: 72% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    opacity: 0.96 !important;
+    filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.16)) !important;
+}
+
+body.control-panel-is-collapsed .sidebar-bottom-logo-wrap,
+body.control-panel-is-collapsed .sidebar-bottom-logo {
+    display: none !important;
+}
+
+.project-card .progress-bar-container,
+.stitch-project-card .progress-bar-container,
+body[data-theme^="console"] .project-card .progress-bar-container,
+body[data-theme^="glass"] .project-card .progress-bar-container,
+body[data-theme^="blueprint"] .project-card .progress-bar-container {
+    margin-top: 0.22rem !important;
+}
+
+body[data-theme^="blueprint"] .notifications-modal .notifications-modal-content,
+body[data-theme^="blueprint"] .notifications-modal .account-modal-scroll,
+body[data-theme^="blueprint"] .notifications-modal .notifications-modal-list,
+body[data-theme^="blueprint"] .notifications-modal .notification-card,
+body[data-theme^="blueprint"] .notifications-modal .side-panel-empty {
+    background: var(--panel, var(--surface, #1a1a1a)) !important;
+    border-color: var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--inset-shadow, var(--shadow-inset, inset 2px 2px 5px rgba(0, 0, 0, 0.55), inset -1px -1px 4px rgba(255, 255, 255, 0.06))) !important;
+}
+
+body[data-theme^="blueprint"] .notifications-modal .notification-card--unread {
+    background: color-mix(in srgb, var(--accent, var(--primary, #0099ff)) 10%, var(--panel, var(--surface, #1a1a1a))) !important;
+    border-color: color-mix(in srgb, var(--accent, var(--primary, #0099ff)) 48%, var(--line, transparent)) !important;
+    box-shadow: var(--inset-shadow, var(--shadow-inset, inset 2px 2px 5px rgba(0, 0, 0, 0.55), inset -1px -1px 4px rgba(255, 255, 255, 0.06))) !important;
+}
