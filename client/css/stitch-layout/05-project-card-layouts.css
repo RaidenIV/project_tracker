@@ -1946,6 +1946,30 @@ body[data-theme^="blueprint"] .project-layout-option.is-active {
     outline: none !important;
 }
 
+.project-layout-option:disabled,
+.project-layout-option.is-disabled,
+.project-layout-option:disabled:hover,
+.project-layout-option:disabled:focus-visible,
+body[data-theme^="console"] .project-layout-option:disabled,
+body[data-theme^="console"] .project-layout-option.is-disabled,
+body[data-theme^="console"] .project-layout-option:disabled:hover,
+body[data-theme^="console"] .project-layout-option:disabled:focus-visible,
+body[data-theme^="glass"] .project-layout-option:disabled,
+body[data-theme^="glass"] .project-layout-option.is-disabled,
+body[data-theme^="glass"] .project-layout-option:disabled:hover,
+body[data-theme^="glass"] .project-layout-option:disabled:focus-visible,
+body[data-theme^="blueprint"] .project-layout-option:disabled,
+body[data-theme^="blueprint"] .project-layout-option.is-disabled,
+body[data-theme^="blueprint"] .project-layout-option:disabled:hover,
+body[data-theme^="blueprint"] .project-layout-option:disabled:focus-visible {
+    opacity: 0.38 !important;
+    cursor: not-allowed !important;
+    color: var(--muted, #737373) !important;
+    border-color: var(--line, rgba(255, 255, 255, 0.1)) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
 @media (max-width: 720px) {
     #projectModal .modal-top-menu-shell .modal-menu-bar,
     body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
