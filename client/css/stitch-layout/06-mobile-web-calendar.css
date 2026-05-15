@@ -1733,15 +1733,6 @@ body[data-theme^="glass"] .project-card {
     overflow: visible !important;
 }
 
-/* Fix 1: project-header overflow clips meatball dropdown */
-.project-card .project-header,
-.stitch-project-card .project-header,
-body[data-theme^="console"] .project-card .project-header,
-body[data-theme^="blueprint"] .project-card .project-header,
-body[data-theme^="glass"] .project-card .project-header {
-    overflow: visible !important;
-}
-
 .project-actions,
 .project-card .project-actions,
 .stitch-project-card .project-actions {

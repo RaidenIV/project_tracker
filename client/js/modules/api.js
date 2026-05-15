@@ -99,130 +99,6 @@ async function getLatestServerProjectForRetry(project) {
     }
 }
 
-function hasTextContent(value) {
-    return String(value ?? '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/&nbsp;/gi, ' ')
-        .replace(/&amp;/gi, '&')
-        .replace(/&lt;/gi, '<')
-        .replace(/&gt;/gi, '>')
-        .replace(/&quot;/gi, '"')
-        .replace(/&#39;/gi, "'")
-        .replace(/\s+/g, ' ')
-        .trim().length > 0;
-}
-
-function normalizeProjectNotesCandidate(value = '') {
-    if (typeof value === 'string') {
-        const raw = value.trim();
-        if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
-            try {
-                const parsed = JSON.parse(raw);
-                if (parsed && typeof parsed === 'object') {
-                    if (parsed.__projectNotesTabs === true || Array.isArray(parsed.tabs)) return value;
-                    return normalizeProjectNotesCandidate(parsed);
-                }
-            } catch {
-                // Keep plain text that happens to contain braces/brackets.
-            }
-        }
-        return value;
-    }
-    if (Array.isArray(value)) {
-        try {
-            return JSON.stringify({
-                __projectNotesTabs: true,
-                activeTabId: value[0]?.id || 'notes-general',
-                tabs: value
-            });
-        } catch {
-            return '';
-        }
-    }
-    if (!value || typeof value !== 'object') return '';
-    if (value.__projectNotesTabs === true || Array.isArray(value.tabs)) {
-        try {
-            return JSON.stringify({
-                __projectNotesTabs: true,
-                activeTabId: value.activeTabId || '',
-                tabs: Array.isArray(value.tabs) ? value.tabs : []
-            });
-        } catch {
-            return '';
-        }
-    }
-    const legacyText = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? '';
-    if (typeof legacyText === 'string') return legacyText;
-    if (legacyText && typeof legacyText === 'object') return normalizeProjectNotesCandidate(legacyText);
-    return '';
-}
-
-function projectNotesHaveContent(notes) {
-    const raw = normalizeProjectNotesCandidate(notes);
-    if (!String(raw ?? '').trim()) return false;
-    try {
-        const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.tabs)) {
-            return parsed.tabs.some(tab => hasTextContent(tab?.body) || (Array.isArray(tab?.links) && tab.links.length > 0));
-        }
-    } catch {
-        // Plain-text legacy notes are handled below.
-    }
-    return hasTextContent(raw);
-}
-
-function getBestProjectNotesValue(projectOrValue = {}, ...extraValues) {
-    const values = projectOrValue && typeof projectOrValue === 'object' && !Array.isArray(projectOrValue)
-        ? [
-            projectOrValue.notes,
-            projectOrValue.projectNotes,
-            projectOrValue.projectNote,
-            projectOrValue.notesData,
-            projectOrValue.noteTabs,
-            projectOrValue.noteTabsData,
-            projectOrValue.note,
-            ...extraValues
-        ]
-        : [projectOrValue, ...extraValues];
-    const normalizedValues = values
-        .map(normalizeProjectNotesCandidate)
-        .filter(value => String(value ?? '').trim().length > 0);
-    return normalizedValues.find(projectNotesHaveContent) || normalizedValues[0] || '';
-}
-
-function mergeLatestNotesForConflictRetry(localProject = {}, latestProject = {}) {
-    const localNotes = getBestProjectNotesValue(localProject);
-    const latestNotes = getBestProjectNotesValue(latestProject);
-    const localHasNotes = projectNotesHaveContent(localNotes);
-    const latestHasNotes = projectNotesHaveContent(latestNotes);
-    return !localHasNotes && latestHasNotes ? latestNotes : localNotes;
-}
-
-function taskHasNoteField(task = {}) {
-    return !!task && typeof task === 'object' && (
-        Object.prototype.hasOwnProperty.call(task, 'note') ||
-        Object.prototype.hasOwnProperty.call(task, 'notes')
-    );
-}
-
-function mergeLatestTaskNotesForConflictRetry(localTasks = [], latestTasks = []) {
-    if (!Array.isArray(localTasks) || !Array.isArray(latestTasks) || !latestTasks.length) {
-        return Array.isArray(localTasks) ? localTasks : [];
-    }
-
-    const latestById = new Map(latestTasks.map(task => [String(task?.id ?? ''), task]));
-    return localTasks.map(task => {
-        const latestTask = latestById.get(String(task?.id ?? ''));
-        const localNote = task?.note ?? task?.notes ?? '';
-        const latestNote = latestTask?.note ?? latestTask?.notes ?? '';
-        if (!hasTextContent(localNote) && hasTextContent(latestNote)) {
-            return { ...task, note: latestNote };
-        }
-        return task;
-    });
-}
-
-
 export async function saveProjectToServer(project) {
     if (!project._id) {
         return { ok: false, skipped: true };
@@ -247,8 +123,6 @@ export async function saveProjectToServer(project) {
                     const retryEndpointId = latestProject?._id || projectEndpointId;
                     const retryPayload = {
                         ...buildPayload(latestModified),
-                        notes: mergeLatestNotesForConflictRetry(project, latestProject),
-                        tasks: mergeLatestTaskNotesForConflictRetry(project.tasks, latestProject?.tasks),
                         _id: latestProject?._id || project._id,
                         id: project.id || latestProject?.id || latestProject?._id
                     };

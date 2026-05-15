@@ -1895,29 +1895,3 @@ body[data-theme="blueprint-dark"] #projectModal .task-item .task-delete-button:f
     color: var(--danger) !important;
     stroke: currentColor !important;
 }
-
-/* ============================================================================
-   Fix 5: Neumorphism notifications modal - flat items, no card chrome
-   ============================================================================ */
-body[data-theme^="blueprint"] .notifications-modal .notification-card,
-body[data-theme^="blueprint"] .notifications-modal .notification-card:hover {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    border-bottom: 1px solid var(--line-soft, rgba(148, 163, 184, 0.16)) !important;
-    padding: 0.7rem 0.25rem !important;
-    transform: none !important;
-    cursor: default !important;
-}
-
-body[data-theme^="blueprint"] .notifications-modal .notification-card:last-child {
-    border-bottom: none !important;
-}
-
-body[data-theme^="blueprint"] .notifications-modal .notification-card--unread {
-    background: transparent !important;
-    box-shadow: none !important;
-    border-bottom: 1px solid color-mix(in srgb, var(--accent, currentColor) 38%, transparent) !important;
-}
