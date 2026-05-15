@@ -440,7 +440,7 @@ function getCurrentPersonalLevelProgress() {
 
 function syncPanelUserLevelBadge(level) {
     const badge = document.getElementById('panelUserLevelBadge');
-    if (badge) badge.textContent = `[lvl ${Math.max(1, Number(level) || 1)}]`;
+    if (badge) badge.textContent = `LEVEL ${Math.max(1, Number(level) || 1)}`;
 }
 
 function renderAccountProgression() {
@@ -1631,6 +1631,7 @@ const uiState = {
     savedViews: [],
     activeSavedViewId: '',
     theme: 'blueprint-dark',
+    projectCardTaskPreview: true,
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
     commandPaletteOpen: false,
@@ -1663,6 +1664,7 @@ const LOCAL_STORAGE_KEYS = {
     PROJECT_TASK_SORT: 'tracker_project_task_sort_v1',
     PROJECT_TASK_CATEGORY_FILTER: 'tracker_project_task_category_filter_v1',
     PROJECT_GRID_LAYOUT: 'tracker_project_grid_layout_v1',
+    PROJECT_CARD_TASK_PREVIEW: 'tracker_project_card_preview_v1',
     COMPETITIVE_NOTIFICATIONS: 'tracker_competitive_notifications_v1',
     NOTIFICATIONS_READ: 'tracker_notifications_read_v1',
     MODAL_TAB_ORDER: 'tracker_modal_tab_order_v1'
@@ -2882,6 +2884,52 @@ function loadThemePreference() {
     applyTheme(uiState.theme, false);
 }
 
+function isProjectCardTaskPreviewEnabled() {
+    return uiState.projectCardTaskPreview !== false;
+}
+
+function syncProjectCardTaskPreviewToggle() {
+    const enabled = isProjectCardTaskPreviewEnabled();
+    const toggle = document.getElementById('projectTaskPreviewToggleBtn');
+    if (!toggle) return;
+    toggle.classList.toggle('is-active', enabled);
+    toggle.setAttribute('aria-pressed', String(enabled));
+    toggle.setAttribute('aria-label', enabled ? 'Tasks preview is on. Turn tasks preview off.' : 'Tasks preview is off. Turn tasks preview on.');
+    toggle.title = enabled ? 'Turn tasks preview off' : 'Turn tasks preview on';
+}
+
+function applyProjectCardTaskPreviewPreference(persist = true, shouldRender = true) {
+    const enabled = isProjectCardTaskPreviewEnabled();
+    document.body.classList.toggle('project-card-task-preview-disabled', !enabled);
+    syncProjectCardTaskPreviewToggle();
+    if (persist) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.PROJECT_CARD_TASK_PREVIEW, enabled ? 'true' : 'false');
+        } catch (err) {
+            console.warn('Failed to save project card task preview preference:', err);
+        }
+    }
+    if (shouldRender && typeof render === 'function') {
+        render();
+    }
+}
+
+function setProjectCardTaskPreviewEnabled(enabled) {
+    uiState.projectCardTaskPreview = enabled !== false;
+    applyProjectCardTaskPreviewPreference(true, true);
+}
+
+function loadProjectCardTaskPreviewPreference() {
+    try {
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECT_CARD_TASK_PREVIEW);
+        uiState.projectCardTaskPreview = stored === null ? true : stored !== 'false';
+    } catch (err) {
+        console.warn('Failed to load project card task preview preference:', err);
+        uiState.projectCardTaskPreview = true;
+    }
+    applyProjectCardTaskPreviewPreference(false, false);
+}
+
 function applyTheme(themeName, persist = true) {
     uiState.theme = normalizeThemeName(themeName);
     syncThemeBranding();
@@ -2946,6 +2994,7 @@ function openUiOptionsModal() {
     const meta = getThemeMeta(uiState.theme);
     document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
     syncColorModeToggle();
+    syncProjectCardTaskPreviewToggle();
     document.getElementById('uiOptionsModal')?.classList.add('active');
 }
 
@@ -10593,7 +10642,8 @@ function renderProjectCard(project) {
     const canOwnerDelete = project.userRole === 'owner';
     const canShowReorderHandle = canEditProject && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER;
     const canReorderProject = canShowReorderHandle && uiState.sortMode === 'manual';
-    const previewTasks = getProjectCardPreviewTasks(project);
+    const showTaskPreview = isProjectCardTaskPreviewEnabled();
+    const previewTasks = showTaskPreview ? getProjectCardPreviewTasks(project) : [];
     const projectTags = getProjectTags(project);
     const projectDescription = getProjectCardDescription(project);
     const accessLabel = isViewer || isEditor
@@ -10609,7 +10659,7 @@ function renderProjectCard(project) {
                 : '<span class="project-card-status">ACTIVE</span>'));
 
     return `
-        <div class="project-card stitch-project-card ${isViewer ? 'project-card--viewer' : ''}"
+        <div class="project-card stitch-project-card ${isViewer ? 'project-card--viewer' : ''} ${showTaskPreview ? '' : 'project-card--task-preview-disabled'}"
              data-project-id="${project.id}"
              data-project-can-reorder="${canReorderProject ? 'true' : 'false'}"
              onclick="openProjectModal('${project.id}')">
@@ -10660,14 +10710,14 @@ function renderProjectCard(project) {
                 ${hasOverdueTasks ? `<div class="project-card-overdue-warning">${renderWarningTriangleIcon('project-card-overdue-icon')}<span>OVERDUE TASKS</span></div>` : ''}
             </div>
 
-            <ul class="project-preview-list">
+            ${showTaskPreview ? `<ul class="project-preview-list">
                 ${previewTasks.length ? previewTasks.map(task => `
                     <li class="project-preview-task ${task.completed ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
                         <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
                         <span>${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                     </li>
                 `).join('') : '<li class="project-preview-empty">No tasks yet</li>'}
-            </ul>
+            </ul>` : ''}
 
             <div class="project-card-notes-bar">
                 <button class="project-card-notes-button task-note-button ${projectHasNotes(project.notes) ? 'has-note' : ''}"
@@ -11267,6 +11317,9 @@ function initializeEventHandlers() {
     };
     document.getElementById('colorModeToggleBtn')?.addEventListener('click', toggleColorMode);
     document.getElementById('uiColorModeToggleBtn')?.addEventListener('click', toggleColorMode);
+    document.getElementById('projectTaskPreviewToggleBtn')?.addEventListener('click', () => {
+        setProjectCardTaskPreviewEnabled(!isProjectCardTaskPreviewEnabled());
+    });
     document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
         uiState.commandQuery = e.target.value || '';
         uiState.commandActiveIndex = 0;
@@ -11791,6 +11844,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadThemePreference();
     loadAccentColorPreference();
     loadProjectSortPreference();
+    loadProjectCardTaskPreviewPreference();
     moveColorModeToggleToSidebarHeader();
     initAuthScreen();
 

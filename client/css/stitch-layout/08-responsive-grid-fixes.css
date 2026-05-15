@@ -1128,3 +1128,213 @@ body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pil
         align-content: start !important;
     }
 }
+
+/* ============================================================================
+   Targeted follow-up: sidebar level label, inline notification count, and
+   optional project-card task preview
+   ============================================================================ */
+.control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    justify-items: start !important;
+    text-align: left !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-username,
+.control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge {
+    justify-self: start !important;
+    text-align: left !important;
+}
+
+.control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="console"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="glass"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge,
+body[data-theme^="blueprint"] .control-panel .panel-avatar-button.panel-user-pill .panel-user-level-badge {
+    min-width: 0 !important;
+    width: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--heading, currentColor) !important;
+    padding: 0 !important;
+    letter-spacing: 0.04em !important;
+}
+
+.control-panel .panel-notification-button,
+body[data-theme^="console"] .control-panel .panel-notification-button,
+body[data-theme^="glass"] .control-panel .panel-notification-button,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.52rem !important;
+    white-space: nowrap !important;
+}
+
+.control-panel .panel-notification-button .notification-unread-badge,
+body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge,
+body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    min-width: 1.35rem !important;
+    height: 1.35rem !important;
+    padding: 0 0.36rem !important;
+    border-color: color-mix(in srgb, var(--accent-contrast, #050607) 26%, transparent) !important;
+    line-height: 1 !important;
+}
+
+.control-panel .panel-notification-button .notification-unread-badge.hidden,
+body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge.hidden,
+body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge.hidden,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge.hidden {
+    display: none !important;
+}
+
+.ui-options-card-setting-row,
+body[data-theme^="console"] .ui-options-card-setting-row,
+body[data-theme^="glass"] .ui-options-card-setting-row,
+body[data-theme^="blueprint"] .ui-options-card-setting-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin: 0.95rem 0 1.05rem !important;
+    padding: 0.9rem 1rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.26)) 78%, transparent) !important;
+    border-radius: 16px !important;
+    background: color-mix(in srgb, var(--surface, transparent) 88%, transparent) !important;
+    box-shadow: var(--inset-shadow, none) !important;
+}
+
+.ui-options-card-setting-copy {
+    display: grid !important;
+    gap: 0.22rem !important;
+    min-width: 0 !important;
+}
+
+.ui-options-card-setting-title {
+    color: var(--heading, currentColor) !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.07em !important;
+    text-transform: uppercase !important;
+}
+
+.ui-options-card-setting-description {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+}
+
+.ui-options-switch,
+body[data-theme^="console"] .ui-options-switch,
+body[data-theme^="glass"] .ui-options-switch,
+body[data-theme^="blueprint"] .ui-options-switch {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 3.35rem !important;
+    height: 1.78rem !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 48%, transparent) !important;
+    border-radius: 999px !important;
+    background: var(--surface, transparent) !important;
+    box-shadow: var(--inset-shadow, none) !important;
+    cursor: pointer !important;
+}
+
+.ui-options-switch-thumb,
+body[data-theme^="console"] .ui-options-switch-thumb,
+body[data-theme^="glass"] .ui-options-switch-thumb,
+body[data-theme^="blueprint"] .ui-options-switch-thumb {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0.22rem !important;
+    width: 1.26rem !important;
+    height: 1.26rem !important;
+    border-radius: 999px !important;
+    background: var(--muted, currentColor) !important;
+    transform: translate(0, -50%) !important;
+    transition: transform 0.18s ease, background 0.18s ease !important;
+}
+
+.ui-options-switch.is-active .ui-options-switch-thumb,
+body[data-theme^="console"] .ui-options-switch.is-active .ui-options-switch-thumb,
+body[data-theme^="glass"] .ui-options-switch.is-active .ui-options-switch-thumb,
+body[data-theme^="blueprint"] .ui-options-switch.is-active .ui-options-switch-thumb {
+    background: var(--accent, currentColor) !important;
+    transform: translate(1.56rem, -50%) !important;
+}
+
+body.project-card-task-preview-disabled .project-preview-list,
+body.project-card-task-preview-disabled .project-card .project-preview-list,
+body.project-card-task-preview-disabled .stitch-project-card .project-preview-list {
+    display: none !important;
+}
+
+@media (min-width: 981px) {
+    body.project-card-task-preview-disabled .project-grid,
+    body.project-card-task-preview-disabled.control-panel-is-collapsed .project-grid,
+    body.project-card-task-preview-disabled[data-theme^="console"] .project-grid,
+    body.project-card-task-preview-disabled[data-theme^="blueprint"] .project-grid,
+    body.project-card-task-preview-disabled[data-theme^="glass"] .project-grid {
+        --project-card-uniform-height: 24.2rem;
+        grid-auto-rows: var(--project-card-uniform-height) !important;
+    }
+
+    body.project-card-task-preview-disabled .project-card.stitch-project-card,
+    body.project-card-task-preview-disabled .stitch-project-card.project-card,
+    body.project-card-task-preview-disabled[data-theme^="console"] .project-card.stitch-project-card,
+    body.project-card-task-preview-disabled[data-theme^="blueprint"] .project-card.stitch-project-card,
+    body.project-card-task-preview-disabled[data-theme^="glass"] .project-card.stitch-project-card {
+        height: var(--project-card-uniform-height) !important;
+        min-height: var(--project-card-uniform-height) !important;
+        max-height: var(--project-card-uniform-height) !important;
+        grid-template-rows:
+            var(--project-card-header-slot)
+            var(--project-card-tags-slot)
+            var(--project-card-progress-slot)
+            var(--project-card-notes-slot)
+            var(--project-card-footer-slot) !important;
+    }
+
+    body.project-card-task-preview-disabled .project-card .project-card-notes-bar,
+    body.project-card-task-preview-disabled .stitch-project-card .project-card-notes-bar,
+    body.project-card-task-preview-disabled[data-theme^="console"] .project-card .project-card-notes-bar,
+    body.project-card-task-preview-disabled[data-theme^="blueprint"] .project-card .project-card-notes-bar,
+    body.project-card-task-preview-disabled[data-theme^="glass"] .project-card .project-card-notes-bar {
+        grid-row: 4 !important;
+    }
+
+    body.project-card-task-preview-disabled .project-card .project-card-footer,
+    body.project-card-task-preview-disabled .stitch-project-card .project-card-footer,
+    body.project-card-task-preview-disabled[data-theme^="console"] .project-card .project-card-footer,
+    body.project-card-task-preview-disabled[data-theme^="blueprint"] .project-card .project-card-footer,
+    body.project-card-task-preview-disabled[data-theme^="glass"] .project-card .project-card-footer {
+        grid-row: 5 !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1200px) {
+    body.project-card-task-preview-disabled .project-grid,
+    body.project-card-task-preview-disabled.control-panel-is-collapsed .project-grid,
+    body.project-card-task-preview-disabled[data-theme^="console"] .project-grid,
+    body.project-card-task-preview-disabled[data-theme^="blueprint"] .project-grid,
+    body.project-card-task-preview-disabled[data-theme^="glass"] .project-grid {
+        --project-card-uniform-height: 23.8rem;
+    }
+}
