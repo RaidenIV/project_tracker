@@ -590,6 +590,133 @@ function projectNotesPlainText(value = '') {
         .trim();
 }
 
+function decodeProjectNoteEntities(value = '') {
+    let text = String(value ?? '');
+    for (let i = 0; i < 4; i += 1) {
+        const decoded = text
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/&quot;/gi, '"')
+            .replace(/&#39;|&#x27;|&apos;/gi, "'")
+            .replace(/&lt;/gi, '<')
+            .replace(/&gt;/gi, '>')
+            .replace(/&amp;/gi, '&');
+        if (decoded === text) break;
+        text = decoded;
+    }
+    return text;
+}
+
+function normalizeProjectNoteHref(value = '') {
+    const rawHref = decodeProjectNoteEntities(value).trim();
+    if (!rawHref) return '';
+    const href = rawHref.toLowerCase().startsWith('www.') ? `https://${rawHref}` : rawHref;
+    if (!/^(https?:\/\/|mailto:)/i.test(href)) return '';
+    return href.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 500);
+}
+
+function expandProjectNoteLinkCandidates(links = []) {
+    if (!links) return [];
+    if (Array.isArray(links)) return links;
+    if (typeof links === 'string') {
+        const raw = links.trim();
+        if (!raw) return [];
+        if ((raw.startsWith('[') && raw.endsWith(']')) || (raw.startsWith('{') && raw.endsWith('}'))) {
+            try {
+                return expandProjectNoteLinkCandidates(JSON.parse(raw));
+            } catch {
+                return [raw];
+            }
+        }
+        return [raw];
+    }
+    if (typeof links === 'object') {
+        const nested = links.links ?? links.hyperlinks ?? links.urls ?? links.urlList ?? links.items ?? links.entries;
+        if (nested && nested !== links) return expandProjectNoteLinkCandidates(nested);
+        return Object.entries(links).map(([key, value]) => {
+            if (value && typeof value === 'object') {
+                return { label: value.label ?? value.text ?? value.title ?? value.name ?? key, ...value };
+            }
+            return { label: key, href: value };
+        });
+    }
+    return [];
+}
+
+function normalizeProjectNoteLinks(links = []) {
+    const candidates = expandProjectNoteLinkCandidates(links);
+    const seen = new Set();
+    return candidates
+        .map((link, index) => {
+            const fallbackId = `link-${Date.now()}-${index}`;
+            const source = link && typeof link === 'object' ? link : { href: link, label: link };
+            const id = String(source.id || source._id || source.key || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+            const href = normalizeProjectNoteHref(
+                source.href ??
+                source.url ??
+                source.link ??
+                source.linkUrl ??
+                source.linkURL ??
+                source.webUrl ??
+                source.webURL ??
+                source.address ??
+                source.uri ??
+                source.to ??
+                source.value ??
+                ''
+            );
+            const label = decodeProjectNoteEntities(source.label ?? source.text ?? source.title ?? source.name ?? source.displayText ?? source.caption ?? '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .slice(0, 80);
+            if (!label && !href) return null;
+            const safeLabel = label || href;
+            const key = href ? href.toLowerCase() : `${safeLabel.toLowerCase()}|${index}`;
+            if (seen.has(key)) return null;
+            seen.add(key);
+            return { id, label: safeLabel, href };
+        })
+        .filter(Boolean)
+        .slice(0, 20);
+}
+
+function addUniqueProjectNoteLink(target, seen, link) {
+    const normalized = normalizeProjectNoteLinks([link])[0];
+    if (!normalized?.href) return;
+    const key = normalized.href.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    target.push({ ...normalized, id: normalized.id || `legacy-${target.length}` });
+}
+
+function extractProjectNoteLinks(value = '') {
+    const rawText = String(value ?? '');
+    const links = [];
+    const seen = new Set();
+    let match;
+
+    const anchorPattern = /<a\b[^>]*?href\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
+    while ((match = anchorPattern.exec(rawText)) !== null) {
+        const href = decodeProjectNoteEntities(match[2] || match[3] || match[4] || '');
+        const label = projectNotesPlainText(match[5] || '').trim() || href;
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-anchor-${links.length}`, href, label });
+    }
+
+    const markdownPattern = /\[([^\]\n]+)\]\(((?:https?:\/\/|www\.|mailto:)[^)\s]+)\)/gi;
+    while ((match = markdownPattern.exec(rawText)) !== null) {
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-markdown-${links.length}`, href: match[2], label: match[1] });
+    }
+
+    const plainText = projectNotesPlainText(rawText || '');
+    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+    while ((match = urlPattern.exec(plainText)) !== null) {
+        const label = match[1].replace(/[),.;:!?]+$/g, '');
+        if (!label) continue;
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-url-${links.length}`, href: label, label });
+    }
+
+    return links;
+}
+
 function normalizeLegacyProjectNoteEntry(entry, index = 0, fallbackTitle = '') {
     const title = String(
         entry?.title ??
@@ -613,31 +740,50 @@ function normalizeLegacyProjectNoteEntry(entry, index = 0, fallbackTitle = '') {
             ''
         );
     const body = typeof bodyValue === 'string' ? bodyValue : sanitizeProjectNotesValue(bodyValue);
-    const links = typeof entry === 'object' && entry !== null ? (entry.links ?? entry.hyperlinks ?? entry.urls ?? []) : [];
+    const explicitLinks = typeof entry === 'object' && entry !== null
+        ? (entry.links ?? entry.hyperlinks ?? entry.urls ?? entry.urlList ?? entry.linkList ?? entry.link ?? entry.url ?? entry.href ?? [])
+        : [];
+    const links = normalizeProjectNoteLinks([
+        ...normalizeProjectNoteLinks(explicitLinks),
+        ...extractProjectNoteLinks(body)
+    ]);
     return {
         id: String(entry?.id || entry?._id || (index === 0 ? 'notes-general' : `notes-legacy-${index}`)).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || (index === 0 ? 'notes-general' : `notes-legacy-${index}`),
         title,
         body,
-        links: Array.isArray(links) ? links : []
+        links
     };
 }
 
 function buildProjectNotesTabsFromArray(value = []) {
     return value
         .map((entry, index) => normalizeLegacyProjectNoteEntry(entry, index))
-        .filter(tab => projectNotesPlainText(tab.body).length > 0 || tab.links.length > 0);
+        .filter(tab => projectNotesPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
 }
 
 function buildProjectNotesTabsFromMap(value = {}) {
     return Object.entries(value)
         .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'items', 'entries', 'pages', 'sections', 'links', 'hyperlinks', 'urls', '_id', 'id', 'createdAt', 'updatedAt', 'lastModified'].includes(key))
         .map(([key, entry], index) => normalizeLegacyProjectNoteEntry(entry, index, key))
-        .filter(tab => projectNotesPlainText(tab.body).length > 0 || tab.links.length > 0);
+        .filter(tab => projectNotesPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
 }
 
 function serializeProjectNotesTabs(tabs = [], activeTabId = '') {
     try {
-        const safeTabs = Array.isArray(tabs) ? tabs : [];
+        const safeTabs = (Array.isArray(tabs) ? tabs : []).map((tab, index) => {
+            const fallbackId = index === 0 ? 'notes-general' : `notes-legacy-${index}`;
+            const body = String(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
+            return {
+                ...tab,
+                id: String(tab?.id || tab?._id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId,
+                title: String(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`,
+                body,
+                links: normalizeProjectNoteLinks([
+                    ...normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []),
+                    ...extractProjectNoteLinks(body)
+                ])
+            };
+        });
         return JSON.stringify({
             __projectNotesTabs: true,
             activeTabId: activeTabId || safeTabs[0]?.id || 'notes-general',
@@ -705,7 +851,10 @@ function sanitizeProjectNotesValue(value = '') {
             id: 'notes-general',
             title: String(legacyTitle || 'Notes').slice(0, 40) || 'Notes',
             body: legacyText,
-            links: Array.isArray(value.links ?? value.hyperlinks ?? value.urls) ? (value.links ?? value.hyperlinks ?? value.urls) : []
+            links: normalizeProjectNoteLinks([
+                ...(normalizeProjectNoteLinks(value.links ?? value.hyperlinks ?? value.urls ?? value.urlList ?? value.linkList ?? value.link ?? value.url ?? value.href ?? [])),
+                ...extractProjectNoteLinks(legacyText)
+            ])
         }], 'notes-general');
     }
     if (legacyText && typeof legacyText === 'object') return sanitizeProjectNotesValue(legacyText);
@@ -722,7 +871,7 @@ function projectNotesHaveContent(value = '') {
     try {
         const parsed = JSON.parse(normalized);
         if (parsed && Array.isArray(parsed.tabs)) {
-            return parsed.tabs.some(tab => projectNotesPlainText(tab?.body).length > 0 || (Array.isArray(tab?.links) && tab.links.length > 0));
+            return parsed.tabs.some(tab => projectNotesPlainText(tab?.body).length > 0 || normalizeProjectNoteLinks(tab?.links || []).length > 0 || extractProjectNoteLinks(tab?.body || '').length > 0);
         }
     } catch {
         // Legacy plain-text notes are handled below.

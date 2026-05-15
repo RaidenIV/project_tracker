@@ -1730,7 +1730,7 @@ function escapeHtml(value) {
 
 
 function hasRichTextMarkup(value) {
-    return /<\/?(?:strong|b|em|i|u|br|div|p)\b/i.test(String(value ?? ''));
+    return /<\/?(?:strong|b|em|i|u|br|div|p|a)\b/i.test(String(value ?? ''));
 }
 
 function plainTextToRichTextHtml(value = '') {
@@ -2359,7 +2359,11 @@ function captureActiveProjectNoteEdits(projectId, surface = 'modal', data = null
 
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
-    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
+    tab.links = normalizeProjectNoteLinks([
+        ...normalizeProjectNoteLinks(tab.links || []),
+        ...collectProjectNoteLinksFromSurface(activeTab.id, surface),
+        ...extractLinksFromText(tab.body || '')
+    ]);
     return notesData;
 }
 
@@ -4993,28 +4997,70 @@ function getProjectNotesActiveTab(projectId) {
 }
 
 function normalizeProjectNoteHref(value = '') {
-    const rawHref = String(value ?? '').trim();
+    const rawHref = decodeHtmlEntities(value).trim();
     if (!rawHref) return '';
     const href = rawHref.toLowerCase().startsWith('www.') ? `https://${rawHref}` : rawHref;
     if (!/^(https?:\/\/|mailto:)/i.test(href)) return '';
     return href.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 500);
 }
 
+function expandProjectNoteLinkCandidates(links = []) {
+    if (!links) return [];
+    if (Array.isArray(links)) return links;
+    if (typeof links === 'string') {
+        const raw = links.trim();
+        if (!raw) return [];
+        if ((raw.startsWith('[') && raw.endsWith(']')) || (raw.startsWith('{') && raw.endsWith('}'))) {
+            try {
+                return expandProjectNoteLinkCandidates(JSON.parse(raw));
+            } catch {
+                return [raw];
+            }
+        }
+        return [raw];
+    }
+    if (typeof links === 'object') {
+        const nested = links.links ?? links.hyperlinks ?? links.urls ?? links.urlList ?? links.items ?? links.entries;
+        if (nested && nested !== links) return expandProjectNoteLinkCandidates(nested);
+        return Object.entries(links).map(([key, value]) => {
+            if (value && typeof value === 'object') {
+                return { label: value.label ?? value.text ?? value.title ?? value.name ?? key, ...value };
+            }
+            return { label: key, href: value };
+        });
+    }
+    return [];
+}
+
 function normalizeProjectNoteLinks(links = []) {
-    if (!Array.isArray(links)) return [];
+    const candidates = expandProjectNoteLinkCandidates(links);
     const seen = new Set();
-    return links
+    return candidates
         .map((link, index) => {
             const fallbackId = `link-${Date.now()}-${index}`;
-            const id = String(link?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
-            const href = normalizeProjectNoteHref(link?.href ?? link?.url ?? '');
-            const label = String(link?.label ?? link?.text ?? link?.title ?? '')
+            const source = link && typeof link === 'object' ? link : { href: link, label: link };
+            const id = String(source.id || source._id || source.key || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+            const href = normalizeProjectNoteHref(
+                source.href ??
+                source.url ??
+                source.link ??
+                source.linkUrl ??
+                source.linkURL ??
+                source.webUrl ??
+                source.webURL ??
+                source.address ??
+                source.uri ??
+                source.to ??
+                source.value ??
+                ''
+            );
+            const label = decodeHtmlEntities(source.label ?? source.text ?? source.title ?? source.name ?? source.displayText ?? source.caption ?? '')
                 .trim()
                 .replace(/\s+/g, ' ')
                 .slice(0, 80);
             if (!label && !href) return null;
             const safeLabel = label || href;
-            const key = `${safeLabel.toLowerCase()}|${href.toLowerCase()}`;
+            const key = href ? href.toLowerCase() : `${safeLabel.toLowerCase()}|${index}`;
             if (seen.has(key)) return null;
             seen.add(key);
             return { id, label: safeLabel, href };
@@ -5023,20 +5069,39 @@ function normalizeProjectNoteLinks(links = []) {
         .slice(0, 20);
 }
 
+function addUniqueProjectNoteLink(target, seen, link) {
+    const normalized = normalizeProjectNoteLinks([link])[0];
+    if (!normalized?.href) return;
+    const key = normalized.href.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    target.push({ ...normalized, id: normalized.id || `legacy-${target.length}` });
+}
+
 function extractLinksFromText(text = '') {
-    const rawText = getRichTextPlainText(text || '');
+    const rawText = String(text ?? '');
     const links = [];
     const seen = new Set();
-    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
     let match;
 
-    while ((match = urlPattern.exec(rawText)) !== null) {
-        let label = match[1].replace(/[),.;:!?]+$/g, '');
+    const anchorPattern = /<a\b[^>]*?href\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
+    while ((match = anchorPattern.exec(rawText)) !== null) {
+        const href = decodeHtmlEntities(match[2] || match[3] || match[4] || '');
+        const label = getRichTextPlainText(match[5] || '').trim() || href;
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-anchor-${links.length}`, href, label });
+    }
+
+    const markdownPattern = /\[([^\]\n]+)\]\(((?:https?:\/\/|www\.|mailto:)[^)\s]+)\)/gi;
+    while ((match = markdownPattern.exec(rawText)) !== null) {
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-markdown-${links.length}`, href: match[2], label: match[1] });
+    }
+
+    const plainText = getRichTextPlainText(rawText || '');
+    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+    while ((match = urlPattern.exec(plainText)) !== null) {
+        const label = match[1].replace(/[),.;:!?]+$/g, '');
         if (!label) continue;
-        const href = normalizeProjectNoteHref(label);
-        if (!href || seen.has(href)) continue;
-        seen.add(href);
-        links.push({ id: `legacy-${links.length}`, href, label });
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-url-${links.length}`, href: label, label });
     }
 
     return links;
@@ -5609,7 +5674,11 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!tab) return;
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
-    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
+    tab.links = normalizeProjectNoteLinks([
+        ...normalizeProjectNoteLinks(tab.links || []),
+        ...collectProjectNoteLinksFromSurface(activeTab.id, surface),
+        ...extractLinksFromText(tab.body || '')
+    ]);
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
@@ -8479,8 +8548,56 @@ function noteCandidateHasContent(value) {
     }
 }
 
+function getProjectNotesCandidateFields(project = {}) {
+    if (!project || typeof project !== 'object') return [];
+    const candidateKeys = [
+        'notes',
+        'projectNotes',
+        'projectNote',
+        'notesData',
+        'noteTabs',
+        'noteTabsData',
+        'projectNoteTabs',
+        'projectNotesTabs',
+        'projectNotesData',
+        'notesHtml',
+        'notesHTML',
+        'notesText',
+        'noteText',
+        'richTextNotes',
+        'projectNotesHtml',
+        'projectNotesHTML',
+        'projectNotesText',
+        'note'
+    ];
+    const nestedKeys = ['metadata', 'meta', 'details', 'data', 'customFields', 'extra', 'legacy'];
+    const values = [];
+
+    candidateKeys.forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(project, key)) values.push(project[key]);
+    });
+
+    nestedKeys.forEach(parentKey => {
+        const nested = project[parentKey];
+        if (!nested || typeof nested !== 'object') return;
+        candidateKeys.forEach(key => {
+            if (Object.prototype.hasOwnProperty.call(nested, key)) values.push(nested[key]);
+        });
+    });
+
+    return values;
+}
+
 function getBestProjectNotesValue(...values) {
-    const normalizedValues = values
+    const expandedValues = values.flatMap(value => {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            const projectCandidates = getProjectNotesCandidateFields(value);
+            return projectCandidates.length ? projectCandidates : [value];
+        }
+        return [value];
+    });
+
+    const normalizedValues = expandedValues
         .map(value => normalizeProjectNotesValue(value))
         .filter(value => String(value ?? '').trim().length > 0);
 
@@ -8490,33 +8607,55 @@ function getBestProjectNotesValue(...values) {
 
 function getProjectNotesValueFromProject(project = {}) {
     if (!project || typeof project !== 'object') return '';
-    return getBestProjectNotesValue(
-        project.notes,
-        project.projectNotes,
-        project.projectNote,
-        project.notesData,
-        project.noteTabs,
-        project.noteTabsData,
-        project.note
-    );
+    return getBestProjectNotesValue(project);
+}
+
+function normalizeLegacyProjectNoteEntry(entry, index = 0, fallbackTitle = '') {
+    const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-legacy-${index}`;
+    const title = String(
+        entry?.title ??
+        entry?.name ??
+        entry?.label ??
+        entry?.heading ??
+        fallbackTitle ??
+        `Note ${index + 1}`
+    ).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || `Note ${index + 1}`;
+    const bodyValue = typeof entry === 'string'
+        ? entry
+        : (
+            entry?.body ??
+            entry?.text ??
+            entry?.note ??
+            entry?.content ??
+            entry?.html ??
+            entry?.value ??
+            entry?.description ??
+            entry?.comment ??
+            ''
+        );
+    const body = typeof bodyValue === 'string' ? bodyValue : normalizeProjectNotesValue(bodyValue);
+    const explicitLinks = typeof entry === 'object' && entry !== null
+        ? (entry.links ?? entry.hyperlinks ?? entry.urls ?? entry.urlList ?? entry.linkList ?? entry.link ?? entry.url ?? entry.href ?? [])
+        : [];
+    const bodyLinks = extractLinksFromText(body);
+    return normalizeProjectNotesTab({
+        id: entry?.id || entry?._id || fallbackId,
+        title,
+        body,
+        links: [...normalizeProjectNoteLinks(explicitLinks), ...bodyLinks]
+    }, index);
+}
+
+function buildProjectNotesTabsFromArray(value = []) {
+    return value
+        .map((entry, index) => normalizeLegacyProjectNoteEntry(entry, index))
+        .filter(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
 }
 
 function buildProjectNotesTabsFromMap(value = {}) {
     return Object.entries(value)
-        .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'links', 'hyperlinks'].includes(key))
-        .map(([key, entry], index) => {
-            const bodyValue = typeof entry === 'string'
-                ? entry
-                : (entry?.body ?? entry?.text ?? entry?.note ?? entry?.notes ?? entry?.content ?? entry?.html ?? '');
-            const body = typeof bodyValue === 'string' ? bodyValue : normalizeProjectNotesValue(bodyValue);
-            const links = typeof entry === 'object' && entry !== null ? (entry.links ?? entry.hyperlinks ?? []) : [];
-            return normalizeProjectNotesTab({
-                id: index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-legacy-${index}`,
-                title: key.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || `Note ${index + 1}`,
-                body,
-                links
-            }, index);
-        })
+        .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'items', 'entries', 'pages', 'sections', 'links', 'hyperlinks', 'urls', '_id', 'id', 'createdAt', 'updatedAt', 'lastModified'].includes(key))
+        .map(([key, entry], index) => normalizeLegacyProjectNoteEntry(entry, index, key))
         .filter(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
 }
 
@@ -8538,27 +8677,62 @@ function normalizeProjectNotesValue(value = '') {
         return value;
     }
     if (Array.isArray(value)) {
-        return serializeProjectNotesData({
-            activeTabId: value[0]?.id || PROJECT_NOTES_DEFAULT_TAB_ID,
-            tabs: value
-        });
+        const tabs = buildProjectNotesTabsFromArray(value);
+        if (tabs.length) {
+            return serializeProjectNotesData({
+                activeTabId: tabs[0]?.id || PROJECT_NOTES_DEFAULT_TAB_ID,
+                tabs
+            });
+        }
+        try {
+            return JSON.stringify({
+                [PROJECT_NOTES_TAB_DATA_FLAG]: true,
+                activeTabId: value[0]?.id || PROJECT_NOTES_DEFAULT_TAB_ID,
+                tabs: value
+            });
+        } catch {
+            return '';
+        }
     }
     if (!value || typeof value !== 'object') return '';
 
     if (value[PROJECT_NOTES_TAB_DATA_FLAG] === true || Array.isArray(value.tabs)) {
+        const sourceTabs = Array.isArray(value.tabs) ? value.tabs : [];
+        const normalizedTabs = sourceTabs.length ? buildProjectNotesTabsFromArray(sourceTabs) : [];
         try {
             return JSON.stringify({
                 [PROJECT_NOTES_TAB_DATA_FLAG]: true,
-                activeTabId: value.activeTabId || '',
-                tabs: Array.isArray(value.tabs) ? value.tabs : []
+                activeTabId: value.activeTabId || normalizedTabs[0]?.id || '',
+                tabs: normalizedTabs.length ? normalizedTabs : sourceTabs
             });
         } catch {
             return '';
         }
     }
 
-    const legacyBody = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? '';
-    const legacyTitle = value.title ?? value.name ?? 'Notes';
+    const arrayTabFields = ['items', 'entries', 'pages', 'sections', 'noteTabs', 'noteTabsData', 'projectNoteTabs', 'projectNotesTabs', 'projectNotesData'];
+    for (const key of arrayTabFields) {
+        if (Array.isArray(value[key])) {
+            const tabs = buildProjectNotesTabsFromArray(value[key]);
+            if (tabs.length) {
+                return serializeProjectNotesData({
+                    activeTabId: value.activeTabId || tabs[0].id,
+                    tabs
+                });
+            }
+        }
+    }
+
+    const objectTabFields = ['items', 'entries', 'pages', 'sections', 'noteTabs', 'noteTabsData', 'projectNoteTabs', 'projectNotesTabs', 'projectNotesData'];
+    for (const key of objectTabFields) {
+        if (value[key] && typeof value[key] === 'object' && !Array.isArray(value[key])) {
+            const nestedNotes = normalizeProjectNotesValue(value[key]);
+            if (String(nestedNotes || '').trim()) return nestedNotes;
+        }
+    }
+
+    const legacyBody = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? value.description ?? value.comment ?? '';
+    const legacyTitle = value.title ?? value.name ?? value.label ?? value.heading ?? 'Notes';
     if (typeof legacyBody === 'string' && legacyBody.trim()) {
         return serializeProjectNotesData({
             activeTabId: PROJECT_NOTES_DEFAULT_TAB_ID,
@@ -8566,7 +8740,7 @@ function normalizeProjectNotesValue(value = '') {
                 id: PROJECT_NOTES_DEFAULT_TAB_ID,
                 title: legacyTitle,
                 body: legacyBody,
-                links: value.links ?? value.hyperlinks ?? []
+                links: value.links ?? value.hyperlinks ?? value.urls ?? []
             }]
         });
     }
@@ -8590,10 +8764,12 @@ function normalizeProjectNotesValue(value = '') {
 
 function normalizeProjectNotesTab(tab, index = 0) {
     const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-${Date.now()}-${index}`;
-    const id = String(tab?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
-    const title = String(tab?.title || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
-    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? '');
-    const links = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? []);
+    const id = String(tab?.id || tab?._id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+    const title = String(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
+    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
+    const explicitLinks = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []);
+    const bodyLinks = extractLinksFromText(body);
+    const links = normalizeProjectNoteLinks([...explicitLinks, ...bodyLinks]);
     return { id, title, body, links };
 }
 
