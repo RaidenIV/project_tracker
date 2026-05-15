@@ -940,10 +940,14 @@ function mergeExistingTaskNotes(sanitizedTasks = [], rawTasks = [], existingTask
         return Array.isArray(sanitizedTasks) ? sanitizedTasks : [];
     }
 
+    const rawById = Array.isArray(rawTasks)
+        ? new Map(rawTasks.map(r => [String(r?.id ?? ''), r]))
+        : new Map();
     const existingById = new Map(existingTasks.map(task => [String(task?.id ?? ''), task]));
-    return sanitizedTasks.map((task, index) => {
-        const rawTask = Array.isArray(rawTasks) ? rawTasks[index] : null;
-        const existingTask = existingById.get(String(task?.id ?? ''));
+    return sanitizedTasks.map(task => {
+        const taskIdKey = String(task?.id ?? '');
+        const rawTask = rawById.get(taskIdKey) ?? null;
+        const existingTask = existingById.get(taskIdKey);
         const existingNote = typeof existingTask?.note === 'string' ? existingTask.note : '';
         if (!taskPayloadHasNoteField(rawTask) && !task.note && existingNote) {
             return { ...task, note: existingNote };
