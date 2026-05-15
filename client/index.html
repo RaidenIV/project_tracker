@@ -219,68 +219,76 @@
                     </div>
                 </div>
 
-                <div class="sidebar-section-label">Projects</div>
-
-                <button class="add-project-button" id="addProjectButton">
-                    <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    New Project
-                </button>
-
-                <div class="new-project-create-panel hidden" id="newProjectCreatePanel" aria-live="polite">
-                    <label class="new-project-create-label" for="newProjectTitleInput">Project name</label>
-                    <input class="new-project-name-input"
-                           id="newProjectTitleInput"
-                           type="text"
-                           maxlength="80"
-                           placeholder="Project name">
-                    <label class="new-project-create-label" for="newProjectDescriptionInput">Project description <span class="new-project-create-label-optional">Optional</span></label>
-                    <textarea class="new-project-description-input"
-                              id="newProjectDescriptionInput"
-                              rows="3"
-                              maxlength="280"
-                              placeholder="Describe this project (optional)"></textarea>
-                    <div class="new-project-description-warning hidden" id="newProjectDescriptionWarning">Project description is optional</div>
-                    <div class="new-project-create-actions">
-                        <button class="new-project-confirm-button" id="confirmNewProjectButton" type="button">Create Project</button>
-                        <button class="new-project-cancel-button" id="cancelNewProjectButton" type="button">Cancel</button>
-                    </div>
-                </div>
-
-                <div class="sidebar-nav-list">
-                    <button class="sidebar-nav-card active" id="activeProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">ACTIVE</span>
-                        <span class="sidebar-nav-card-count" id="activeProjectsCount">0</span>
+                <div class="sidebar-collapsible" data-sidebar-section="workspace">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="workspace" type="button" aria-expanded="true">
+                        <span class="sidebar-section-toggle-label">Workspace</span>
+                        <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
+                        </svg>
                     </button>
-                    <button class="sidebar-nav-card" id="sharedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Shared</span>
-                        <span class="sidebar-nav-card-count" id="sharedProjectsCount">0</span>
-                    </button>
-                    <button class="sidebar-nav-card" id="completedProjectsCard" type="button">
-                        <span class="sidebar-nav-card-label">Completed</span>
-                        <span class="sidebar-nav-card-count" id="completedProjectsCount">0</span>
-                    </button>
-                    <button class="sidebar-nav-card" id="archivedProjectsMoreBtn" type="button">
-                        <span class="sidebar-nav-card-label">Archived Projects</span>
-                        <span class="sidebar-nav-card-count" id="archivedProjectsCount">0</span>
-                    </button>
-                </div>
+                    <div class="sidebar-section-body" id="workspaceSectionBody">
+                        <button class="add-project-button" id="addProjectButton">
+                            <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            New Project
+                        </button>
 
-                <div class="total-completion-section sidebar-total-completion-section">
-                    <h3>Total Completion</h3>
-                    <div class="total-completion-display">
-                        <div class="total-percentage" id="totalPercentage">0%</div>
-                        <div class="total-percentage-label">Across All Projects</div>
-                    </div>
-                    <div class="sidebar-completion-stats">
-                        <div class="sidebar-completion-stat">
-                            <span>Completed Tasks</span>
-                            <strong id="completedTasksCount">0</strong>
+                        <div class="new-project-create-panel hidden" id="newProjectCreatePanel" aria-live="polite">
+                            <label class="new-project-create-label" for="newProjectTitleInput">Project name</label>
+                            <input class="new-project-name-input"
+                                   id="newProjectTitleInput"
+                                   type="text"
+                                   maxlength="80"
+                                   placeholder="Project name">
+                            <label class="new-project-create-label" for="newProjectDescriptionInput">Project description <span class="new-project-create-label-optional">Optional</span></label>
+                            <textarea class="new-project-description-input"
+                                      id="newProjectDescriptionInput"
+                                      rows="3"
+                                      maxlength="280"
+                                      placeholder="Describe this project (optional)"></textarea>
+                            <div class="new-project-description-warning hidden" id="newProjectDescriptionWarning">Project description is optional</div>
+                            <div class="new-project-create-actions">
+                                <button class="new-project-confirm-button" id="confirmNewProjectButton" type="button">Create Project</button>
+                                <button class="new-project-cancel-button" id="cancelNewProjectButton" type="button">Cancel</button>
+                            </div>
                         </div>
-                        <div class="sidebar-completion-stat">
-                            <span>Remaining Tasks</span>
-                            <strong id="incompleteTasksCount">0</strong>
+
+                        <div class="sidebar-nav-list">
+                            <button class="sidebar-nav-card active" id="activeProjectsCard" type="button">
+                                <span class="sidebar-nav-card-label">ACTIVE</span>
+                                <span class="sidebar-nav-card-count" id="activeProjectsCount">0</span>
+                            </button>
+                            <button class="sidebar-nav-card" id="sharedProjectsCard" type="button">
+                                <span class="sidebar-nav-card-label">Shared</span>
+                                <span class="sidebar-nav-card-count" id="sharedProjectsCount">0</span>
+                            </button>
+                            <button class="sidebar-nav-card" id="completedProjectsCard" type="button">
+                                <span class="sidebar-nav-card-label">Completed</span>
+                                <span class="sidebar-nav-card-count" id="completedProjectsCount">0</span>
+                            </button>
+                            <button class="sidebar-nav-card" id="archivedProjectsMoreBtn" type="button">
+                                <span class="sidebar-nav-card-label">Archived Projects</span>
+                                <span class="sidebar-nav-card-count" id="archivedProjectsCount">0</span>
+                            </button>
+                        </div>
+
+                        <div class="total-completion-section sidebar-total-completion-section">
+                            <h3>Total Completion</h3>
+                            <div class="total-completion-display">
+                                <div class="total-percentage" id="totalPercentage">0%</div>
+                                <div class="total-percentage-label">Across All Projects</div>
+                            </div>
+                            <div class="sidebar-completion-stats">
+                                <div class="sidebar-completion-stat">
+                                    <span>Completed Tasks</span>
+                                    <strong id="completedTasksCount">0</strong>
+                                </div>
+                                <div class="sidebar-completion-stat">
+                                    <span>Remaining Tasks</span>
+                                    <strong id="incompleteTasksCount">0</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

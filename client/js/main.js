@@ -1654,6 +1654,7 @@ const uiState = {
     commandQuery: '',
     commandActiveIndex: 0,
     sidebarSections: {
+        workspace: true,
         leaderboard: true,
         settings: true
     },
@@ -3808,7 +3809,7 @@ function ensureSidebarSettingsDropdown() {
 
 function initializeSidebarSections() {
     ensureSidebarSettingsDropdown();
-    ['leaderboard', 'settings'].forEach(sectionKey => {
+    ['workspace', 'leaderboard', 'settings'].forEach(sectionKey => {
         setSidebarSectionExpanded(sectionKey, false);
     });
 }

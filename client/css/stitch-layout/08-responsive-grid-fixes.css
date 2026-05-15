@@ -1842,3 +1842,283 @@ body[data-theme^="blueprint"] .new-project-create-label-optional {
         gap: inherit !important;
     }
 }
+
+/* ============================================================================
+   Targeted follow-up: workspace collapse, dropdown stacking, sidebar logo,
+   notification spacing, and constrained leaderboard structure
+   ============================================================================ */
+.top-app-bar,
+body[data-theme^="console"] .top-app-bar,
+body[data-theme^="glass"] .top-app-bar,
+body[data-theme^="blueprint"] .top-app-bar {
+    position: sticky !important;
+    z-index: 20000 !important;
+    overflow: visible !important;
+}
+
+.top-app-bar > *,
+.top-app-layout-control-slot,
+body[data-theme^="console"] .top-app-layout-control-slot,
+body[data-theme^="glass"] .top-app-layout-control-slot,
+body[data-theme^="blueprint"] .top-app-layout-control-slot {
+    overflow: visible !important;
+}
+
+.top-app-layout-control-slot,
+body[data-theme^="console"] .top-app-layout-control-slot,
+body[data-theme^="glass"] .top-app-layout-control-slot,
+body[data-theme^="blueprint"] .top-app-layout-control-slot {
+    z-index: 20100 !important;
+}
+
+.top-app-layout-control-slot .project-layout-controls,
+body[data-theme^="console"] .top-app-layout-control-slot .project-layout-controls,
+body[data-theme^="glass"] .top-app-layout-control-slot .project-layout-controls,
+body[data-theme^="blueprint"] .top-app-layout-control-slot .project-layout-controls {
+    z-index: 20200 !important;
+}
+
+.top-app-layout-control-slot .project-layout-menu,
+body[data-theme^="console"] .top-app-layout-control-slot .project-layout-menu,
+body[data-theme^="glass"] .top-app-layout-control-slot .project-layout-menu,
+body[data-theme^="blueprint"] .top-app-layout-control-slot .project-layout-menu {
+    z-index: 20300 !important;
+    isolation: isolate !important;
+}
+
+.viewport,
+body[data-theme^="console"] .viewport,
+body[data-theme^="glass"] .viewport,
+body[data-theme^="blueprint"] .viewport {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.project-grid,
+body[data-theme^="console"] .project-grid,
+body[data-theme^="glass"] .project-grid,
+body[data-theme^="blueprint"] .project-grid {
+    overflow: visible !important;
+}
+
+.viewport:has(.project-meatballs[open]),
+body[data-theme^="console"] .viewport:has(.project-meatballs[open]),
+body[data-theme^="glass"] .viewport:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .viewport:has(.project-meatballs[open]) {
+    overflow: visible !important;
+}
+
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) {
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 19000 !important;
+}
+
+.project-card:has(.project-meatballs[open]) .project-actions,
+.stitch-project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-actions,
+.project-meatballs[open],
+.project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs[open],
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs[open],
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs[open],
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
+    z-index: 19100 !important;
+}
+
+.sidebar-bottom-logo,
+body[data-theme^="console"] .sidebar-bottom-logo,
+body[data-theme^="glass"] .sidebar-bottom-logo,
+body[data-theme^="blueprint"] .sidebar-bottom-logo {
+    width: clamp(3.28rem, 4.6875vw, 4.84rem) !important;
+    max-width: 45% !important;
+}
+
+.sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body:not([hidden]),
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body:not([hidden]),
+body[data-theme^="glass"] .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body:not([hidden]),
+body[data-theme^="blueprint"] .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body:not([hidden]) {
+    display: grid !important;
+    gap: 0.9rem !important;
+}
+
+@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1200px) {
+    .control-panel .panel-notification-button,
+    body[data-theme^="console"] .control-panel .panel-notification-button,
+    body[data-theme^="glass"] .control-panel .panel-notification-button,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button {
+        gap: 0.9rem !important;
+        padding-inline: 1.08rem !important;
+    }
+
+    .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="console"] .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .panel-notification-label {
+        padding-right: 0.65rem !important;
+    }
+
+    .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge {
+        margin-left: auto !important;
+    }
+
+    .leaderboard-list,
+    body[data-theme^="console"] .leaderboard-list,
+    body[data-theme^="glass"] .leaderboard-list,
+    body[data-theme^="blueprint"] .leaderboard-list {
+        gap: 0.72rem !important;
+    }
+
+    .leaderboard-list > .leaderboard-row,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+        grid-template-columns: 1.18rem 2.42rem minmax(0, 1fr) !important;
+        grid-template-rows: minmax(1rem, auto) minmax(1rem, auto) !important;
+        grid-template-areas:
+            "rank avatar user"
+            "rank avatar score" !important;
+        column-gap: 0.68rem !important;
+        row-gap: 0.12rem !important;
+        align-items: center !important;
+        min-height: 4.42rem !important;
+        padding: 0.74rem 0.72rem !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-rank {
+        grid-area: rank !important;
+        align-self: center !important;
+        justify-self: start !important;
+        min-width: 0 !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
+        grid-area: avatar !important;
+        width: 2.42rem !important;
+        height: 2.42rem !important;
+        justify-self: center !important;
+        align-self: center !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-img,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar-fallback {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main {
+        grid-area: user !important;
+        display: block !important;
+        align-self: end !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        text-align: left !important;
+        font-size: clamp(0.72rem, 0.6vw, 0.84rem) !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        overflow-wrap: normal !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-meta,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-level,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-level-badge,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user-label,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-meta {
+        display: none !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
+        grid-area: score !important;
+        justify-self: start !important;
+        align-self: start !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        font-size: clamp(0.72rem, 0.58vw, 0.84rem) !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0.01em !important;
+        color: var(--accent, currentColor) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
+
+/* Ensure project-card action menus sit above the viewport/top-toolbar stack when open. */
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) {
+    z-index: 25000 !important;
+}
+
+.project-card:has(.project-meatballs[open]) .project-actions,
+.stitch-project-card:has(.project-meatballs[open]) .project-actions,
+.project-meatballs[open],
+.project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="console"] .project-meatballs[open],
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="glass"] .project-meatballs[open],
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="blueprint"] .project-meatballs[open],
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
+    z-index: 25100 !important;
+}
