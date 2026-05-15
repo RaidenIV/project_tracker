@@ -363,7 +363,7 @@ function buildPersonalProgressionMetrics() {
         if (projectCompleted) {
             completedProjects.push({ project, dayKey: projectCompletedDay, timestamp: projectCompletedTimestamp });
         }
-        if (projectCompleted && tasks.length > 0 && tasks.every(task => task.completed)) hasCleanSweep = true;
+        if (projectCompleted && tasks.length > 0 && tasks.every(task => isTaskCompleted(task))) hasCleanSweep = true;
         if (isProjectArchived(project) && projectCompleted) hasArchivedCompletedProject = true;
         if (normalizePriorityTagValue(project.projectPriorityTag) !== DEFAULT_TASK_TAG) hasPriority = true;
         if (Array.isArray(project.tags) && project.tags.length > 0) hasTag = true;
@@ -377,7 +377,7 @@ function buildPersonalProgressionMetrics() {
             if (task.category && task.category !== DEFAULT_TASK_CATEGORY) hasTag = true;
             if (getRichTextPlainText(task.note || '')) hasNote = true;
             if (isTaskOverdue(task)) currentOverdueTasks += 1;
-            if (!task.completed) return;
+            if (!isTaskCompleted(task)) return;
 
             const completedDate = task.completedDate || '';
             const dayKey = getLocalDayKey(completedDate);
@@ -930,10 +930,10 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                         ${selectedTasks.map(task => {
                         const taskIdLiteral = serializeInlineJsString(task.id);
                         return `
-                            <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
+                            <div class="project-calendar-selected-task ${isTaskCompleted(task) ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <div class="project-calendar-selected-task-body">
-                                    <span class="project-calendar-selected-task-text ${task.completed ? 'completed' : ''}">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
+                                    <span class="project-calendar-selected-task-text ${isTaskCompleted(task) ? 'completed' : ''}">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                                     <div class="project-calendar-selected-task-actions">
                                         ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                                         ${canEditCalendar ? `
@@ -997,7 +997,7 @@ function getProjectCalendarDraggableTasks(project) {
 
     return getDisplayTasksForProject(project, { hideCompleted: true, sortMode, activeCategory })
         .map((task, index) => normalizeTask(task, index))
-        .filter(task => !task.completed);
+        .filter(task => !isTaskCompleted(task));
 }
 
 function buildProjectCalendarTaskDockMarkup(project) {
@@ -1317,6 +1317,22 @@ function getTaskCategoryListWith(valueList = []) {
         .filter(category => category && !isDefaultTaskCategoryName(category)))];
 }
 
+function parseTaskCompletedValue(value) {
+    if (value === true || value === 1) return true;
+    if (value === false || value === 0 || value === null || value === undefined) return false;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return false;
+        if (['true', '1', 'yes', 'y', 'completed', 'complete', 'done'].includes(normalized)) return true;
+        if (['false', '0', 'no', 'n', 'active', 'incomplete', 'open', 'pending'].includes(normalized)) return false;
+    }
+    return Boolean(value);
+}
+
+function isTaskCompleted(task = {}) {
+    return parseTaskCompletedValue(task?.completed);
+}
+
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
@@ -1328,7 +1344,7 @@ function normalizeTask(task = {}, index = 0) {
         id: Number.isFinite(numericId) ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
         note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
-        completed: !!task?.completed,
+        completed: parseTaskCompletedValue(task?.completed),
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         completedBy: task?.completedBy ? String(task.completedBy) : '',
         completedByName: task?.completedByName ? String(task.completedByName) : '',
@@ -1513,14 +1529,14 @@ function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
         return [...baseOrder].sort((a, b) => {
             const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
             if (priorityDiff !== 0) return priorityDiff;
-            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
-            return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
+            if (isTaskCompleted(a) !== isTaskCompleted(b)) return isTaskCompleted(a) ? 1 : -1;
+            return isTaskCompleted(a) ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
         });
     }
 
     if (mode === 'due-date') {
         return [...baseOrder].sort((a, b) => {
-            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+            if (isTaskCompleted(a) !== isTaskCompleted(b)) return isTaskCompleted(a) ? 1 : -1;
             const aDue = normalizeTaskDueDate(a.dueDate);
             const bDue = normalizeTaskDueDate(b.dueDate);
             if (aDue && bDue && aDue !== bDue) return aDue.localeCompare(bDue);
@@ -1714,7 +1730,7 @@ function escapeHtml(value) {
 
 
 function hasRichTextMarkup(value) {
-    return /<\/?(?:strong|b|em|i|u|br|div|p)\b/i.test(String(value ?? ''));
+    return /<\/?(?:strong|b|em|i|u|br|div|p|a)\b/i.test(String(value ?? ''));
 }
 
 function plainTextToRichTextHtml(value = '') {
@@ -2343,7 +2359,11 @@ function captureActiveProjectNoteEdits(projectId, surface = 'modal', data = null
 
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
-    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
+    tab.links = normalizeProjectNoteLinks([
+        ...normalizeProjectNoteLinks(tab.links || []),
+        ...collectProjectNoteLinksFromSurface(activeTab.id, surface),
+        ...extractLinksFromText(tab.body || '')
+    ]);
     return notesData;
 }
 
@@ -2445,14 +2465,14 @@ function getCompletedTaskDisplayState(project, options = {}) {
     const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
         ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
         : orderedTasks;
-    const completedTasks = categoryFilteredTasks.filter(task => task.completed);
+    const completedTasks = categoryFilteredTasks.filter(task => isTaskCompleted(task));
     const completedVisibleLimit = completedLimit === 'all'
         ? completedTasks.length
         : Math.max(COMPLETED_TASK_BATCH_DEFAULT, Number(completedLimit) || COMPLETED_TASK_BATCH_DEFAULT);
     const visibleCompletedIds = new Set(completedTasks
         .slice(0, completedVisibleLimit)
         .map(task => String(task.id)));
-    const visibleTasks = categoryFilteredTasks.filter(task => !task.completed || visibleCompletedIds.has(String(task.id)));
+    const visibleTasks = categoryFilteredTasks.filter(task => !isTaskCompleted(task) || visibleCompletedIds.has(String(task.id)));
 
     return {
         visibleTasks,
@@ -2631,8 +2651,8 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         if (isProjectArchived(project)) return;
         const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
         const completedProject = isProjectCompleted(project);
-        const completedTaskCount = tasks.filter(task => task.completed).length;
-        const creditedCompletedTasks = tasks.filter(task => task.completed && (!task.completedBy || task.completedBy === userId));
+        const completedTaskCount = tasks.filter(task => isTaskCompleted(task)).length;
+        const creditedCompletedTasks = tasks.filter(task => isTaskCompleted(task) && (!task.completedBy || task.completedBy === userId));
         const completedRecords = creditedCompletedTasks.map(task => ({ timestamp: getCompletionTimestamp(task.completedDate) }));
         row.dailyCompletedTasks += countLocalCompletedRecords(completedRecords, dayStart, dayEnd);
         row.weeklyCompletedTasks += countLocalCompletedRecords(completedRecords, weekStart, weekEnd);
@@ -3068,7 +3088,7 @@ function normalizeProject(project) {
         id: project.id || project._id || String(Date.now()),
         _id: project._id || project.id,
         title: project.title || 'Untitled Project',
-        notes: typeof project.notes === 'string' ? project.notes : '',
+        notes: getProjectNotesValueFromProject(project),
         description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
         projectPriorityTag: getProjectPriorityTag(project),
         dueDate: getProjectDueDate(project),
@@ -3146,7 +3166,7 @@ function matchesProjectSearch(project, query) {
     const haystack = [
         project.title,
         project.description,
-        project.notes,
+        getProjectNotesValueFromProject(project),
         ...getProjectTags(project),
         ...(project.tasks || []).map(task => task.text)
     ].join(' ').toLowerCase();
@@ -3177,16 +3197,16 @@ function getFilteredProjects() {
         projects.sort((a, b) => a.title.localeCompare(b.title));
     } else if (uiState.sortMode === 'remaining') {
         projects.sort((a, b) => {
-            const aRemaining = (a.tasks || []).filter(task => !task.completed).length;
-            const bRemaining = (b.tasks || []).filter(task => !task.completed).length;
+            const aRemaining = (a.tasks || []).filter(task => !isTaskCompleted(task)).length;
+            const bRemaining = (b.tasks || []).filter(task => !isTaskCompleted(task)).length;
             return bRemaining - aRemaining;
         });
     } else if (uiState.sortMode === 'progress') {
         projects.sort((a, b) => {
             const aTotal = a.tasks?.length || 0;
             const bTotal = b.tasks?.length || 0;
-            const aDone = a.tasks?.filter(task => task.completed).length || 0;
-            const bDone = b.tasks?.filter(task => task.completed).length || 0;
+            const aDone = a.tasks?.filter(task => isTaskCompleted(task)).length || 0;
+            const bDone = b.tasks?.filter(task => isTaskCompleted(task)).length || 0;
             const aProgress = aTotal ? aDone / aTotal : 0;
             const bProgress = bTotal ? bDone / bTotal : 0;
             return bProgress - aProgress;
@@ -4362,7 +4382,9 @@ function removeRealtimeProject(projectId) {
 
 
 const RECENT_LOCAL_TASK_SYNC_GUARD_MS = 60000;
+const RECENT_LOCAL_PROJECT_NOTES_SYNC_GUARD_MS = 60000;
 const recentLocalTaskSnapshots = new Map();
+const recentLocalProjectNotesSnapshots = new Map();
 
 function getProjectIdentityKeys(projectOrId) {
     const keys = new Set();
@@ -4403,6 +4425,64 @@ function getRecentLocalTaskSnapshot(projectOrId) {
     }
     return null;
 }
+
+function rememberRecentLocalProjectNotesSnapshot(projectOrId, notes = '') {
+    const normalizedNotes = normalizeProjectNotesValue(notes);
+    const snapshot = {
+        notes: normalizedNotes,
+        expiresAt: Date.now() + RECENT_LOCAL_PROJECT_NOTES_SYNC_GUARD_MS
+    };
+    getProjectIdentityKeys(projectOrId).forEach(key => {
+        recentLocalProjectNotesSnapshots.set(key, snapshot);
+    });
+}
+
+function getRecentLocalProjectNotesSnapshot(projectOrId) {
+    const now = Date.now();
+    for (const key of getProjectIdentityKeys(projectOrId)) {
+        const snapshot = recentLocalProjectNotesSnapshots.get(key);
+        if (!snapshot) continue;
+        if (snapshot.expiresAt <= now) {
+            recentLocalProjectNotesSnapshots.delete(key);
+            continue;
+        }
+        return normalizeProjectNotesValue(snapshot.notes);
+    }
+    return null;
+}
+
+function taskPayloadHasNoteField(task = {}) {
+    return !!task && typeof task === 'object' && (
+        Object.prototype.hasOwnProperty.call(task, 'note') ||
+        Object.prototype.hasOwnProperty.call(task, 'notes')
+    );
+}
+
+function mergeTaskNotesFromExisting(incomingTasks = [], existingTasks = [], rawTasks = null) {
+    if (!Array.isArray(incomingTasks) || !Array.isArray(existingTasks) || !existingTasks.length) {
+        return Array.isArray(incomingTasks) ? incomingTasks : [];
+    }
+
+    const existingById = new Map(existingTasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        return [String(normalizedTask.id), normalizedTask];
+    }));
+
+    return incomingTasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        const rawTask = Array.isArray(rawTasks) ? rawTasks[index] : task;
+        const existingTask = existingById.get(String(normalizedTask.id));
+        const existingNote = sanitizeRichTextHtml(existingTask?.note || '').trim();
+        const incomingNote = sanitizeRichTextHtml(normalizedTask.note || '').trim();
+        const rawHasNote = taskPayloadHasNoteField(rawTask);
+
+        if (!rawHasNote && !incomingNote && existingNote) {
+            return { ...normalizedTask, note: existingNote };
+        }
+        return normalizedTask;
+    });
+}
+
 
 function isRealtimeFromCurrentUser(payload = {}) {
     const sourceUserId = payload?.sourceUserId ? String(payload.sourceUserId) : '';
@@ -4453,12 +4533,32 @@ function mergeRealtimeProjectWithExisting(existingProject, incomingProject, rawP
 
     if (!realtimePayloadHasField(rawPayload, 'tasks') || hasLocalUnsynced || incomingTasksLookLikeTransientEmpty) {
         mergedProject.tasks = Array.isArray(recentTaskSnapshot) && recentTaskSnapshot.length ? recentTaskSnapshot : existingTasks;
+    } else if (Array.isArray(mergedProject.tasks)) {
+        mergedProject.tasks = mergeTaskNotesFromExisting(mergedProject.tasks, existingTasks, rawTasks);
     }
     if (!realtimePayloadHasField(rawPayload, 'taskCategories') || hasLocalUnsynced) {
         mergedProject.taskCategories = Array.isArray(existingProject.taskCategories) ? existingProject.taskCategories : [];
     }
-    if (!realtimePayloadHasField(rawPayload, 'notes') || hasLocalUnsynced) {
-        mergedProject.notes = typeof existingProject.notes === 'string' ? existingProject.notes : '';
+    const recentNotesSnapshot = getRecentLocalProjectNotesSnapshot(existingProject);
+    const existingNotesValue = getProjectNotesValueFromProject(existingProject);
+    if (!realtimePayloadHasField(rawPayload, 'notes', 'projectNotes', 'notesData', 'noteTabs', 'noteTabsData', 'note', 'projectNote') || hasLocalUnsynced || recentNotesSnapshot !== null) {
+        mergedProject.notes = recentNotesSnapshot !== null
+            ? recentNotesSnapshot
+            : existingNotesValue;
+    } else {
+        const incomingNotesValue = getProjectNotesValueFromProject({
+            ...incomingProject,
+            notes: mergedProject.notes ?? rawPayload.notes ?? incomingProject.notes,
+            projectNotes: rawPayload.projectNotes ?? incomingProject.projectNotes,
+            notesData: rawPayload.notesData ?? incomingProject.notesData,
+            noteTabs: rawPayload.noteTabs ?? incomingProject.noteTabs,
+            noteTabsData: rawPayload.noteTabsData ?? incomingProject.noteTabsData,
+            note: rawPayload.note ?? incomingProject.note,
+            projectNote: rawPayload.projectNote ?? incomingProject.projectNote
+        });
+        mergedProject.notes = projectHasNotes(incomingNotesValue) || !projectHasNotes(existingNotesValue)
+            ? incomingNotesValue
+            : existingNotesValue;
     }
     if (!realtimePayloadHasField(rawPayload, 'calendarNotes', 'projectCalendarNotes') || hasLocalUnsynced) {
         mergedProject.calendarNotes = normalizeProjectCalendarNotes(existingProject.calendarNotes || existingProject.projectCalendarNotes || {});
@@ -4554,14 +4654,9 @@ async function addProject() {
         const projectTitle = normalizeProjectTitleInput(nameInput?.value);
         if (!validateProjectTitleInput(nameInput)) return;
 
-        const requiredDescription = normalizeProjectDescription(descriptionInput.value);
-        if (!requiredDescription) {
-            showNewProjectDescriptionWarning(true);
-            descriptionInput.focus({ preventScroll: true });
-            return;
-        }
+        const description = normalizeProjectDescription(descriptionInput.value);
 
-        await createProjectWithDescription(requiredDescription, projectTitle);
+        await createProjectWithDescription(description, projectTitle);
         resetNewProjectCreatePanel();
         return;
     }
@@ -4736,7 +4831,7 @@ function deleteProject(projectId) {
     const mongoId = project?._id;
 
     if (isProjectCompleted(project)) state.decrementCompletedProjects();
-    const completedTasks = project?.tasks.filter(t => t.completed).length || 0;
+    const completedTasks = project?.tasks.filter(t => isTaskCompleted(t)).length || 0;
     for (let i = 0; i < completedTasks; i++) state.decrementCompletedTasks();
 
     state.deleteProject(projectId);
@@ -4819,15 +4914,23 @@ function updateProjectDescription(projectId, descriptionValue) {
 
 function getProjectNotesDataForProject(projectId) {
     const project = state.findProject(projectId);
-    return normalizeProjectNotesData(project?.notes || '');
+    return normalizeProjectNotesData(getProjectNotesValueFromProject(project));
+}
+
+function stageProjectNotesData(projectId, data, options = {}) {
+    if (!state.canEdit(projectId)) return '';
+    const serializedNotes = serializeProjectNotesData(data);
+    rememberRecentLocalProjectNotesSnapshot(projectId, serializedNotes);
+    state.updateProject(projectId, projectUpdate({ notes: serializedNotes }));
+    updateProjectNotesIndicators(projectId, serializedNotes);
+    if (options.persist) saveData();
+    return serializedNotes;
 }
 
 function saveProjectNotesData(projectId, data, options = {}) {
-    if (!state.canEdit(projectId)) return;
-    const serializedNotes = serializeProjectNotesData(data);
-    state.updateProject(projectId, projectUpdate({ notes: serializedNotes }));
+    const serializedNotes = stageProjectNotesData(projectId, data);
+    if (!serializedNotes) return;
     saveData();
-    updateProjectNotesIndicators(projectId, serializedNotes);
 
     if (options.renderSurface) {
         renderProjectNotesSurface(projectId, options.renderSurface);
@@ -4889,28 +4992,70 @@ function getProjectNotesActiveTab(projectId) {
 }
 
 function normalizeProjectNoteHref(value = '') {
-    const rawHref = String(value ?? '').trim();
+    const rawHref = decodeHtmlEntities(value).trim();
     if (!rawHref) return '';
     const href = rawHref.toLowerCase().startsWith('www.') ? `https://${rawHref}` : rawHref;
     if (!/^(https?:\/\/|mailto:)/i.test(href)) return '';
     return href.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 500);
 }
 
+function expandProjectNoteLinkCandidates(links = []) {
+    if (!links) return [];
+    if (Array.isArray(links)) return links;
+    if (typeof links === 'string') {
+        const raw = links.trim();
+        if (!raw) return [];
+        if ((raw.startsWith('[') && raw.endsWith(']')) || (raw.startsWith('{') && raw.endsWith('}'))) {
+            try {
+                return expandProjectNoteLinkCandidates(JSON.parse(raw));
+            } catch {
+                return [raw];
+            }
+        }
+        return [raw];
+    }
+    if (typeof links === 'object') {
+        const nested = links.links ?? links.hyperlinks ?? links.urls ?? links.urlList ?? links.items ?? links.entries;
+        if (nested && nested !== links) return expandProjectNoteLinkCandidates(nested);
+        return Object.entries(links).map(([key, value]) => {
+            if (value && typeof value === 'object') {
+                return { label: value.label ?? value.text ?? value.title ?? value.name ?? key, ...value };
+            }
+            return { label: key, href: value };
+        });
+    }
+    return [];
+}
+
 function normalizeProjectNoteLinks(links = []) {
-    if (!Array.isArray(links)) return [];
+    const candidates = expandProjectNoteLinkCandidates(links);
     const seen = new Set();
-    return links
+    return candidates
         .map((link, index) => {
             const fallbackId = `link-${Date.now()}-${index}`;
-            const id = String(link?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
-            const href = normalizeProjectNoteHref(link?.href ?? link?.url ?? '');
-            const label = String(link?.label ?? link?.text ?? link?.title ?? '')
+            const source = link && typeof link === 'object' ? link : { href: link, label: link };
+            const id = String(source.id || source._id || source.key || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+            const href = normalizeProjectNoteHref(
+                source.href ??
+                source.url ??
+                source.link ??
+                source.linkUrl ??
+                source.linkURL ??
+                source.webUrl ??
+                source.webURL ??
+                source.address ??
+                source.uri ??
+                source.to ??
+                source.value ??
+                ''
+            );
+            const label = decodeHtmlEntities(source.label ?? source.text ?? source.title ?? source.name ?? source.displayText ?? source.caption ?? '')
                 .trim()
                 .replace(/\s+/g, ' ')
                 .slice(0, 80);
             if (!label && !href) return null;
             const safeLabel = label || href;
-            const key = `${safeLabel.toLowerCase()}|${href.toLowerCase()}`;
+            const key = href ? href.toLowerCase() : `${safeLabel.toLowerCase()}|${index}`;
             if (seen.has(key)) return null;
             seen.add(key);
             return { id, label: safeLabel, href };
@@ -4919,20 +5064,39 @@ function normalizeProjectNoteLinks(links = []) {
         .slice(0, 20);
 }
 
+function addUniqueProjectNoteLink(target, seen, link) {
+    const normalized = normalizeProjectNoteLinks([link])[0];
+    if (!normalized?.href) return;
+    const key = normalized.href.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    target.push({ ...normalized, id: normalized.id || `legacy-${target.length}` });
+}
+
 function extractLinksFromText(text = '') {
-    const rawText = getRichTextPlainText(text || '');
+    const rawText = String(text ?? '');
     const links = [];
     const seen = new Set();
-    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
     let match;
 
-    while ((match = urlPattern.exec(rawText)) !== null) {
-        let label = match[1].replace(/[),.;:!?]+$/g, '');
+    const anchorPattern = /<a\b[^>]*?href\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
+    while ((match = anchorPattern.exec(rawText)) !== null) {
+        const href = decodeHtmlEntities(match[2] || match[3] || match[4] || '');
+        const label = getRichTextPlainText(match[5] || '').trim() || href;
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-anchor-${links.length}`, href, label });
+    }
+
+    const markdownPattern = /\[([^\]\n]+)\]\(((?:https?:\/\/|www\.|mailto:)[^)\s]+)\)/gi;
+    while ((match = markdownPattern.exec(rawText)) !== null) {
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-markdown-${links.length}`, href: match[2], label: match[1] });
+    }
+
+    const plainText = getRichTextPlainText(rawText || '');
+    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+    while ((match = urlPattern.exec(plainText)) !== null) {
+        const label = match[1].replace(/[),.;:!?]+$/g, '');
         if (!label) continue;
-        const href = normalizeProjectNoteHref(label);
-        if (!href || seen.has(href)) continue;
-        seen.add(href);
-        links.push({ id: `legacy-${links.length}`, href, label });
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-url-${links.length}`, href: label, label });
     }
 
     return links;
@@ -5071,7 +5235,7 @@ function handleProjectNoteTabNameKeydown(projectId, tabId, surface = 'modal', ev
 }
 
 function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
-    const data = normalizeProjectNotesData(project?.notes || '');
+    const data = normalizeProjectNotesData(getProjectNotesValueFromProject(project));
     const activeTab = data.tabs.find(tab => tab.id === data.activeTabId) || data.tabs[0] || createDefaultProjectNotesTab('');
     const canEdit = state.canEdit(projectId);
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
@@ -5163,7 +5327,8 @@ function selectProjectNoteTab(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     commitPendingProjectNoteTabName(projectId, surface);
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     if (!data.tabs.some(tab => tab.id === tabId)) return;
     data.activeTabId = tabId;
     saveProjectNotesData(projectId, data, { renderSurface: surface });
@@ -5174,7 +5339,8 @@ function addProjectNoteTab(projectId, surface = 'quick', event) {
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
     commitPendingProjectNoteTabName(projectId, surface);
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     const nextNumber = data.tabs.length + 1;
     const nextTab = normalizeProjectNotesTab({
         id: `notes-${Date.now()}`,
@@ -5198,7 +5364,8 @@ function deleteProjectNoteTab(projectId, tabId, surface = 'quick', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     if (data.tabs.length <= 1) return;
     const tab = data.tabs.find(item => item.id === tabId);
     openConfirmationDialog({
@@ -5308,9 +5475,11 @@ function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
+    stageProjectNotesData(projectId, data, { persist: true });
 
     const modal = ensureProjectNoteLinkModal();
     const textInput = document.getElementById('projectNoteLinkTextInput');
@@ -5334,7 +5503,9 @@ function editProjectNoteLink(projectId, tabId, linkId, surface = 'modal', event)
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.canEdit(projectId)) return;
-    const data = getProjectNotesDataForProject(projectId);
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
+    stageProjectNotesData(projectId, data, { persist: true });
     const tab = data.tabs.find(item => item.id === tabId);
     if (!tab) return;
     const link = normalizeProjectNoteLinks(tab.links || []).find(item => item.id === linkId);
@@ -5498,7 +5669,11 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!tab) return;
     if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
-    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, surface));
+    tab.links = normalizeProjectNoteLinks([
+        ...normalizeProjectNoteLinks(tab.links || []),
+        ...collectProjectNoteLinksFromSurface(activeTab.id, surface),
+        ...extractLinksFromText(tab.body || '')
+    ]);
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
@@ -5603,7 +5778,7 @@ function copyProjectToClipboard(projectId, evt) {
     if (!project) return;
 
     // Only copy incomplete task text
-    const incompleteTasks = project.tasks.filter(t => !t.completed);
+    const incompleteTasks = project.tasks.filter(t => !isTaskCompleted(t));
 
     const text = incompleteTasks.map(task => getTaskPlainText(task.text)).join('\n');
 
@@ -5646,7 +5821,7 @@ function toggleTask(projectId, taskId) {
     const task = project.tasks.find(t => t.id === taskId);
     if (!task) return;
     
-    const willBeCompleted = !task.completed;
+    const willBeCompleted = !isTaskCompleted(task);
     const shouldAnimateAway = willBeCompleted && getProjectHideCompletedPreference(projectId);
     
     // Only use the fade-away animation when completed tasks are hidden from view.
@@ -5695,7 +5870,7 @@ function performTaskToggle(projectId, taskId) {
     
     const updatedTasks = project.tasks.map(t => {
         if (t.id === taskId) {
-            const newCompleted = !t.completed;
+            const newCompleted = !isTaskCompleted(t);
             if (newCompleted) {
                 state.incrementCompletedTasks();
             } else {
@@ -5893,11 +6068,11 @@ function getTaskCompletionUndoStates(beforeTasks = [], afterTasks = []) {
         .map((task, index) => normalizeTask(task, index))
         .filter(task => {
             const afterTask = afterById.get(task.id);
-            return afterTask && !!afterTask.completed !== !!task.completed;
+            return afterTask && isTaskCompleted(afterTask) !== isTaskCompleted(task);
         })
         .map(task => ({
             id: task.id,
-            completed: !!task.completed,
+            completed: isTaskCompleted(task),
             completedDate: task.completedDate || null,
             completedBy: task.completedBy || '',
             completedByName: task.completedByName || ''
@@ -5925,13 +6100,13 @@ function restoreTaskCompletionUndo(undoEntry) {
     const updatedTasks = project.tasks.map((task, index) => {
         const normalizedTask = normalizeTask(task, index);
         const previousState = previousStateById.get(normalizedTask.id);
-        if (!previousState || !!normalizedTask.completed === !!previousState.completed) return normalizedTask;
+        if (!previousState || isTaskCompleted(normalizedTask) === parseTaskCompletedValue(previousState.completed)) return normalizedTask;
 
         completedStatDelta += previousState.completed ? 1 : -1;
         changed = true;
         return {
             ...normalizedTask,
-            completed: !!previousState.completed,
+            completed: parseTaskCompletedValue(previousState.completed),
             completedDate: previousState.completed ? (previousState.completedDate || null) : null,
             completedBy: previousState.completed ? (previousState.completedBy || '') : '',
             completedByName: previousState.completed ? (previousState.completedByName || '') : ''
@@ -6045,11 +6220,11 @@ function updateSelectedTasks(projectId, updater) {
         const normalizedTask = normalizeTask(task, index);
         if (!selectedIds.has(normalizedTask.id)) return normalizedTask;
 
-        const beforeCompleted = !!normalizedTask.completed;
+        const beforeCompleted = isTaskCompleted(normalizedTask);
         const nextTask = normalizeTask(updater(normalizedTask) || normalizedTask, index);
         if (JSON.stringify(nextTask) !== JSON.stringify(normalizedTask)) changed = true;
-        if (!beforeCompleted && nextTask.completed) completedStatDelta += 1;
-        if (beforeCompleted && !nextTask.completed) completedStatDelta -= 1;
+        if (!beforeCompleted && isTaskCompleted(nextTask)) completedStatDelta += 1;
+        if (beforeCompleted && !isTaskCompleted(nextTask)) completedStatDelta -= 1;
         return nextTask;
     });
 
@@ -6106,7 +6281,7 @@ function completeSelectedTasks(projectId, event) {
     event?.stopPropagation?.();
     const completedDate = new Date().toISOString();
     const modalState = captureProjectModalState(projectId);
-    const changed = updateSelectedTasks(projectId, task => task.completed
+    const changed = updateSelectedTasks(projectId, task => isTaskCompleted(task)
         ? task
         : applyTaskCompletionAttribution(task, completedDate));
     if (!changed) return;
@@ -6133,7 +6308,7 @@ function deleteSelectedTasks(projectId, event) {
             const deletedTasks = project.tasks
                 .map((task, index) => normalizeTask(task, index))
                 .filter(task => selectedIds.has(task.id));
-            const completedDeletedCount = deletedTasks.filter(task => task.completed).length;
+            const completedDeletedCount = deletedTasks.filter(task => isTaskCompleted(task)).length;
             const updatedTasks = project.tasks
                 .map((task, index) => normalizeTask(task, index))
                 .filter(task => !selectedIds.has(task.id));
@@ -6152,7 +6327,7 @@ function updateProjectProgress(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const completedTasks = project.tasks.filter(t => t.completed).length;
+    const completedTasks = project.tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = project.tasks.length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
@@ -6401,7 +6576,7 @@ function performUndo() {
         if (project.completed) {
             state.incrementCompletedProjects();
         }
-        const completedTasks = project.tasks.filter(t => t.completed).length;
+        const completedTasks = project.tasks.filter(t => isTaskCompleted(t)).length;
         for (let i = 0; i < completedTasks; i++) {
             state.incrementCompletedTasks();
         }
@@ -6416,7 +6591,7 @@ function performUndo() {
             const updatedTasks = sortTasks([...project.tasks, task]);
             state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
             
-            if (task.completed) {
+            if (isTaskCompleted(task)) {
                 state.incrementCompletedTasks();
             }
             
@@ -6484,7 +6659,7 @@ function calculateVisibleCompletionStats() {
     return projects.reduce((totals, project) => {
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
         totals.totalTasks += tasks.length;
-        totals.completedTasks += tasks.filter(task => task.completed).length;
+        totals.completedTasks += tasks.filter(task => isTaskCompleted(task)).length;
         return totals;
     }, { totalTasks: 0, completedTasks: 0 });
 }
@@ -7742,7 +7917,7 @@ function getDisplayTasksForProject(project, options = {}) {
         ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
         : orderedTasks;
     const displayState = hideCompleted
-        ? { visibleTasks: categoryFilteredTasks.filter(task => !task.completed) }
+        ? { visibleTasks: categoryFilteredTasks.filter(task => !isTaskCompleted(task)) }
         : getCompletedTaskDisplayState(project, { sortMode, activeCategory });
     const visibleTasks = displayState.visibleTasks;
     const draftTaskId = Number(uiState.newTaskDraft?.taskId);
@@ -8323,16 +8498,28 @@ function setProjectTagFilter(tagName) {
 function getProjectCardPreviewTasks(project) {
     if (!Array.isArray(project?.tasks)) return [];
     const sortMode = getProjectTaskSortPreference(project?.id);
-    let activeCategory = getProjectTaskCategoryFilter(project?.id);
-    const categories = getProjectTaskCategories(project);
-    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
-        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
-    }
-    return getDisplayTasksForProject(project, {
-        hideCompleted: getProjectHideCompletedPreference(project?.id),
-        sortMode,
-        activeCategory
-    }).slice(0, 3);
+    const orderedTasks = sortTasksForDisplay(project.tasks, sortMode)
+        .map((task, index) => ({ task: normalizeTask(task, index), index }))
+        .filter(entry => !isTaskCompleted(entry.task));
+
+    const hasPriorityTasks = orderedTasks.some(entry =>
+        entry.task.tag && entry.task.tag !== 'none'
+    );
+
+    return orderedTasks
+        .sort((a, b) => {
+            if (hasPriorityTasks) {
+                const aPriority = TASK_TAG_PRIORITY[a.task.tag] ?? TASK_TAG_PRIORITY['none'];
+                const bPriority = TASK_TAG_PRIORITY[b.task.tag] ?? TASK_TAG_PRIORITY['none'];
+                if (aPriority !== bPriority) return aPriority - bPriority;
+            }
+            const aOverdue = isTaskOverdue(a.task);
+            const bOverdue = isTaskOverdue(b.task);
+            if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+            return a.index - b.index;
+        })
+        .slice(0, 3)
+        .map(entry => entry.task);
 }
 
 function formatProjectSyncText(project) {
@@ -8354,17 +8541,244 @@ function createDefaultProjectNotesTab(body = '') {
     };
 }
 
+function noteCandidateHasContent(value) {
+    const normalized = normalizeProjectNotesValue(value);
+    if (!String(normalized || '').trim()) return false;
+    try {
+        const data = normalizeProjectNotesData(normalized);
+        return data.tabs.some(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+    } catch {
+        return getRichTextPlainText(normalized).length > 0;
+    }
+}
+
+function getProjectNotesCandidateFields(project = {}) {
+    if (!project || typeof project !== 'object') return [];
+    const candidateKeys = [
+        'notes',
+        'projectNotes',
+        'projectNote',
+        'notesData',
+        'noteTabs',
+        'noteTabsData',
+        'projectNoteTabs',
+        'projectNotesTabs',
+        'projectNotesData',
+        'notesHtml',
+        'notesHTML',
+        'notesText',
+        'noteText',
+        'richTextNotes',
+        'projectNotesHtml',
+        'projectNotesHTML',
+        'projectNotesText',
+        'note'
+    ];
+    const nestedKeys = ['metadata', 'meta', 'details', 'data', 'customFields', 'extra', 'legacy'];
+    const values = [];
+
+    candidateKeys.forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(project, key)) values.push(project[key]);
+    });
+
+    nestedKeys.forEach(parentKey => {
+        const nested = project[parentKey];
+        if (!nested || typeof nested !== 'object') return;
+        candidateKeys.forEach(key => {
+            if (Object.prototype.hasOwnProperty.call(nested, key)) values.push(nested[key]);
+        });
+    });
+
+    return values;
+}
+
+function getBestProjectNotesValue(...values) {
+    const expandedValues = values.flatMap(value => {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            const projectCandidates = getProjectNotesCandidateFields(value);
+            return projectCandidates.length ? projectCandidates : [value];
+        }
+        return [value];
+    });
+
+    const normalizedValues = expandedValues
+        .map(value => normalizeProjectNotesValue(value))
+        .filter(value => String(value ?? '').trim().length > 0);
+
+    const withContent = normalizedValues.find(noteCandidateHasContent);
+    return withContent || normalizedValues[0] || '';
+}
+
+function getProjectNotesValueFromProject(project = {}) {
+    if (!project || typeof project !== 'object') return '';
+    return getBestProjectNotesValue(project);
+}
+
+function normalizeLegacyProjectNoteEntry(entry, index = 0, fallbackTitle = '') {
+    const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-legacy-${index}`;
+    const title = String(
+        entry?.title ??
+        entry?.name ??
+        entry?.label ??
+        entry?.heading ??
+        fallbackTitle ??
+        `Note ${index + 1}`
+    ).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || `Note ${index + 1}`;
+    const bodyValue = typeof entry === 'string'
+        ? entry
+        : (
+            entry?.body ??
+            entry?.text ??
+            entry?.note ??
+            entry?.content ??
+            entry?.html ??
+            entry?.value ??
+            entry?.description ??
+            entry?.comment ??
+            ''
+        );
+    const body = typeof bodyValue === 'string' ? bodyValue : normalizeProjectNotesValue(bodyValue);
+    const explicitLinks = typeof entry === 'object' && entry !== null
+        ? (entry.links ?? entry.hyperlinks ?? entry.urls ?? entry.urlList ?? entry.linkList ?? entry.link ?? entry.url ?? entry.href ?? [])
+        : [];
+    const bodyLinks = extractLinksFromText(body);
+    return normalizeProjectNotesTab({
+        id: entry?.id || entry?._id || fallbackId,
+        title,
+        body,
+        links: [...normalizeProjectNoteLinks(explicitLinks), ...bodyLinks]
+    }, index);
+}
+
+function buildProjectNotesTabsFromArray(value = []) {
+    return value
+        .map((entry, index) => normalizeLegacyProjectNoteEntry(entry, index))
+        .filter(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+}
+
+function buildProjectNotesTabsFromMap(value = {}) {
+    return Object.entries(value)
+        .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'items', 'entries', 'pages', 'sections', 'links', 'hyperlinks', 'urls', '_id', 'id', 'createdAt', 'updatedAt', 'lastModified'].includes(key))
+        .map(([key, entry], index) => normalizeLegacyProjectNoteEntry(entry, index, key))
+        .filter(tab => getRichTextPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+}
+
+function normalizeProjectNotesValue(value = '') {
+    if (typeof value === 'string') {
+        const raw = value.trim();
+        if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    if (parsed[PROJECT_NOTES_TAB_DATA_FLAG] === true || Array.isArray(parsed.tabs)) return value;
+                    const normalizedParsed = normalizeProjectNotesValue(parsed);
+                    if (String(normalizedParsed || '').trim()) return normalizedParsed;
+                }
+            } catch {
+                // Keep plain text that happens to contain braces/brackets.
+            }
+        }
+        return value;
+    }
+    if (Array.isArray(value)) {
+        const tabs = buildProjectNotesTabsFromArray(value);
+        if (tabs.length) {
+            return serializeProjectNotesData({
+                activeTabId: tabs[0]?.id || PROJECT_NOTES_DEFAULT_TAB_ID,
+                tabs
+            });
+        }
+        try {
+            return JSON.stringify({
+                [PROJECT_NOTES_TAB_DATA_FLAG]: true,
+                activeTabId: value[0]?.id || PROJECT_NOTES_DEFAULT_TAB_ID,
+                tabs: value
+            });
+        } catch {
+            return '';
+        }
+    }
+    if (!value || typeof value !== 'object') return '';
+
+    if (value[PROJECT_NOTES_TAB_DATA_FLAG] === true || Array.isArray(value.tabs)) {
+        const sourceTabs = Array.isArray(value.tabs) ? value.tabs : [];
+        const normalizedTabs = sourceTabs.length ? buildProjectNotesTabsFromArray(sourceTabs) : [];
+        try {
+            return JSON.stringify({
+                [PROJECT_NOTES_TAB_DATA_FLAG]: true,
+                activeTabId: value.activeTabId || normalizedTabs[0]?.id || '',
+                tabs: normalizedTabs.length ? normalizedTabs : sourceTabs
+            });
+        } catch {
+            return '';
+        }
+    }
+
+    const arrayTabFields = ['items', 'entries', 'pages', 'sections', 'noteTabs', 'noteTabsData', 'projectNoteTabs', 'projectNotesTabs', 'projectNotesData'];
+    for (const key of arrayTabFields) {
+        if (Array.isArray(value[key])) {
+            const tabs = buildProjectNotesTabsFromArray(value[key]);
+            if (tabs.length) {
+                return serializeProjectNotesData({
+                    activeTabId: value.activeTabId || tabs[0].id,
+                    tabs
+                });
+            }
+        }
+    }
+
+    const objectTabFields = ['items', 'entries', 'pages', 'sections', 'noteTabs', 'noteTabsData', 'projectNoteTabs', 'projectNotesTabs', 'projectNotesData'];
+    for (const key of objectTabFields) {
+        if (value[key] && typeof value[key] === 'object' && !Array.isArray(value[key])) {
+            const nestedNotes = normalizeProjectNotesValue(value[key]);
+            if (String(nestedNotes || '').trim()) return nestedNotes;
+        }
+    }
+
+    const legacyBody = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? value.description ?? value.comment ?? '';
+    const legacyTitle = value.title ?? value.name ?? value.label ?? value.heading ?? 'Notes';
+    if (typeof legacyBody === 'string' && legacyBody.trim()) {
+        return serializeProjectNotesData({
+            activeTabId: PROJECT_NOTES_DEFAULT_TAB_ID,
+            tabs: [{
+                id: PROJECT_NOTES_DEFAULT_TAB_ID,
+                title: legacyTitle,
+                body: legacyBody,
+                links: value.links ?? value.hyperlinks ?? value.urls ?? []
+            }]
+        });
+    }
+
+    if (legacyBody && typeof legacyBody === 'object') {
+        const nestedNotes = normalizeProjectNotesValue(legacyBody);
+        if (String(nestedNotes || '').trim()) return nestedNotes;
+    }
+
+    const mappedTabs = buildProjectNotesTabsFromMap(value);
+    if (mappedTabs.length) {
+        return serializeProjectNotesData({
+            activeTabId: mappedTabs[0].id,
+            tabs: mappedTabs
+        });
+    }
+
+    return '';
+}
+
+
 function normalizeProjectNotesTab(tab, index = 0) {
     const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-${Date.now()}-${index}`;
-    const id = String(tab?.id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
-    const title = String(tab?.title || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
-    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? '');
-    const links = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? []);
+    const id = String(tab?.id || tab?._id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+    const title = String(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
+    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
+    const explicitLinks = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []);
+    const bodyLinks = extractLinksFromText(body);
+    const links = normalizeProjectNoteLinks([...explicitLinks, ...bodyLinks]);
     return { id, title, body, links };
 }
 
 function normalizeProjectNotesData(notes) {
-    const raw = String(notes ?? '');
+    const raw = normalizeProjectNotesValue(notes);
     if (raw.trim()) {
         try {
             const parsed = JSON.parse(raw);
@@ -8693,6 +9107,7 @@ function updateTaskNote(projectId, taskId, noteValue) {
         };
     });
 
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     renderModalTaskList(projectId);
@@ -9554,9 +9969,9 @@ function openProjectModal(projectId, options = {}) {
         ? completedDisplayState.visibleTasks
         : getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
 
-    const completedTasks = tasks.filter(t => t.completed).length;
+    const completedTasks = tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = tasks.length;
-    const remainingTasks = tasks.filter(t => !t.completed).length;
+    const remainingTasks = tasks.filter(t => !isTaskCompleted(t)).length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
     const modal = document.getElementById('projectModal');
@@ -10679,9 +11094,9 @@ function render() {
 function renderProjectCard(project) {
     const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-    const completedTasksCount = tasks.filter(t => t.completed).length;
+    const completedTasksCount = tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = tasks.length;
-    const remainingTasksCount = tasks.filter(t => !t.completed).length;
+    const remainingTasksCount = tasks.filter(t => !isTaskCompleted(t)).length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
     const hasOverdueTasks = projectHasOverdueTasks(project);
     const isShared = collaborators.length > 0;
@@ -10761,7 +11176,7 @@ function renderProjectCard(project) {
 
             ${showTaskPreview ? `<ul class="project-preview-list">
                 ${previewTasks.length ? previewTasks.map(task => `
-                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
+                    <li class="project-preview-task ${isTaskCompleted(task) ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
                         <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
                         <span>${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                     </li>
@@ -10815,7 +11230,7 @@ function renderSharedProjectsPanel() {
     sharedProjectsList.innerHTML = sharedActiveProjects.map(project => {
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
         const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-        const completedTasksCount = tasks.filter(task => task.completed).length;
+        const completedTasksCount = tasks.filter(task => isTaskCompleted(task)).length;
         const totalTasks = tasks.length;
         const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
         const accessLabel = project.userRole === 'owner'

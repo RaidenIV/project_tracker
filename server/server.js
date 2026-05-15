@@ -144,7 +144,7 @@ const Account = mongoose.model('Account', accountSchema);
 const taskSchema = new mongoose.Schema({
     id:            Number,
     text:          String,
-    completed:     Boolean,
+    completed:     { type: Boolean, default: false },
     completedDate: String,
     completedBy:   { type: String, default: '' },
     completedByName: { type: String, default: '' },
@@ -180,7 +180,13 @@ const projectSchema = new mongoose.Schema({
     completedDate: String,
     completedBy:   { type: String, default: '' },
     completedByName: { type: String, default: '' },
-    notes:         { type: String, default: '' },
+    notes:         { type: mongoose.Schema.Types.Mixed, default: '' },
+    projectNotes:  { type: mongoose.Schema.Types.Mixed, default: undefined },
+    projectNote:   { type: mongoose.Schema.Types.Mixed, default: undefined },
+    notesData:     { type: mongoose.Schema.Types.Mixed, default: undefined },
+    noteTabs:      { type: mongoose.Schema.Types.Mixed, default: undefined },
+    noteTabsData:  { type: mongoose.Schema.Types.Mixed, default: undefined },
+    note:          { type: mongoose.Schema.Types.Mixed, default: undefined },
     calendarNotes: { type: Object, default: {} },
     description:   { type: String, default: '' },
     tags:          { type: [String], default: [] },
@@ -268,11 +274,14 @@ function requireRole(minRole) {
 async function enrichProject(project, userId, accountMap) {
     const pObj = project.toObject ? project.toObject() : { ...project };
     pObj.id = project._id ? project._id.toString() : project.id;
+    pObj.notes = getBestProjectNotesValue(pObj);
 
-    const collab = project.collaborators.find(c => c.userId === userId);
-    pObj.userRole  = project.owner === userId ? 'owner' : (collab?.role || 'viewer');
-    pObj.ownerName = accountMap?.[project.owner]?.username || 'Unknown';
-    pObj.ownerEmail = accountMap?.[project.owner]?.email || '';
+    const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
+    const ownerId = String(project.owner || '');
+    const collab = collaborators.find(c => c.userId === userId);
+    pObj.userRole  = ownerId === userId ? 'owner' : (collab?.role || 'viewer');
+    pObj.ownerName = accountMap?.[ownerId]?.username || 'Unknown';
+    pObj.ownerEmail = accountMap?.[ownerId]?.email || '';
     return pObj;
 }
 
@@ -508,6 +517,22 @@ function sanitizeDateKey(value) {
     return `${year}-${month}-${day}`;
 }
 
+function parseTaskCompletedValue(value) {
+    if (value === true || value === 1) return true;
+    if (value === false || value === 0 || value === null || value === undefined) return false;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return false;
+        if (['true', '1', 'yes', 'y', 'completed', 'complete', 'done'].includes(normalized)) return true;
+        if (['false', '0', 'no', 'n', 'active', 'incomplete', 'open', 'pending'].includes(normalized)) return false;
+    }
+    return Boolean(value);
+}
+
+function isTaskCompleted(task = {}) {
+    return parseTaskCompletedValue(task?.completed);
+}
+
 function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
@@ -521,7 +546,7 @@ function sanitizeTask(task, index = 0) {
     return {
         id: hasValidId ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
-        completed: !!task?.completed,
+        completed: parseTaskCompletedValue(task?.completed),
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         completedBy: task?.completedBy ? String(task.completedBy).slice(0, 80) : '',
         completedByName: task?.completedByName ? String(task.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '',
@@ -551,6 +576,386 @@ function sanitizeProjectCalendarNotes(value = {}) {
         return notes;
     }, {});
 }
+
+function projectNotesPlainText(value = '') {
+    return String(value ?? '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function decodeProjectNoteEntities(value = '') {
+    let text = String(value ?? '');
+    for (let i = 0; i < 4; i += 1) {
+        const decoded = text
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/&quot;/gi, '"')
+            .replace(/&#39;|&#x27;|&apos;/gi, "'")
+            .replace(/&lt;/gi, '<')
+            .replace(/&gt;/gi, '>')
+            .replace(/&amp;/gi, '&');
+        if (decoded === text) break;
+        text = decoded;
+    }
+    return text;
+}
+
+function normalizeProjectNoteHref(value = '') {
+    const rawHref = decodeProjectNoteEntities(value).trim();
+    if (!rawHref) return '';
+    const href = rawHref.toLowerCase().startsWith('www.') ? `https://${rawHref}` : rawHref;
+    if (!/^(https?:\/\/|mailto:)/i.test(href)) return '';
+    return href.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 500);
+}
+
+function expandProjectNoteLinkCandidates(links = []) {
+    if (!links) return [];
+    if (Array.isArray(links)) return links;
+    if (typeof links === 'string') {
+        const raw = links.trim();
+        if (!raw) return [];
+        if ((raw.startsWith('[') && raw.endsWith(']')) || (raw.startsWith('{') && raw.endsWith('}'))) {
+            try {
+                return expandProjectNoteLinkCandidates(JSON.parse(raw));
+            } catch {
+                return [raw];
+            }
+        }
+        return [raw];
+    }
+    if (typeof links === 'object') {
+        const nested = links.links ?? links.hyperlinks ?? links.urls ?? links.urlList ?? links.items ?? links.entries;
+        if (nested && nested !== links) return expandProjectNoteLinkCandidates(nested);
+        return Object.entries(links).map(([key, value]) => {
+            if (value && typeof value === 'object') {
+                return { label: value.label ?? value.text ?? value.title ?? value.name ?? key, ...value };
+            }
+            return { label: key, href: value };
+        });
+    }
+    return [];
+}
+
+function normalizeProjectNoteLinks(links = []) {
+    const candidates = expandProjectNoteLinkCandidates(links);
+    const seen = new Set();
+    return candidates
+        .map((link, index) => {
+            const fallbackId = `link-${Date.now()}-${index}`;
+            const source = link && typeof link === 'object' ? link : { href: link, label: link };
+            const id = String(source.id || source._id || source.key || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
+            const href = normalizeProjectNoteHref(
+                source.href ??
+                source.url ??
+                source.link ??
+                source.linkUrl ??
+                source.linkURL ??
+                source.webUrl ??
+                source.webURL ??
+                source.address ??
+                source.uri ??
+                source.to ??
+                source.value ??
+                ''
+            );
+            const label = decodeProjectNoteEntities(source.label ?? source.text ?? source.title ?? source.name ?? source.displayText ?? source.caption ?? '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .slice(0, 80);
+            if (!label && !href) return null;
+            const safeLabel = label || href;
+            const key = href ? href.toLowerCase() : `${safeLabel.toLowerCase()}|${index}`;
+            if (seen.has(key)) return null;
+            seen.add(key);
+            return { id, label: safeLabel, href };
+        })
+        .filter(Boolean)
+        .slice(0, 20);
+}
+
+function addUniqueProjectNoteLink(target, seen, link) {
+    const normalized = normalizeProjectNoteLinks([link])[0];
+    if (!normalized?.href) return;
+    const key = normalized.href.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    target.push({ ...normalized, id: normalized.id || `legacy-${target.length}` });
+}
+
+function extractProjectNoteLinks(value = '') {
+    const rawText = String(value ?? '');
+    const links = [];
+    const seen = new Set();
+    let match;
+
+    const anchorPattern = /<a\b[^>]*?href\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
+    while ((match = anchorPattern.exec(rawText)) !== null) {
+        const href = decodeProjectNoteEntities(match[2] || match[3] || match[4] || '');
+        const label = projectNotesPlainText(match[5] || '').trim() || href;
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-anchor-${links.length}`, href, label });
+    }
+
+    const markdownPattern = /\[([^\]\n]+)\]\(((?:https?:\/\/|www\.|mailto:)[^)\s]+)\)/gi;
+    while ((match = markdownPattern.exec(rawText)) !== null) {
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-markdown-${links.length}`, href: match[2], label: match[1] });
+    }
+
+    const plainText = projectNotesPlainText(rawText || '');
+    const urlPattern = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+    while ((match = urlPattern.exec(plainText)) !== null) {
+        const label = match[1].replace(/[),.;:!?]+$/g, '');
+        if (!label) continue;
+        addUniqueProjectNoteLink(links, seen, { id: `legacy-url-${links.length}`, href: label, label });
+    }
+
+    return links;
+}
+
+function normalizeLegacyProjectNoteEntry(entry, index = 0, fallbackTitle = '') {
+    const title = String(
+        entry?.title ??
+        entry?.name ??
+        entry?.label ??
+        entry?.heading ??
+        fallbackTitle ??
+        `Note ${index + 1}`
+    ).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40) || `Note ${index + 1}`;
+    const bodyValue = typeof entry === 'string'
+        ? entry
+        : (
+            entry?.body ??
+            entry?.text ??
+            entry?.note ??
+            entry?.content ??
+            entry?.html ??
+            entry?.value ??
+            entry?.description ??
+            entry?.comment ??
+            ''
+        );
+    const body = typeof bodyValue === 'string' ? bodyValue : sanitizeProjectNotesValue(bodyValue);
+    const explicitLinks = typeof entry === 'object' && entry !== null
+        ? (entry.links ?? entry.hyperlinks ?? entry.urls ?? entry.urlList ?? entry.linkList ?? entry.link ?? entry.url ?? entry.href ?? [])
+        : [];
+    const links = normalizeProjectNoteLinks([
+        ...normalizeProjectNoteLinks(explicitLinks),
+        ...extractProjectNoteLinks(body)
+    ]);
+    return {
+        id: String(entry?.id || entry?._id || (index === 0 ? 'notes-general' : `notes-legacy-${index}`)).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || (index === 0 ? 'notes-general' : `notes-legacy-${index}`),
+        title,
+        body,
+        links
+    };
+}
+
+function buildProjectNotesTabsFromArray(value = []) {
+    return value
+        .map((entry, index) => normalizeLegacyProjectNoteEntry(entry, index))
+        .filter(tab => projectNotesPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+}
+
+function buildProjectNotesTabsFromMap(value = {}) {
+    return Object.entries(value)
+        .filter(([key]) => !['__projectNotesTabs', 'activeTabId', 'tabs', 'items', 'entries', 'pages', 'sections', 'links', 'hyperlinks', 'urls', '_id', 'id', 'createdAt', 'updatedAt', 'lastModified'].includes(key))
+        .map(([key, entry], index) => normalizeLegacyProjectNoteEntry(entry, index, key))
+        .filter(tab => projectNotesPlainText(tab.body).length > 0 || normalizeProjectNoteLinks(tab.links || []).length > 0);
+}
+
+function serializeProjectNotesTabs(tabs = [], activeTabId = '') {
+    try {
+        const safeTabs = (Array.isArray(tabs) ? tabs : []).map((tab, index) => {
+            const fallbackId = index === 0 ? 'notes-general' : `notes-legacy-${index}`;
+            const body = String(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
+            return {
+                ...tab,
+                id: String(tab?.id || tab?._id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId,
+                title: String(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`,
+                body,
+                links: normalizeProjectNoteLinks([
+                    ...normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []),
+                    ...extractProjectNoteLinks(body)
+                ])
+            };
+        });
+        return JSON.stringify({
+            __projectNotesTabs: true,
+            activeTabId: activeTabId || safeTabs[0]?.id || 'notes-general',
+            tabs: safeTabs
+        });
+    } catch {
+        return '';
+    }
+}
+
+function sanitizeProjectNotesValue(value = '') {
+    if (typeof value === 'string') {
+        const raw = value.trim();
+        if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    if (parsed.__projectNotesTabs === true || Array.isArray(parsed.tabs)) return value;
+                    const normalizedParsed = sanitizeProjectNotesValue(parsed);
+                    if (String(normalizedParsed || '').trim()) return normalizedParsed;
+                }
+            } catch {
+                // Keep plain text that happens to contain braces/brackets.
+            }
+        }
+        return value;
+    }
+    if (Array.isArray(value)) {
+        const tabs = buildProjectNotesTabsFromArray(value);
+        if (tabs.length) return serializeProjectNotesTabs(tabs, tabs[0]?.id || 'notes-general');
+        return serializeProjectNotesTabs(value, value[0]?.id || 'notes-general');
+    }
+    if (!value || typeof value !== 'object') return '';
+
+    try {
+        if (value.__projectNotesTabs === true || Array.isArray(value.tabs)) {
+            const sourceTabs = Array.isArray(value.tabs) ? value.tabs : [];
+            const normalizedTabs = buildProjectNotesTabsFromArray(sourceTabs);
+            return serializeProjectNotesTabs(normalizedTabs.length ? normalizedTabs : sourceTabs, value.activeTabId || normalizedTabs[0]?.id || sourceTabs[0]?.id || 'notes-general');
+        }
+    } catch {
+        return '';
+    }
+
+    const arrayTabFields = ['items', 'entries', 'pages', 'sections', 'noteTabs', 'noteTabsData', 'projectNoteTabs', 'projectNotesTabs', 'projectNotesData'];
+    for (const key of arrayTabFields) {
+        if (Array.isArray(value[key])) {
+            const tabs = buildProjectNotesTabsFromArray(value[key]);
+            if (tabs.length) return serializeProjectNotesTabs(tabs, value.activeTabId || tabs[0].id);
+        }
+    }
+
+    const objectTabFields = ['items', 'entries', 'pages', 'sections', 'noteTabs', 'noteTabsData', 'projectNoteTabs', 'projectNotesTabs', 'projectNotesData'];
+    for (const key of objectTabFields) {
+        if (value[key] && typeof value[key] === 'object' && !Array.isArray(value[key])) {
+            const nestedNotes = sanitizeProjectNotesValue(value[key]);
+            if (String(nestedNotes || '').trim()) return nestedNotes;
+        }
+    }
+
+    const legacyText = value.body ?? value.text ?? value.note ?? value.notes ?? value.content ?? value.html ?? value.value ?? value.description ?? value.comment ?? '';
+    const legacyTitle = value.title ?? value.name ?? value.label ?? value.heading ?? 'Notes';
+    if (typeof legacyText === 'string' && legacyText.trim()) {
+        return serializeProjectNotesTabs([{
+            id: 'notes-general',
+            title: String(legacyTitle || 'Notes').slice(0, 40) || 'Notes',
+            body: legacyText,
+            links: normalizeProjectNoteLinks([
+                ...(normalizeProjectNoteLinks(value.links ?? value.hyperlinks ?? value.urls ?? value.urlList ?? value.linkList ?? value.link ?? value.url ?? value.href ?? [])),
+                ...extractProjectNoteLinks(legacyText)
+            ])
+        }], 'notes-general');
+    }
+    if (legacyText && typeof legacyText === 'object') return sanitizeProjectNotesValue(legacyText);
+
+    const mappedTabs = buildProjectNotesTabsFromMap(value);
+    if (mappedTabs.length) return serializeProjectNotesTabs(mappedTabs, mappedTabs[0].id);
+
+    return '';
+}
+
+function projectNotesHaveContent(value = '') {
+    const normalized = sanitizeProjectNotesValue(value);
+    if (!String(normalized || '').trim()) return false;
+    try {
+        const parsed = JSON.parse(normalized);
+        if (parsed && Array.isArray(parsed.tabs)) {
+            return parsed.tabs.some(tab => projectNotesPlainText(tab?.body).length > 0 || normalizeProjectNoteLinks(tab?.links || []).length > 0 || extractProjectNoteLinks(tab?.body || '').length > 0);
+        }
+    } catch {
+        // Legacy plain-text notes are handled below.
+    }
+    return projectNotesPlainText(normalized).length > 0;
+}
+
+function getProjectNotesCandidateFields(project = {}) {
+    if (!project || typeof project !== 'object') return [];
+    const candidateKeys = [
+        'notes',
+        'projectNotes',
+        'projectNote',
+        'notesData',
+        'noteTabs',
+        'noteTabsData',
+        'projectNoteTabs',
+        'projectNotesTabs',
+        'projectNotesData',
+        'notesHtml',
+        'notesHTML',
+        'notesText',
+        'noteText',
+        'richTextNotes',
+        'projectNotesHtml',
+        'projectNotesHTML',
+        'projectNotesText',
+        'note'
+    ];
+    const nestedKeys = ['metadata', 'meta', 'details', 'data', 'customFields', 'extra', 'legacy'];
+    const values = [];
+    candidateKeys.forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(project, key)) values.push(project[key]);
+    });
+    nestedKeys.forEach(parentKey => {
+        const nested = project[parentKey];
+        if (!nested || typeof nested !== 'object') return;
+        candidateKeys.forEach(key => {
+            if (Object.prototype.hasOwnProperty.call(nested, key)) values.push(nested[key]);
+        });
+    });
+    return values;
+}
+
+function getBestProjectNotesValue(projectOrValue = {}, ...extraValues) {
+    const values = projectOrValue && typeof projectOrValue === 'object' && !Array.isArray(projectOrValue)
+        ? [...getProjectNotesCandidateFields(projectOrValue), ...extraValues]
+        : [projectOrValue, ...extraValues];
+
+    const normalizedValues = values
+        .map(value => sanitizeProjectNotesValue(value))
+        .filter(value => String(value ?? '').trim().length > 0);
+
+    return normalizedValues.find(projectNotesHaveContent) || normalizedValues[0] || '';
+}
+
+function taskPayloadHasNoteField(task = {}) {
+    return !!task && typeof task === 'object' && (
+        Object.prototype.hasOwnProperty.call(task, 'note') ||
+        Object.prototype.hasOwnProperty.call(task, 'notes')
+    );
+}
+
+function mergeExistingTaskNotes(sanitizedTasks = [], rawTasks = [], existingTasks = []) {
+    if (!Array.isArray(sanitizedTasks) || !Array.isArray(existingTasks) || !existingTasks.length) {
+        return Array.isArray(sanitizedTasks) ? sanitizedTasks : [];
+    }
+
+    const rawById = Array.isArray(rawTasks)
+        ? new Map(rawTasks.map(r => [String(r?.id ?? ''), r]))
+        : new Map();
+    const existingById = new Map(existingTasks.map(task => [String(task?.id ?? ''), task]));
+    return sanitizedTasks.map(task => {
+        const taskIdKey = String(task?.id ?? '');
+        const rawTask = rawById.get(taskIdKey) ?? null;
+        const existingTask = existingById.get(taskIdKey);
+        const existingNote = typeof existingTask?.note === 'string' ? existingTask.note : '';
+        if (!taskPayloadHasNoteField(rawTask) && !task.note && existingNote) {
+            return { ...task, note: existingNote };
+        }
+        return task;
+    });
+}
+
 
 function sanitizeProjectPriorityTag(value) {
     const raw = String(value || 'none').trim().toLowerCase();
@@ -584,7 +989,17 @@ function sanitizeIncomingProjectUpdate(body = {}) {
     if (body.completedDate !== undefined) sanitized.completedDate = body.completedDate ? String(body.completedDate) : null;
     if (body.completedBy !== undefined) sanitized.completedBy = body.completedBy ? String(body.completedBy).slice(0, 80) : '';
     if (body.completedByName !== undefined) sanitized.completedByName = body.completedByName ? String(body.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '';
-    if (body.notes !== undefined) sanitized.notes = typeof body.notes === 'string' ? body.notes : String(body.notes ?? '');
+    if (body.notes !== undefined || body.projectNotes !== undefined || body.projectNote !== undefined || body.notesData !== undefined || body.noteTabs !== undefined || body.noteTabsData !== undefined || body.note !== undefined) {
+        sanitized.notes = getBestProjectNotesValue({
+            notes: body.notes,
+            projectNotes: body.projectNotes,
+            projectNote: body.projectNote,
+            notesData: body.notesData,
+            noteTabs: body.noteTabs,
+            noteTabsData: body.noteTabsData,
+            note: body.note
+        });
+    }
     if (body.calendarNotes !== undefined || body.projectCalendarNotes !== undefined) {
         sanitized.calendarNotes = sanitizeProjectCalendarNotes(body.calendarNotes ?? body.projectCalendarNotes);
     }
@@ -786,11 +1201,11 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 app.get('/api/projects', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const projects = await Project.find({
+        const projects = await Project.collection.find({
             $or: [{ owner: userId }, { 'collaborators.userId': userId }]
-        }).sort({ priority: 1 });
+        }).sort({ priority: 1 }).toArray();
 
-        const ownerIds = [...new Set(projects.map(p => p.owner))];
+        const ownerIds = [...new Set(projects.map(p => String(p.owner || '')).filter(Boolean))];
         const accountMap = await buildAccountMap(ownerIds);
         const enriched = await Promise.all(projects.map(p => enrichProject(p, userId, accountMap)));
         res.json(enriched);
@@ -808,10 +1223,6 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
 
-        if (!sanitizedDescription) {
-            return res.status(400).json({ error: 'Project description is required.' });
-        }
-
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
@@ -825,7 +1236,7 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             completedDate: completedDate || null,
             completedBy:   completed ? String(completedBy || req.user.id || '') : '',
             completedByName: completed ? String(completedByName || req.user.username || '') : '',
-            notes:         notes        || '',
+            notes:         getBestProjectNotesValue({ notes, projectNotes: req.body.projectNotes, projectNote: req.body.projectNote, notesData: req.body.notesData, noteTabs: req.body.noteTabs, noteTabsData: req.body.noteTabsData, note: req.body.note }),
             calendarNotes: sanitizeProjectCalendarNotes(calendarNotes ?? projectCalendarNotes),
             description:   sanitizedDescription,
             archived:      false,
@@ -862,7 +1273,31 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
         }
 
         const incoming = sanitizeIncomingProjectUpdate(req.body || {});
-        const currentProject = req.project.toObject({ depopulate: true, versionKey: false });
+        const rawCurrentProject = await Project.collection.findOne({ _id: req.project._id });
+        const currentProject = {
+            ...(req.project.toObject({ depopulate: true, versionKey: false }) || {}),
+            ...(rawCurrentProject || {})
+        };
+        if (Array.isArray(incoming.tasks)) {
+            incoming.tasks = mergeExistingTaskNotes(incoming.tasks, req.body?.tasks, currentProject.tasks || []);
+        }
+        if (Object.prototype.hasOwnProperty.call(incoming, 'notes')) {
+            const existingNotes = getBestProjectNotesValue(currentProject);
+            const incomingNotes = getBestProjectNotesValue({
+                notes: incoming.notes,
+                projectNotes: req.body?.projectNotes,
+                projectNote: req.body?.projectNote,
+                notesData: req.body?.notesData,
+                noteTabs: req.body?.noteTabs,
+                noteTabsData: req.body?.noteTabsData,
+                note: req.body?.note
+            });
+            incoming.notes = incomingNotes;
+            const changedNonNoteFields = Object.keys(incoming).filter(key => key !== 'notes' && projectFieldChanged(currentProject[key], incoming[key]));
+            if (!projectNotesHaveContent(incomingNotes) && projectNotesHaveContent(existingNotes) && changedNonNoteFields.length > 0) {
+                incoming.notes = existingNotes;
+            }
+        }
         const changedFields = {};
         allowed.forEach(key => {
             if (incoming[key] === undefined) return;
@@ -1360,7 +1795,7 @@ function timestampInRange(value, start, end) {
 }
 
 function getCreditedUserIdsForCompletedTask(task, participantIds, ownerId) {
-    if (!task?.completed) return [];
+    if (!isTaskCompleted(task)) return [];
     const completedBy = String(task.completedBy || '');
     if (completedBy && participantIds.includes(completedBy)) return [completedBy];
     return ownerId ? [ownerId] : [];
@@ -1482,13 +1917,13 @@ async function buildLeaderboardData(currentUserId) {
         const participantIds = [...new Set([ownerId, ...collaboratorIds].filter(Boolean))];
         const isSharedProject = collaborators.length > 0;
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
-        const completedTaskCount = tasks.filter(task => task && task.completed).length;
+        const completedTaskCount = tasks.filter(task => task && isTaskCompleted(task)).length;
         const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
         const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
         const completedProject = !!project.completed;
         const projectCompletedBy = String(project.completedBy || ownerId || '');
         const latestCompletedTask = tasks
-            .filter(task => task?.completed && task.completedDate)
+            .filter(task => isTaskCompleted(task) && task.completedDate)
             .sort((a, b) => new Date(b.completedDate || 0) - new Date(a.completedDate || 0))[0] || null;
 
         participantIds.forEach(participantId => {
@@ -1521,7 +1956,7 @@ async function buildLeaderboardData(currentUserId) {
                 if (completedProject && latestCompletedTask && String(latestCompletedTask.completedBy || ownerId || '') === participantId) {
                     row.finalSharedProjectClosures += 1;
                 }
-                const creditedSharedTasks = tasks.filter(task => getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
+                const creditedSharedTasks = tasks.filter(task => isTaskCompleted(task) && getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
                 if (tasks.length > 0 && creditedSharedTasks / tasks.length >= 0.5) row.sharedCarryProjects += 1;
             }
         });
