@@ -1219,10 +1219,6 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             ? description.trim().replace(/\s+/g, ' ').slice(0, 280)
             : String(description ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
 
-        if (!sanitizedDescription) {
-            return res.status(400).json({ error: 'Project description is required.' });
-        }
-
         const project = await new Project({
             title:         title        || 'New Project',
             tasks:         Array.isArray(tasks) ? tasks.map((task, index) => sanitizeTask(task, index)) : [],
