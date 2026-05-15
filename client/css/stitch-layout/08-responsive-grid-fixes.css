@@ -192,26 +192,6 @@
     }
 }
 
-/* Follow-up patch: keep sub-1920 non-mobile desktop project grids at two cards per row. */
-@media (min-width: 981px) and (max-width: 1919px) {
-    .project-grid,
-    body.has-sidebar .project-grid,
-    body.sidebar-collapsed .project-grid,
-    body.control-panel-is-collapsed .project-grid,
-    body[data-theme^="console"] .project-grid,
-    body[data-theme^="blueprint"] .project-grid,
-    body[data-theme^="glass"] .project-grid,
-    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
-    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
-    body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
-        justify-content: stretch !important;
-        justify-items: stretch !important;
-        align-content: start !important;
-        place-content: start stretch !important;
-    }
-}
 
 @media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (min-resolution: 1.5dppx),
        (min-width: 1800px) and (min-height: 1100px),
@@ -322,8 +302,8 @@
     }
 }
 
-/* Follow-up patch: enforce the sub-1920 desktop card cap after later high-resolution overrides. */
-@media (min-width: 981px) and (max-width: 1919px) {
+/* Final desktop grid breakpoint correction: avoid broad sub-1920 overrides. */
+@media (min-width: 981px) and (max-width: 1679px) {
     .project-grid,
     body.has-sidebar .project-grid,
     body.sidebar-collapsed .project-grid,
@@ -335,6 +315,7 @@
     body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
     body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
         justify-content: stretch !important;
         justify-items: stretch !important;
         align-content: start !important;
@@ -342,8 +323,7 @@
     }
 }
 
-/* Follow-up patch: allow 1920x1200-class desktop displays to keep the approved three-card row. */
-@media (min-width: 1900px) and (min-height: 1100px) {
+@media (min-width: 1680px) {
     .project-grid,
     body.has-sidebar .project-grid,
     body.sidebar-collapsed .project-grid,
