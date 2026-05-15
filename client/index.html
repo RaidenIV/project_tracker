@@ -161,12 +161,7 @@
                 </select>
             </div>
 
-            <img
-                src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
-                alt="Logo"
-                class="top-app-logo"
-                id="topAppLogo"
-            >
+            <div class="top-app-layout-control-slot" id="topAppLayoutControlSlot" aria-label="Project card layout controls"></div>
         </div>
         <!-- Viewport -->
         <div class="viewport" id="viewport">
@@ -330,6 +325,15 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="sidebar-bottom-logo-wrap" aria-label="AIGOX logo">
+                    <img
+                        src="https://images.squarespace-cdn.com/content/v1/681ea18dd168a935c26295bd/a539e2d3-74e3-48f8-915e-46d97f2f1f0a/image.png?format=1000w"
+                        alt="Logo"
+                        class="sidebar-bottom-logo"
+                        id="sidebarBottomLogo"
+                    >
+                </div>
             </div>
         </div>
     </div>
@@ -360,7 +364,7 @@
                         <div class="account-profile-email" id="accountEmailText">you@example.com</div>
                         <div class="account-avatar-actions">
                             <input type="file" id="accountProfilePicInput" accept="image/*" class="visually-hidden">
-                            <button class="account-action-btn" type="button" onclick="triggerProfilePicUpload()">Upload Profile Picture</button>
+                            <button class="account-action-btn" id="accountProfilePicButton" type="button" onclick="triggerProfilePicUpload()">Upload Profile Picture</button>
                             <button class="account-action-btn account-action-btn--secondary" type="button" onclick="removeProfilePicture()">Remove</button>
                         </div>
                     </div>

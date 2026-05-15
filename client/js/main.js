@@ -1674,8 +1674,37 @@ const SESSION_STORAGE_KEYS = {
     OPEN_PROJECT_MODAL: 'tracker_open_project_modal_v1'
 };
 
+function decodeHtmlEntities(value) {
+    let text = String(value ?? '');
+    if (!/[&](?:amp|lt|gt|quot|apos|#39|#x27|nbsp);/i.test(text)) return text;
+
+    const decodeOnce = source => {
+        if (typeof document !== 'undefined') {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = source;
+            return textarea.value;
+        }
+        return source
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/&quot;/gi, '"')
+            .replace(/&#39;|&#x27;|&apos;/gi, "'")
+            .replace(/&lt;/gi, '<')
+            .replace(/&gt;/gi, '>')
+            .replace(/&amp;/gi, '&');
+    };
+
+    for (let i = 0; i < 4; i += 1) {
+        const decoded = decodeOnce(text);
+        if (decoded === text) break;
+        text = decoded;
+        if (!/[&](?:amp|lt|gt|quot|apos|#39|#x27|nbsp);/i.test(text)) break;
+    }
+
+    return text;
+}
+
 function escapeHtml(value) {
-    return String(value ?? '')
+    return decodeHtmlEntities(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -1689,7 +1718,7 @@ function hasRichTextMarkup(value) {
 }
 
 function plainTextToRichTextHtml(value = '') {
-    return escapeHtml(String(value ?? '')).replace(/\r\n|\r|\n/g, '<br>');
+    return escapeHtml(decodeHtmlEntities(value)).replace(/\r\n|\r|\n/g, '<br>');
 }
 
 function sanitizeRichTextHtml(value = '') {
@@ -2826,6 +2855,11 @@ function syncThemeBranding() {
         topAppLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
     }
 
+    const sidebarBottomLogo = document.getElementById('sidebarBottomLogo');
+    if (sidebarBottomLogo) {
+        sidebarBottomLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
+
     const authLogo = document.querySelector('.auth-logo-img');
     if (authLogo) {
         authLogo.src = DARK_MODE_LOGO_URL;
@@ -3307,12 +3341,21 @@ function applyAccountUI(user) {
         accountState.user.username
     );
 
+    const effectiveAccountProfilePic = accountState.pendingProfilePic !== null
+        ? accountState.pendingProfilePic
+        : accountState.user.profilePic;
+
     setAvatarUI(
         document.getElementById('accountAvatarImg'),
         document.getElementById('accountAvatarFallback'),
-        accountState.pendingProfilePic !== null ? accountState.pendingProfilePic : accountState.user.profilePic,
+        effectiveAccountProfilePic,
         accountState.user.username
     );
+
+    const accountProfilePicButton = document.getElementById('accountProfilePicButton');
+    if (accountProfilePicButton) {
+        accountProfilePicButton.textContent = effectiveAccountProfilePic ? 'Update Profile Picture' : 'Upload Profile Picture';
+    }
 
     setAvatarUI(
         document.getElementById('menuAccountAvatarImg'),
@@ -5686,7 +5729,7 @@ function performTaskToggle(projectId, taskId) {
     
     // Update stats display
     const completedTasksCountEl = document.getElementById('completedTasksCount');
-    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = calculateVisibleCompletionStats().completedTasks;
     updateTotalCompletion();
 }
 
@@ -5726,7 +5769,7 @@ function completeTaskBatch(projectId, shouldCompleteTask) {
     render();
     updateTotalCompletion();
     const completedTasksCountEl = document.getElementById('completedTasksCount');
-    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = calculateVisibleCompletionStats().completedTasks;
     requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
 }
 
@@ -5915,7 +5958,7 @@ function restoreTaskCompletionUndo(undoEntry) {
     render();
     updateTotalCompletion();
     const completedTasksCountEl = document.getElementById('completedTasksCount');
-    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = calculateVisibleCompletionStats().completedTasks;
     requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
     return true;
 }
@@ -5935,7 +5978,7 @@ function refreshModalTaskUi(projectId, options = {}) {
     render();
     updateTotalCompletion();
     const completedTasksCountEl = document.getElementById('completedTasksCount');
-    if (completedTasksCountEl) completedTasksCountEl.textContent = state.getStats().completedTasks;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = calculateVisibleCompletionStats().completedTasks;
     requestAnimationFrame(() => window.scrollTo(pageScrollX, pageScrollY));
 }
 
@@ -6436,16 +6479,18 @@ function handleTaskClick(projectId, taskId, event) {
 // TOTAL COMPLETION CALCULATION
 // ============================================================================
 
+function calculateVisibleCompletionStats() {
+    const projects = state.getProjects().filter(project => !isProjectArchived(project));
+    return projects.reduce((totals, project) => {
+        const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+        totals.totalTasks += tasks.length;
+        totals.completedTasks += tasks.filter(task => task.completed).length;
+        return totals;
+    }, { totalTasks: 0, completedTasks: 0 });
+}
+
 function calculateTotalCompletion() {
-    const allProjects = state.getProjects();
-    let totalTasks = 0;
-    let completedTasks = 0;
-    
-    allProjects.forEach(project => {
-        totalTasks += project.tasks.length;
-        completedTasks += project.tasks.filter(t => t.completed).length;
-    });
-    
+    const { totalTasks, completedTasks } = calculateVisibleCompletionStats();
     if (totalTasks === 0) return 0;
     return Math.round((completedTasks / totalTasks) * 100);
 }
@@ -10475,15 +10520,19 @@ function buildProjectLayoutControlsMarkup(layout) {
 function ensureProjectLayoutControls() {
     const grid = document.getElementById('projectGrid');
     if (!grid?.parentElement) return;
-    const host = grid.parentElement;
-    host.classList.add('project-grid-layout-host');
+    const fallbackHost = grid.parentElement;
+    fallbackHost.classList.add('project-grid-layout-host');
+    const slot = document.getElementById('topAppLayoutControlSlot');
+    const host = slot || fallbackHost;
     const layout = loadProjectGridLayoutPreference();
     let controls = document.getElementById('projectLayoutControls');
     if (!controls) {
         controls = document.createElement('div');
         controls.id = 'projectLayoutControls';
         controls.className = 'project-layout-controls';
-        host.insertBefore(controls, grid);
+    }
+    if (controls.parentElement !== host) {
+        host.appendChild(controls);
     }
     controls.innerHTML = buildProjectLayoutControlsMarkup(layout);
     controls.classList.remove('is-open');
@@ -10567,16 +10616,16 @@ function render() {
     ensureProjectLayoutControls();
 
     const stats = syncDerivedCompletedProjectStats() || { completedTasks: 0, completedProjects: 0 };
+    const visibleCompletionStats = calculateVisibleCompletionStats();
     const activeProjectsCountEl = document.getElementById('activeProjectsCount');
     const completedTasksCountEl = document.getElementById('completedTasksCount');
     const completedProjectsCountEl = document.getElementById('completedProjectsCount');
 
     if (activeProjectsCountEl) activeProjectsCountEl.textContent = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project)).length;
-    if (completedTasksCountEl) completedTasksCountEl.textContent = stats.completedTasks || 0;
+    if (completedTasksCountEl) completedTasksCountEl.textContent = visibleCompletionStats.completedTasks || 0;
     if (completedProjectsCountEl) completedProjectsCountEl.textContent = stats.completedProjects || 0;
 
-    const incompleteTasks = state.getProjects().filter(project => !isProjectCompleted(project) && !isProjectArchived(project))
-        .reduce((sum, p) => sum + (Array.isArray(p.tasks) ? p.tasks.filter(t => !t.completed).length : 0), 0);
+    const incompleteTasks = Math.max(0, (visibleCompletionStats.totalTasks || 0) - (visibleCompletionStats.completedTasks || 0));
     const incompleteEl = document.getElementById('incompleteTasksCount');
     if (incompleteEl) incompleteEl.textContent = incompleteTasks;
 

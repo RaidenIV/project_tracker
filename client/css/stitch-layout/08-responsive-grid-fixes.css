@@ -1362,6 +1362,28 @@ body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .proj
     letter-spacing: 0.035em !important;
 }
 
+@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1080px) {
+    .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
+    .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
+    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
+    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
+    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title {
+        font-size: 1.18rem !important;
+        line-height: 1.35 !important;
+        letter-spacing: inherit !important;
+    }
+
+    .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title-input--card,
+    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card {
+        font-size: 17px !important;
+        line-height: 1.35 !important;
+        letter-spacing: inherit !important;
+    }
+}
+
 /* ============================================================================
    Targeted follow-up: leaderboard score accent and constrained desktop fit
    ============================================================================ */
@@ -1456,27 +1478,6 @@ body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-
         letter-spacing: 0.01em !important;
         white-space: nowrap !important;
         color: var(--accent, currentColor) !important;
-    }
-}
-
-/* ============================================================================
-   Targeted follow-up: hide leaderboard avatars on constrained desktop displays
-   ============================================================================ */
-@media (max-width: 1920px) and (max-height: 1200px) {
-    .leaderboard-list > .leaderboard-row,
-    body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
-    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
-    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
-        grid-template-columns: 1.15rem minmax(0, 1fr) max-content !important;
-        grid-template-areas: "rank user score" !important;
-        column-gap: 0.72rem !important;
-    }
-
-    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
-    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
-    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
-    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
-        display: none !important;
     }
 }
 
