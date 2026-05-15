@@ -363,7 +363,7 @@ function buildPersonalProgressionMetrics() {
         if (projectCompleted) {
             completedProjects.push({ project, dayKey: projectCompletedDay, timestamp: projectCompletedTimestamp });
         }
-        if (projectCompleted && tasks.length > 0 && tasks.every(task => task.completed)) hasCleanSweep = true;
+        if (projectCompleted && tasks.length > 0 && tasks.every(task => isTaskCompleted(task))) hasCleanSweep = true;
         if (isProjectArchived(project) && projectCompleted) hasArchivedCompletedProject = true;
         if (normalizePriorityTagValue(project.projectPriorityTag) !== DEFAULT_TASK_TAG) hasPriority = true;
         if (Array.isArray(project.tags) && project.tags.length > 0) hasTag = true;
@@ -377,7 +377,7 @@ function buildPersonalProgressionMetrics() {
             if (task.category && task.category !== DEFAULT_TASK_CATEGORY) hasTag = true;
             if (getRichTextPlainText(task.note || '')) hasNote = true;
             if (isTaskOverdue(task)) currentOverdueTasks += 1;
-            if (!task.completed) return;
+            if (!isTaskCompleted(task)) return;
 
             const completedDate = task.completedDate || '';
             const dayKey = getLocalDayKey(completedDate);
@@ -930,10 +930,10 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                         ${selectedTasks.map(task => {
                         const taskIdLiteral = serializeInlineJsString(task.id);
                         return `
-                            <div class="project-calendar-selected-task ${task.completed ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
+                            <div class="project-calendar-selected-task ${isTaskCompleted(task) ? 'is-completed' : ''} ${getProjectCalendarTaskPriorityClass(task)}">
                                 ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <div class="project-calendar-selected-task-body">
-                                    <span class="project-calendar-selected-task-text ${task.completed ? 'completed' : ''}">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
+                                    <span class="project-calendar-selected-task-text ${isTaskCompleted(task) ? 'completed' : ''}">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                                     <div class="project-calendar-selected-task-actions">
                                         ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                                         ${canEditCalendar ? `
@@ -997,7 +997,7 @@ function getProjectCalendarDraggableTasks(project) {
 
     return getDisplayTasksForProject(project, { hideCompleted: true, sortMode, activeCategory })
         .map((task, index) => normalizeTask(task, index))
-        .filter(task => !task.completed);
+        .filter(task => !isTaskCompleted(task));
 }
 
 function buildProjectCalendarTaskDockMarkup(project) {
@@ -1317,6 +1317,22 @@ function getTaskCategoryListWith(valueList = []) {
         .filter(category => category && !isDefaultTaskCategoryName(category)))];
 }
 
+function parseTaskCompletedValue(value) {
+    if (value === true || value === 1) return true;
+    if (value === false || value === 0 || value === null || value === undefined) return false;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return false;
+        if (['true', '1', 'yes', 'y', 'completed', 'complete', 'done'].includes(normalized)) return true;
+        if (['false', '0', 'no', 'n', 'active', 'incomplete', 'open', 'pending'].includes(normalized)) return false;
+    }
+    return Boolean(value);
+}
+
+function isTaskCompleted(task = {}) {
+    return parseTaskCompletedValue(task?.completed);
+}
+
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
@@ -1328,7 +1344,7 @@ function normalizeTask(task = {}, index = 0) {
         id: Number.isFinite(numericId) ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
         note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
-        completed: !!task?.completed,
+        completed: parseTaskCompletedValue(task?.completed),
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         completedBy: task?.completedBy ? String(task.completedBy) : '',
         completedByName: task?.completedByName ? String(task.completedByName) : '',
@@ -1513,14 +1529,14 @@ function sortTasksForDisplay(tasks, mode = DEFAULT_TASK_SORT_MODE) {
         return [...baseOrder].sort((a, b) => {
             const priorityDiff = getTaskTagPriority(a) - getTaskTagPriority(b);
             if (priorityDiff !== 0) return priorityDiff;
-            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
-            return a.completed ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
+            if (isTaskCompleted(a) !== isTaskCompleted(b)) return isTaskCompleted(a) ? 1 : -1;
+            return isTaskCompleted(a) ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id);
         });
     }
 
     if (mode === 'due-date') {
         return [...baseOrder].sort((a, b) => {
-            if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+            if (isTaskCompleted(a) !== isTaskCompleted(b)) return isTaskCompleted(a) ? 1 : -1;
             const aDue = normalizeTaskDueDate(a.dueDate);
             const bDue = normalizeTaskDueDate(b.dueDate);
             if (aDue && bDue && aDue !== bDue) return aDue.localeCompare(bDue);
@@ -2445,14 +2461,14 @@ function getCompletedTaskDisplayState(project, options = {}) {
     const categoryFilteredTasks = activeCategory && activeCategory !== DEFAULT_TASK_CATEGORY_FILTER
         ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
         : orderedTasks;
-    const completedTasks = categoryFilteredTasks.filter(task => task.completed);
+    const completedTasks = categoryFilteredTasks.filter(task => isTaskCompleted(task));
     const completedVisibleLimit = completedLimit === 'all'
         ? completedTasks.length
         : Math.max(COMPLETED_TASK_BATCH_DEFAULT, Number(completedLimit) || COMPLETED_TASK_BATCH_DEFAULT);
     const visibleCompletedIds = new Set(completedTasks
         .slice(0, completedVisibleLimit)
         .map(task => String(task.id)));
-    const visibleTasks = categoryFilteredTasks.filter(task => !task.completed || visibleCompletedIds.has(String(task.id)));
+    const visibleTasks = categoryFilteredTasks.filter(task => !isTaskCompleted(task) || visibleCompletedIds.has(String(task.id)));
 
     return {
         visibleTasks,
@@ -2631,8 +2647,8 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         if (isProjectArchived(project)) return;
         const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
         const completedProject = isProjectCompleted(project);
-        const completedTaskCount = tasks.filter(task => task.completed).length;
-        const creditedCompletedTasks = tasks.filter(task => task.completed && (!task.completedBy || task.completedBy === userId));
+        const completedTaskCount = tasks.filter(task => isTaskCompleted(task)).length;
+        const creditedCompletedTasks = tasks.filter(task => isTaskCompleted(task) && (!task.completedBy || task.completedBy === userId));
         const completedRecords = creditedCompletedTasks.map(task => ({ timestamp: getCompletionTimestamp(task.completedDate) }));
         row.dailyCompletedTasks += countLocalCompletedRecords(completedRecords, dayStart, dayEnd);
         row.weeklyCompletedTasks += countLocalCompletedRecords(completedRecords, weekStart, weekEnd);
@@ -3177,16 +3193,16 @@ function getFilteredProjects() {
         projects.sort((a, b) => a.title.localeCompare(b.title));
     } else if (uiState.sortMode === 'remaining') {
         projects.sort((a, b) => {
-            const aRemaining = (a.tasks || []).filter(task => !task.completed).length;
-            const bRemaining = (b.tasks || []).filter(task => !task.completed).length;
+            const aRemaining = (a.tasks || []).filter(task => !isTaskCompleted(task)).length;
+            const bRemaining = (b.tasks || []).filter(task => !isTaskCompleted(task)).length;
             return bRemaining - aRemaining;
         });
     } else if (uiState.sortMode === 'progress') {
         projects.sort((a, b) => {
             const aTotal = a.tasks?.length || 0;
             const bTotal = b.tasks?.length || 0;
-            const aDone = a.tasks?.filter(task => task.completed).length || 0;
-            const bDone = b.tasks?.filter(task => task.completed).length || 0;
+            const aDone = a.tasks?.filter(task => isTaskCompleted(task)).length || 0;
+            const bDone = b.tasks?.filter(task => isTaskCompleted(task)).length || 0;
             const aProgress = aTotal ? aDone / aTotal : 0;
             const bProgress = bTotal ? bDone / bTotal : 0;
             return bProgress - aProgress;
@@ -4736,7 +4752,7 @@ function deleteProject(projectId) {
     const mongoId = project?._id;
 
     if (isProjectCompleted(project)) state.decrementCompletedProjects();
-    const completedTasks = project?.tasks.filter(t => t.completed).length || 0;
+    const completedTasks = project?.tasks.filter(t => isTaskCompleted(t)).length || 0;
     for (let i = 0; i < completedTasks; i++) state.decrementCompletedTasks();
 
     state.deleteProject(projectId);
@@ -5603,7 +5619,7 @@ function copyProjectToClipboard(projectId, evt) {
     if (!project) return;
 
     // Only copy incomplete task text
-    const incompleteTasks = project.tasks.filter(t => !t.completed);
+    const incompleteTasks = project.tasks.filter(t => !isTaskCompleted(t));
 
     const text = incompleteTasks.map(task => getTaskPlainText(task.text)).join('\n');
 
@@ -5646,7 +5662,7 @@ function toggleTask(projectId, taskId) {
     const task = project.tasks.find(t => t.id === taskId);
     if (!task) return;
     
-    const willBeCompleted = !task.completed;
+    const willBeCompleted = !isTaskCompleted(task);
     const shouldAnimateAway = willBeCompleted && getProjectHideCompletedPreference(projectId);
     
     // Only use the fade-away animation when completed tasks are hidden from view.
@@ -5695,7 +5711,7 @@ function performTaskToggle(projectId, taskId) {
     
     const updatedTasks = project.tasks.map(t => {
         if (t.id === taskId) {
-            const newCompleted = !t.completed;
+            const newCompleted = !isTaskCompleted(t);
             if (newCompleted) {
                 state.incrementCompletedTasks();
             } else {
@@ -5893,11 +5909,11 @@ function getTaskCompletionUndoStates(beforeTasks = [], afterTasks = []) {
         .map((task, index) => normalizeTask(task, index))
         .filter(task => {
             const afterTask = afterById.get(task.id);
-            return afterTask && !!afterTask.completed !== !!task.completed;
+            return afterTask && isTaskCompleted(afterTask) !== isTaskCompleted(task);
         })
         .map(task => ({
             id: task.id,
-            completed: !!task.completed,
+            completed: isTaskCompleted(task),
             completedDate: task.completedDate || null,
             completedBy: task.completedBy || '',
             completedByName: task.completedByName || ''
@@ -5925,13 +5941,13 @@ function restoreTaskCompletionUndo(undoEntry) {
     const updatedTasks = project.tasks.map((task, index) => {
         const normalizedTask = normalizeTask(task, index);
         const previousState = previousStateById.get(normalizedTask.id);
-        if (!previousState || !!normalizedTask.completed === !!previousState.completed) return normalizedTask;
+        if (!previousState || isTaskCompleted(normalizedTask) === parseTaskCompletedValue(previousState.completed)) return normalizedTask;
 
         completedStatDelta += previousState.completed ? 1 : -1;
         changed = true;
         return {
             ...normalizedTask,
-            completed: !!previousState.completed,
+            completed: parseTaskCompletedValue(previousState.completed),
             completedDate: previousState.completed ? (previousState.completedDate || null) : null,
             completedBy: previousState.completed ? (previousState.completedBy || '') : '',
             completedByName: previousState.completed ? (previousState.completedByName || '') : ''
@@ -6045,11 +6061,11 @@ function updateSelectedTasks(projectId, updater) {
         const normalizedTask = normalizeTask(task, index);
         if (!selectedIds.has(normalizedTask.id)) return normalizedTask;
 
-        const beforeCompleted = !!normalizedTask.completed;
+        const beforeCompleted = isTaskCompleted(normalizedTask);
         const nextTask = normalizeTask(updater(normalizedTask) || normalizedTask, index);
         if (JSON.stringify(nextTask) !== JSON.stringify(normalizedTask)) changed = true;
-        if (!beforeCompleted && nextTask.completed) completedStatDelta += 1;
-        if (beforeCompleted && !nextTask.completed) completedStatDelta -= 1;
+        if (!beforeCompleted && isTaskCompleted(nextTask)) completedStatDelta += 1;
+        if (beforeCompleted && !isTaskCompleted(nextTask)) completedStatDelta -= 1;
         return nextTask;
     });
 
@@ -6106,7 +6122,7 @@ function completeSelectedTasks(projectId, event) {
     event?.stopPropagation?.();
     const completedDate = new Date().toISOString();
     const modalState = captureProjectModalState(projectId);
-    const changed = updateSelectedTasks(projectId, task => task.completed
+    const changed = updateSelectedTasks(projectId, task => isTaskCompleted(task)
         ? task
         : applyTaskCompletionAttribution(task, completedDate));
     if (!changed) return;
@@ -6133,7 +6149,7 @@ function deleteSelectedTasks(projectId, event) {
             const deletedTasks = project.tasks
                 .map((task, index) => normalizeTask(task, index))
                 .filter(task => selectedIds.has(task.id));
-            const completedDeletedCount = deletedTasks.filter(task => task.completed).length;
+            const completedDeletedCount = deletedTasks.filter(task => isTaskCompleted(task)).length;
             const updatedTasks = project.tasks
                 .map((task, index) => normalizeTask(task, index))
                 .filter(task => !selectedIds.has(task.id));
@@ -6152,7 +6168,7 @@ function updateProjectProgress(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
     
-    const completedTasks = project.tasks.filter(t => t.completed).length;
+    const completedTasks = project.tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = project.tasks.length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
@@ -6401,7 +6417,7 @@ function performUndo() {
         if (project.completed) {
             state.incrementCompletedProjects();
         }
-        const completedTasks = project.tasks.filter(t => t.completed).length;
+        const completedTasks = project.tasks.filter(t => isTaskCompleted(t)).length;
         for (let i = 0; i < completedTasks; i++) {
             state.incrementCompletedTasks();
         }
@@ -6416,7 +6432,7 @@ function performUndo() {
             const updatedTasks = sortTasks([...project.tasks, task]);
             state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
             
-            if (task.completed) {
+            if (isTaskCompleted(task)) {
                 state.incrementCompletedTasks();
             }
             
@@ -6484,7 +6500,7 @@ function calculateVisibleCompletionStats() {
     return projects.reduce((totals, project) => {
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
         totals.totalTasks += tasks.length;
-        totals.completedTasks += tasks.filter(task => task.completed).length;
+        totals.completedTasks += tasks.filter(task => isTaskCompleted(task)).length;
         return totals;
     }, { totalTasks: 0, completedTasks: 0 });
 }
@@ -7742,7 +7758,7 @@ function getDisplayTasksForProject(project, options = {}) {
         ? orderedTasks.filter(task => normalizeTask(task).category === activeCategory)
         : orderedTasks;
     const displayState = hideCompleted
-        ? { visibleTasks: categoryFilteredTasks.filter(task => !task.completed) }
+        ? { visibleTasks: categoryFilteredTasks.filter(task => !isTaskCompleted(task)) }
         : getCompletedTaskDisplayState(project, { sortMode, activeCategory });
     const visibleTasks = displayState.visibleTasks;
     const draftTaskId = Number(uiState.newTaskDraft?.taskId);
@@ -8323,16 +8339,19 @@ function setProjectTagFilter(tagName) {
 function getProjectCardPreviewTasks(project) {
     if (!Array.isArray(project?.tasks)) return [];
     const sortMode = getProjectTaskSortPreference(project?.id);
-    let activeCategory = getProjectTaskCategoryFilter(project?.id);
-    const categories = getProjectTaskCategories(project);
-    if (activeCategory !== DEFAULT_TASK_CATEGORY_FILTER && !categories.includes(activeCategory)) {
-        activeCategory = DEFAULT_TASK_CATEGORY_FILTER;
-    }
-    return getDisplayTasksForProject(project, {
-        hideCompleted: getProjectHideCompletedPreference(project?.id),
-        sortMode,
-        activeCategory
-    }).slice(0, 3);
+    const orderedTasks = sortTasksForDisplay(project.tasks, sortMode)
+        .map((task, index) => ({ task: normalizeTask(task, index), index }))
+        .filter(entry => !isTaskCompleted(entry.task));
+
+    return orderedTasks
+        .sort((a, b) => {
+            const aOverdue = isTaskOverdue(a.task);
+            const bOverdue = isTaskOverdue(b.task);
+            if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+            return a.index - b.index;
+        })
+        .slice(0, 3)
+        .map(entry => entry.task);
 }
 
 function formatProjectSyncText(project) {
@@ -9554,9 +9573,9 @@ function openProjectModal(projectId, options = {}) {
         ? completedDisplayState.visibleTasks
         : getDisplayTasksForProject(project, { hideCompleted, sortMode: taskSortMode, activeCategory });
 
-    const completedTasks = tasks.filter(t => t.completed).length;
+    const completedTasks = tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = tasks.length;
-    const remainingTasks = tasks.filter(t => !t.completed).length;
+    const remainingTasks = tasks.filter(t => !isTaskCompleted(t)).length;
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
     const modal = document.getElementById('projectModal');
@@ -10679,9 +10698,9 @@ function render() {
 function renderProjectCard(project) {
     const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
     const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-    const completedTasksCount = tasks.filter(t => t.completed).length;
+    const completedTasksCount = tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = tasks.length;
-    const remainingTasksCount = tasks.filter(t => !t.completed).length;
+    const remainingTasksCount = tasks.filter(t => !isTaskCompleted(t)).length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
     const hasOverdueTasks = projectHasOverdueTasks(project);
     const isShared = collaborators.length > 0;
@@ -10761,7 +10780,7 @@ function renderProjectCard(project) {
 
             ${showTaskPreview ? `<ul class="project-preview-list">
                 ${previewTasks.length ? previewTasks.map(task => `
-                    <li class="project-preview-task ${task.completed ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
+                    <li class="project-preview-task ${isTaskCompleted(task) ? 'is-completed' : ''} ${isTaskOverdue(task) ? 'is-overdue' : ''}">
                         <span class="project-preview-priority project-preview-priority--${task.tag}" title="Priority: ${escapeHtml(getTaskTagLabel(task))}" aria-hidden="true"><span class="task-tag-flag task-tag-flag--${task.tag}"></span></span>
                         <span>${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
                     </li>
@@ -10815,7 +10834,7 @@ function renderSharedProjectsPanel() {
     sharedProjectsList.innerHTML = sharedActiveProjects.map(project => {
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
         const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-        const completedTasksCount = tasks.filter(task => task.completed).length;
+        const completedTasksCount = tasks.filter(task => isTaskCompleted(task)).length;
         const totalTasks = tasks.length;
         const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
         const accessLabel = project.userRole === 'owner'

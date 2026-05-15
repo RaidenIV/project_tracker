@@ -144,7 +144,7 @@ const Account = mongoose.model('Account', accountSchema);
 const taskSchema = new mongoose.Schema({
     id:            Number,
     text:          String,
-    completed:     Boolean,
+    completed:     { type: Boolean, default: false },
     completedDate: String,
     completedBy:   { type: String, default: '' },
     completedByName: { type: String, default: '' },
@@ -508,6 +508,22 @@ function sanitizeDateKey(value) {
     return `${year}-${month}-${day}`;
 }
 
+function parseTaskCompletedValue(value) {
+    if (value === true || value === 1) return true;
+    if (value === false || value === 0 || value === null || value === undefined) return false;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return false;
+        if (['true', '1', 'yes', 'y', 'completed', 'complete', 'done'].includes(normalized)) return true;
+        if (['false', '0', 'no', 'n', 'active', 'incomplete', 'open', 'pending'].includes(normalized)) return false;
+    }
+    return Boolean(value);
+}
+
+function isTaskCompleted(task = {}) {
+    return parseTaskCompletedValue(task?.completed);
+}
+
 function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
@@ -521,7 +537,7 @@ function sanitizeTask(task, index = 0) {
     return {
         id: hasValidId ? numericId : fallbackId,
         text: typeof task?.text === 'string' ? task.text : '',
-        completed: !!task?.completed,
+        completed: parseTaskCompletedValue(task?.completed),
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         completedBy: task?.completedBy ? String(task.completedBy).slice(0, 80) : '',
         completedByName: task?.completedByName ? String(task.completedByName).trim().replace(/\s+/g, ' ').slice(0, 80) : '',
@@ -1360,7 +1376,7 @@ function timestampInRange(value, start, end) {
 }
 
 function getCreditedUserIdsForCompletedTask(task, participantIds, ownerId) {
-    if (!task?.completed) return [];
+    if (!isTaskCompleted(task)) return [];
     const completedBy = String(task.completedBy || '');
     if (completedBy && participantIds.includes(completedBy)) return [completedBy];
     return ownerId ? [ownerId] : [];
@@ -1482,13 +1498,13 @@ async function buildLeaderboardData(currentUserId) {
         const participantIds = [...new Set([ownerId, ...collaboratorIds].filter(Boolean))];
         const isSharedProject = collaborators.length > 0;
         const tasks = Array.isArray(project.tasks) ? project.tasks : [];
-        const completedTaskCount = tasks.filter(task => task && task.completed).length;
+        const completedTaskCount = tasks.filter(task => task && isTaskCompleted(task)).length;
         const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
         const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
         const completedProject = !!project.completed;
         const projectCompletedBy = String(project.completedBy || ownerId || '');
         const latestCompletedTask = tasks
-            .filter(task => task?.completed && task.completedDate)
+            .filter(task => isTaskCompleted(task) && task.completedDate)
             .sort((a, b) => new Date(b.completedDate || 0) - new Date(a.completedDate || 0))[0] || null;
 
         participantIds.forEach(participantId => {
@@ -1521,7 +1537,7 @@ async function buildLeaderboardData(currentUserId) {
                 if (completedProject && latestCompletedTask && String(latestCompletedTask.completedBy || ownerId || '') === participantId) {
                     row.finalSharedProjectClosures += 1;
                 }
-                const creditedSharedTasks = tasks.filter(task => getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
+                const creditedSharedTasks = tasks.filter(task => isTaskCompleted(task) && getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
                 if (tasks.length > 0 && creditedSharedTasks / tasks.length >= 0.5) row.sharedCarryProjects += 1;
             }
         });
