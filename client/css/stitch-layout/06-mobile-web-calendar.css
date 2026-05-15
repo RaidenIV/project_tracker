@@ -1,0 +1,3849 @@
+/* ============================================================================
+   v70 archive view + layered mobile off-canvas sidebar
+   ============================================================================ */
+.project-card-status--archived {
+    color: var(--muted, #9ca3af) !important;
+    border-color: color-mix(in srgb, var(--muted, #9ca3af) 65%, transparent) !important;
+}
+
+@media (max-width: 980px) {
+    body {
+        overflow: hidden !important;
+        overscroll-behavior-x: none !important;
+        touch-action: pan-y !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        display: block !important;
+        overflow: hidden !important;
+        background: var(--bg, #090a0f) !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        z-index: 8 !important;
+        display: block !important;
+        width: min(82vw, 22rem) !important;
+        max-width: min(82vw, 22rem) !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+        padding: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+        pointer-events: auto !important;
+        overflow: hidden !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+    }
+
+    .control-panel-scroll-inner {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-right: 0.85rem !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-scroll-inner > *:not(.control-panel-header),
+    body.control-panel-is-collapsed .panel-username,
+    body.control-panel-is-collapsed .save-status,
+    body.control-panel-is-collapsed .sidebar-section-label,
+    body.control-panel-is-collapsed .add-project-button,
+    body.control-panel-is-collapsed .sidebar-nav-list,
+    body.control-panel-is-collapsed .total-completion-section,
+    body.control-panel-is-collapsed .sidebar-collapsible {
+        display: initial !important;
+    }
+
+    .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 36 !important;
+        width: 100vw !important;
+        min-height: 5.75rem !important;
+        transform: translate3d(0, 0, 0) !important;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.28s cubic-bezier(0.4, 0, 0.2, 1), filter 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: transform !important;
+    }
+
+    .viewport,
+    body.control-panel-is-collapsed .viewport {
+        position: fixed !important;
+        top: 5.75rem !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 35 !important;
+        width: 100vw !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        transform: translate3d(0, 0, 0) !important;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.28s cubic-bezier(0.4, 0, 0.2, 1), filter 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: transform !important;
+    }
+
+    body.mobile-drawer-open .top-app-bar,
+    body.mobile-drawer-open .viewport {
+        transform: translate3d(min(78vw, 20rem), 0, 0) !important;
+        border-radius: 1.35rem 0 0 1.35rem !important;
+        box-shadow: -1.25rem 0 2.5rem rgba(0, 0, 0, 0.42) !important;
+        filter: brightness(0.78) saturate(0.95) !important;
+    }
+
+    body.mobile-drawer-open .viewport {
+        cursor: pointer !important;
+    }
+
+    body.mobile-drawer-open .top-app-bar {
+        cursor: pointer !important;
+    }
+
+    .panel-edge-toggle {
+        display: none !important;
+    }
+}
+
+/* ============================================================================
+   v71 mobile web sidebar: standard overlay drawer for web
+   ============================================================================ */
+@media (max-width: 980px) {
+    body,
+    body.mobile-drawer-open {
+        overflow: hidden !important;
+        touch-action: manipulation !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        display: block !important;
+        overflow: hidden !important;
+        background: var(--bg, #090a0f) !important;
+    }
+
+    .container::after {
+        content: "" !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 90 !important;
+        display: block !important;
+        background: rgba(0, 0, 0, 0.52) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transition: opacity 0.22s ease, visibility 0.22s ease !important;
+    }
+
+    body.mobile-sidebar-open .container::after {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        z-index: 120 !important;
+        display: block !important;
+        width: min(86vw, 22rem) !important;
+        max-width: min(86vw, 22rem) !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 1.15rem 1.15rem 0 !important;
+        transform: translate3d(-105%, 0, 0) !important;
+        transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.24s ease !important;
+        pointer-events: auto !important;
+        overflow: hidden !important;
+        box-shadow: none !important;
+    }
+
+    body.mobile-sidebar-open .control-panel,
+    body.mobile-sidebar-open .control-panel.collapsed,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel.collapsed {
+        transform: translate3d(0, 0, 0) !important;
+        box-shadow: 1.25rem 0 2.75rem rgba(0, 0, 0, 0.48) !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+    }
+
+    .control-panel-scroll-inner {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: calc(1rem + env(safe-area-inset-top, 0px)) 0.95rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-scroll-inner > *:not(.control-panel-header),
+    body.control-panel-is-collapsed .panel-username,
+    body.control-panel-is-collapsed .save-status,
+    body.control-panel-is-collapsed .sidebar-section-label,
+    body.control-panel-is-collapsed .add-project-button,
+    body.control-panel-is-collapsed .sidebar-nav-list,
+    body.control-panel-is-collapsed .total-completion-section,
+    body.control-panel-is-collapsed .sidebar-collapsible {
+        display: initial !important;
+    }
+
+    .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 40 !important;
+        width: 100vw !important;
+        min-height: 5.75rem !important;
+        padding: calc(0.85rem + env(safe-area-inset-top, 0px)) 1rem 0.85rem 4.2rem !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        filter: none !important;
+        box-shadow: none !important;
+        cursor: default !important;
+        transition: none !important;
+    }
+
+    .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-drawer-open .viewport {
+        position: fixed !important;
+        top: 5.75rem !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 35 !important;
+        width: 100vw !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 1rem !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        transform: none !important;
+        filter: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        cursor: default !important;
+        transition: none !important;
+    }
+
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle {
+        display: inline-flex !important;
+        position: fixed !important;
+        top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+        left: 0.9rem !important;
+        right: auto !important;
+        transform: none !important;
+        z-index: 130 !important;
+        width: 2.65rem !important;
+        height: 2.65rem !important;
+        min-width: 2.65rem !important;
+        min-height: 2.65rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 0.95rem !important;
+    }
+
+    body.mobile-sidebar-open .panel-edge-toggle {
+        color: var(--accent, #ff8a00) !important;
+    }
+}
+
+/* ============================================================================
+   v72 layered mobile drawer repair
+   ============================================================================ */
+:root {
+    --mobile-drawer-width: min(86vw, 22rem);
+    --mobile-app-bar-height: 5.75rem;
+}
+
+@media (max-width: 980px) {
+    html,
+    body,
+    body.mobile-drawer-open,
+    body.mobile-sidebar-open {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        overscroll-behavior-x: none !important;
+        touch-action: pan-y !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        position: fixed !important;
+        inset: 0 !important;
+        display: block !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        overflow: hidden !important;
+        background: var(--bg, #090a0f) !important;
+    }
+
+    .container::after,
+    body.mobile-sidebar-open .container::after {
+        content: none !important;
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed,
+    body.mobile-sidebar-open .control-panel,
+    body.mobile-sidebar-open .control-panel.collapsed,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel.collapsed {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        z-index: 8 !important;
+        display: block !important;
+        width: var(--mobile-drawer-width) !important;
+        min-width: 0 !important;
+        max-width: var(--mobile-drawer-width) !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        transition: none !important;
+        pointer-events: auto !important;
+        overflow: hidden !important;
+        box-shadow: none !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+    }
+
+    .control-panel-scroll-inner {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: calc(1rem + env(safe-area-inset-top, 0px)) 0.95rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-scroll-inner > *:not(.control-panel-header),
+    body.control-panel-is-collapsed .panel-username,
+    body.control-panel-is-collapsed .save-status,
+    body.control-panel-is-collapsed .sidebar-section-label,
+    body.control-panel-is-collapsed .add-project-button,
+    body.control-panel-is-collapsed .sidebar-nav-list,
+    body.control-panel-is-collapsed .total-completion-section,
+    body.control-panel-is-collapsed .sidebar-collapsible {
+        display: initial !important;
+    }
+
+    .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        z-index: 36 !important;
+        width: 100vw !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: calc(0.85rem + env(safe-area-inset-top, 0px)) 1rem 0.85rem !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
+        transform: translate3d(0, 0, 0) !important;
+        filter: none !important;
+        box-shadow: none !important;
+        cursor: default !important;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.28s cubic-bezier(0.4, 0, 0.2, 1), filter 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: transform !important;
+    }
+
+    .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-sidebar-open .viewport,
+    body.mobile-drawer-open .viewport {
+        position: fixed !important;
+        top: var(--mobile-app-bar-height, 5.75rem) !important;
+        left: 0 !important;
+        right: auto !important;
+        bottom: 0 !important;
+        z-index: 35 !important;
+        width: 100vw !important;
+        height: calc(100dvh - var(--mobile-app-bar-height, 5.75rem)) !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 1rem !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        touch-action: pan-y !important;
+        transform: translate3d(0, 0, 0) !important;
+        filter: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        cursor: default !important;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.28s cubic-bezier(0.4, 0, 0.2, 1), filter 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: transform !important;
+    }
+
+    body.mobile-drawer-open .top-app-bar,
+    body.mobile-drawer-open .viewport {
+        transform: translate3d(var(--mobile-drawer-width), 0, 0) !important;
+        box-shadow: -1.25rem 0 2.75rem rgba(0, 0, 0, 0.46) !important;
+        filter: brightness(0.78) saturate(0.95) !important;
+    }
+
+    body.mobile-drawer-open .top-app-bar {
+        border-radius: 1.35rem 0 0 0 !important;
+        cursor: pointer !important;
+    }
+
+    body.mobile-drawer-open .viewport {
+        border-radius: 0 0 0 1.35rem !important;
+        cursor: pointer !important;
+    }
+
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+        gap: 0.85rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-drawer-open .panel-edge-toggle,
+    #collapseButton,
+    #expandButton {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+}
+
+/* ============================================================================
+   v73 mobile foreground shell, compact toolbar, disabled layout menu, and modal menu fit
+   ============================================================================ */
+@media (max-width: 980px) {
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.45rem !important;
+        min-height: 0 !important;
+        padding: calc(0.55rem + env(safe-area-inset-top, 0px)) 0.7rem 0.55rem !important;
+        background: var(--bg, #090a0f) !important;
+        background-color: var(--bg, #090a0f) !important;
+        border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.2)) !important;
+        isolation: isolate !important;
+        overflow: visible !important;
+    }
+
+    .viewport,
+    body[data-theme^="console"] .viewport,
+    body[data-theme^="glass"] .viewport,
+    body[data-theme^="blueprint"] .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-sidebar-open .viewport,
+    body.mobile-drawer-open .viewport {
+        background: var(--bg, #090a0f) !important;
+        background-color: var(--bg, #090a0f) !important;
+        isolation: isolate !important;
+    }
+
+    body:not(.mobile-drawer-open) .control-panel,
+    body:not(.mobile-drawer-open) .control-panel.collapsed,
+    body:not(.mobile-drawer-open).control-panel-is-collapsed .control-panel,
+    body:not(.mobile-drawer-open).control-panel-is-collapsed .control-panel.collapsed {
+        pointer-events: none !important;
+    }
+
+    body.mobile-drawer-open .control-panel,
+    body.mobile-drawer-open .control-panel.collapsed,
+    body.mobile-drawer-open.control-panel-is-collapsed .control-panel,
+    body.mobile-drawer-open.control-panel-is-collapsed .control-panel.collapsed {
+        pointer-events: auto !important;
+    }
+
+    .project-layout-controls,
+    .project-layout-toggle,
+    .project-layout-menu {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title {
+        flex: 0 1 min(38vw, 10rem) !important;
+        width: auto !important;
+        max-width: min(38vw, 10rem) !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        font-size: clamp(0.84rem, 3.6vw, 1.05rem) !important;
+        line-height: 1.05 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        justify-self: auto !important;
+        gap: 0.38rem !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    #projectCategorySelect,
+    .view-toolbar-category-select {
+        flex: 0 1 clamp(4.65rem, 23vw, 7rem) !important;
+        width: clamp(4.65rem, 23vw, 7rem) !important;
+        max-width: clamp(4.65rem, 23vw, 7rem) !important;
+        min-width: 0 !important;
+        height: 2.55rem !important;
+        min-height: 2.55rem !important;
+        padding: 0 0.6rem !important;
+        font-size: 0.82rem !important;
+        line-height: 1 !important;
+    }
+
+    #projectSortSelect,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect {
+        flex: 0 1 clamp(4.9rem, 25vw, 7.25rem) !important;
+        width: clamp(4.9rem, 25vw, 7.25rem) !important;
+        max-width: clamp(4.9rem, 25vw, 7.25rem) !important;
+        min-width: 0 !important;
+        height: 2.55rem !important;
+        min-height: 2.55rem !important;
+        padding: 0 1.45rem 0 0.62rem !important;
+        font-size: 0.82rem !important;
+        line-height: 1 !important;
+    }
+
+    .view-toolbar-search-wrap,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap {
+        position: relative !important;
+        flex: 0 0 2.55rem !important;
+        width: 2.55rem !important;
+        max-width: 2.55rem !important;
+        min-width: 2.55rem !important;
+        height: 2.55rem !important;
+        overflow: hidden !important;
+        transition: flex-basis 0.22s ease, width 0.22s ease, max-width 0.22s ease !important;
+    }
+
+    .view-toolbar-search-wrap::before,
+    .top-view-toolbar .view-toolbar-search-wrap::before {
+        content: "⌕" !important;
+        position: absolute !important;
+        left: 0.83rem !important;
+        top: 50% !important;
+        z-index: 2 !important;
+        transform: translateY(-50%) !important;
+        color: var(--heading, currentColor) !important;
+        font-size: 1rem !important;
+        line-height: 1 !important;
+        pointer-events: none !important;
+    }
+
+    .view-toolbar-search-wrap:focus-within,
+    .view-toolbar-search-wrap.is-mobile-search-open,
+    .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        flex-basis: min(46vw, 12.5rem) !important;
+        width: min(46vw, 12.5rem) !important;
+        max-width: min(46vw, 12.5rem) !important;
+    }
+
+    #projectSearchInput,
+    .view-toolbar-search,
+    .view-toolbar-search-wrap .view-toolbar-search,
+    .top-view-toolbar .view-toolbar-search-wrap .view-toolbar-search {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 2.55rem !important;
+        min-height: 2.55rem !important;
+        padding: 0 0.7rem 0 2.2rem !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) #projectSearchInput,
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) .view-toolbar-search {
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+        caret-color: transparent !important;
+        padding-right: 0 !important;
+    }
+
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) #projectSearchInput::placeholder,
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) .view-toolbar-search::placeholder {
+        color: transparent !important;
+        opacity: 0 !important;
+    }
+
+    .view-toolbar-search-wrap:focus-within #projectSearchInput,
+    .view-toolbar-search-wrap.is-mobile-search-open #projectSearchInput,
+    .view-toolbar-search-wrap:focus-within .view-toolbar-search,
+    .view-toolbar-search-wrap.is-mobile-search-open .view-toolbar-search {
+        color: var(--heading, currentColor) !important;
+        -webkit-text-fill-color: var(--heading, currentColor) !important;
+        caret-color: var(--accent, currentColor) !important;
+    }
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-top-menu-shell,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+        width: 100% !important;
+        margin: 0 0 0.75rem !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) 2.35rem !important;
+        align-items: center !important;
+        gap: 0.32rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding: calc(0.58rem + env(safe-area-inset-top, 0px)) 0.55rem 0.55rem !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item {
+        flex: initial !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 2.35rem !important;
+        padding: 0.48rem 0.25rem !important;
+        justify-content: center !important;
+        font-size: clamp(0.68rem, 2.7vw, 0.82rem) !important;
+        line-height: 1 !important;
+        letter-spacing: 0.02em !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item .modal-tab-note-icon,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item .modal-tab-note-icon,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item .modal-tab-note-icon,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item .modal-tab-note-icon {
+        width: 0.88rem !important;
+        height: 0.88rem !important;
+        min-width: 0.88rem !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item .members-count,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item .members-count,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item .members-count,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item .members-count {
+        margin-left: 0.22rem !important;
+        font-size: 0.65em !important;
+        min-width: 1.05rem !important;
+        padding: 0.05rem 0.22rem !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-left: 0 !important;
+        flex: initial !important;
+        width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        max-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        padding: 0 !important;
+    }
+}
+
+@media (max-width: 380px) {
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) 2.15rem !important;
+        gap: 0.24rem !important;
+        padding-left: 0.42rem !important;
+        padding-right: 0.42rem !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-close,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+        width: 2.15rem !important;
+        min-width: 2.15rem !important;
+        max-width: 2.15rem !important;
+    }
+}
+
+/* ============================================================================
+   v74 mobile toolbar alignment, scroll recovery, modal tab flush, settings dropdown
+   ============================================================================ */
+.sidebar-collapsible[data-sidebar-section="settings"],
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"],
+body[data-theme^="glass"] .sidebar-collapsible[data-sidebar-section="settings"],
+body[data-theme^="blueprint"] .sidebar-collapsible[data-sidebar-section="settings"] {
+    display: block !important;
+}
+
+.sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle,
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle,
+body[data-theme^="glass"] .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle,
+body[data-theme^="blueprint"] .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+#settingsSectionBody,
+body[data-theme^="console"] #settingsSectionBody,
+body[data-theme^="glass"] #settingsSectionBody,
+body[data-theme^="blueprint"] #settingsSectionBody {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#settingsSectionBody[hidden],
+body[data-theme^="console"] #settingsSectionBody[hidden],
+body[data-theme^="glass"] #settingsSectionBody[hidden],
+body[data-theme^="blueprint"] #settingsSectionBody[hidden] {
+    display: none !important;
+}
+
+.settings-panel-card,
+body[data-theme^="console"] .settings-panel-card,
+body[data-theme^="glass"] .settings-panel-card,
+body[data-theme^="blueprint"] .settings-panel-card {
+    width: 100% !important;
+    margin: 0.75rem 0 0 !important;
+}
+
+.settings-actions,
+body[data-theme^="console"] .settings-actions,
+body[data-theme^="glass"] .settings-actions,
+body[data-theme^="blueprint"] .settings-actions {
+    display: grid !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    padding: 0 !important;
+}
+
+.settings-actions .sidebar-action-button,
+body[data-theme^="console"] .settings-actions .sidebar-action-button,
+body[data-theme^="glass"] .settings-actions .sidebar-action-button,
+body[data-theme^="blueprint"] .settings-actions .sidebar-action-button {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+
+@media (max-width: 980px) {
+    :root {
+        --mobile-app-bar-height: 3.65rem;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        display: grid !important;
+        grid-template-columns: minmax(4.6rem, 0.7fr) minmax(0, 1.45fr) auto !important;
+        grid-template-rows: auto !important;
+        align-items: center !important;
+        gap: 0.42rem !important;
+        width: 100vw !important;
+        min-height: 0 !important;
+        height: auto !important;
+        padding: calc(0.42rem + env(safe-area-inset-top, 0px)) 0.52rem 0.42rem !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        align-self: center !important;
+        justify-self: start !important;
+        flex: initial !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: clamp(0.78rem, 3.15vw, 0.98rem) !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        align-self: center !important;
+        justify-self: stretch !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 0.32rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    .top-app-bar > .top-app-logo,
+    .top-app-logo,
+    body[data-theme^="console"] .top-app-logo,
+    body[data-theme^="glass"] .top-app-logo,
+    body[data-theme^="blueprint"] .top-app-logo {
+        display: block !important;
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        align-self: center !important;
+        justify-self: end !important;
+        width: clamp(2.3rem, 10vw, 3.6rem) !important;
+        max-width: clamp(2.3rem, 10vw, 3.6rem) !important;
+        height: auto !important;
+        max-height: 2.2rem !important;
+        object-fit: contain !important;
+        margin: 0 !important;
+    }
+
+    #projectCategorySelect,
+    .view-toolbar-category-select {
+        flex: 0 1 clamp(4.3rem, 20vw, 5.8rem) !important;
+        width: clamp(4.3rem, 20vw, 5.8rem) !important;
+        max-width: clamp(4.3rem, 20vw, 5.8rem) !important;
+        min-width: 0 !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        padding: 0 0.45rem !important;
+        font-size: clamp(0.72rem, 2.65vw, 0.86rem) !important;
+        line-height: 1 !important;
+    }
+
+    .view-toolbar-search-wrap,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="glass"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap {
+        position: relative !important;
+        flex: 0 0 2.35rem !important;
+        width: 2.35rem !important;
+        max-width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .view-toolbar-search-wrap:focus-within,
+    .view-toolbar-search-wrap.is-mobile-search-open,
+    .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        flex: 1 1 min(42vw, 10.5rem) !important;
+        width: min(42vw, 10.5rem) !important;
+        max-width: min(42vw, 10.5rem) !important;
+        min-width: min(34vw, 8rem) !important;
+    }
+
+    #projectSearchInput,
+    .view-toolbar-search,
+    .view-toolbar-search-wrap .view-toolbar-search,
+    .top-view-toolbar .view-toolbar-search-wrap .view-toolbar-search {
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        padding: 0 0.55rem 0 2.05rem !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    .view-toolbar-search-wrap::before,
+    .top-view-toolbar .view-toolbar-search-wrap::before {
+        left: 0.72rem !important;
+    }
+
+    #projectSortSelect,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="glass"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSortSelect {
+        flex: 0 1 clamp(4.7rem, 22vw, 6.4rem) !important;
+        width: clamp(4.7rem, 22vw, 6.4rem) !important;
+        max-width: clamp(4.7rem, 22vw, 6.4rem) !important;
+        min-width: 0 !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        padding: 0 1.25rem 0 0.52rem !important;
+        font-size: clamp(0.72rem, 2.65vw, 0.86rem) !important;
+        line-height: 1 !important;
+    }
+
+    .viewport,
+    body[data-theme^="console"] .viewport,
+    body[data-theme^="glass"] .viewport,
+    body[data-theme^="blueprint"] .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-sidebar-open .viewport,
+    body.mobile-drawer-open .viewport {
+        top: var(--mobile-app-bar-height, 3.65rem) !important;
+        height: calc(100dvh - var(--mobile-app-bar-height, 3.65rem)) !important;
+        padding-top: 0 !important;
+        overflow-y: scroll !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: auto !important;
+        touch-action: pan-y !important;
+    }
+
+    .project-grid,
+    .project-card,
+    .stitch-project-card,
+    .view-filter-chips {
+        touch-action: pan-y !important;
+    }
+
+    .view-filter-chips {
+        margin-top: 0 !important;
+    }
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-top-menu-shell,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+        margin-bottom: 0 !important;
+    }
+
+    #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        padding-top: 0 !important;
+    }
+
+    #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+}
+
+/* ============================================================================
+   v75 mobile toolbar order, flush card canvas, settings cleanup, notes centering
+   ============================================================================ */
+.sidebar-more-group,
+#sidebarMoreToggleBtn,
+#sidebarMoreMenu,
+body[data-theme^="console"] .sidebar-more-group,
+body[data-theme^="glass"] .sidebar-more-group,
+body[data-theme^="blueprint"] .sidebar-more-group {
+    display: none !important;
+}
+
+.project-notes-save-button,
+.task-note-modal-actions .modal-done-btn,
+body[data-theme^="console"] .project-notes-save-button,
+body[data-theme^="console"] .task-note-modal-actions .modal-done-btn,
+body[data-theme^="glass"] .project-notes-save-button,
+body[data-theme^="glass"] .task-note-modal-actions .modal-done-btn,
+body[data-theme^="blueprint"] .project-notes-save-button,
+body[data-theme^="blueprint"] .task-note-modal-actions .modal-done-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 980px) {
+    :root {
+        --mobile-app-bar-height: 3.4rem;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.44rem !important;
+        width: 100vw !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        padding: calc(0.38rem + env(safe-area-inset-top, 0px)) 0.5rem 0.38rem !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+        border-bottom-width: 1px !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title {
+        order: 1 !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        align-self: center !important;
+        justify-self: auto !important;
+        display: block !important;
+        font-size: clamp(0.78rem, 3vw, 1rem) !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        order: 2 !important;
+        flex: 0 0 auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.36rem !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        align-self: center !important;
+        justify-self: auto !important;
+    }
+
+    .view-toolbar-search-wrap,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="glass"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap {
+        order: 1 !important;
+        flex: 0 0 2.35rem !important;
+        width: 2.35rem !important;
+        max-width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .view-toolbar-search-wrap:focus-within,
+    .view-toolbar-search-wrap.is-mobile-search-open,
+    .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        flex: 0 1 min(34vw, 8.25rem) !important;
+        width: min(34vw, 8.25rem) !important;
+        max-width: min(34vw, 8.25rem) !important;
+        min-width: min(28vw, 6.75rem) !important;
+    }
+
+    #projectSearchInput,
+    .view-toolbar-search,
+    .view-toolbar-search-wrap .view-toolbar-search,
+    .top-view-toolbar .view-toolbar-search-wrap .view-toolbar-search {
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        padding: 0 0.5rem 0 2rem !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    .view-toolbar-search-wrap::before,
+    .top-view-toolbar .view-toolbar-search-wrap::before {
+        left: 0.7rem !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+    }
+
+    #projectSortSelect,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="glass"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSortSelect {
+        order: 2 !important;
+        flex: 0 0 clamp(4.75rem, 22vw, 6.25rem) !important;
+        width: clamp(4.75rem, 22vw, 6.25rem) !important;
+        max-width: clamp(4.75rem, 22vw, 6.25rem) !important;
+        min-width: 0 !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        margin: 0 !important;
+        padding: 0 1.15rem 0 0.5rem !important;
+        font-size: clamp(0.72rem, 2.6vw, 0.86rem) !important;
+        line-height: 1 !important;
+    }
+
+    #projectCategorySelect,
+    .view-toolbar-category-select {
+        display: none !important;
+    }
+
+    .top-app-bar > .top-app-logo,
+    .top-app-logo,
+    body[data-theme^="console"] .top-app-logo,
+    body[data-theme^="glass"] .top-app-logo,
+    body[data-theme^="blueprint"] .top-app-logo {
+        order: 3 !important;
+        flex: 0 0 clamp(2rem, 8.6vw, 3rem) !important;
+        display: block !important;
+        width: clamp(2rem, 8.6vw, 3rem) !important;
+        max-width: clamp(2rem, 8.6vw, 3rem) !important;
+        height: auto !important;
+        max-height: 2rem !important;
+        object-fit: contain !important;
+        margin: 0 !important;
+        align-self: center !important;
+        justify-self: auto !important;
+    }
+
+    .viewport,
+    body[data-theme^="console"] .viewport,
+    body[data-theme^="glass"] .viewport,
+    body[data-theme^="blueprint"] .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-sidebar-open .viewport,
+    body.mobile-drawer-open .viewport {
+        top: var(--mobile-app-bar-height, 3.4rem) !important;
+        height: calc(100dvh - var(--mobile-app-bar-height, 3.4rem)) !important;
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        touch-action: pan-y !important;
+    }
+
+    .viewport > :first-child,
+    .project-grid-layout-host,
+    body[data-theme^="console"] .project-grid-layout-host,
+    body[data-theme^="glass"] .project-grid-layout-host,
+    body[data-theme^="blueprint"] .project-grid-layout-host {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    body[data-theme^="console"] .view-filter-chips,
+    body[data-theme^="console"] .view-filter-chips:not(:empty),
+    body[data-theme^="glass"] .view-filter-chips,
+    body[data-theme^="glass"] .view-filter-chips:not(:empty),
+    body[data-theme^="blueprint"] .view-filter-chips,
+    body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+        margin-top: 0 !important;
+    }
+}
+
+/* ============================================================================
+   v76 mobile web navigation correction
+   - replaces the X-style sliding foreground layout with a normal web overlay drawer
+   - keeps the mobile content toolbar in one row: view label → search → sort → logo
+   - keeps project cards flush to the bottom edge of the toolbar
+   ============================================================================ */
+@media (max-width: 980px) {
+    :root {
+        --mobile-app-bar-height: 3.35rem;
+        --mobile-web-drawer-width: min(86vw, 22rem);
+    }
+
+    html,
+    body,
+    body.mobile-drawer-open,
+    body.mobile-sidebar-open {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        overscroll-behavior-x: none !important;
+        touch-action: pan-y !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        position: fixed !important;
+        inset: 0 !important;
+        display: block !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        background: var(--bg, #090a0f) !important;
+    }
+
+    .container::after {
+        content: "" !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 110 !important;
+        display: block !important;
+        background: rgba(0, 0, 0, 0.54) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transition: opacity 0.22s ease, visibility 0.22s ease !important;
+    }
+
+    body.mobile-drawer-open .container::after,
+    body.mobile-sidebar-open .container::after {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 70 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.42rem !important;
+        width: 100vw !important;
+        height: auto !important;
+        min-height: calc(3.35rem + env(safe-area-inset-top, 0px)) !important;
+        max-height: none !important;
+        padding: calc(0.35rem + env(safe-area-inset-top, 0px)) 0.5rem 0.35rem !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        border-radius: 0 !important;
+        border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.2)) !important;
+        background: var(--bg, #090a0f) !important;
+        background-color: var(--bg, #090a0f) !important;
+        box-shadow: none !important;
+        filter: none !important;
+        transform: none !important;
+        cursor: default !important;
+        transition: none !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title {
+        order: 1 !important;
+        position: static !important;
+        display: block !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        align-self: center !important;
+        color: var(--heading, currentColor) !important;
+        font-size: clamp(0.8rem, 3vw, 1rem) !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        pointer-events: none !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        order: 2 !important;
+        flex: 0 0 auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.34rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        align-self: center !important;
+    }
+
+    .view-toolbar-search-wrap,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="glass"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap {
+        order: 1 !important;
+        position: relative !important;
+        flex: 0 0 2.28rem !important;
+        width: 2.28rem !important;
+        max-width: 2.28rem !important;
+        min-width: 2.28rem !important;
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        transition: flex-basis 0.18s ease, width 0.18s ease, max-width 0.18s ease !important;
+    }
+
+    .view-toolbar-search-wrap:focus-within,
+    .view-toolbar-search-wrap.is-mobile-search-open,
+    .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        flex: 0 1 min(34vw, 8.25rem) !important;
+        width: min(34vw, 8.25rem) !important;
+        max-width: min(34vw, 8.25rem) !important;
+        min-width: min(26vw, 6.5rem) !important;
+    }
+
+    .view-toolbar-search-wrap::before,
+    .top-view-toolbar .view-toolbar-search-wrap::before {
+        content: "⌕" !important;
+        position: absolute !important;
+        left: 0.68rem !important;
+        top: 50% !important;
+        z-index: 2 !important;
+        transform: translateY(-50%) !important;
+        color: var(--heading, currentColor) !important;
+        font-size: 0.95rem !important;
+        line-height: 1 !important;
+        pointer-events: none !important;
+    }
+
+    #projectSearchInput,
+    .view-toolbar-search,
+    .view-toolbar-search-wrap .view-toolbar-search,
+    .top-view-toolbar .view-toolbar-search-wrap .view-toolbar-search {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        padding: 0 0.5rem 0 1.95rem !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) #projectSearchInput,
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) .view-toolbar-search {
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+        caret-color: transparent !important;
+        padding-right: 0 !important;
+    }
+
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) #projectSearchInput::placeholder,
+    .view-toolbar-search-wrap:not(:focus-within):not(.is-mobile-search-open) .view-toolbar-search::placeholder {
+        color: transparent !important;
+        opacity: 0 !important;
+    }
+
+    #projectSortSelect,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="glass"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSortSelect {
+        order: 2 !important;
+        flex: 0 0 clamp(4.65rem, 22vw, 6.1rem) !important;
+        width: clamp(4.65rem, 22vw, 6.1rem) !important;
+        max-width: clamp(4.65rem, 22vw, 6.1rem) !important;
+        min-width: 0 !important;
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        margin: 0 !important;
+        padding: 0 1.15rem 0 0.48rem !important;
+        font-size: clamp(0.7rem, 2.55vw, 0.84rem) !important;
+        line-height: 1 !important;
+    }
+
+    .top-app-bar > .top-app-logo,
+    .top-app-logo,
+    body[data-theme^="console"] .top-app-logo,
+    body[data-theme^="glass"] .top-app-logo,
+    body[data-theme^="blueprint"] .top-app-logo {
+        order: 3 !important;
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        flex: 0 0 clamp(2.05rem, 8.5vw, 3rem) !important;
+        display: block !important;
+        width: clamp(2.05rem, 8.5vw, 3rem) !important;
+        max-width: clamp(2.05rem, 8.5vw, 3rem) !important;
+        height: auto !important;
+        max-height: 1.85rem !important;
+        object-fit: contain !important;
+        margin: 0 !important;
+        align-self: center !important;
+        justify-self: auto !important;
+        pointer-events: none !important;
+    }
+
+    .viewport,
+    body[data-theme^="console"] .viewport,
+    body[data-theme^="glass"] .viewport,
+    body[data-theme^="blueprint"] .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-sidebar-open .viewport,
+    body.mobile-drawer-open .viewport {
+        position: fixed !important;
+        top: var(--mobile-app-bar-height, 3.35rem) !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 35 !important;
+        display: block !important;
+        width: 100vw !important;
+        height: calc(100dvh - var(--mobile-app-bar-height, 3.35rem)) !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 0 0.75rem calc(0.9rem + env(safe-area-inset-bottom, 0px)) !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        touch-action: pan-y !important;
+        background: var(--bg, #090a0f) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        filter: none !important;
+        transform: none !important;
+        cursor: default !important;
+        transition: none !important;
+    }
+
+    .viewport > :first-child,
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    #projectGrid,
+    .project-grid,
+    .project-grid-layout-host {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        bottom: 0 !important;
+        z-index: 120 !important;
+        display: block !important;
+        width: var(--mobile-web-drawer-width) !important;
+        min-width: 0 !important;
+        max-width: var(--mobile-web-drawer-width) !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 1rem 1rem 0 !important;
+        transform: translate3d(-105%, 0, 0) !important;
+        transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s ease !important;
+        pointer-events: none !important;
+        overflow: hidden !important;
+        box-shadow: none !important;
+    }
+
+    body.mobile-drawer-open .control-panel,
+    body.mobile-drawer-open .control-panel.collapsed,
+    body.mobile-drawer-open.control-panel-is-collapsed .control-panel,
+    body.mobile-drawer-open.control-panel-is-collapsed .control-panel.collapsed,
+    body.mobile-sidebar-open .control-panel,
+    body.mobile-sidebar-open .control-panel.collapsed,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel.collapsed {
+        transform: translate3d(0, 0, 0) !important;
+        pointer-events: auto !important;
+        box-shadow: 1.25rem 0 2.75rem rgba(0, 0, 0, 0.46) !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner,
+    body.mobile-drawer-open .control-panel-content,
+    body.mobile-drawer-open .control-panel-scroll-inner {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+    }
+
+    .control-panel-scroll-inner {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: calc(1rem + env(safe-area-inset-top, 0px)) 0.95rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+    }
+
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-drawer-open .panel-edge-toggle,
+    body.mobile-sidebar-open .panel-edge-toggle {
+        display: inline-flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: auto !important;
+        left: 0.9rem !important;
+        right: auto !important;
+        bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 130 !important;
+        width: 2.65rem !important;
+        height: 2.65rem !important;
+        min-width: 2.65rem !important;
+        min-height: 2.65rem !important;
+        padding: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 0.95rem !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+
+    .panel-edge-toggle svg,
+    body.control-panel-is-collapsed .panel-edge-toggle svg,
+    body.mobile-drawer-open .panel-edge-toggle svg,
+    body.mobile-sidebar-open .panel-edge-toggle svg {
+        width: 1.2rem !important;
+        height: 1.2rem !important;
+        transform: none !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: project modal/card meatballs, metadata details, calendar tab
+   ============================================================================ */
+#projectModal .modal-top-menu-shell,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell,
+#projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    overflow: visible !important;
+    z-index: 420 !important;
+}
+
+.project-card,
+.stitch-project-card,
+body[data-theme^="console"] .project-card,
+body[data-theme^="blueprint"] .project-card,
+body[data-theme^="glass"] .project-card {
+    overflow: visible !important;
+}
+
+.project-actions,
+.project-card .project-actions,
+.stitch-project-card .project-actions {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    min-width: 2.35rem !important;
+    z-index: 80 !important;
+}
+
+.project-meatballs,
+body[data-theme^="console"] .project-meatballs,
+body[data-theme^="blueprint"] .project-meatballs,
+body[data-theme^="glass"] .project-meatballs {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 90 !important;
+}
+
+.project-meatballs--modal,
+body[data-theme^="console"] .project-meatballs--modal,
+body[data-theme^="blueprint"] .project-meatballs--modal,
+body[data-theme^="glass"] .project-meatballs--modal {
+    flex: 0 0 2.5rem !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+}
+
+.project-meatballs-toggle,
+body[data-theme^="console"] .project-meatballs-toggle,
+body[data-theme^="blueprint"] .project-meatballs-toggle,
+body[data-theme^="glass"] .project-meatballs-toggle {
+    appearance: none !important;
+    list-style: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.35rem !important;
+    min-width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    padding: 0 !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: pointer !important;
+    font-size: 1.35rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+}
+
+.project-meatballs-toggle::-webkit-details-marker {
+    display: none !important;
+}
+
+.project-meatballs-toggle:hover,
+.project-meatballs-toggle:focus-visible,
+.project-meatballs[open] .project-meatballs-toggle,
+body[data-theme^="console"] .project-meatballs-toggle:hover,
+body[data-theme^="console"] .project-meatballs-toggle:focus-visible,
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-toggle,
+body[data-theme^="blueprint"] .project-meatballs-toggle:hover,
+body[data-theme^="blueprint"] .project-meatballs-toggle:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-toggle,
+body[data-theme^="glass"] .project-meatballs-toggle:hover,
+body[data-theme^="glass"] .project-meatballs-toggle:focus-visible,
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-toggle {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(255, 138, 0, 0.18)) !important;
+    outline: none !important;
+}
+
+.project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs-dropdown {
+    position: absolute !important;
+    top: calc(100% + 0.5rem) !important;
+    right: 0 !important;
+    z-index: 5000 !important;
+    display: grid !important;
+    gap: 0.35rem !important;
+    min-width: 12.25rem !important;
+    padding: 0.55rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.95rem !important;
+    background: var(--surface-strong, var(--surface, #101116)) !important;
+    color: var(--text, currentColor) !important;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38) !important;
+}
+
+.project-meatballs--modal .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs--modal .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs--modal .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs--modal .project-meatballs-dropdown {
+    top: calc(100% + 0.65rem) !important;
+    right: 0 !important;
+}
+
+.project-meatballs-item,
+body[data-theme^="console"] .project-meatballs-item,
+body[data-theme^="blueprint"] .project-meatballs-item,
+body[data-theme^="glass"] .project-meatballs-item {
+    appearance: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    min-height: 2.25rem !important;
+    padding: 0.62rem 0.75rem !important;
+    border: 0 !important;
+    border-radius: 0.7rem !important;
+    background: transparent !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-align: left !important;
+    text-transform: uppercase !important;
+}
+
+.project-meatballs-item:hover,
+.project-meatballs-item:focus-visible,
+body[data-theme^="console"] .project-meatballs-item:hover,
+body[data-theme^="console"] .project-meatballs-item:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs-item:hover,
+body[data-theme^="blueprint"] .project-meatballs-item:focus-visible,
+body[data-theme^="glass"] .project-meatballs-item:hover,
+body[data-theme^="glass"] .project-meatballs-item:focus-visible {
+    background: var(--hover, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-meatballs-item--danger:hover,
+.project-meatballs-item--danger:focus-visible,
+body[data-theme^="console"] .project-meatballs-item--danger:hover,
+body[data-theme^="console"] .project-meatballs-item--danger:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs-item--danger:hover,
+body[data-theme^="blueprint"] .project-meatballs-item--danger:focus-visible,
+body[data-theme^="glass"] .project-meatballs-item--danger:hover,
+body[data-theme^="glass"] .project-meatballs-item--danger:focus-visible {
+    color: #ef4444 !important;
+}
+
+.project-metadata-details-overlay.active,
+body[data-theme^="console"] .project-metadata-details-overlay.active,
+body[data-theme^="blueprint"] .project-metadata-details-overlay.active,
+body[data-theme^="glass"] .project-metadata-details-overlay.active {
+    z-index: 9000 !important;
+}
+
+.project-metadata-details-content,
+body[data-theme^="console"] .project-metadata-details-content,
+body[data-theme^="blueprint"] .project-metadata-details-content,
+body[data-theme^="glass"] .project-metadata-details-content {
+    width: min(92vw, 34rem) !important;
+    max-width: 34rem !important;
+    max-height: min(82vh, 44rem) !important;
+    padding: 1.35rem !important;
+    overflow: hidden !important;
+}
+
+.project-metadata-details-header,
+body[data-theme^="console"] .project-metadata-details-header,
+body[data-theme^="blueprint"] .project-metadata-details-header,
+body[data-theme^="glass"] .project-metadata-details-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.project-metadata-details-title,
+body[data-theme^="console"] .project-metadata-details-title,
+body[data-theme^="blueprint"] .project-metadata-details-title,
+body[data-theme^="glass"] .project-metadata-details-title {
+    margin: 0 !important;
+    color: var(--heading, inherit) !important;
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+}
+
+.project-metadata-details-subtitle,
+body[data-theme^="console"] .project-metadata-details-subtitle,
+body[data-theme^="blueprint"] .project-metadata-details-subtitle,
+body[data-theme^="glass"] .project-metadata-details-subtitle {
+    margin: 0.25rem 0 0 !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+}
+
+.project-metadata-details-body,
+body[data-theme^="console"] .project-metadata-details-body,
+body[data-theme^="blueprint"] .project-metadata-details-body,
+body[data-theme^="glass"] .project-metadata-details-body {
+    max-height: calc(min(82vh, 44rem) - 6.5rem) !important;
+    overflow-y: auto !important;
+    padding-right: 0.2rem !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.project-metadata-card,
+body[data-theme^="console"] .project-metadata-card,
+body[data-theme^="blueprint"] .project-metadata-card,
+body[data-theme^="glass"] .project-metadata-card {
+    display: grid !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-metadata-row,
+body[data-theme^="console"] .project-metadata-row,
+body[data-theme^="blueprint"] .project-metadata-row,
+body[data-theme^="glass"] .project-metadata-row {
+    display: grid !important;
+    grid-template-columns: minmax(7rem, 0.45fr) minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+    align-items: start !important;
+    padding-bottom: 0.55rem !important;
+    border-bottom: 1px solid var(--border, rgba(148, 163, 184, 0.18)) !important;
+}
+
+.project-metadata-row:last-child,
+body[data-theme^="console"] .project-metadata-row:last-child,
+body[data-theme^="blueprint"] .project-metadata-row:last-child,
+body[data-theme^="glass"] .project-metadata-row:last-child {
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+}
+
+.project-metadata-label,
+body[data-theme^="console"] .project-metadata-label,
+body[data-theme^="blueprint"] .project-metadata-label,
+body[data-theme^="glass"] .project-metadata-label {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.74rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-metadata-value,
+body[data-theme^="console"] .project-metadata-value,
+body[data-theme^="blueprint"] .project-metadata-value,
+body[data-theme^="glass"] .project-metadata-value {
+    color: var(--text, currentColor) !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+}
+
+.project-calendar-panel,
+body[data-theme^="console"] .project-calendar-panel,
+body[data-theme^="blueprint"] .project-calendar-panel,
+body[data-theme^="glass"] .project-calendar-panel {
+    display: grid !important;
+    gap: 1rem !important;
+}
+
+.project-calendar-card,
+body[data-theme^="console"] .project-calendar-card,
+body[data-theme^="blueprint"] .project-calendar-card,
+body[data-theme^="glass"] .project-calendar-card {
+    display: grid !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-calendar-card-title,
+body[data-theme^="console"] .project-calendar-card-title,
+body[data-theme^="blueprint"] .project-calendar-card-title,
+body[data-theme^="glass"] .project-calendar-card-title {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-card-value,
+.project-calendar-empty,
+body[data-theme^="console"] .project-calendar-card-value,
+body[data-theme^="console"] .project-calendar-empty,
+body[data-theme^="blueprint"] .project-calendar-card-value,
+body[data-theme^="blueprint"] .project-calendar-empty,
+body[data-theme^="glass"] .project-calendar-card-value,
+body[data-theme^="glass"] .project-calendar-empty {
+    color: var(--text, currentColor) !important;
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+}
+
+.project-calendar-list,
+body[data-theme^="console"] .project-calendar-list,
+body[data-theme^="blueprint"] .project-calendar-list,
+body[data-theme^="glass"] .project-calendar-list {
+    display: grid !important;
+    gap: 0.55rem !important;
+}
+
+.project-calendar-item,
+body[data-theme^="console"] .project-calendar-item,
+body[data-theme^="blueprint"] .project-calendar-item,
+body[data-theme^="glass"] .project-calendar-item {
+    display: grid !important;
+    grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+    padding: 0.62rem 0.75rem !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+}
+
+.project-calendar-item.is-completed,
+body[data-theme^="console"] .project-calendar-item.is-completed,
+body[data-theme^="blueprint"] .project-calendar-item.is-completed,
+body[data-theme^="glass"] .project-calendar-item.is-completed {
+    opacity: 0.62 !important;
+}
+
+.project-calendar-date,
+body[data-theme^="console"] .project-calendar-date,
+body[data-theme^="blueprint"] .project-calendar-date,
+body[data-theme^="glass"] .project-calendar-date {
+    color: var(--accent, currentColor) !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-task,
+body[data-theme^="console"] .project-calendar-task,
+body[data-theme^="blueprint"] .project-calendar-task,
+body[data-theme^="glass"] .project-calendar-task {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 720px) {
+    .project-metadata-row,
+    body[data-theme^="console"] .project-metadata-row,
+    body[data-theme^="blueprint"] .project-metadata-row,
+    body[data-theme^="glass"] .project-metadata-row,
+    .project-calendar-item,
+    body[data-theme^="console"] .project-calendar-item,
+    body[data-theme^="blueprint"] .project-calendar-item,
+    body[data-theme^="glass"] .project-calendar-item {
+        grid-template-columns: 1fr !important;
+        gap: 0.25rem !important;
+    }
+
+    .project-metadata-value,
+    body[data-theme^="console"] .project-metadata-value,
+    body[data-theme^="blueprint"] .project-metadata-value,
+    body[data-theme^="glass"] .project-metadata-value {
+        text-align: left !important;
+    }
+}
+
+/* Targeted patch: settings spacing, neumorphic task sort spacing, card actions menu visibility, and last sync contrast */
+body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions,
+body[data-theme^="console"] #settingsSectionBody .settings-actions,
+body[data-theme^="console"] .settings-panel-card .settings-actions {
+    gap: 0.9rem !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+    margin-top: 0.9rem !important;
+}
+
+.project-grid,
+body[data-theme^="console"] .project-grid,
+body[data-theme^="blueprint"] .project-grid,
+body[data-theme^="glass"] .project-grid {
+    overflow: visible !important;
+}
+
+.project-card.stitch-project-card,
+.stitch-project-card.project-card,
+body[data-theme^="console"] .project-card.stitch-project-card,
+body[data-theme^="blueprint"] .project-card.stitch-project-card,
+body[data-theme^="glass"] .project-card.stitch-project-card {
+    overflow: visible !important;
+}
+
+.project-card .project-header,
+.stitch-project-card .project-header,
+body[data-theme^="console"] .project-card .project-header,
+body[data-theme^="blueprint"] .project-card .project-header,
+body[data-theme^="glass"] .project-card .project-header {
+    overflow: visible !important;
+}
+
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) {
+    position: relative !important;
+    z-index: 3000 !important;
+}
+
+.project-card .project-actions:has(.project-meatballs[open]),
+.stitch-project-card .project-actions:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card .project-actions:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card .project-actions:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card .project-actions:has(.project-meatballs[open]) {
+    z-index: 3100 !important;
+}
+
+body:not([data-theme$="-light"]) .project-card .project-sync-text,
+body:not([data-theme$="-light"]) .stitch-project-card .project-sync-text,
+body:not([data-theme$="-light"]) .project-card-title-stack .project-sync-text {
+    color: #fff !important;
+}
+
+body[data-theme$="-light"] .project-card .project-sync-text,
+body[data-theme$="-light"] .stitch-project-card .project-sync-text,
+body[data-theme$="-light"] .project-card-title-stack .project-sync-text {
+    color: #000 !important;
+}
+
+/* Targeted patch: interactive project calendar with day notes and due-task view */
+.project-calendar-panel,
+body[data-theme^="console"] .project-calendar-panel,
+body[data-theme^="blueprint"] .project-calendar-panel,
+body[data-theme^="glass"] .project-calendar-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+}
+
+.project-calendar-shell,
+.project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-shell,
+body[data-theme^="console"] .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-shell,
+body[data-theme^="blueprint"] .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-shell,
+body[data-theme^="glass"] .project-calendar-selected-card {
+    display: grid !important;
+    gap: 0.9rem !important;
+    min-width: 0 !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-calendar-toolbar,
+body[data-theme^="console"] .project-calendar-toolbar,
+body[data-theme^="blueprint"] .project-calendar-toolbar,
+body[data-theme^="glass"] .project-calendar-toolbar {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+    gap: 0.55rem !important;
+    align-items: center !important;
+}
+
+.project-calendar-current-month,
+body[data-theme^="console"] .project-calendar-current-month,
+body[data-theme^="blueprint"] .project-calendar-current-month,
+body[data-theme^="glass"] .project-calendar-current-month {
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-nav-button,
+.project-calendar-today-button,
+.project-calendar-note-button,
+body[data-theme^="console"] .project-calendar-nav-button,
+body[data-theme^="console"] .project-calendar-today-button,
+body[data-theme^="console"] .project-calendar-note-button,
+body[data-theme^="blueprint"] .project-calendar-nav-button,
+body[data-theme^="blueprint"] .project-calendar-today-button,
+body[data-theme^="blueprint"] .project-calendar-note-button,
+body[data-theme^="glass"] .project-calendar-nav-button,
+body[data-theme^="glass"] .project-calendar-today-button,
+body[data-theme^="glass"] .project-calendar-note-button {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.25rem !important;
+    padding: 0.5rem 0.75rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-nav-button,
+body[data-theme^="console"] .project-calendar-nav-button,
+body[data-theme^="blueprint"] .project-calendar-nav-button,
+body[data-theme^="glass"] .project-calendar-nav-button {
+    width: 2.25rem !important;
+    padding: 0 !important;
+    color: var(--accent, currentColor) !important;
+    font-size: 1.35rem !important;
+    line-height: 1 !important;
+}
+
+.project-calendar-nav-button:hover,
+.project-calendar-today-button:hover,
+.project-calendar-note-button:hover,
+.project-calendar-nav-button:focus-visible,
+.project-calendar-today-button:focus-visible,
+.project-calendar-note-button:focus-visible,
+body[data-theme^="console"] .project-calendar-nav-button:hover,
+body[data-theme^="console"] .project-calendar-today-button:hover,
+body[data-theme^="console"] .project-calendar-note-button:hover,
+body[data-theme^="blueprint"] .project-calendar-nav-button:hover,
+body[data-theme^="blueprint"] .project-calendar-today-button:hover,
+body[data-theme^="blueprint"] .project-calendar-note-button:hover,
+body[data-theme^="glass"] .project-calendar-nav-button:hover,
+body[data-theme^="glass"] .project-calendar-today-button:hover,
+body[data-theme^="glass"] .project-calendar-note-button:hover {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-calendar-weekdays,
+.project-calendar-month-grid,
+body[data-theme^="console"] .project-calendar-weekdays,
+body[data-theme^="console"] .project-calendar-month-grid,
+body[data-theme^="blueprint"] .project-calendar-weekdays,
+body[data-theme^="blueprint"] .project-calendar-month-grid,
+body[data-theme^="glass"] .project-calendar-weekdays,
+body[data-theme^="glass"] .project-calendar-month-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 0.42rem !important;
+}
+
+.project-calendar-weekdays span,
+body[data-theme^="console"] .project-calendar-weekdays span,
+body[data-theme^="blueprint"] .project-calendar-weekdays span,
+body[data-theme^="glass"] .project-calendar-weekdays span {
+    color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-day,
+.project-calendar-day-spacer,
+body[data-theme^="console"] .project-calendar-day,
+body[data-theme^="console"] .project-calendar-day-spacer,
+body[data-theme^="blueprint"] .project-calendar-day,
+body[data-theme^="blueprint"] .project-calendar-day-spacer,
+body[data-theme^="glass"] .project-calendar-day,
+body[data-theme^="glass"] .project-calendar-day-spacer {
+    min-height: 3.35rem !important;
+    border-radius: 0.75rem !important;
+}
+
+.project-calendar-day,
+body[data-theme^="console"] .project-calendar-day,
+body[data-theme^="blueprint"] .project-calendar-day,
+body[data-theme^="glass"] .project-calendar-day {
+    appearance: none !important;
+    position: relative !important;
+    display: grid !important;
+    align-content: space-between !important;
+    justify-items: start !important;
+    padding: 0.48rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.045)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: pointer !important;
+    font: inherit !important;
+}
+
+.project-calendar-day:hover,
+.project-calendar-day:focus-visible,
+body[data-theme^="console"] .project-calendar-day:hover,
+body[data-theme^="console"] .project-calendar-day:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-day:hover,
+body[data-theme^="blueprint"] .project-calendar-day:focus-visible,
+body[data-theme^="glass"] .project-calendar-day:hover,
+body[data-theme^="glass"] .project-calendar-day:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-calendar-day.is-selected,
+body[data-theme^="console"] .project-calendar-day.is-selected,
+body[data-theme^="blueprint"] .project-calendar-day.is-selected,
+body[data-theme^="glass"] .project-calendar-day.is-selected {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 1px var(--accent, currentColor) inset !important;
+}
+
+.project-calendar-day.is-today .project-calendar-day-number,
+body[data-theme^="console"] .project-calendar-day.is-today .project-calendar-day-number,
+body[data-theme^="blueprint"] .project-calendar-day.is-today .project-calendar-day-number,
+body[data-theme^="glass"] .project-calendar-day.is-today .project-calendar-day-number {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-day-number,
+body[data-theme^="console"] .project-calendar-day-number,
+body[data-theme^="blueprint"] .project-calendar-day-number,
+body[data-theme^="glass"] .project-calendar-day-number {
+    font-size: 0.9rem !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-day-markers,
+body[data-theme^="console"] .project-calendar-day-markers,
+body[data-theme^="blueprint"] .project-calendar-day-markers,
+body[data-theme^="glass"] .project-calendar-day-markers {
+    display: inline-flex !important;
+    gap: 0.22rem !important;
+    align-items: center !important;
+    min-height: 0.4rem !important;
+}
+
+.project-calendar-marker,
+body[data-theme^="console"] .project-calendar-marker,
+body[data-theme^="blueprint"] .project-calendar-marker,
+body[data-theme^="glass"] .project-calendar-marker {
+    width: 0.38rem !important;
+    height: 0.38rem !important;
+    border-radius: 999px !important;
+    background: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+}
+
+.project-calendar-marker--tasks,
+body[data-theme^="console"] .project-calendar-marker--tasks,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks,
+body[data-theme^="glass"] .project-calendar-marker--tasks {
+    background: var(--accent, currentColor) !important;
+}
+
+.project-calendar-marker--note,
+body[data-theme^="console"] .project-calendar-marker--note,
+body[data-theme^="blueprint"] .project-calendar-marker--note,
+body[data-theme^="glass"] .project-calendar-marker--note {
+    background: #f59e0b !important;
+}
+
+.project-calendar-marker--project,
+body[data-theme^="console"] .project-calendar-marker--project,
+body[data-theme^="blueprint"] .project-calendar-marker--project,
+body[data-theme^="glass"] .project-calendar-marker--project {
+    background: #ef4444 !important;
+}
+
+.project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-selected-card {
+    max-height: min(62vh, 34rem) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.project-calendar-selected-header,
+.project-calendar-note-actions,
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-header,
+body[data-theme^="console"] .project-calendar-note-actions,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-header,
+body[data-theme^="blueprint"] .project-calendar-note-actions,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-header,
+body[data-theme^="glass"] .project-calendar-note-actions,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.65rem !important;
+}
+
+.project-calendar-selected-label,
+.project-calendar-selected-block-title,
+.project-calendar-note-limit,
+.project-calendar-readonly-note,
+body[data-theme^="console"] .project-calendar-selected-label,
+body[data-theme^="console"] .project-calendar-selected-block-title,
+body[data-theme^="console"] .project-calendar-note-limit,
+body[data-theme^="console"] .project-calendar-readonly-note,
+body[data-theme^="blueprint"] .project-calendar-selected-label,
+body[data-theme^="blueprint"] .project-calendar-selected-block-title,
+body[data-theme^="blueprint"] .project-calendar-note-limit,
+body[data-theme^="blueprint"] .project-calendar-readonly-note,
+body[data-theme^="glass"] .project-calendar-selected-label,
+body[data-theme^="glass"] .project-calendar-selected-block-title,
+body[data-theme^="glass"] .project-calendar-note-limit,
+body[data-theme^="glass"] .project-calendar-readonly-note {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-selected-title,
+body[data-theme^="console"] .project-calendar-selected-title,
+body[data-theme^="blueprint"] .project-calendar-selected-title,
+body[data-theme^="glass"] .project-calendar-selected-title {
+    margin: 0.2rem 0 0 !important;
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 1.1rem !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-project-due-pill,
+body[data-theme^="console"] .project-calendar-project-due-pill,
+body[data-theme^="blueprint"] .project-calendar-project-due-pill,
+body[data-theme^="glass"] .project-calendar-project-due-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.32rem 0.55rem !important;
+    border-radius: 999px !important;
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #ef4444 !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-selected-block,
+.project-calendar-selected-tasks,
+body[data-theme^="console"] .project-calendar-selected-block,
+body[data-theme^="console"] .project-calendar-selected-tasks,
+body[data-theme^="blueprint"] .project-calendar-selected-block,
+body[data-theme^="blueprint"] .project-calendar-selected-tasks,
+body[data-theme^="glass"] .project-calendar-selected-block,
+body[data-theme^="glass"] .project-calendar-selected-tasks {
+    display: grid !important;
+    gap: 0.55rem !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    padding: 0.58rem 0.65rem !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+}
+
+.project-calendar-selected-task.is-completed,
+body[data-theme^="console"] .project-calendar-selected-task.is-completed,
+body[data-theme^="blueprint"] .project-calendar-selected-task.is-completed,
+body[data-theme^="glass"] .project-calendar-selected-task.is-completed {
+    opacity: 0.62 !important;
+}
+
+.project-calendar-selected-task-status,
+body[data-theme^="console"] .project-calendar-selected-task-status,
+body[data-theme^="blueprint"] .project-calendar-selected-task-status,
+body[data-theme^="glass"] .project-calendar-selected-task-status {
+    color: var(--accent, currentColor) !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-selected-task-text,
+body[data-theme^="console"] .project-calendar-selected-task-text,
+body[data-theme^="blueprint"] .project-calendar-selected-task-text,
+body[data-theme^="glass"] .project-calendar-selected-task-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.project-calendar-selected-task-priority,
+body[data-theme^="console"] .project-calendar-selected-task-priority,
+body[data-theme^="blueprint"] .project-calendar-selected-task-priority,
+body[data-theme^="glass"] .project-calendar-selected-task-priority {
+    flex: 0 0 auto !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-note-input,
+body[data-theme^="console"] .project-calendar-note-input,
+body[data-theme^="blueprint"] .project-calendar-note-input,
+body[data-theme^="glass"] .project-calendar-note-input {
+    width: 100% !important;
+    min-height: 8rem !important;
+    resize: vertical !important;
+    padding: 0.75rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--input-bg, var(--surface-subtle, rgba(255, 255, 255, 0.05))) !important;
+    color: var(--text, currentColor) !important;
+    font: inherit !important;
+    line-height: 1.45 !important;
+}
+
+.project-calendar-note-input:focus,
+body[data-theme^="console"] .project-calendar-note-input:focus,
+body[data-theme^="blueprint"] .project-calendar-note-input:focus,
+body[data-theme^="glass"] .project-calendar-note-input:focus {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.project-calendar-note-button--secondary,
+body[data-theme^="console"] .project-calendar-note-button--secondary,
+body[data-theme^="blueprint"] .project-calendar-note-button--secondary,
+body[data-theme^="glass"] .project-calendar-note-button--secondary {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+}
+
+.project-calendar-note-button:disabled,
+body[data-theme^="console"] .project-calendar-note-button:disabled,
+body[data-theme^="blueprint"] .project-calendar-note-button:disabled,
+body[data-theme^="glass"] .project-calendar-note-button:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.45 !important;
+}
+
+@media (max-width: 920px) {
+    .project-calendar-panel,
+    body[data-theme^="console"] .project-calendar-panel,
+    body[data-theme^="blueprint"] .project-calendar-panel,
+    body[data-theme^="glass"] .project-calendar-panel {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 620px) {
+    .project-calendar-toolbar,
+    body[data-theme^="console"] .project-calendar-toolbar,
+    body[data-theme^="blueprint"] .project-calendar-toolbar,
+    body[data-theme^="glass"] .project-calendar-toolbar {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+
+    .project-calendar-today-button,
+    body[data-theme^="console"] .project-calendar-today-button,
+    body[data-theme^="blueprint"] .project-calendar-today-button,
+    body[data-theme^="glass"] .project-calendar-today-button {
+        grid-column: 1 / -1 !important;
+    }
+
+    .project-calendar-day,
+    .project-calendar-day-spacer,
+    body[data-theme^="console"] .project-calendar-day,
+    body[data-theme^="console"] .project-calendar-day-spacer,
+    body[data-theme^="blueprint"] .project-calendar-day,
+    body[data-theme^="blueprint"] .project-calendar-day-spacer,
+    body[data-theme^="glass"] .project-calendar-day,
+    body[data-theme^="glass"] .project-calendar-day-spacer {
+        min-height: 2.85rem !important;
+        border-radius: 0.62rem !important;
+    }
+
+    .project-calendar-selected-task,
+    .project-calendar-note-actions,
+    body[data-theme^="console"] .project-calendar-selected-task,
+    body[data-theme^="console"] .project-calendar-note-actions,
+    body[data-theme^="blueprint"] .project-calendar-selected-task,
+    body[data-theme^="blueprint"] .project-calendar-note-actions,
+    body[data-theme^="glass"] .project-calendar-selected-task,
+    body[data-theme^="glass"] .project-calendar-note-actions {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+}
+
+/* Hide project summary controls when the Calendar tab is active. */
+#projectModal.is-calendar-tab-active .modal-project-description-view,
+#projectModal.is-calendar-tab-active .project-tag-controls,
+#projectModal.is-calendar-tab-active .modal-project-priority-row {
+    display: none !important;
+}
+
+/* Targeted patch: calendar task date priority, scroll stability, and selected-day layout */
+.project-calendar-day-priority--high,
+body[data-theme^="console"] .project-calendar-day-priority--high,
+body[data-theme^="blueprint"] .project-calendar-day-priority--high,
+body[data-theme^="glass"] .project-calendar-day-priority--high {
+    --calendar-priority-color: #ef4444;
+}
+
+.project-calendar-day-priority--medium,
+body[data-theme^="console"] .project-calendar-day-priority--medium,
+body[data-theme^="blueprint"] .project-calendar-day-priority--medium,
+body[data-theme^="glass"] .project-calendar-day-priority--medium {
+    --calendar-priority-color: #f97316;
+}
+
+.project-calendar-day-priority--low,
+body[data-theme^="console"] .project-calendar-day-priority--low,
+body[data-theme^="blueprint"] .project-calendar-day-priority--low,
+body[data-theme^="glass"] .project-calendar-day-priority--low {
+    --calendar-priority-color: #22c55e;
+}
+
+.project-calendar-day-priority--none,
+body[data-theme^="console"] .project-calendar-day-priority--none,
+body[data-theme^="blueprint"] .project-calendar-day-priority--none,
+body[data-theme^="glass"] .project-calendar-day-priority--none {
+    --calendar-priority-color: color-mix(in srgb, var(--muted, currentColor) 72%, transparent);
+}
+
+.project-calendar-day.has-tasks,
+body[data-theme^="console"] .project-calendar-day.has-tasks,
+body[data-theme^="blueprint"] .project-calendar-day.has-tasks,
+body[data-theme^="glass"] .project-calendar-day.has-tasks {
+    box-shadow: inset 0 -2px 0 var(--calendar-priority-color, var(--muted, currentColor)) !important;
+}
+
+.project-calendar-day.has-tasks.is-selected,
+body[data-theme^="console"] .project-calendar-day.has-tasks.is-selected,
+body[data-theme^="blueprint"] .project-calendar-day.has-tasks.is-selected,
+body[data-theme^="glass"] .project-calendar-day.has-tasks.is-selected {
+    box-shadow: 0 0 0 1px var(--accent, currentColor) inset, inset 0 -2px 0 var(--calendar-priority-color, var(--muted, currentColor)) !important;
+}
+
+.project-calendar-day.has-tasks .project-calendar-day-number,
+body[data-theme^="console"] .project-calendar-day.has-tasks .project-calendar-day-number,
+body[data-theme^="blueprint"] .project-calendar-day.has-tasks .project-calendar-day-number,
+body[data-theme^="glass"] .project-calendar-day.has-tasks .project-calendar-day-number {
+    color: var(--calendar-priority-color, var(--text, currentColor)) !important;
+}
+
+.project-calendar-marker--tasks,
+.project-calendar-marker--tasks.project-calendar-marker--priority-high,
+.project-calendar-marker--tasks.project-calendar-marker--priority-medium,
+.project-calendar-marker--tasks.project-calendar-marker--priority-low,
+.project-calendar-marker--tasks.project-calendar-marker--priority-none,
+body[data-theme^="console"] .project-calendar-marker--tasks,
+body[data-theme^="console"] .project-calendar-marker--tasks.project-calendar-marker--priority-high,
+body[data-theme^="console"] .project-calendar-marker--tasks.project-calendar-marker--priority-medium,
+body[data-theme^="console"] .project-calendar-marker--tasks.project-calendar-marker--priority-low,
+body[data-theme^="console"] .project-calendar-marker--tasks.project-calendar-marker--priority-none,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks.project-calendar-marker--priority-high,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks.project-calendar-marker--priority-medium,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks.project-calendar-marker--priority-low,
+body[data-theme^="blueprint"] .project-calendar-marker--tasks.project-calendar-marker--priority-none,
+body[data-theme^="glass"] .project-calendar-marker--tasks,
+body[data-theme^="glass"] .project-calendar-marker--tasks.project-calendar-marker--priority-high,
+body[data-theme^="glass"] .project-calendar-marker--tasks.project-calendar-marker--priority-medium,
+body[data-theme^="glass"] .project-calendar-marker--tasks.project-calendar-marker--priority-low,
+body[data-theme^="glass"] .project-calendar-marker--tasks.project-calendar-marker--priority-none {
+    background: var(--accent, currentColor) !important;
+    background-color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-selected-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+.project-calendar-selected-tasks,
+body[data-theme^="console"] .project-calendar-selected-tasks,
+body[data-theme^="blueprint"] .project-calendar-selected-tasks,
+body[data-theme^="glass"] .project-calendar-selected-tasks {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-content: initial !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.project-calendar-selected-task-status,
+body[data-theme^="console"] .project-calendar-selected-task-status,
+body[data-theme^="blueprint"] .project-calendar-selected-task-status,
+body[data-theme^="glass"] .project-calendar-selected-task-status {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-selected-task-priority.project-calendar-task-priority--high,
+body[data-theme^="console"] .project-calendar-selected-task-priority.project-calendar-task-priority--high,
+body[data-theme^="blueprint"] .project-calendar-selected-task-priority.project-calendar-task-priority--high,
+body[data-theme^="glass"] .project-calendar-selected-task-priority.project-calendar-task-priority--high {
+    color: #ef4444 !important;
+}
+
+.project-calendar-selected-task-priority.project-calendar-task-priority--medium,
+body[data-theme^="console"] .project-calendar-selected-task-priority.project-calendar-task-priority--medium,
+body[data-theme^="blueprint"] .project-calendar-selected-task-priority.project-calendar-task-priority--medium,
+body[data-theme^="glass"] .project-calendar-selected-task-priority.project-calendar-task-priority--medium {
+    color: #f97316 !important;
+}
+
+.project-calendar-selected-task-priority.project-calendar-task-priority--low,
+body[data-theme^="console"] .project-calendar-selected-task-priority.project-calendar-task-priority--low,
+body[data-theme^="blueprint"] .project-calendar-selected-task-priority.project-calendar-task-priority--low,
+body[data-theme^="glass"] .project-calendar-selected-task-priority.project-calendar-task-priority--low {
+    color: #22c55e !important;
+}
+
+.project-calendar-note-actions,
+body[data-theme^="console"] .project-calendar-note-actions,
+body[data-theme^="blueprint"] .project-calendar-note-actions,
+body[data-theme^="glass"] .project-calendar-note-actions {
+    min-width: 0 !important;
+    flex-wrap: wrap !important;
+}
+
+/* Keep project summary controls hidden whenever the Calendar tab is active. */
+#projectModal.is-calendar-tab-active .modal-project-description-view,
+#projectModal.is-calendar-tab-active .project-tag-controls,
+#projectModal.is-calendar-tab-active .modal-project-priority-row {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Targeted patch: calendar drag-to-schedule task list and minimized empty day notes */
+.project-calendar-side-panel,
+body[data-theme^="console"] .project-calendar-side-panel,
+body[data-theme^="blueprint"] .project-calendar-side-panel,
+body[data-theme^="glass"] .project-calendar-side-panel {
+    display: grid !important;
+    gap: 1rem !important;
+    align-content: start !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-side-panel .project-calendar-selected-card,
+body[data-theme^="console"] .project-calendar-side-panel .project-calendar-selected-card,
+body[data-theme^="blueprint"] .project-calendar-side-panel .project-calendar-selected-card,
+body[data-theme^="glass"] .project-calendar-side-panel .project-calendar-selected-card {
+    max-height: min(42vh, 28rem) !important;
+}
+
+.project-calendar-task-dock,
+body[data-theme^="console"] .project-calendar-task-dock,
+body[data-theme^="blueprint"] .project-calendar-task-dock,
+body[data-theme^="glass"] .project-calendar-task-dock {
+    display: grid !important;
+    gap: 0.75rem !important;
+    min-width: 0 !important;
+    padding: 1rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 1rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.06)) !important;
+}
+
+.project-calendar-task-dock-header,
+body[data-theme^="console"] .project-calendar-task-dock-header,
+body[data-theme^="blueprint"] .project-calendar-task-dock-header,
+body[data-theme^="glass"] .project-calendar-task-dock-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+}
+
+.project-calendar-task-dock-title,
+body[data-theme^="console"] .project-calendar-task-dock-title,
+body[data-theme^="blueprint"] .project-calendar-task-dock-title,
+body[data-theme^="glass"] .project-calendar-task-dock-title {
+    margin: 0.18rem 0 0 !important;
+    color: var(--heading, var(--text, currentColor)) !important;
+    font-size: 0.95rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-task-dock-count,
+body[data-theme^="console"] .project-calendar-task-dock-count,
+body[data-theme^="blueprint"] .project-calendar-task-dock-count,
+body[data-theme^="glass"] .project-calendar-task-dock-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    padding: 0 0.5rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    color: var(--accent, currentColor) !important;
+    font-weight: 900 !important;
+}
+
+.project-calendar-task-dock-list,
+body[data-theme^="console"] .project-calendar-task-dock-list,
+body[data-theme^="blueprint"] .project-calendar-task-dock-list,
+body[data-theme^="glass"] .project-calendar-task-dock-list {
+    display: grid !important;
+    gap: 0.5rem !important;
+    max-height: min(32vh, 17rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 0.25rem !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-draggable-task {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    min-width: 0 !important;
+    padding: 0.58rem 0.65rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.24)) !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: grab !important;
+    user-select: none !important;
+}
+
+.project-calendar-draggable-task:active,
+body[data-theme^="console"] .project-calendar-draggable-task:active,
+body[data-theme^="blueprint"] .project-calendar-draggable-task:active,
+body[data-theme^="glass"] .project-calendar-draggable-task:active {
+    cursor: grabbing !important;
+}
+
+.project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="console"] .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder {
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto !important;
+}
+
+.project-calendar-task-drag-handle,
+body[data-theme^="console"] .project-calendar-task-drag-handle,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle,
+body[data-theme^="glass"] .project-calendar-task-drag-handle {
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-width: 1.65rem !important;
+    padding: 0.28rem !important;
+    border-radius: 0.5rem !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    cursor: grab !important;
+    flex: 0 0 auto !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: none !important;
+}
+
+.project-calendar-task-drag-handle:hover,
+.project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="console"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="console"] .project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="blueprint"] .project-calendar-task-drag-handle:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:hover,
+body[data-theme^="glass"] .project-calendar-task-drag-handle:focus-visible {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-task-dock-list.is-calendar-task-reordering .project-calendar-draggable-task {
+    transition: transform 0.14s ease, opacity 0.14s ease !important;
+}
+
+.project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="console"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-calendar-task-reordering,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reordering {
+    opacity: 0.88 !important;
+    cursor: grabbing !important;
+    position: relative !important;
+    z-index: 3 !important;
+}
+
+.project-calendar-draggable-task.is-completed,
+body[data-theme^="console"] .project-calendar-draggable-task.is-completed,
+body[data-theme^="blueprint"] .project-calendar-draggable-task.is-completed,
+body[data-theme^="glass"] .project-calendar-draggable-task.is-completed {
+    opacity: 0.62 !important;
+}
+
+.project-calendar-draggable-task-dot,
+body[data-theme^="console"] .project-calendar-draggable-task-dot,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-dot,
+body[data-theme^="glass"] .project-calendar-draggable-task-dot {
+    width: 0.42rem !important;
+    height: 0.42rem !important;
+    border-radius: 999px !important;
+    background: var(--accent, currentColor) !important;
+}
+
+.project-calendar-draggable-task-text,
+body[data-theme^="console"] .project-calendar-draggable-task-text,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-text,
+body[data-theme^="glass"] .project-calendar-draggable-task-text {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+}
+
+.project-calendar-draggable-task-date,
+body[data-theme^="console"] .project-calendar-draggable-task-date,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-date,
+body[data-theme^="glass"] .project-calendar-draggable-task-date {
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+
+.project-calendar-note-input.is-minimized,
+.project-calendar-selected-card.is-day-note-empty .project-calendar-note-input,
+body[data-theme^="console"] .project-calendar-note-input.is-minimized,
+body[data-theme^="console"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input,
+body[data-theme^="blueprint"] .project-calendar-note-input.is-minimized,
+body[data-theme^="blueprint"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input,
+body[data-theme^="glass"] .project-calendar-note-input.is-minimized,
+body[data-theme^="glass"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input {
+    min-height: 2.75rem !important;
+    height: 2.75rem !important;
+}
+
+.project-calendar-note-input.is-minimized:focus,
+.project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus,
+body[data-theme^="console"] .project-calendar-note-input.is-minimized:focus,
+body[data-theme^="console"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus,
+body[data-theme^="blueprint"] .project-calendar-note-input.is-minimized:focus,
+body[data-theme^="blueprint"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus,
+body[data-theme^="glass"] .project-calendar-note-input.is-minimized:focus,
+body[data-theme^="glass"] .project-calendar-selected-card.is-day-note-empty .project-calendar-note-input:focus {
+    min-height: 8rem !important;
+    height: auto !important;
+}
+
+#projectModal.is-calendar-tab-active .project-due-date-control--modal,
+body[data-theme^="console"] #projectModal.is-calendar-tab-active .project-due-date-control--modal,
+body[data-theme^="blueprint"] #projectModal.is-calendar-tab-active .project-due-date-control--modal,
+body[data-theme^="glass"] #projectModal.is-calendar-tab-active .project-due-date-control--modal {
+    display: none !important;
+}
+
+@media (max-width: 920px) {
+    .project-calendar-side-panel,
+    body[data-theme^="console"] .project-calendar-side-panel,
+    body[data-theme^="blueprint"] .project-calendar-side-panel,
+    body[data-theme^="glass"] .project-calendar-side-panel {
+        width: 100% !important;
+    }
+
+    .project-calendar-side-panel .project-calendar-selected-card,
+    body[data-theme^="console"] .project-calendar-side-panel .project-calendar-selected-card,
+    body[data-theme^="blueprint"] .project-calendar-side-panel .project-calendar-selected-card,
+    body[data-theme^="glass"] .project-calendar-side-panel .project-calendar-selected-card {
+        max-height: none !important;
+    }
+}
+
+/* Targeted patch: calendar task dock ordering, incomplete-only list, and priority editing */
+.project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-draggable-task {
+    grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+}
+
+.project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-task-priority-control {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    min-width: 0 !important;
+    max-width: 9rem !important;
+    padding: 0.25rem 0.42rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.24)) !important;
+    border-radius: 999px !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    cursor: default !important;
+}
+
+.project-calendar-task-priority-control .task-tag-flag,
+body[data-theme^="console"] .project-calendar-task-priority-control .task-tag-flag,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control .task-tag-flag,
+body[data-theme^="glass"] .project-calendar-task-priority-control .task-tag-flag {
+    flex: 0 0 auto !important;
+    width: 0.55rem !important;
+    height: 0.55rem !important;
+}
+
+.project-calendar-task-priority-select,
+body[data-theme^="console"] .project-calendar-task-priority-select,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select,
+body[data-theme^="glass"] .project-calendar-task-priority-select {
+    min-width: 0 !important;
+    max-width: 7rem !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    appearance: auto !important;
+}
+
+.project-calendar-task-priority-select:focus-visible,
+body[data-theme^="console"] .project-calendar-task-priority-select:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-priority-select:focus-visible {
+    box-shadow: none !important;
+}
+
+.project-calendar-task-priority-control:focus-within,
+body[data-theme^="console"] .project-calendar-task-priority-control:focus-within,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control:focus-within,
+body[data-theme^="glass"] .project-calendar-task-priority-control:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+}
+
+.project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task-priority-control {
+    justify-self: end !important;
+}
+
+@media (max-width: 640px) {
+    .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-draggable-task {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+
+    .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="console"] .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder {
+        grid-template-columns: auto auto minmax(0, 1fr) auto !important;
+    }
+
+    .project-calendar-draggable-task .project-calendar-task-priority-control,
+    body[data-theme^="console"] .project-calendar-draggable-task .project-calendar-task-priority-control,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task .project-calendar-task-priority-control,
+    body[data-theme^="glass"] .project-calendar-draggable-task .project-calendar-task-priority-control {
+        grid-column: 2 / -1 !important;
+        justify-self: start !important;
+    }
+
+    .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control,
+    body[data-theme^="console"] .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control,
+    body[data-theme^="glass"] .project-calendar-draggable-task.has-manual-reorder .project-calendar-task-priority-control {
+        grid-column: 3 / -1 !important;
+    }
+}
+
+/* Targeted patch: calendar tab vertical layout, hidden progress, and readable priority selects */
+#projectModal.is-calendar-tab-active .modal-progress,
+body[data-theme^="console"] #projectModal.is-calendar-tab-active .modal-progress,
+body[data-theme^="blueprint"] #projectModal.is-calendar-tab-active .modal-progress,
+body[data-theme^="glass"] #projectModal.is-calendar-tab-active .modal-progress {
+    display: none !important;
+}
+
+#projectModal.is-calendar-tab-active .modal-scroll-inner,
+body[data-theme^="console"] #projectModal.is-calendar-tab-active .modal-scroll-inner,
+body[data-theme^="blueprint"] #projectModal.is-calendar-tab-active .modal-scroll-inner,
+body[data-theme^="glass"] #projectModal.is-calendar-tab-active .modal-scroll-inner {
+    gap: 0.8rem !important;
+}
+
+.project-calendar-panel,
+body[data-theme^="console"] .project-calendar-panel,
+body[data-theme^="blueprint"] .project-calendar-panel,
+body[data-theme^="glass"] .project-calendar-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+    width: 100% !important;
+}
+
+.project-calendar-main-row,
+body[data-theme^="console"] .project-calendar-main-row,
+body[data-theme^="blueprint"] .project-calendar-main-row,
+body[data-theme^="glass"] .project-calendar-main-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list {
+    max-height: min(34vh, 22rem) !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+    grid-template-columns: auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
+    padding: 0.7rem 0.8rem !important;
+}
+
+.project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder {
+    grid-template-columns: auto auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
+}
+
+.project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-task-priority-control {
+    max-width: 10.5rem !important;
+}
+
+.project-calendar-task-priority-select,
+body[data-theme^="console"] .project-calendar-task-priority-select,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select,
+body[data-theme^="glass"] .project-calendar-task-priority-select {
+    max-width: 8.5rem !important;
+    color: var(--text, #f8fafc) !important;
+    background: transparent !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+}
+
+.project-calendar-task-priority-select option,
+body[data-theme^="console"] .project-calendar-task-priority-select option,
+body[data-theme^="blueprint"] .project-calendar-task-priority-select option,
+body[data-theme^="glass"] .project-calendar-task-priority-select option {
+    color: #f8fafc !important;
+    background: #111827 !important;
+}
+
+body[data-theme$="-light"] .project-calendar-task-priority-select,
+body[data-theme$="-light"] .project-calendar-task-priority-select option {
+    color: #111827 !important;
+    background: #ffffff !important;
+    -webkit-text-fill-color: #111827 !important;
+}
+
+@media (max-width: 920px) {
+    .project-calendar-main-row,
+    body[data-theme^="console"] .project-calendar-main-row,
+    body[data-theme^="blueprint"] .project-calendar-main-row,
+    body[data-theme^="glass"] .project-calendar-main-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+        grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+}
+
+/* Targeted patch: calendar task removal and mobile menu bar refinement */
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto auto !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+}
+
+.project-calendar-remove-task-button,
+body[data-theme^="console"] .project-calendar-remove-task-button,
+body[data-theme^="blueprint"] .project-calendar-remove-task-button,
+body[data-theme^="glass"] .project-calendar-remove-task-button {
+    appearance: none !important;
+    flex: 0 0 auto !important;
+    justify-self: end !important;
+    min-height: 1.9rem !important;
+    padding: 0.34rem 0.58rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 999px !important;
+    background: var(--surface-2, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--muted, rgba(148, 163, 184, 0.9)) !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.66rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.06em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+
+.project-calendar-remove-task-button:hover,
+.project-calendar-remove-task-button:focus-visible,
+body[data-theme^="console"] .project-calendar-remove-task-button:hover,
+body[data-theme^="console"] .project-calendar-remove-task-button:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-remove-task-button:hover,
+body[data-theme^="blueprint"] .project-calendar-remove-task-button:focus-visible,
+body[data-theme^="glass"] .project-calendar-remove-task-button:hover,
+body[data-theme^="glass"] .project-calendar-remove-task-button:focus-visible {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+    outline: none !important;
+}
+
+@media (max-width: 980px) {
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        padding: calc(0.35rem + env(safe-area-inset-top, 0px)) 0.5rem 0.35rem 3.45rem !important;
+        gap: 0.42rem !important;
+    }
+
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-sidebar-open .panel-edge-toggle {
+        position: fixed !important;
+        top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        left: 0.5rem !important;
+        right: auto !important;
+        bottom: auto !important;
+        z-index: 95 !important;
+        width: 2.28rem !important;
+        height: 2.28rem !important;
+        min-width: 2.28rem !important;
+        min-height: 2.28rem !important;
+        border-radius: 0.78rem !important;
+    }
+
+    body.mobile-drawer-open .panel-edge-toggle,
+    body.mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle {
+        top: calc(0.65rem + env(safe-area-inset-top, 0px)) !important;
+        left: calc(var(--mobile-web-drawer-width, min(86vw, 22rem)) - 3.1rem) !important;
+        right: auto !important;
+        bottom: auto !important;
+        z-index: 140 !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title {
+        order: 1 !important;
+        flex: 0 1 clamp(4.35rem, 21vw, 7rem) !important;
+        max-width: clamp(4.35rem, 21vw, 7rem) !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        order: 2 !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        gap: 0.36rem !important;
+    }
+
+    .view-toolbar-search-wrap,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="glass"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar-search-wrap:focus-within,
+    .view-toolbar-search-wrap.is-mobile-search-open,
+    .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        order: 1 !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 5.75rem !important;
+        max-width: none !important;
+    }
+
+    #projectSortSelect,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="glass"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSortSelect {
+        order: 2 !important;
+        flex: 0 0 clamp(4.35rem, 18vw, 5.55rem) !important;
+        width: clamp(4.35rem, 18vw, 5.55rem) !important;
+        max-width: clamp(4.35rem, 18vw, 5.55rem) !important;
+    }
+
+    .top-app-bar > .top-app-logo,
+    .top-app-logo,
+    body[data-theme^="console"] .top-app-logo,
+    body[data-theme^="glass"] .top-app-logo,
+    body[data-theme^="blueprint"] .top-app-logo {
+        order: 3 !important;
+        flex: 0 0 clamp(3.08rem, 12.75vw, 4.5rem) !important;
+        width: clamp(3.08rem, 12.75vw, 4.5rem) !important;
+        max-width: clamp(3.08rem, 12.75vw, 4.5rem) !important;
+        max-height: 2.8rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .project-calendar-selected-task,
+    body[data-theme^="console"] .project-calendar-selected-task,
+    body[data-theme^="blueprint"] .project-calendar-selected-task,
+    body[data-theme^="glass"] .project-calendar-selected-task {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+    }
+
+    .project-calendar-selected-task .project-calendar-task-priority-control,
+    body[data-theme^="console"] .project-calendar-selected-task .project-calendar-task-priority-control,
+    body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-task-priority-control,
+    body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task-priority-control {
+        grid-column: 2 / -1 !important;
+        justify-self: start !important;
+    }
+
+    .project-calendar-remove-task-button,
+    body[data-theme^="console"] .project-calendar-remove-task-button,
+    body[data-theme^="blueprint"] .project-calendar-remove-task-button,
+    body[data-theme^="glass"] .project-calendar-remove-task-button {
+        grid-column: 2 / -1 !important;
+        justify-self: start !important;
+    }
+}
+
+/* Targeted patch: calendar task dock sorting, selected-day actions, mobile card spacing */
+.project-calendar-task-dock-heading,
+body[data-theme^="console"] .project-calendar-task-dock-heading,
+body[data-theme^="blueprint"] .project-calendar-task-dock-heading,
+body[data-theme^="glass"] .project-calendar-task-dock-heading {
+    display: grid !important;
+    gap: 0.12rem !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-task-dock-controls,
+body[data-theme^="console"] .project-calendar-task-dock-controls,
+body[data-theme^="blueprint"] .project-calendar-task-dock-controls,
+body[data-theme^="glass"] .project-calendar-task-dock-controls {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.55rem !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-task-sort-select,
+body[data-theme^="console"] .project-calendar-task-sort-select,
+body[data-theme^="blueprint"] .project-calendar-task-sort-select,
+body[data-theme^="glass"] .project-calendar-task-sort-select {
+    min-height: 2rem !important;
+    width: clamp(8.5rem, 18vw, 11rem) !important;
+    max-width: 11rem !important;
+    padding: 0.42rem 2rem 0.42rem 0.7rem !important;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28)) !important;
+    border-radius: 0.75rem !important;
+    background-color: var(--surface-2, rgba(255, 255, 255, 0.06)) !important;
+    color: var(--text, #f8fafc) !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.project-calendar-task-sort-select:focus-visible,
+body[data-theme^="console"] .project-calendar-task-sort-select:focus-visible,
+body[data-theme^="blueprint"] .project-calendar-task-sort-select:focus-visible,
+body[data-theme^="glass"] .project-calendar-task-sort-select:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 1px var(--accent, currentColor) !important;
+}
+
+.project-calendar-task-sort-select option,
+body[data-theme^="console"] .project-calendar-task-sort-select option,
+body[data-theme^="blueprint"] .project-calendar-task-sort-select option,
+body[data-theme^="glass"] .project-calendar-task-sort-select option {
+    color: #f8fafc !important;
+    background: #111827 !important;
+}
+
+body[data-theme$="-light"] .project-calendar-task-sort-select,
+body[data-theme$="-light"] .project-calendar-task-sort-select option {
+    color: #111827 !important;
+    background-color: #ffffff !important;
+    -webkit-text-fill-color: #111827 !important;
+}
+
+.project-calendar-draggable-task-date.has-date,
+body[data-theme^="console"] .project-calendar-draggable-task-date.has-date,
+body[data-theme^="blueprint"] .project-calendar-draggable-task-date.has-date,
+body[data-theme^="glass"] .project-calendar-draggable-task-date.has-date {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-calendar-selected-task,
+body[data-theme^="console"] .project-calendar-selected-task,
+body[data-theme^="blueprint"] .project-calendar-selected-task,
+body[data-theme^="glass"] .project-calendar-selected-task {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start !important;
+    justify-content: stretch !important;
+    gap: 0.58rem !important;
+}
+
+.project-calendar-selected-task-body,
+body[data-theme^="console"] .project-calendar-selected-task-body,
+body[data-theme^="blueprint"] .project-calendar-selected-task-body,
+body[data-theme^="glass"] .project-calendar-selected-task-body {
+    display: grid !important;
+    gap: 0.48rem !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-selected-task-actions,
+body[data-theme^="console"] .project-calendar-selected-task-actions,
+body[data-theme^="blueprint"] .project-calendar-selected-task-actions,
+body[data-theme^="glass"] .project-calendar-selected-task-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+}
+
+.project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="console"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-task-priority-control,
+body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-task-priority-control,
+.project-calendar-selected-task .project-calendar-remove-task-button,
+body[data-theme^="console"] .project-calendar-selected-task .project-calendar-remove-task-button,
+body[data-theme^="blueprint"] .project-calendar-selected-task .project-calendar-remove-task-button,
+body[data-theme^="glass"] .project-calendar-selected-task .project-calendar-remove-task-button {
+    grid-column: auto !important;
+    justify-self: start !important;
+}
+
+@media (max-width: 980px) {
+    .stitch-project-card .project-title,
+    .project-card .project-title,
+    body[data-theme^="console"] .stitch-project-card .project-title,
+    body[data-theme^="console"] .project-card .project-title,
+    body[data-theme^="glass"] .stitch-project-card .project-title,
+    body[data-theme^="glass"] .project-card .project-title,
+    body[data-theme^="blueprint"] .stitch-project-card .project-title,
+    body[data-theme^="blueprint"] .project-card .project-title {
+        font-size: clamp(1.1rem, 4.9vw, 1.38rem) !important;
+        line-height: 1.12 !important;
+    }
+
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    body[data-theme^="console"] .view-filter-chips,
+    body[data-theme^="console"] .view-filter-chips:not(:empty),
+    body[data-theme^="glass"] .view-filter-chips,
+    body[data-theme^="glass"] .view-filter-chips:not(:empty),
+    body[data-theme^="blueprint"] .view-filter-chips,
+    body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+        padding-top: 0.35rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .project-calendar-task-dock-header,
+    body[data-theme^="console"] .project-calendar-task-dock-header,
+    body[data-theme^="blueprint"] .project-calendar-task-dock-header,
+    body[data-theme^="glass"] .project-calendar-task-dock-header {
+        align-items: stretch !important;
+        flex-wrap: wrap !important;
+    }
+
+    .project-calendar-task-dock-controls,
+    body[data-theme^="console"] .project-calendar-task-dock-controls,
+    body[data-theme^="blueprint"] .project-calendar-task-dock-controls,
+    body[data-theme^="glass"] .project-calendar-task-dock-controls {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    .project-calendar-task-sort-select,
+    body[data-theme^="console"] .project-calendar-task-sort-select,
+    body[data-theme^="blueprint"] .project-calendar-task-sort-select,
+    body[data-theme^="glass"] .project-calendar-task-sort-select {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: mobile settings modal layering, compact mobile toolbar,
+   modal menu fit, and notes-tab icon removal
+   ============================================================================ */
+.modal-tab-note-icon,
+body[data-theme^="console"] .modal-tab-note-icon,
+body[data-theme^="glass"] .modal-tab-note-icon,
+body[data-theme^="blueprint"] .modal-tab-note-icon {
+    display: none !important;
+}
+
+@media (max-width: 980px) {
+    #accountSettingsModal.modal-overlay,
+    #uiOptionsModal.modal-overlay,
+    #shortcutsModal.modal-overlay,
+    #howToGuideModal.modal-overlay,
+    body[data-theme^="console"] #accountSettingsModal.modal-overlay,
+    body[data-theme^="console"] #uiOptionsModal.modal-overlay,
+    body[data-theme^="console"] #shortcutsModal.modal-overlay,
+    body[data-theme^="console"] #howToGuideModal.modal-overlay,
+    body[data-theme^="glass"] #accountSettingsModal.modal-overlay,
+    body[data-theme^="glass"] #uiOptionsModal.modal-overlay,
+    body[data-theme^="glass"] #shortcutsModal.modal-overlay,
+    body[data-theme^="glass"] #howToGuideModal.modal-overlay,
+    body[data-theme^="blueprint"] #accountSettingsModal.modal-overlay,
+    body[data-theme^="blueprint"] #uiOptionsModal.modal-overlay,
+    body[data-theme^="blueprint"] #shortcutsModal.modal-overlay,
+    body[data-theme^="blueprint"] #howToGuideModal.modal-overlay {
+        z-index: 100000 !important;
+    }
+
+    #accountSettingsModal.modal-overlay.active,
+    #uiOptionsModal.modal-overlay.active,
+    #shortcutsModal.modal-overlay.active,
+    #howToGuideModal.modal-overlay.active,
+    body[data-theme^="console"] #accountSettingsModal.modal-overlay.active,
+    body[data-theme^="console"] #uiOptionsModal.modal-overlay.active,
+    body[data-theme^="console"] #shortcutsModal.modal-overlay.active,
+    body[data-theme^="console"] #howToGuideModal.modal-overlay.active,
+    body[data-theme^="glass"] #accountSettingsModal.modal-overlay.active,
+    body[data-theme^="glass"] #uiOptionsModal.modal-overlay.active,
+    body[data-theme^="glass"] #shortcutsModal.modal-overlay.active,
+    body[data-theme^="glass"] #howToGuideModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #accountSettingsModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #uiOptionsModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #shortcutsModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #howToGuideModal.modal-overlay.active {
+        z-index: 100000 !important;
+        position: fixed !important;
+        inset: 0 !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-drawer-open .top-app-bar {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.38rem !important;
+        padding: calc(0.35rem + env(safe-area-inset-top, 0px)) 0.5rem 0.35rem !important;
+        min-height: calc(3.35rem + env(safe-area-inset-top, 0px)) !important;
+        overflow: hidden !important;
+    }
+
+    .top-app-bar > .top-app-bar-title,
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="glass"] .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar > .top-app-bar-title,
+    body[data-theme^="blueprint"] .top-app-bar-title {
+        order: 1 !important;
+        flex: 0 1 clamp(4rem, 24vw, 6.7rem) !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: clamp(4rem, 24vw, 6.7rem) !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar,
+    body[data-theme^="glass"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        order: 2 !important;
+        flex: 0 0 auto !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.32rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    .view-toolbar-search-wrap,
+    .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="glass"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar-search-wrap:focus-within,
+    .view-toolbar-search-wrap.is-mobile-search-open,
+    .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        flex: 0 0 min(17vw, 4.15rem) !important;
+        width: min(17vw, 4.15rem) !important;
+        min-width: min(17vw, 4.15rem) !important;
+        max-width: min(17vw, 4.15rem) !important;
+    }
+
+    #projectSortSelect,
+    .top-view-toolbar #projectSortSelect,
+    body[data-theme^="console"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="glass"] .top-viewToolbar #projectSortSelect,
+    body[data-theme^="glass"] .top-view-toolbar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSortSelect {
+        flex: 0 0 clamp(4.45rem, 21vw, 5.9rem) !important;
+        width: clamp(4.45rem, 21vw, 5.9rem) !important;
+        max-width: clamp(4.45rem, 21vw, 5.9rem) !important;
+    }
+
+    .top-app-bar > .top-app-logo,
+    .top-app-logo,
+    body[data-theme^="console"] .top-app-logo,
+    body[data-theme^="glass"] .top-app-logo,
+    body[data-theme^="blueprint"] .top-app-logo {
+        display: none !important;
+    }
+
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    body[data-theme^="console"] .view-filter-chips,
+    body[data-theme^="console"] .view-filter-chips:not(:empty),
+    body[data-theme^="glass"] .view-filter-chips,
+    body[data-theme^="glass"] .view-filter-chips:not(:empty),
+    body[data-theme^="blueprint"] .view-filter-chips,
+    body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+        padding-top: 0.65rem !important;
+        margin-bottom: 0.85rem !important;
+    }
+}
+
+@media (max-width: 720px) {
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.22rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    #projectModal .modal-menu-bar .modal-tab,
+    #projectModal .modal-menu-bar .modal-menu-item,
+    body[data-theme^="console"] #projectModal .modal-menu-bar .modal-tab,
+    body[data-theme^="console"] #projectModal .modal-menu-bar .modal-menu-item,
+    body[data-theme^="glass"] #projectModal .modal-menu-bar .modal-tab,
+    body[data-theme^="glass"] #projectModal .modal-menu-bar .modal-menu-item,
+    body[data-theme^="blueprint"] #projectModal .modal-menu-bar .modal-tab,
+    body[data-theme^="blueprint"] #projectModal .modal-menu-bar .modal-menu-item {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        width: auto !important;
+        padding: 0.48rem 0.28rem !important;
+        font-size: clamp(0.58rem, 2.45vw, 0.72rem) !important;
+        letter-spacing: 0.015em !important;
+        white-space: nowrap !important;
+    }
+
+    #projectModal .project-meatballs--modal,
+    body[data-theme^="console"] #projectModal .project-meatballs--modal,
+    body[data-theme^="glass"] #projectModal .project-meatballs--modal,
+    body[data-theme^="blueprint"] #projectModal .project-meatballs--modal,
+    #projectModal .modal-menu-close,
+    body[data-theme^="console"] #projectModal .modal-menu-close,
+    body[data-theme^="glass"] #projectModal .modal-menu-close,
+    body[data-theme^="blueprint"] #projectModal .modal-menu-close {
+        flex: 0 0 2rem !important;
+        width: 2rem !important;
+        min-width: 2rem !important;
+        max-width: 2rem !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+    }
+
+    #projectModal .project-meatballs-toggle,
+    body[data-theme^="console"] #projectModal .project-meatballs-toggle,
+    body[data-theme^="glass"] #projectModal .project-meatballs-toggle,
+    body[data-theme^="blueprint"] #projectModal .project-meatballs-toggle {
+        width: 2rem !important;
+        min-width: 2rem !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+        font-size: 1.05rem !important;
+    }
+}
+

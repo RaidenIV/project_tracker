@@ -1,0 +1,323 @@
+/* ============================================================================
+   Responsive desktop/tablet scaling patch
+   Keeps the approved 1920x1080 and existing mobile layouts intact while making
+   intermediate laptop, tablet-landscape, 16:10, and high-resolution desktops
+   fluid instead of relying on isolated resolution-specific fixes.
+   ============================================================================ */
+@media (min-width: 981px) and (max-width: 1919px) {
+    html,
+    body {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        --responsive-sidebar-width: clamp(16rem, 20vw, 20rem);
+        --responsive-sidebar-collapsed-width: clamp(4.5rem, 6vw, 5rem);
+        grid-template-columns: var(--responsive-sidebar-width) minmax(0, 1fr) !important;
+        grid-template-rows: minmax(5rem, auto) minmax(0, 1fr) !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: var(--responsive-sidebar-collapsed-width) minmax(0, 1fr) !important;
+    }
+
+    .control-panel {
+        width: var(--responsive-sidebar-width) !important;
+        min-width: 0 !important;
+        max-width: var(--responsive-sidebar-width) !important;
+    }
+
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        width: var(--responsive-sidebar-collapsed-width) !important;
+        min-width: 0 !important;
+        max-width: var(--responsive-sidebar-collapsed-width) !important;
+    }
+
+    .panel-edge-toggle,
+    .panel-edge-toggle:hover,
+    .panel-edge-toggle:focus-visible {
+        left: var(--responsive-sidebar-width) !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle:hover,
+    body.control-panel-is-collapsed .panel-edge-toggle:focus-visible {
+        left: var(--responsive-sidebar-collapsed-width) !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar {
+        grid-template-columns: minmax(9rem, max-content) minmax(0, 1fr) auto !important;
+        gap: clamp(0.65rem, 1vw, 1.25rem) !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 5rem !important;
+        padding-inline: clamp(1rem, 1.7vw, 2rem) !important;
+        overflow: hidden !important;
+    }
+
+    .top-app-bar-title,
+    body[data-theme^="console"] .top-app-bar-title {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        justify-self: stretch !important;
+        display: grid !important;
+        grid-template-columns: minmax(10rem, 1fr) minmax(8.5rem, 11rem) !important;
+        gap: clamp(0.5rem, 0.9vw, 0.85rem) !important;
+        align-items: center !important;
+    }
+
+    .top-view-toolbar .view-toolbar-search-wrap,
+    .view-toolbar.top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="console"] .top-view-toolbar .view-toolbar-search-wrap {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
+
+    #projectSortSelect,
+    body[data-theme^="console"] #projectSortSelect,
+    body[data-theme^="blueprint"] #projectSortSelect,
+    body[data-theme^="glass"] #projectSortSelect {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .top-app-logo {
+        width: clamp(4rem, 5vw, 5.75rem) !important;
+        max-width: 5.75rem !important;
+    }
+
+    .viewport {
+        min-width: 0 !important;
+        width: 100% !important;
+        padding: clamp(1rem, 1.7vw, 1.75rem) clamp(1rem, 1.7vw, 2rem) 2rem !important;
+        overflow-x: hidden !important;
+    }
+
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1100px) {
+    .container,
+    body.control-panel-is-collapsed .container {
+        grid-template-rows: minmax(7.25rem, auto) minmax(0, 1fr) !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-content: center !important;
+        row-gap: 0.65rem !important;
+        padding-block: 0.85rem !important;
+    }
+
+    .top-app-bar-title,
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar {
+        grid-column: 1 / -1 !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar {
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 9.5rem) !important;
+    }
+
+    .top-app-logo {
+        display: none !important;
+    }
+}
+
+/* Follow-up patch: keep sub-1920 non-mobile desktop project grids at two cards per row. */
+@media (min-width: 981px) and (max-width: 1919px) {
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: clamp(0.85rem, 1.1vw, 1.35rem) !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+}
+
+@media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (min-resolution: 1.5dppx),
+       (min-width: 1800px) and (min-height: 1100px),
+       (min-width: 2400px) and (min-height: 1200px) {
+    .container,
+    body.control-panel-is-collapsed .container {
+        --responsive-sidebar-width: clamp(20rem, 16vw, 22rem);
+        --responsive-sidebar-collapsed-width: 5rem;
+        grid-template-columns: var(--responsive-sidebar-width) minmax(0, 1fr) !important;
+        grid-template-rows: minmax(5rem, auto) minmax(0, 1fr) !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: var(--responsive-sidebar-collapsed-width) minmax(0, 1fr) !important;
+    }
+
+    .control-panel {
+        width: var(--responsive-sidebar-width) !important;
+        min-width: 0 !important;
+        max-width: var(--responsive-sidebar-width) !important;
+    }
+
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        width: var(--responsive-sidebar-collapsed-width) !important;
+        min-width: 0 !important;
+        max-width: var(--responsive-sidebar-collapsed-width) !important;
+    }
+
+    .panel-edge-toggle,
+    .panel-edge-toggle:hover,
+    .panel-edge-toggle:focus-visible {
+        left: var(--responsive-sidebar-width) !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle:hover,
+    body.control-panel-is-collapsed .panel-edge-toggle:focus-visible {
+        left: var(--responsive-sidebar-collapsed-width) !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 5rem !important;
+        overflow: hidden !important;
+    }
+
+    .top-view-toolbar,
+    .view-toolbar.top-view-toolbar,
+    body[data-theme^="console"] .top-view-toolbar,
+    body[data-theme^="console"] .view-toolbar.top-view-toolbar,
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="glass"] .top-view-toolbar {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        justify-self: stretch !important;
+    }
+
+    .viewport {
+        min-width: 0 !important;
+        width: 100% !important;
+        padding-inline: clamp(1.5rem, 1.7vw, 2.5rem) !important;
+        overflow-x: hidden !important;
+    }
+
+    .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: clamp(1.15rem, 1.1vw, 1.5rem) !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+}

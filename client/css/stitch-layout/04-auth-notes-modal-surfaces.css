@@ -1,0 +1,3747 @@
+/* ============================================================================
+   Targeted patch: Neumorphism UI options and leaderboard stats surface refinements
+   ============================================================================ */
+body[data-theme^="blueprint"] .leaderboard-profile-modal-content {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--neumo-raised-shadow, var(--shadow-level-2, none)) !important;
+}
+
+body[data-theme^="blueprint"] .leaderboard-profile-stat-card {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-header,
+body[data-theme^="blueprint"] .ui-options-mode-toggle-row,
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-actions {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-header {
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-mode-toggle-row,
+body[data-theme^="blueprint"] .ui-options-modal-content .account-modal-actions {
+    padding: 0 !important;
+}
+
+body[data-theme="blueprint-dark"] .ui-options-mode-toggle-row,
+body[data-theme="blueprint-dark"] .ui-options-mode-toggle-row .ui-options-section-label,
+body[data-theme="blueprint-dark"] .ui-options-mode-toggle-row .color-mode-toggle-option {
+    color: #fff !important;
+}
+
+body[data-theme="blueprint-light"] .ui-options-mode-toggle-row,
+body[data-theme="blueprint-light"] .ui-options-mode-toggle-row .ui-options-section-label,
+body[data-theme="blueprint-light"] .ui-options-mode-toggle-row .color-mode-toggle-option {
+    color: #000 !important;
+}
+
+body[data-theme="blueprint-light"] .ui-options-modal-content .modal-done-btn,
+body[data-theme="blueprint-light"] .ui-options-modal-content .modal-done-btn:hover,
+body[data-theme="blueprint-light"] .ui-options-modal-content .modal-done-btn:focus-visible {
+    color: #000 !important;
+}
+
+body[data-theme^="blueprint"] #archivedProjectsMoreBtn .section-count-pill {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+/* ============================================================================
+   Targeted patch: Neumorphism modal controls and modal Add Tasks undo action
+   ============================================================================ */
+#projectModal .modal-paste-actions,
+body[data-theme^="console"] #projectModal .modal-paste-actions,
+body[data-theme^="glass"] #projectModal .modal-paste-actions,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    align-items: stretch !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+}
+
+#projectModal .modal-paste-actions .paste-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button {
+    width: 100% !important;
+    min-height: 2.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button {
+    min-width: 5.1rem !important;
+    padding-inline: 0.9rem !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+#projectModal .modal-paste-actions .paste-undo-button:disabled,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button:disabled,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button:disabled,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.52 !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="blueprint"] #projectModal .project-tag-add {
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--heading, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .project-tag-add:hover,
+body[data-theme^="blueprint"] #projectModal .project-tag-add:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button.is-disabled,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:disabled {
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+}
+
+body[data-theme^="blueprint"] .leaderboard-profile-close,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-close,
+body[data-theme^="blueprint"] #howToGuideModal .modal-close,
+body[data-theme^="blueprint"] #shortcutsModal .modal-close {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-width: 2.35rem !important;
+    min-height: 2.35rem !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    border-radius: 0.8rem !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .leaderboard-profile-close:hover,
+body[data-theme^="blueprint"] .leaderboard-profile-close:focus-visible,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-close:hover,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-close:focus-visible,
+body[data-theme^="blueprint"] #howToGuideModal .modal-close:hover,
+body[data-theme^="blueprint"] #howToGuideModal .modal-close:focus-visible,
+body[data-theme^="blueprint"] #shortcutsModal .modal-close:hover,
+body[data-theme^="blueprint"] #shortcutsModal .modal-close:focus-visible {
+    border-color: color-mix(in srgb, var(--danger, #ef4444) 52%, transparent) !important;
+    color: var(--danger, #ef4444) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-content,
+body[data-theme^="blueprint"] #accountSettingsModal .account-profile-top,
+body[data-theme^="blueprint"] #accountSettingsModal .account-form-grid,
+body[data-theme^="blueprint"] #accountSettingsModal .account-field,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stats-section,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stat-card,
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-actions,
+body[data-theme^="blueprint"] #accountSettingsModal .account-action-btn,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-done-btn {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-input,
+body[data-theme^="blueprint"] #accountSettingsModal input.account-input {
+    background: var(--surface, var(--panel, transparent)) !important;
+    background-color: var(--surface, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    color: var(--text, currentColor) !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-action-btn:hover,
+body[data-theme^="blueprint"] #accountSettingsModal .account-action-btn:focus-visible,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-done-btn:hover,
+body[data-theme^="blueprint"] #accountSettingsModal .modal-done-btn:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] #shortcutsModal .shortcuts-modal-content,
+body[data-theme^="blueprint"] #shortcutsModal .shortcut-line,
+body[data-theme^="blueprint"] #shortcutsModal kbd {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    box-shadow: var(--neumo-soft-shadow) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] #shortcutsModal .shortcut-line:hover,
+body[data-theme^="blueprint"] #shortcutsModal .shortcut-line:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow) !important;
+}
+
+@media (max-width: 520px) {
+    #projectModal .modal-paste-actions,
+    body[data-theme^="console"] #projectModal .modal-paste-actions,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button {
+        min-width: 0 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: Neumorphism account settings surfaces and completion values
+   ============================================================================ */
+body[data-theme^="blueprint"] #accountSettingsModal .account-profile-top,
+body[data-theme^="blueprint"] #accountSettingsModal .account-form-grid,
+body[data-theme^="blueprint"] #accountSettingsModal .account-field,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stats-section,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stat-card,
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-actions {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-profile-top,
+body[data-theme^="blueprint"] #accountSettingsModal .account-form-grid,
+body[data-theme^="blueprint"] #accountSettingsModal .account-stats-section,
+body[data-theme^="blueprint"] #accountSettingsModal .account-modal-actions {
+    padding: 0 !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-field {
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+body[data-theme^="blueprint"] #accountSettingsModal .account-stat-card {
+    border-radius: 0 !important;
+}
+
+body[data-theme^="blueprint"] .sidebar-total-completion-section .total-percentage,
+body[data-theme^="blueprint"] .sidebar-total-completion-section .sidebar-completion-stat strong,
+body[data-theme^="blueprint"] #totalPercentage,
+body[data-theme^="blueprint"] #completedTasksCount,
+body[data-theme^="blueprint"] #incompleteTasksCount {
+    color: var(--accent, currentColor) !important;
+}
+
+/* ============================================================================
+   Targeted patch: Neumorphism avatar convexity and mobile scrolling recovery
+   ============================================================================ */
+body[data-theme^="blueprint"] .panel-avatar,
+body[data-theme^="blueprint"] .account-avatar,
+body[data-theme^="blueprint"] .menu-account-avatar,
+body[data-theme^="blueprint"] .leaderboard-row-avatar,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid color-mix(in srgb, var(--line, currentColor) 72%, transparent) !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .panel-avatar-img,
+body[data-theme^="blueprint"] .account-avatar-img,
+body[data-theme^="blueprint"] .menu-account-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-row-avatar-img,
+body[data-theme^="blueprint"] .leaderboard-profile-avatar-img {
+    border-radius: inherit !important;
+}
+
+@media (max-width: 980px) {
+    html,
+    body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    body {
+        position: static !important;
+        touch-action: pan-y !important;
+        overscroll-behavior-y: auto !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        height: auto !important;
+        min-height: 100dvh !important;
+        overflow: visible !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .control-panel-content,
+    .control-panel-scroll-inner {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    .control-panel-scroll-inner,
+    .viewport {
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .viewport {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .project-grid {
+        min-height: 0 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: completed-task batch display controls in project modal
+   ============================================================================ */
+#projectModal .completed-task-display-controls-shell,
+body[data-theme^="console"] #projectModal .completed-task-display-controls-shell,
+body[data-theme^="glass"] #projectModal .completed-task-display-controls-shell,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-controls-shell {
+    order: 2 !important;
+}
+
+#projectModal .completed-task-display-controls,
+body[data-theme^="console"] #projectModal .completed-task-display-controls,
+body[data-theme^="glass"] #projectModal .completed-task-display-controls,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-controls {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+    margin: 0.35rem 0 0.85rem !important;
+    padding: 0.65rem 0.75rem !important;
+    border: 1px solid rgba(130, 145, 165, 0.24) !important;
+    border-radius: 0.85rem !important;
+    font-size: 0.78rem !important;
+}
+
+#projectModal .completed-task-display-summary,
+body[data-theme^="console"] #projectModal .completed-task-display-summary,
+body[data-theme^="glass"] #projectModal .completed-task-display-summary,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-summary {
+    min-width: 0 !important;
+    line-height: 1.25 !important;
+}
+
+#projectModal .completed-task-display-actions,
+body[data-theme^="console"] #projectModal .completed-task-display-actions,
+body[data-theme^="glass"] #projectModal .completed-task-display-actions,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.45rem !important;
+    flex-wrap: wrap !important;
+}
+
+#projectModal .completed-task-display-button,
+body[data-theme^="console"] #projectModal .completed-task-display-button,
+body[data-theme^="glass"] #projectModal .completed-task-display-button,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-button {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2rem !important;
+    padding: 0.45rem 0.65rem !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(130, 145, 165, 0.28) !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+}
+
+#projectModal .completed-task-display-button:hover,
+body[data-theme^="console"] #projectModal .completed-task-display-button:hover,
+body[data-theme^="glass"] #projectModal .completed-task-display-button:hover,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-button:hover {
+    color: var(--accent, #0099ff) !important;
+    border-color: color-mix(in srgb, var(--accent, #0099ff) 55%, transparent) !important;
+}
+
+#projectModal .completed-task-display-button:disabled,
+body[data-theme^="console"] #projectModal .completed-task-display-button:disabled,
+body[data-theme^="glass"] #projectModal .completed-task-display-button:disabled,
+body[data-theme^="blueprint"] #projectModal .completed-task-display-button:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    color: inherit !important;
+    border-color: rgba(130, 145, 165, 0.22) !important;
+}
+
+@media (max-width: 640px) {
+    #projectModal .completed-task-display-controls,
+    body[data-theme^="console"] #projectModal .completed-task-display-controls,
+    body[data-theme^="glass"] #projectModal .completed-task-display-controls,
+    body[data-theme^="blueprint"] #projectModal .completed-task-display-controls {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    #projectModal .completed-task-display-actions,
+    body[data-theme^="console"] #projectModal .completed-task-display-actions,
+    body[data-theme^="glass"] #projectModal .completed-task-display-actions,
+    body[data-theme^="blueprint"] #projectModal .completed-task-display-actions {
+        justify-content: flex-start !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: Console task tabs attached to tasks card and compact menu dot
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] {
+    overflow: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card {
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 1.05rem !important;
+    background: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 90 !important;
+    margin: 0 !important;
+    padding: 0.65rem 0.75rem 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 1.05rem 1.05rem 0 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.96)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    overflow: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card-body {
+    margin: 0 !important;
+    padding: 1rem !important;
+    border: 0 !important;
+    border-radius: 0 0 1.05rem 1.05rem !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tabs {
+    align-items: center !important;
+    min-height: 2.15rem !important;
+    gap: 0.45rem !important;
+    padding: 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tab-shell {
+    min-height: 2.1rem !important;
+    height: 2.1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.28rem !important;
+    padding: 0 0.72rem !important;
+    line-height: 1 !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tab,
+body[data-theme^="console"] #projectModal .task-category-menu-button,
+body[data-theme^="console"] #projectModal .task-category-add-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-menu-button {
+    box-sizing: border-box !important;
+    align-self: center !important;
+    width: 1.34rem !important;
+    min-width: 1.34rem !important;
+    max-width: 1.34rem !important;
+    height: 1.34rem !important;
+    min-height: 1.34rem !important;
+    max-height: 1.34rem !important;
+    gap: 0.13rem !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: inherit !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-menu-button span {
+    flex: 0 0 auto !important;
+    width: 3px !important;
+    height: 3px !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    background: currentColor !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-menu-button:hover,
+body[data-theme^="console"] #projectModal .task-category-menu-button:focus-visible,
+body[data-theme^="console"] #projectModal .task-category-tab-wrap.is-menu-open .task-category-menu-button {
+    background: color-mix(in srgb, var(--accent, #ff9900) 16%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent, #ff9900) 16%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent, #ff9900) 32%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+
+/* ============================================================================
+   Targeted patch: mobile project modal optimization and top-sticky task tabs
+   ============================================================================ */
+@media (max-width: 720px) {
+    #projectModal.modal-overlay,
+    body[data-theme^="console"] #projectModal.modal-overlay,
+    body[data-theme^="glass"] #projectModal.modal-overlay,
+    body[data-theme^="blueprint"] #projectModal.modal-overlay {
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .modal-content#modalContent,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100svh !important;
+        max-height: 100svh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .modal-content#modalContent::before,
+    #projectModal .modal-content#modalContent::after,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent::before,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent::after,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent::before,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent::after,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent::before,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent::after {
+        display: none !important;
+    }
+
+    #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100svh !important;
+        max-height: 100svh !important;
+        padding: calc(0.85rem + env(safe-area-inset-top, 0px)) 0.75rem calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-gutter: auto !important;
+    }
+
+    #projectModal .modal-header-centered,
+    body[data-theme^="console"] #projectModal .modal-header-centered,
+    body[data-theme^="glass"] #projectModal .modal-header-centered,
+    body[data-theme^="blueprint"] #projectModal .modal-header-centered {
+        align-items: flex-start !important;
+        gap: 0.65rem !important;
+        margin-bottom: 0.8rem !important;
+        min-width: 0 !important;
+    }
+
+    #projectModal .modal-title-container,
+    body[data-theme^="console"] #projectModal .modal-title-container,
+    body[data-theme^="glass"] #projectModal .modal-title-container,
+    body[data-theme^="blueprint"] #projectModal .modal-title-container {
+        min-width: 0 !important;
+    }
+
+    #projectModal .modal-title,
+    #projectModal .modal-title-edit-button,
+    body[data-theme^="console"] #projectModal .modal-title,
+    body[data-theme^="console"] #projectModal .modal-title-edit-button,
+    body[data-theme^="glass"] #projectModal .modal-title,
+    body[data-theme^="glass"] #projectModal .modal-title-edit-button,
+    body[data-theme^="blueprint"] #projectModal .modal-title,
+    body[data-theme^="blueprint"] #projectModal .modal-title-edit-button {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: clamp(1.05rem, 5vw, 1.35rem) !important;
+        line-height: 1.15 !important;
+    }
+
+    #projectModal .modal-copy-button,
+    #projectModal .modal-close,
+    body[data-theme^="console"] #projectModal .modal-copy-button,
+    body[data-theme^="console"] #projectModal .modal-close,
+    body[data-theme^="glass"] #projectModal .modal-copy-button,
+    body[data-theme^="glass"] #projectModal .modal-close,
+    body[data-theme^="blueprint"] #projectModal .modal-copy-button,
+    body[data-theme^="blueprint"] #projectModal .modal-close {
+        width: 2.45rem !important;
+        min-width: 2.45rem !important;
+        height: 2.45rem !important;
+        min-height: 2.45rem !important;
+        padding: 0 !important;
+    }
+
+    #projectModal .modal-project-description-view,
+    #projectModal .modal-progress,
+    #projectModal .modal-tabs,
+    body[data-theme^="console"] #projectModal .modal-project-description-view,
+    body[data-theme^="console"] #projectModal .modal-progress,
+    body[data-theme^="console"] #projectModal .modal-tabs,
+    body[data-theme^="glass"] #projectModal .modal-project-description-view,
+    body[data-theme^="glass"] #projectModal .modal-progress,
+    body[data-theme^="glass"] #projectModal .modal-tabs,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-view,
+    body[data-theme^="blueprint"] #projectModal .modal-progress,
+    body[data-theme^="blueprint"] #projectModal .modal-tabs {
+        margin-bottom: 0.65rem !important;
+    }
+
+    #projectModal .modal-tabs,
+    body[data-theme^="console"] #projectModal .modal-tabs,
+    body[data-theme^="glass"] #projectModal .modal-tabs,
+    body[data-theme^="blueprint"] #projectModal .modal-tabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 0.4rem !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding-bottom: 0.15rem !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #projectModal .modal-tab,
+    body[data-theme^="console"] #projectModal .modal-tab,
+    body[data-theme^="glass"] #projectModal .modal-tab,
+    body[data-theme^="blueprint"] #projectModal .modal-tab {
+        flex: 0 0 auto !important;
+        min-height: 2.25rem !important;
+        padding: 0 0.85rem !important;
+        white-space: nowrap !important;
+    }
+
+    #projectModal .modal-section[id^="tasks-section-"],
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"],
+    body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"],
+    body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] {
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .modal-tasks-card,
+    body[data-theme^="console"] #projectModal .modal-tasks-card,
+    body[data-theme^="glass"] #projectModal .modal-tasks-card,
+    body[data-theme^="blueprint"] #projectModal .modal-tasks-card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+        position: sticky !important;
+        top: calc(-0.85rem - env(safe-area-inset-top, 0px)) !important;
+        z-index: 120 !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.55rem 0 !important;
+        border-radius: 0 !important;
+        background: var(--panel, rgba(18, 18, 24, 0.98)) !important;
+        background-color: var(--panel, rgba(18, 18, 24, 0.98)) !important;
+        box-shadow: 0 1px 0 var(--line, rgba(148, 163, 184, 0.22)) !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-category-tabs,
+    body[data-theme^="console"] #projectModal .task-category-tabs,
+    body[data-theme^="glass"] #projectModal .task-category-tabs,
+    body[data-theme^="blueprint"] #projectModal .task-category-tabs {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    #projectModal .task-category-tabs::-webkit-scrollbar,
+    body[data-theme^="console"] #projectModal .task-category-tabs::-webkit-scrollbar,
+    body[data-theme^="glass"] #projectModal .task-category-tabs::-webkit-scrollbar,
+    body[data-theme^="blueprint"] #projectModal .task-category-tabs::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    #projectModal .task-category-tab-shell,
+    body[data-theme^="console"] #projectModal .task-category-tab-shell,
+    body[data-theme^="glass"] #projectModal .task-category-tab-shell,
+    body[data-theme^="blueprint"] #projectModal .task-category-tab-shell {
+        flex: 0 0 auto !important;
+        max-width: min(9rem, 42vw) !important;
+    }
+
+    #projectModal .modal-tasks-card-body,
+    body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+    body[data-theme^="glass"] #projectModal .modal-tasks-card-body,
+    body[data-theme^="blueprint"] #projectModal .modal-tasks-card-body {
+        padding: 0.75rem !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .modal-task-controls-row,
+    body[data-theme^="console"] #projectModal .modal-task-controls-row,
+    body[data-theme^="glass"] #projectModal .modal-task-controls-row,
+    body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+
+    #projectModal .hide-completed-toggle,
+    #projectModal .task-sort-control,
+    body[data-theme^="console"] #projectModal .hide-completed-toggle,
+    body[data-theme^="console"] #projectModal .task-sort-control,
+    body[data-theme^="glass"] #projectModal .hide-completed-toggle,
+    body[data-theme^="glass"] #projectModal .task-sort-control,
+    body[data-theme^="blueprint"] #projectModal .hide-completed-toggle,
+    body[data-theme^="blueprint"] #projectModal .task-sort-control {
+        width: 100% !important;
+        min-width: 0 !important;
+        align-items: stretch !important;
+    }
+
+    #projectModal .task-sort-select,
+    body[data-theme^="console"] #projectModal .task-sort-select,
+    body[data-theme^="glass"] #projectModal .task-sort-select,
+    body[data-theme^="blueprint"] #projectModal .task-sort-select {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        display: grid !important;
+        grid-template-columns: auto auto auto minmax(0, 1fr) !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 0.7rem !important;
+    }
+
+    #projectModal .task-main-content,
+    body[data-theme^="console"] #projectModal .task-main-content,
+    body[data-theme^="glass"] #projectModal .task-main-content,
+    body[data-theme^="blueprint"] #projectModal .task-main-content {
+        grid-column: 4 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        flex-basis: auto !important;
+    }
+
+    #projectModal .task-text,
+    body[data-theme^="console"] #projectModal .task-text,
+    body[data-theme^="glass"] #projectModal .task-text,
+    body[data-theme^="blueprint"] #projectModal .task-text {
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme^="console"] #projectModal .task-meta-controls,
+    body[data-theme^="glass"] #projectModal .task-meta-controls,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        justify-content: flex-start !important;
+        gap: 0.45rem !important;
+        flex-wrap: wrap !important;
+    }
+
+    #projectModal .modal-paste-section,
+    body[data-theme^="console"] #projectModal .modal-paste-section,
+    body[data-theme^="glass"] #projectModal .modal-paste-section,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-section {
+        padding: 0.75rem !important;
+    }
+
+    #projectModal .modal-paste-actions,
+    body[data-theme^="console"] #projectModal .modal-paste-actions,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+        grid-template-columns: minmax(0, 1fr) auto auto !important;
+        gap: 0.5rem !important;
+    }
+
+    #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button {
+        min-width: 4.4rem !important;
+        padding-inline: 0.65rem !important;
+    }
+}
+
+@media (max-width: 380px) {
+    #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent .modal-scroll-inner,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        padding-left: 0.55rem !important;
+        padding-right: 0.55rem !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        grid-template-columns: auto auto minmax(0, 1fr) !important;
+        gap: 0.45rem !important;
+    }
+
+    #projectModal .task-drag-handle,
+    body[data-theme^="console"] #projectModal .task-drag-handle,
+    body[data-theme^="glass"] #projectModal .task-drag-handle,
+    body[data-theme^="blueprint"] #projectModal .task-drag-handle {
+        display: none !important;
+    }
+
+    #projectModal .task-main-content,
+    body[data-theme^="console"] #projectModal .task-main-content,
+    body[data-theme^="glass"] #projectModal .task-main-content,
+    body[data-theme^="blueprint"] #projectModal .task-main-content {
+        grid-column: 3 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: mobile task list optimization
+   ============================================================================ */
+@media (max-width: 720px) {
+    #projectModal .task-list,
+    body[data-theme^="console"] #projectModal .task-list,
+    body[data-theme^="glass"] #projectModal .task-list,
+    body[data-theme^="blueprint"] #projectModal .task-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.62rem !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        display: grid !important;
+        grid-template-columns: 1.55rem 1.75rem minmax(0, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        align-items: flex-start !important;
+        column-gap: 0.48rem !important;
+        row-gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 0.68rem !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-bulk-select,
+    body[data-theme^="console"] #projectModal .task-bulk-select,
+    body[data-theme^="glass"] #projectModal .task-bulk-select,
+    body[data-theme^="blueprint"] #projectModal .task-bulk-select {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: start !important;
+        margin: 0.18rem 0 0 !important;
+    }
+
+    #projectModal .task-checkbox,
+    body[data-theme^="console"] #projectModal .task-checkbox,
+    body[data-theme^="glass"] #projectModal .task-checkbox,
+    body[data-theme^="blueprint"] #projectModal .task-checkbox {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: start !important;
+        margin-top: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    #projectModal .task-main-content,
+    body[data-theme^="console"] #projectModal .task-main-content,
+    body[data-theme^="glass"] #projectModal .task-main-content,
+    body[data-theme^="blueprint"] #projectModal .task-main-content {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        align-self: start !important;
+    }
+
+    #projectModal .task-text,
+    body[data-theme^="console"] #projectModal .task-text,
+    body[data-theme^="glass"] #projectModal .task-text,
+    body[data-theme^="blueprint"] #projectModal .task-text {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        line-height: 1.32 !important;
+        font-size: clamp(0.82rem, 3.65vw, 0.94rem) !important;
+    }
+
+    #projectModal .task-input--textarea,
+    body[data-theme^="console"] #projectModal .task-input--textarea,
+    body[data-theme^="glass"] #projectModal .task-input--textarea,
+    body[data-theme^="blueprint"] #projectModal .task-input--textarea {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        font-size: 0.95rem !important;
+        line-height: 1.35 !important;
+    }
+
+    #projectModal .task-drag-handle,
+    body[data-theme^="console"] #projectModal .task-drag-handle,
+    body[data-theme^="glass"] #projectModal .task-drag-handle,
+    body[data-theme^="blueprint"] #projectModal .task-drag-handle {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        justify-self: center !important;
+        align-self: center !important;
+        width: 1.5rem !important;
+        min-width: 1.5rem !important;
+        height: 1.5rem !important;
+        padding: 0.25rem !important;
+        margin: 0 !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme^="console"] #projectModal .task-meta-controls,
+    body[data-theme^="glass"] #projectModal .task-meta-controls,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls {
+        grid-column: 2 / -1 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+        gap: 0.42rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-note-button,
+    #projectModal .task-priority-button,
+    #projectModal .delete-button,
+    #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="console"] #projectModal .task-note-button,
+    body[data-theme^="console"] #projectModal .task-priority-button,
+    body[data-theme^="console"] #projectModal .delete-button,
+    body[data-theme^="console"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="glass"] #projectModal .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-priority-button,
+    body[data-theme^="glass"] #projectModal .delete-button,
+    body[data-theme^="glass"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="blueprint"] #projectModal .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button,
+    body[data-theme^="blueprint"] #projectModal .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control:not(.has-due-date) {
+        width: 2.15rem !important;
+        min-width: 2.15rem !important;
+        height: 2.15rem !important;
+        min-height: 2.15rem !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date {
+        width: auto !important;
+        min-width: 5.1rem !important;
+        max-width: 100% !important;
+        height: 2.15rem !important;
+        min-height: 2.15rem !important;
+        padding-inline: 0.32rem !important;
+        flex: 0 1 auto !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date .task-due-date-input {
+        width: 4.75rem !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        font-size: 0.7rem !important;
+    }
+
+    #projectModal .task-priority-control,
+    body[data-theme^="console"] #projectModal .task-priority-control,
+    body[data-theme^="glass"] #projectModal .task-priority-control,
+    body[data-theme^="blueprint"] #projectModal .task-priority-control {
+        position: relative !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+    }
+
+    #projectModal .task-priority-popover,
+    body[data-theme^="console"] #projectModal .task-priority-popover,
+    body[data-theme^="glass"] #projectModal .task-priority-popover,
+    body[data-theme^="blueprint"] #projectModal .task-priority-popover {
+        right: 0 !important;
+        left: auto !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        min-width: min(13rem, calc(100vw - 1.5rem)) !important;
+        z-index: 220 !important;
+    }
+
+    #projectModal .task-priority-option,
+    body[data-theme^="console"] #projectModal .task-priority-option,
+    body[data-theme^="glass"] #projectModal .task-priority-option,
+    body[data-theme^="blueprint"] #projectModal .task-priority-option {
+        white-space: normal !important;
+        text-align: left !important;
+        line-height: 1.2 !important;
+    }
+}
+
+@media (max-width: 420px) {
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        grid-template-columns: 1.35rem 1.55rem minmax(0, 1fr) !important;
+        column-gap: 0.4rem !important;
+        row-gap: 0.5rem !important;
+        padding: 0.62rem !important;
+    }
+
+    #projectModal .task-note-button,
+    #projectModal .task-priority-button,
+    #projectModal .delete-button,
+    #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="console"] #projectModal .task-note-button,
+    body[data-theme^="console"] #projectModal .task-priority-button,
+    body[data-theme^="console"] #projectModal .delete-button,
+    body[data-theme^="console"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="glass"] #projectModal .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-priority-button,
+    body[data-theme^="glass"] #projectModal .delete-button,
+    body[data-theme^="glass"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="blueprint"] #projectModal .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button,
+    body[data-theme^="blueprint"] #projectModal .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control:not(.has-due-date) {
+        width: 2rem !important;
+        min-width: 2rem !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date {
+        height: 2rem !important;
+        min-height: 2rem !important;
+        min-width: 4.85rem !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: Console project modal task tabs stay pinned at modal top
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    position: relative !important;
+    isolation: isolate !important;
+    overflow-y: auto !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"],
+body[data-theme^="console"] #projectModal .modal-tasks-card {
+    position: relative !important;
+    overflow: visible !important;
+    contain: none !important;
+    isolation: isolate !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100000 !important;
+    margin: 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.99)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.99)) !important;
+    background-image: none !important;
+    box-shadow: 0 1px 0 var(--line, rgba(148, 163, 184, 0.22)) !important;
+    transform: translateZ(0) !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-item:not(.dragging) {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+@media (max-width: 900px) {
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        padding-top: 0 !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner > .modal-header-centered:first-child {
+        margin-top: calc(0.85rem + env(safe-area-inset-top, 0px)) !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        z-index: 100000 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: Console task tabs stick to the true modal top while scrolling
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-content#modalContent {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    contain: none !important;
+    isolation: auto !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"],
+body[data-theme^="console"] #projectModal .modal-tasks-card {
+    overflow: visible !important;
+    contain: none !important;
+    isolation: auto !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2147483000 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    background: var(--panel, rgba(18, 18, 24, 0.995)) !important;
+    background-color: var(--panel, rgba(18, 18, 24, 0.995)) !important;
+    box-shadow: 0 1px 0 var(--line, rgba(148, 163, 184, 0.22)) !important;
+    transform: translateZ(0) !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-item:not(.dragging) {
+    z-index: 0 !important;
+}
+
+@media (max-width: 720px) {
+    body[data-theme^="console"] #projectModal .modal-content#modalContent {
+        height: 100svh !important;
+        max-height: 100svh !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-content#modalContent .modal-scroll-inner {
+        height: auto !important;
+        min-height: 100svh !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        z-index: 2147483000 !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: Console sticky task tabs top clipping fix
+   ============================================================================ */
+body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+    top: 0 !important;
+    padding-top: 0.38rem !important;
+    min-height: calc(2.15rem + 0.38rem) !important;
+    overflow: visible !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tabs {
+    padding-top: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    clip-path: none !important;
+}
+
+body[data-theme^="console"] #projectModal .task-category-tab-wrap,
+body[data-theme^="console"] #projectModal .task-category-tab-shell {
+    overflow: visible !important;
+    clip-path: none !important;
+}
+
+@media (max-width: 720px) {
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls {
+        padding-top: calc(0.38rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(2.15rem + 0.38rem + env(safe-area-inset-top, 0px)) !important;
+    }
+}
+
+
+/* ============================================================================
+   Targeted patch: compact mobile task rows
+   ============================================================================ */
+@media (max-width: 720px) {
+    #projectModal .task-list,
+    body[data-theme^="console"] #projectModal .task-list,
+    body[data-theme^="glass"] #projectModal .task-list,
+    body[data-theme^="blueprint"] #projectModal .task-list {
+        gap: 0.48rem !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        display: grid !important;
+        grid-template-columns: 1.65rem 1.65rem minmax(0, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        grid-template-areas:
+            "complete select title"
+            "drag actions actions" !important;
+        align-items: start !important;
+        align-content: start !important;
+        justify-items: stretch !important;
+        column-gap: 0.48rem !important;
+        row-gap: 0.42rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 0.62rem 0.64rem !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-checkbox,
+    body[data-theme^="console"] #projectModal .task-checkbox,
+    body[data-theme^="glass"] #projectModal .task-checkbox,
+    body[data-theme^="blueprint"] #projectModal .task-checkbox {
+        grid-area: complete !important;
+        justify-self: center !important;
+        align-self: start !important;
+        width: 1.28rem !important;
+        min-width: 1.28rem !important;
+        max-width: 1.28rem !important;
+        height: 1.28rem !important;
+        min-height: 1.28rem !important;
+        max-height: 1.28rem !important;
+        margin: 0.08rem 0 0 !important;
+        padding: 0 !important;
+        flex: 0 0 1.28rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-bulk-select,
+    body[data-theme^="console"] #projectModal .task-bulk-select,
+    body[data-theme^="glass"] #projectModal .task-bulk-select,
+    body[data-theme^="blueprint"] #projectModal .task-bulk-select {
+        grid-area: select !important;
+        justify-self: center !important;
+        align-self: start !important;
+        width: 1.28rem !important;
+        min-width: 1.28rem !important;
+        max-width: 1.28rem !important;
+        height: 1.28rem !important;
+        min-height: 1.28rem !important;
+        max-height: 1.28rem !important;
+        margin: 0.08rem 0 0 !important;
+        padding: 0 !important;
+        flex: 0 0 1.28rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-bulk-select span,
+    body[data-theme^="console"] #projectModal .task-bulk-select span,
+    body[data-theme^="glass"] #projectModal .task-bulk-select span,
+    body[data-theme^="blueprint"] #projectModal .task-bulk-select span {
+        width: 0.55rem !important;
+        min-width: 0.55rem !important;
+        height: 0.55rem !important;
+        min-height: 0.55rem !important;
+    }
+
+    #projectModal .task-main-content,
+    body[data-theme^="console"] #projectModal .task-main-content,
+    body[data-theme^="glass"] #projectModal .task-main-content,
+    body[data-theme^="blueprint"] #projectModal .task-main-content {
+        grid-area: title !important;
+        align-self: start !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    #projectModal .task-text,
+    body[data-theme^="console"] #projectModal .task-text,
+    body[data-theme^="glass"] #projectModal .task-text,
+    body[data-theme^="blueprint"] #projectModal .task-text {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        line-height: 1.22 !important;
+        font-size: clamp(0.86rem, 3.7vw, 0.98rem) !important;
+    }
+
+    #projectModal .task-drag-handle,
+    body[data-theme^="console"] #projectModal .task-drag-handle,
+    body[data-theme^="glass"] #projectModal .task-drag-handle,
+    body[data-theme^="blueprint"] #projectModal .task-drag-handle {
+        grid-area: drag !important;
+        justify-self: center !important;
+        align-self: center !important;
+        width: 1.35rem !important;
+        min-width: 1.35rem !important;
+        max-width: 1.35rem !important;
+        height: 1.35rem !important;
+        min-height: 1.35rem !important;
+        max-height: 1.35rem !important;
+        margin: 0 !important;
+        padding: 0.2rem !important;
+        flex: 0 0 1.35rem !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme^="console"] #projectModal .task-meta-controls,
+    body[data-theme^="glass"] #projectModal .task-meta-controls,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls {
+        grid-area: actions !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+        gap: 0.34rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-priority-control,
+    body[data-theme^="console"] #projectModal .task-priority-control,
+    body[data-theme^="glass"] #projectModal .task-priority-control,
+    body[data-theme^="blueprint"] #projectModal .task-priority-control {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #projectModal .task-note-button,
+    #projectModal .task-priority-button,
+    #projectModal .delete-button,
+    #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="console"] #projectModal .task-note-button,
+    body[data-theme^="console"] #projectModal .task-priority-button,
+    body[data-theme^="console"] #projectModal .delete-button,
+    body[data-theme^="console"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="glass"] #projectModal .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-priority-button,
+    body[data-theme^="glass"] #projectModal .delete-button,
+    body[data-theme^="glass"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="blueprint"] #projectModal .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button,
+    body[data-theme^="blueprint"] #projectModal .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control:not(.has-due-date) {
+        width: 1.88rem !important;
+        min-width: 1.88rem !important;
+        max-width: 1.88rem !important;
+        height: 1.88rem !important;
+        min-height: 1.88rem !important;
+        max-height: 1.88rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        flex: 0 0 1.88rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-note-button svg,
+    #projectModal .task-priority-button svg,
+    #projectModal .delete-button svg,
+    #projectModal .task-due-date-control svg,
+    body[data-theme^="console"] #projectModal .task-note-button svg,
+    body[data-theme^="console"] #projectModal .task-priority-button svg,
+    body[data-theme^="console"] #projectModal .delete-button svg,
+    body[data-theme^="console"] #projectModal .task-due-date-control svg,
+    body[data-theme^="glass"] #projectModal .task-note-button svg,
+    body[data-theme^="glass"] #projectModal .task-priority-button svg,
+    body[data-theme^="glass"] #projectModal .delete-button svg,
+    body[data-theme^="glass"] #projectModal .task-due-date-control svg,
+    body[data-theme^="blueprint"] #projectModal .task-note-button svg,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button svg,
+    body[data-theme^="blueprint"] #projectModal .delete-button svg,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control svg {
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date {
+        width: auto !important;
+        min-width: 4.65rem !important;
+        max-width: 100% !important;
+        height: 1.88rem !important;
+        min-height: 1.88rem !important;
+        max-height: 1.88rem !important;
+        padding: 0 0.3rem !important;
+        margin: 0 !important;
+        flex: 0 1 auto !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date .task-due-date-input {
+        width: 4.25rem !important;
+        min-width: 0 !important;
+        max-width: 4.25rem !important;
+        font-size: 0.66rem !important;
+        line-height: 1 !important;
+    }
+
+    #projectModal .task-item.is-editing,
+    body[data-theme^="console"] #projectModal .task-item.is-editing,
+    body[data-theme^="glass"] #projectModal .task-item.is-editing,
+    body[data-theme^="blueprint"] #projectModal .task-item.is-editing {
+        grid-template-areas:
+            "complete select title"
+            "drag actions actions" !important;
+    }
+
+    #projectModal .task-item.is-editing .task-input--textarea,
+    body[data-theme^="console"] #projectModal .task-item.is-editing .task-input--textarea,
+    body[data-theme^="glass"] #projectModal .task-item.is-editing .task-input--textarea,
+    body[data-theme^="blueprint"] #projectModal .task-item.is-editing .task-input--textarea {
+        min-height: 2.35rem !important;
+        max-height: 8rem !important;
+    }
+}
+
+@media (max-width: 420px) {
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        grid-template-columns: 1.45rem 1.45rem minmax(0, 1fr) !important;
+        column-gap: 0.38rem !important;
+        row-gap: 0.36rem !important;
+        padding: 0.56rem 0.58rem !important;
+    }
+
+    #projectModal .task-checkbox,
+    #projectModal .task-bulk-select,
+    body[data-theme^="console"] #projectModal .task-checkbox,
+    body[data-theme^="console"] #projectModal .task-bulk-select,
+    body[data-theme^="glass"] #projectModal .task-checkbox,
+    body[data-theme^="glass"] #projectModal .task-bulk-select,
+    body[data-theme^="blueprint"] #projectModal .task-checkbox,
+    body[data-theme^="blueprint"] #projectModal .task-bulk-select {
+        width: 1.16rem !important;
+        min-width: 1.16rem !important;
+        max-width: 1.16rem !important;
+        height: 1.16rem !important;
+        min-height: 1.16rem !important;
+        max-height: 1.16rem !important;
+        flex-basis: 1.16rem !important;
+    }
+
+    #projectModal .task-drag-handle,
+    body[data-theme^="console"] #projectModal .task-drag-handle,
+    body[data-theme^="glass"] #projectModal .task-drag-handle,
+    body[data-theme^="blueprint"] #projectModal .task-drag-handle {
+        width: 1.22rem !important;
+        min-width: 1.22rem !important;
+        max-width: 1.22rem !important;
+        height: 1.22rem !important;
+        min-height: 1.22rem !important;
+        max-height: 1.22rem !important;
+        flex-basis: 1.22rem !important;
+    }
+
+    #projectModal .task-note-button,
+    #projectModal .task-priority-button,
+    #projectModal .delete-button,
+    #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="console"] #projectModal .task-note-button,
+    body[data-theme^="console"] #projectModal .task-priority-button,
+    body[data-theme^="console"] #projectModal .delete-button,
+    body[data-theme^="console"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="glass"] #projectModal .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-priority-button,
+    body[data-theme^="glass"] #projectModal .delete-button,
+    body[data-theme^="glass"] #projectModal .task-due-date-control:not(.has-due-date),
+    body[data-theme^="blueprint"] #projectModal .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-priority-button,
+    body[data-theme^="blueprint"] #projectModal .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control:not(.has-due-date) {
+        width: 1.78rem !important;
+        min-width: 1.78rem !important;
+        max-width: 1.78rem !important;
+        height: 1.78rem !important;
+        min-height: 1.78rem !important;
+        max-height: 1.78rem !important;
+        flex-basis: 1.78rem !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: mobile project tag, priority popover, and description alignment
+   ============================================================================ */
+@media (max-width: 720px) {
+    #projectModal .project-tag-controls,
+    body[data-theme^="console"] #projectModal .project-tag-controls,
+    body[data-theme^="glass"] #projectModal .project-tag-controls,
+    body[data-theme^="blueprint"] #projectModal .project-tag-controls {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .project-tag-list,
+    #projectModal .project-tags-list,
+    #projectModal .project-tag-chips,
+    #projectModal .project-tag-controls .tag-list,
+    body[data-theme^="console"] #projectModal .project-tag-list,
+    body[data-theme^="console"] #projectModal .project-tags-list,
+    body[data-theme^="console"] #projectModal .project-tag-chips,
+    body[data-theme^="console"] #projectModal .project-tag-controls .tag-list,
+    body[data-theme^="glass"] #projectModal .project-tag-list,
+    body[data-theme^="glass"] #projectModal .project-tags-list,
+    body[data-theme^="glass"] #projectModal .project-tag-chips,
+    body[data-theme^="glass"] #projectModal .project-tag-controls .tag-list,
+    body[data-theme^="blueprint"] #projectModal .project-tag-list,
+    body[data-theme^="blueprint"] #projectModal .project-tags-list,
+    body[data-theme^="blueprint"] #projectModal .project-tag-chips,
+    body[data-theme^="blueprint"] #projectModal .project-tag-controls .tag-list {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+        gap: 0.48rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .project-tag-chip,
+    body[data-theme^="console"] #projectModal .project-tag-chip,
+    body[data-theme^="glass"] #projectModal .project-tag-chip,
+    body[data-theme^="blueprint"] #projectModal .project-tag-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.34rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 2.5rem) !important;
+        min-height: 2.35rem !important;
+        height: auto !important;
+        padding: 0.36rem 0.42rem 0.36rem 0.76rem !important;
+        border-radius: 999px !important;
+        line-height: 1.1 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .project-tag-label,
+    body[data-theme^="console"] #projectModal .project-tag-label,
+    body[data-theme^="glass"] #projectModal .project-tag-label,
+    body[data-theme^="blueprint"] #projectModal .project-tag-label {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+        max-width: 9.5rem !important;
+        min-height: 1.4rem !important;
+        height: auto !important;
+        padding: 0 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex: 0 1 auto !important;
+    }
+
+    #projectModal .project-tag-remove,
+    body[data-theme^="console"] #projectModal .project-tag-remove,
+    body[data-theme^="glass"] #projectModal .project-tag-remove,
+    body[data-theme^="blueprint"] #projectModal .project-tag-remove {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.55rem !important;
+        min-width: 1.55rem !important;
+        max-width: 1.55rem !important;
+        height: 1.55rem !important;
+        min-height: 1.55rem !important;
+        max-height: 1.55rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+        line-height: 1 !important;
+        flex: 0 0 1.55rem !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .project-tag-add,
+    body[data-theme^="console"] #projectModal .project-tag-add,
+    body[data-theme^="glass"] #projectModal .project-tag-add,
+    body[data-theme^="blueprint"] #projectModal .project-tag-add {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        max-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        max-height: 2.35rem !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        line-height: 1 !important;
+        flex: 0 0 2.35rem !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .project-header,
+    #projectModal .project-actions,
+    #projectModal .modal-project-priority-row,
+    #projectModal .project-priority-control,
+    body[data-theme^="console"] #projectModal .project-header,
+    body[data-theme^="console"] #projectModal .project-actions,
+    body[data-theme^="console"] #projectModal .modal-project-priority-row,
+    body[data-theme^="console"] #projectModal .project-priority-control,
+    body[data-theme^="glass"] #projectModal .project-header,
+    body[data-theme^="glass"] #projectModal .project-actions,
+    body[data-theme^="glass"] #projectModal .modal-project-priority-row,
+    body[data-theme^="glass"] #projectModal .project-priority-control,
+    body[data-theme^="blueprint"] #projectModal .project-header,
+    body[data-theme^="blueprint"] #projectModal .project-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-project-priority-row,
+    body[data-theme^="blueprint"] #projectModal .project-priority-control {
+        overflow: visible !important;
+        contain: none !important;
+        isolation: auto !important;
+    }
+
+    #projectModal .project-priority-control--modal .project-priority-popover,
+    body[data-theme^="console"] #projectModal .project-priority-control--modal .project-priority-popover,
+    body[data-theme^="glass"] #projectModal .project-priority-control--modal .project-priority-popover,
+    body[data-theme^="blueprint"] #projectModal .project-priority-control--modal .project-priority-popover {
+        left: 50% !important;
+        right: auto !important;
+        top: calc(100% + 0.5rem) !important;
+        width: min(22rem, calc(100vw - 1.5rem)) !important;
+        min-width: min(18rem, calc(100vw - 1.5rem)) !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        max-height: min(54svh, 24rem) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        transform: translateX(-50%) !important;
+        z-index: 2147483600 !important;
+        box-sizing: border-box !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #projectModal .modal-project-description-view,
+    body[data-theme^="console"] #projectModal .modal-project-description-view,
+    body[data-theme^="glass"] #projectModal .modal-project-description-view,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-view {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        justify-content: stretch !important;
+        gap: 0.7rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0.35rem 0 0.85rem !important;
+        padding: 0 !important;
+        text-align: left !important;
+    }
+
+    #projectModal .modal-project-description-text,
+    body[data-theme^="console"] #projectModal .modal-project-description-text,
+    body[data-theme^="glass"] #projectModal .modal-project-description-text,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-text {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        align-self: center !important;
+        line-height: 1.25 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    #projectModal .modal-project-description-edit,
+    body[data-theme^="console"] #projectModal .modal-project-description-edit,
+    body[data-theme^="glass"] #projectModal .modal-project-description-edit,
+    body[data-theme^="blueprint"] #projectModal .modal-project-description-edit {
+        align-self: center !important;
+        justify-self: end !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: UI Options button/color-card refinements
+   ============================================================================ */
+body[data-theme^="console"] .ui-options-modal-content .modal-done-btn,
+body[data-theme^="console"] .ui-options-modal-content .modal-done-btn:hover,
+body[data-theme^="console"] .ui-options-modal-content .modal-done-btn:focus-visible {
+    color: var(--panel, var(--surface, var(--bg, #111318))) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .add-project-button,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:hover,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visible,
+body[data-theme="blueprint-dark"] .add-project-button,
+body[data-theme="blueprint-dark"] .add-project-button:hover,
+body[data-theme="blueprint-dark"] .add-project-button:focus-visible {
+    color: var(--bg, var(--panel, var(--surface, #171717))) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .add-project-button svg,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:hover svg,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visible svg,
+body[data-theme="blueprint-dark"] .add-project-button svg,
+body[data-theme="blueprint-dark"] .add-project-button:hover svg,
+body[data-theme="blueprint-dark"] .add-project-button:focus-visible svg {
+    color: var(--bg, var(--panel, var(--surface, #171717))) !important;
+    stroke: var(--bg, var(--panel, var(--surface, #171717))) !important;
+}
+
+body[data-theme^="blueprint"] .ui-options-modal-content .accent-color-grid {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* ============================================================================
+   Targeted patch: Neumorphism New Project text/icon cutout color
+   ============================================================================ */
+body[data-theme="blueprint-light"] .control-panel .add-project-button,
+body[data-theme="blueprint-light"] .control-panel .add-project-button:hover,
+body[data-theme="blueprint-light"] .control-panel .add-project-button:focus-visible,
+body[data-theme="blueprint-light"] .add-project-button,
+body[data-theme="blueprint-light"] .add-project-button:hover,
+body[data-theme="blueprint-light"] .add-project-button:focus-visible {
+    --new-project-cutout-color: var(--panel, var(--surface, var(--bg, #e8eaed)));
+    color: var(--new-project-cutout-color) !important;
+    -webkit-text-fill-color: var(--new-project-cutout-color) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme="blueprint-dark"] .control-panel .add-project-button,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:hover,
+body[data-theme="blueprint-dark"] .control-panel .add-project-button:focus-visible,
+body[data-theme="blueprint-dark"] .add-project-button,
+body[data-theme="blueprint-dark"] .add-project-button:hover,
+body[data-theme="blueprint-dark"] .add-project-button:focus-visible {
+    --new-project-cutout-color: var(--panel, var(--surface, var(--bg, #1a1a1a)));
+    color: var(--new-project-cutout-color) !important;
+    -webkit-text-fill-color: var(--new-project-cutout-color) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="blueprint"] .control-panel .add-project-button svg,
+body[data-theme^="blueprint"] .control-panel .add-project-button:hover svg,
+body[data-theme^="blueprint"] .control-panel .add-project-button:focus-visible svg,
+body[data-theme^="blueprint"] .add-project-button svg,
+body[data-theme^="blueprint"] .add-project-button:hover svg,
+body[data-theme^="blueprint"] .add-project-button:focus-visible svg,
+body[data-theme^="blueprint"] .control-panel .add-project-button svg *,
+body[data-theme^="blueprint"] .control-panel .add-project-button:hover svg *,
+body[data-theme^="blueprint"] .control-panel .add-project-button:focus-visible svg *,
+body[data-theme^="blueprint"] .add-project-button svg *,
+body[data-theme^="blueprint"] .add-project-button:hover svg *,
+body[data-theme^="blueprint"] .add-project-button:focus-visible svg * {
+    color: var(--new-project-cutout-color) !important;
+    stroke: var(--new-project-cutout-color) !important;
+    -webkit-text-fill-color: var(--new-project-cutout-color) !important;
+}
+
+/* ============================================================================
+   Targeted patch: auth submit button text readability/alignment
+   ============================================================================ */
+.auth-submit,
+.auth-submit:hover:not(:disabled),
+.auth-submit:focus-visible,
+body[data-theme^="console"] .auth-submit,
+body[data-theme^="console"] .auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-submit:hover,
+body[data-theme^="console"] .auth-submit:focus-visible,
+body[data-theme^="blueprint"] .auth-submit,
+body[data-theme^="blueprint"] .auth-submit:hover:not(:disabled),
+body[data-theme^="blueprint"] .auth-submit:focus-visible {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    line-height: 1 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* ============================================================================
+   Targeted patch: auth tab active highlight bottom clipping
+   ============================================================================ */
+.auth-tabs,
+body[data-theme^="console"] .auth-tabs,
+body[data-theme^="blueprint"] .auth-tabs {
+    overflow: visible !important;
+    padding-bottom: max(8px, 0.5rem) !important;
+}
+
+.auth-tab,
+body[data-theme^="console"] .auth-tab,
+body[data-theme^="blueprint"] .auth-tab {
+    bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.auth-tab.auth-tab-active::after,
+body[data-theme^="console"] .auth-tab.auth-tab-active::after,
+body[data-theme^="blueprint"] .auth-tab.auth-tab-active::after {
+    display: none !important;
+}
+
+
+/* ============================================================================
+   Targeted patch: locked auth screen Neumorphism dark mode + matching password input
+   ============================================================================ */
+.auth-overlay,
+body[data-theme] .auth-overlay,
+body[data-theme^="console"] .auth-overlay,
+body[data-theme^="blueprint"] .auth-overlay {
+    --auth-locked-bg: #1a1a1a;
+    --auth-locked-bg-2: #202020;
+    --auth-locked-bg-3: #141414;
+    --auth-locked-panel: #1a1a1a;
+    --auth-locked-heading: #ffffff;
+    --auth-locked-text: rgba(255, 255, 255, 0.78);
+    --auth-locked-muted: rgba(255, 255, 255, 0.6);
+    --auth-locked-muted-2: rgba(255, 255, 255, 0.5);
+    --auth-locked-line: rgba(255, 255, 255, 0.06);
+    --auth-locked-light-shadow: rgba(255, 255, 255, 0.05);
+    --auth-locked-dark-shadow: rgba(0, 0, 0, 0.6);
+    --auth-locked-shadow-level-2: 6px 6px 12px var(--auth-locked-dark-shadow), -3px -3px 10px var(--auth-locked-light-shadow);
+    --auth-locked-shadow-inset: inset 2px 2px 5px var(--auth-locked-dark-shadow), inset -1px -1px 4px var(--auth-locked-light-shadow);
+    background: #000000 !important;
+    color: var(--auth-locked-text) !important;
+}
+
+.auth-overlay .auth-card,
+body[data-theme] .auth-overlay .auth-card,
+body[data-theme^="console"] .auth-overlay .auth-card,
+body[data-theme^="blueprint"] .auth-overlay .auth-card {
+    background: var(--auth-locked-panel) !important;
+    color: var(--auth-locked-text) !important;
+    border: 1px solid var(--auth-locked-line) !important;
+    box-shadow: var(--auth-locked-shadow-level-2) !important;
+}
+
+.auth-overlay .auth-logo-img,
+body[data-theme] .auth-overlay .auth-logo-img {
+    filter: none !important;
+}
+
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    background: var(--auth-locked-panel) !important;
+    border: 1px solid var(--auth-locked-line) !important;
+    box-shadow: var(--auth-locked-shadow-inset) !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    background: transparent !important;
+    color: var(--auth-locked-muted) !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: var(--auth-locked-panel) !important;
+    color: var(--accent, #ff8a00) !important;
+    border-color: var(--accent, #ff8a00) !important;
+    box-shadow: var(--auth-locked-shadow-level-2) !important;
+}
+
+.auth-overlay .auth-label,
+body[data-theme] .auth-overlay .auth-label,
+body[data-theme^="console"] .auth-overlay .auth-label,
+body[data-theme^="blueprint"] .auth-overlay .auth-label,
+.auth-overlay .remember-me-label,
+body[data-theme] .auth-overlay .remember-me-label {
+    color: var(--auth-locked-muted) !important;
+}
+
+.auth-overlay .auth-input-wrap,
+body[data-theme] .auth-overlay .auth-input-wrap,
+body[data-theme^="console"] .auth-overlay .auth-input-wrap,
+body[data-theme^="blueprint"] .auth-overlay .auth-input-wrap {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-input,
+.auth-overlay .auth-input-wrap .auth-input,
+body[data-theme] .auth-overlay .auth-input,
+body[data-theme] .auth-overlay .auth-input-wrap .auth-input,
+body[data-theme^="console"] .auth-overlay .auth-input,
+body[data-theme^="console"] .auth-overlay .auth-input-wrap .auth-input,
+body[data-theme^="blueprint"] .auth-overlay .auth-input,
+body[data-theme^="blueprint"] .auth-overlay .auth-input-wrap .auth-input {
+    background: var(--auth-locked-panel) !important;
+    background-color: var(--auth-locked-panel) !important;
+    color: var(--auth-locked-heading) !important;
+    border: 1px solid var(--auth-locked-line) !important;
+    box-shadow: var(--auth-locked-shadow-inset) !important;
+}
+
+.auth-overlay .auth-input::placeholder,
+body[data-theme] .auth-overlay .auth-input::placeholder {
+    color: var(--auth-locked-muted-2) !important;
+}
+
+.auth-overlay .auth-input:focus,
+.auth-overlay .auth-input-wrap .auth-input:focus,
+body[data-theme] .auth-overlay .auth-input:focus,
+body[data-theme] .auth-overlay .auth-input-wrap .auth-input:focus {
+    border-color: var(--accent, #ff8a00) !important;
+    box-shadow: var(--auth-locked-shadow-inset), 0 0 0 2px color-mix(in srgb, var(--accent, #ff8a00) 28%, transparent) !important;
+}
+
+.auth-overlay .show-pw-btn,
+body[data-theme] .auth-overlay .show-pw-btn,
+body[data-theme^="console"] .auth-overlay .show-pw-btn,
+body[data-theme^="blueprint"] .auth-overlay .show-pw-btn {
+    background: transparent !important;
+    color: var(--auth-locked-muted) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* ============================================================================
+   Targeted patch: auth tab highlight restore + neumorphic submit text
+   ============================================================================ */
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: transparent !important;
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    border-color: var(--accent, #ff8a00) !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-submit,
+.auth-overlay .auth-submit:hover:not(:disabled),
+.auth-overlay .auth-submit:focus-visible,
+body[data-theme] .auth-overlay .auth-submit,
+body[data-theme] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme] .auth-overlay .auth-submit:focus-visible,
+body[data-theme^="console"] .auth-overlay .auth-submit,
+body[data-theme^="console"] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-overlay .auth-submit:hover,
+body[data-theme^="console"] .auth-overlay .auth-submit:focus-visible,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme^="blueprint"] .auth-overlay .auth-submit:focus-visible {
+    color: var(--auth-locked-panel, #1a1a1a) !important;
+    -webkit-text-fill-color: var(--auth-locked-panel, #1a1a1a) !important;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.18), -1px -1px 1px rgba(0, 0, 0, 0.38) !important;
+}
+
+/* ============================================================================
+   Targeted patch: auth tab highlight visible while preserving screenshot styling
+   ============================================================================ */
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    overflow: visible !important;
+    padding: 0.35rem !important;
+    box-sizing: border-box !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+    border-radius: 0.7rem !important;
+}
+
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: transparent !important;
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    border-color: transparent !important;
+    box-shadow: inset 0 0 0 1px var(--accent, #ff8a00) !important;
+}
+
+
+/* ============================================================================
+   Targeted patch: TaskForge auth modal Rajdhani + full Neumorphism treatment
+   ============================================================================ */
+.auth-overlay,
+.auth-overlay *,
+body[data-theme] .auth-overlay,
+body[data-theme] .auth-overlay *,
+body[data-theme^="console"] .auth-overlay,
+body[data-theme^="console"] .auth-overlay *,
+body[data-theme^="blueprint"] .auth-overlay,
+body[data-theme^="blueprint"] .auth-overlay * {
+    font-family: "Rajdhani", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.auth-overlay .auth-card,
+body[data-theme] .auth-overlay .auth-card,
+body[data-theme^="console"] .auth-overlay .auth-card,
+body[data-theme^="blueprint"] .auth-overlay .auth-card {
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    border: 1px solid var(--auth-locked-line, rgba(255, 255, 255, 0.06)) !important;
+    box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.68), -5px -5px 16px rgba(255, 255, 255, 0.045) !important;
+}
+
+.auth-overlay .auth-logo-img,
+body[data-theme] .auth-overlay .auth-logo-img,
+body[data-theme^="console"] .auth-overlay .auth-logo-img,
+body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
+    width: min(4.25rem, 18vw) !important;
+    max-width: 50% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto 0.2rem !important;
+    filter: none !important;
+}
+
+.auth-overlay .auth-brand-copy,
+body[data-theme] .auth-overlay .auth-brand-copy,
+body[data-theme^="console"] .auth-overlay .auth-brand-copy,
+body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
+    display: grid !important;
+    gap: 0.06rem !important;
+    place-items: center !important;
+    margin: 0 0 1.05rem !important;
+    color: var(--auth-locked-heading, #ffffff) !important;
+    text-align: center !important;
+}
+
+.auth-overlay .auth-product-title,
+body[data-theme] .auth-overlay .auth-product-title,
+body[data-theme^="console"] .auth-overlay .auth-product-title,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-title {
+    margin: 0 !important;
+    color: var(--auth-locked-heading, #ffffff) !important;
+    font-size: clamp(1.35rem, 4vw, 1.9rem) !important;
+    line-height: 0.92 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7), -1px -1px 1px rgba(255, 255, 255, 0.07) !important;
+}
+
+.auth-overlay .auth-product-subtitle,
+body[data-theme] .auth-overlay .auth-product-subtitle,
+body[data-theme^="console"] .auth-overlay .auth-product-subtitle,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-subtitle {
+    margin: 0 !important;
+    color: var(--auth-locked-muted, rgba(255, 255, 255, 0.6)) !important;
+    font-size: clamp(0.68rem, 2.4vw, 0.88rem) !important;
+    line-height: 1 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.58), -1px -1px 1px rgba(255, 255, 255, 0.04) !important;
+}
+
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    border: 1px solid var(--auth-locked-line, rgba(255, 255, 255, 0.06)) !important;
+    border-radius: 0.95rem !important;
+    box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.62), inset -2px -2px 6px rgba(255, 255, 255, 0.045) !important;
+    overflow: visible !important;
+    padding: 0.38rem !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    min-height: 2.4rem !important;
+    border-radius: 0.72rem !important;
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    color: var(--auth-locked-muted, rgba(255, 255, 255, 0.6)) !important;
+    -webkit-text-fill-color: var(--auth-locked-muted, rgba(255, 255, 255, 0.6)) !important;
+    border: 1px solid transparent !important;
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.48), -2px -2px 5px rgba(255, 255, 255, 0.04) !important;
+}
+
+.auth-overlay .auth-tab.auth-tab-active,
+body[data-theme] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="console"] .auth-overlay .auth-tab.auth-tab-active,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab.auth-tab-active {
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    border-color: transparent !important;
+    box-shadow: inset 0 0 0 1px var(--accent, #ff8a00), 3px 3px 8px rgba(0, 0, 0, 0.48), -2px -2px 5px rgba(255, 255, 255, 0.04) !important;
+}
+
+.auth-overlay .auth-field,
+body[data-theme] .auth-overlay .auth-field,
+body[data-theme^="console"] .auth-overlay .auth-field,
+body[data-theme^="blueprint"] .auth-overlay .auth-field {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-label,
+body[data-theme] .auth-overlay .auth-label,
+body[data-theme^="console"] .auth-overlay .auth-label,
+body[data-theme^="blueprint"] .auth-overlay .auth-label {
+    color: var(--auth-locked-muted, rgba(255, 255, 255, 0.6)) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.11em !important;
+}
+
+.auth-overlay .auth-input-wrap,
+body[data-theme] .auth-overlay .auth-input-wrap,
+body[data-theme^="console"] .auth-overlay .auth-input-wrap,
+body[data-theme^="blueprint"] .auth-overlay .auth-input-wrap {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.auth-overlay .auth-input,
+.auth-overlay .auth-input-wrap .auth-input,
+body[data-theme] .auth-overlay .auth-input,
+body[data-theme] .auth-overlay .auth-input-wrap .auth-input,
+body[data-theme^="console"] .auth-overlay .auth-input,
+body[data-theme^="console"] .auth-overlay .auth-input-wrap .auth-input,
+body[data-theme^="blueprint"] .auth-overlay .auth-input,
+body[data-theme^="blueprint"] .auth-overlay .auth-input-wrap .auth-input {
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    background-color: var(--auth-locked-panel, #1a1a1a) !important;
+    border: 1px solid var(--auth-locked-line, rgba(255, 255, 255, 0.06)) !important;
+    border-radius: 0.68rem !important;
+    color: var(--auth-locked-heading, #ffffff) !important;
+    box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.62), inset -2px -2px 6px rgba(255, 255, 255, 0.045) !important;
+}
+
+.auth-overlay .show-pw-btn,
+body[data-theme] .auth-overlay .show-pw-btn,
+body[data-theme^="console"] .auth-overlay .show-pw-btn,
+body[data-theme^="blueprint"] .auth-overlay .show-pw-btn {
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    color: var(--auth-locked-muted, rgba(255, 255, 255, 0.6)) !important;
+    border: 1px solid var(--auth-locked-line, rgba(255, 255, 255, 0.06)) !important;
+    border-radius: 999px !important;
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5), -2px -2px 5px rgba(255, 255, 255, 0.04) !important;
+}
+
+.auth-overlay .remember-me-label,
+body[data-theme] .auth-overlay .remember-me-label,
+body[data-theme^="console"] .auth-overlay .remember-me-label,
+body[data-theme^="blueprint"] .auth-overlay .remember-me-label {
+    width: fit-content !important;
+    padding: 0.38rem 0.55rem !important;
+    border-radius: 0.65rem !important;
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    border: 1px solid var(--auth-locked-line, rgba(255, 255, 255, 0.06)) !important;
+    color: var(--auth-locked-muted, rgba(255, 255, 255, 0.6)) !important;
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.48), -2px -2px 5px rgba(255, 255, 255, 0.04) !important;
+}
+
+.auth-overlay .remember-me-checkbox,
+body[data-theme] .auth-overlay .remember-me-checkbox,
+body[data-theme^="console"] .auth-overlay .remember-me-checkbox,
+body[data-theme^="blueprint"] .auth-overlay .remember-me-checkbox {
+    accent-color: var(--accent, #ff8a00) !important;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.54), inset -1px -1px 4px rgba(255, 255, 255, 0.045) !important;
+}
+
+.auth-overlay .auth-submit,
+.auth-overlay .auth-submit:hover:not(:disabled),
+.auth-overlay .auth-submit:focus-visible,
+body[data-theme] .auth-overlay .auth-submit,
+body[data-theme] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme] .auth-overlay .auth-submit:focus-visible,
+body[data-theme^="console"] .auth-overlay .auth-submit,
+body[data-theme^="console"] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme^="console"] .auth-overlay .auth-submit:hover,
+body[data-theme^="console"] .auth-overlay .auth-submit:focus-visible,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit:hover:not(:disabled),
+body[data-theme^="blueprint"] .auth-overlay .auth-submit:focus-visible {
+    min-height: 2.72rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, #ff8a00) 55%, rgba(0, 0, 0, 0.28)) !important;
+    border-radius: 0.72rem !important;
+    background: var(--accent, #ff8a00) !important;
+    color: var(--auth-locked-panel, #1a1a1a) !important;
+    -webkit-text-fill-color: var(--auth-locked-panel, #1a1a1a) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.045em !important;
+    box-shadow: 5px 5px 11px rgba(0, 0, 0, 0.54), -2px -2px 7px rgba(255, 255, 255, 0.055), inset 1px 1px 1px rgba(255, 255, 255, 0.22), inset -1px -1px 2px rgba(0, 0, 0, 0.28) !important;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.18), -1px -1px 1px rgba(0, 0, 0, 0.38) !important;
+}
+
+.auth-overlay .auth-error,
+body[data-theme] .auth-overlay .auth-error,
+body[data-theme^="console"] .auth-overlay .auth-error,
+body[data-theme^="blueprint"] .auth-overlay .auth-error {
+    border-radius: 0.65rem !important;
+    background: var(--auth-locked-panel, #1a1a1a) !important;
+    border: 1px solid rgba(255, 90, 90, 0.24) !important;
+    box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.55), inset -2px -2px 5px rgba(255, 255, 255, 0.04) !important;
+}
+
+@media (max-width: 430px) {
+    .auth-overlay .auth-logo-img,
+    body[data-theme] .auth-overlay .auth-logo-img,
+    body[data-theme^="console"] .auth-overlay .auth-logo-img,
+    body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
+        width: min(3.5rem, 18vw) !important;
+    }
+
+    .auth-overlay .auth-brand-copy,
+    body[data-theme] .auth-overlay .auth-brand-copy,
+    body[data-theme^="console"] .auth-overlay .auth-brand-copy,
+    body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
+        margin-bottom: 0.85rem !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: auth title spacing, logo placement, and casing refinement
+   ============================================================================ */
+.auth-overlay .auth-brand-copy,
+body[data-theme] .auth-overlay .auth-brand-copy,
+body[data-theme^="console"] .auth-overlay .auth-brand-copy,
+body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
+    gap: 0.24rem !important;
+    margin: 0 0 1.05rem !important;
+}
+
+.auth-overlay .auth-product-title,
+body[data-theme] .auth-overlay .auth-product-title,
+body[data-theme^="console"] .auth-overlay .auth-product-title,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-title {
+    font-size: clamp(1.69rem, 5vw, 2.38rem) !important;
+    text-transform: none !important;
+    letter-spacing: 0.035em !important;
+}
+
+.auth-overlay .auth-product-subtitle,
+body[data-theme] .auth-overlay .auth-product-subtitle,
+body[data-theme^="console"] .auth-overlay .auth-product-subtitle,
+body[data-theme^="blueprint"] .auth-overlay .auth-product-subtitle {
+    text-transform: none !important;
+    letter-spacing: 0.045em !important;
+}
+
+.auth-overlay .auth-tabs,
+body[data-theme] .auth-overlay .auth-tabs,
+body[data-theme^="console"] .auth-overlay .auth-tabs,
+body[data-theme^="blueprint"] .auth-overlay .auth-tabs {
+    display: flex !important;
+    gap: 0.38rem !important;
+    padding: 0.38rem !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab,
+.auth-overlay .auth-submit,
+body[data-theme] .auth-overlay .auth-submit,
+body[data-theme^="console"] .auth-overlay .auth-submit,
+body[data-theme^="blueprint"] .auth-overlay .auth-submit {
+    text-transform: none !important;
+}
+
+.auth-overlay .auth-tab,
+body[data-theme] .auth-overlay .auth-tab,
+body[data-theme^="console"] .auth-overlay .auth-tab,
+body[data-theme^="blueprint"] .auth-overlay .auth-tab {
+    flex: 1 1 0 !important;
+    letter-spacing: 0.015em !important;
+}
+
+.auth-overlay .auth-logo-img,
+body[data-theme] .auth-overlay .auth-logo-img,
+body[data-theme^="console"] .auth-overlay .auth-logo-img,
+body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
+    width: min(4.25rem, 18vw) !important;
+    max-width: 50% !important;
+    margin: 1rem auto 0 !important;
+}
+
+@media (max-width: 430px) {
+    .auth-overlay .auth-logo-img,
+    body[data-theme] .auth-overlay .auth-logo-img,
+    body[data-theme^="console"] .auth-overlay .auth-logo-img,
+    body[data-theme^="blueprint"] .auth-overlay .auth-logo-img {
+        width: min(3.5rem, 18vw) !important;
+        margin-top: 0.85rem !important;
+    }
+
+    .auth-overlay .auth-brand-copy,
+    body[data-theme] .auth-overlay .auth-brand-copy,
+    body[data-theme^="console"] .auth-overlay .auth-brand-copy,
+    body[data-theme^="blueprint"] .auth-overlay .auth-brand-copy {
+        gap: 0.24rem !important;
+    }
+}
+
+/* ============================================================================
+   Targeted patch: sidebar branding, visible tabs, links in notes, undo inversion,
+   neumorphic calendar controls, and avatar fill correction
+   ============================================================================ */
+.sidebar-app-brand {
+    display: grid !important;
+    gap: 0.44rem !important;
+    margin: 0 0 1.15rem !important;
+    padding: 0.15rem 0 0.85rem !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.22)) 78%, transparent) !important;
+}
+
+.sidebar-app-title {
+    margin: 0 !important;
+    color: var(--heading, var(--text, #fff)) !important;
+    font: inherit !important;
+    font-size: clamp(1.38rem, 1.7vw, 1.68rem) !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+}
+
+.sidebar-app-subtitle {
+    margin: 0 !important;
+    color: var(--muted, rgba(148, 163, 184, 0.86)) !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.035em !important;
+}
+
+body.control-panel-is-collapsed .sidebar-app-brand {
+    display: none !important;
+}
+
+#undoButton,
+button[data-undo-button],
+.paste-undo-button,
+.undo-button {
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-image: none !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+#undoButton:hover,
+#undoButton:focus-visible,
+button[data-undo-button]:hover,
+button[data-undo-button]:focus-visible,
+.paste-undo-button:hover,
+.paste-undo-button:focus-visible,
+.undo-button:hover,
+.undo-button:focus-visible {
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+#projectModal .modal-tabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    gap: 0.45rem !important;
+    padding: 0 0.35rem !important;
+    overflow: visible !important;
+    border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+}
+
+#projectModal .modal-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.35rem !important;
+    margin: 0 0 -1px !important;
+    padding: 0.62rem 1rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-bottom-color: var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-tab:hover,
+#projectModal .modal-tab:focus-visible {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 36%, var(--line, transparent)) !important;
+    background: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    background-color: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    color: var(--heading, currentColor) !important;
+}
+
+#projectModal .modal-tab.active,
+#projectModal .modal-tab[aria-selected="true"] {
+    border-color: var(--accent, currentColor) !important;
+    border-bottom-color: var(--panel, transparent) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+}
+
+#projectModal .task-category-tab-shell {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+}
+
+#projectModal .task-category-tab-shell:hover,
+#projectModal .task-category-tab-shell:focus-within,
+#projectModal .task-category-tab-wrap.is-menu-open .task-category-tab-shell {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 36%, var(--line, transparent)) !important;
+    background: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    background-color: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    color: var(--heading, currentColor) !important;
+}
+
+#projectModal .task-category-tab-shell.is-active,
+#projectModal .task-category-tab-wrap.is-active .task-category-tab-shell {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tabs,
+body[data-theme^="console"] #projectModal .task-category-tabs {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    scrollbar-width: none !important;
+}
+
+body[data-theme^="console"] #projectModal .modal-tabs::-webkit-scrollbar,
+body[data-theme^="console"] #projectModal .task-category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.project-notes-link-preview {
+    display: grid !important;
+    gap: 0.5rem !important;
+    margin-top: 0.75rem !important;
+    padding: 0.75rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+}
+
+.project-notes-link-preview-label {
+    color: var(--muted, currentColor) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+
+.project-notes-link-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.45rem !important;
+}
+
+.project-notes-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    max-width: 100% !important;
+    padding: 0.35rem 0.58rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 42%, var(--line, transparent)) !important;
+    border-radius: 999px !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-image: none !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.project-notes-link:hover,
+.project-notes-link:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control,
+body[data-theme^="blueprint"] .task-bulk-date-control {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--shadow-level-1, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control:hover,
+body[data-theme^="blueprint"] .task-due-date-control:focus-within,
+body[data-theme^="blueprint"] .task-bulk-date-control:hover,
+body[data-theme^="blueprint"] .task-bulk-date-control:focus-within {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    box-shadow: var(--shadow-inset, var(--inset-shadow, none)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control:not(.has-due-date)::after {
+    background: currentColor !important;
+    background-color: currentColor !important;
+    background-image: none !important;
+}
+
+body[data-theme^="blueprint"] .task-due-date-control:not(.has-due-date) .task-due-date-input::-webkit-calendar-picker-indicator,
+body[data-theme^="blueprint"] .task-bulk-date-control input::-webkit-calendar-picker-indicator {
+    opacity: 0 !important;
+    filter: none !important;
+}
+
+.control-panel .panel-avatar,
+.control-panel .panel-avatar-button .panel-avatar,
+.control-panel .panel-user-pill .panel-avatar {
+    position: relative !important;
+    display: block !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    max-width: 2.5rem !important;
+    max-height: 2.5rem !important;
+    flex: 0 0 2.5rem !important;
+    aspect-ratio: 1 / 1 !important;
+    overflow: hidden !important;
+    border-radius: 999px !important;
+}
+
+.control-panel .panel-avatar-img,
+.control-panel .panel-avatar-fallback {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    border-radius: inherit !important;
+    transform: none !important;
+}
+
+.control-panel .panel-avatar-img:not(.hidden) {
+    display: block !important;
+}
+
+.control-panel .panel-avatar-fallback:not(.hidden) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.control-panel .panel-avatar > .hidden {
+    display: none !important;
+}
+
+/* Targeted follow-up: keep nested project-note tabs visibly shaped and non-scrolling in Console. */
+#projectModal .project-notes-tabs {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+}
+
+#projectModal .project-notes-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+#projectModal .project-notes-tab {
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+}
+
+#projectModal .project-notes-tab.is-active,
+#projectModal .project-notes-tab:hover,
+#projectModal .project-notes-tab:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+/* ============================================================================
+   Targeted follow-up: sidebar title accent, project modal button controls,
+   wider modal, and per-task copy actions
+   ============================================================================ */
+.sidebar-app-title,
+body[data-theme] .sidebar-app-title,
+body[data-theme^="console"] .sidebar-app-title,
+body[data-theme^="glass"] .sidebar-app-title,
+body[data-theme^="blueprint"] .sidebar-app-title {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
+
+#projectModal .modal-content#modalContent,
+body[data-theme^="console"] #projectModal .modal-content#modalContent,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
+    width: min(94vw, 825px) !important;
+    max-width: 825px !important;
+}
+
+#projectModal .modal-tabs,
+body[data-theme^="console"] #projectModal .modal-tabs,
+body[data-theme^="glass"] #projectModal .modal-tabs,
+body[data-theme^="blueprint"] #projectModal .modal-tabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    margin: 0 0 1.15rem !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    border: 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-tab,
+body[data-theme^="console"] #projectModal .modal-tab,
+body[data-theme^="glass"] #projectModal .modal-tab,
+body[data-theme^="blueprint"] #projectModal .modal-tab {
+    position: relative !important;
+    bottom: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 0 !important;
+    min-width: max-content !important;
+    min-height: 2.45rem !important;
+    margin: 0 !important;
+    padding: 0.64rem 0.95rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.85rem !important;
+    background: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-color: var(--surface, rgba(148, 163, 184, 0.08)) !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+    font: inherit !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .modal-tab:hover,
+#projectModal .modal-tab:focus-visible,
+body[data-theme^="console"] #projectModal .modal-tab:hover,
+body[data-theme^="console"] #projectModal .modal-tab:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-tab:hover,
+body[data-theme^="glass"] #projectModal .modal-tab:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-tab:hover,
+body[data-theme^="blueprint"] #projectModal .modal-tab:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    background-color: var(--surface-2, var(--surface, rgba(148, 163, 184, 0.12))) !important;
+    outline: none !important;
+}
+
+#projectModal .modal-tab.active,
+#projectModal .modal-tab[aria-selected="true"],
+body[data-theme^="console"] #projectModal .modal-tab.active,
+body[data-theme^="console"] #projectModal .modal-tab[aria-selected="true"],
+body[data-theme^="glass"] #projectModal .modal-tab.active,
+body[data-theme^="glass"] #projectModal .modal-tab[aria-selected="true"],
+body[data-theme^="blueprint"] #projectModal .modal-tab.active,
+body[data-theme^="blueprint"] #projectModal .modal-tab[aria-selected="true"] {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 86%, var(--accent, currentColor) 14%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 86%, var(--accent, currentColor) 14%) !important;
+    box-shadow: none !important;
+}
+
+#projectModal .modal-tab::after,
+#projectModal .modal-tab.active::after,
+#projectModal .modal-tab[aria-selected="true"]::after,
+body[data-theme^="console"] #projectModal .modal-tab::after,
+body[data-theme^="glass"] #projectModal .modal-tab::after,
+body[data-theme^="blueprint"] #projectModal .modal-tab::after {
+    display: none !important;
+    content: none !important;
+}
+
+.task-copy-button {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease !important;
+}
+
+.task-copy-button .icon,
+.task-copy-button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    pointer-events: none !important;
+}
+
+.task-copy-button:hover,
+.task-copy-button:focus-visible,
+.task-copy-button.is-copied {
+    color: var(--accent, currentColor) !important;
+    background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    background-color: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+    border-color: var(--line-soft, rgba(148, 163, 184, 0.18)) !important;
+    outline: none !important;
+}
+
+body[data-theme^="blueprint"] .task-copy-button {
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--muted, currentColor) !important;
+    box-shadow: var(--shadow-level-1, var(--card-shadow, none)) !important;
+}
+
+body[data-theme^="blueprint"] .task-copy-button:hover,
+body[data-theme^="blueprint"] .task-copy-button:focus-visible,
+body[data-theme^="blueprint"] .task-copy-button.is-copied {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    border-color: var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: var(--shadow-inset, var(--inset-shadow, none)) !important;
+    outline: none !important;
+}
+
+/* Targeted patch: sidebar subtitle spacing and modal Copy All / Undo placement. */
+#projectModal .modal-paste-actions,
+body[data-theme^="console"] #projectModal .modal-paste-actions,
+body[data-theme^="glass"] #projectModal .modal-paste-actions,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button,
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 88%, var(--accent, currentColor) 12%) !important;
+    background-image: none !important;
+    border: 1px solid var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+#projectModal .modal-paste-actions .paste-undo-button:hover,
+#projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button:hover,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+body[data-theme^="console"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button:hover,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-undo-button:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .modal-copy-all-tasks-button:focus-visible {
+    color: var(--accent, var(--primary, currentColor)) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 22%) !important;
+    border-color: var(--accent, var(--primary, currentColor)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+    gap: 0.45rem !important;
+    min-width: 9.25rem !important;
+}
+
+#projectModal .modal-paste-actions .modal-copy-all-tasks-button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    flex: 0 0 auto !important;
+}
+
+@media (max-width: 520px) {
+    #projectModal .modal-paste-actions,
+    body[data-theme^="console"] #projectModal .modal-paste-actions,
+    body[data-theme^="glass"] #projectModal .modal-paste-actions,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    #projectModal .modal-paste-actions .modal-copy-all-tasks-button {
+        min-width: 0 !important;
+    }
+}
+
+/* 2026-05 targeted fixes: 3456 display, delete confirmations, notes links, and modal stacking */
+.project-card .project-title,
+.stitch-project-card .project-title,
+body[data-theme] .project-card .project-title,
+body[data-theme] .stitch-project-card .project-title {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
+
+body[data-theme$="-light"] .project-card .project-sync-text,
+body[data-theme$="-light"] .stitch-project-card .project-sync-text {
+    color: #000 !important;
+}
+
+body[data-theme$="-dark"] .project-card .project-sync-text,
+body[data-theme$="-dark"] .stitch-project-card .project-sync-text,
+body:not([data-theme$="-light"]) .project-card .project-sync-text,
+body:not([data-theme$="-light"]) .stitch-project-card .project-sync-text {
+    color: #fff !important;
+}
+
+body[data-theme^="console"] .project-card.dragging,
+body[data-theme^="console"] .stitch-project-card.dragging,
+body[data-theme^="console"] .project-grid.is-reordering .project-card.dragging,
+body[data-theme^="console"] .project-grid.is-reordering .stitch-project-card.dragging {
+    opacity: 1 !important;
+    background: var(--panel-strong, var(--panel, #0f172a)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+@media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (max-height: 1185px) and (min-resolution: 1.5dppx) {
+    .viewport {
+        padding: 1.15rem 2rem 1.5rem !important;
+    }
+
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+        align-items: start !important;
+    }
+
+    .project-card,
+    .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+        padding: 1.2rem !important;
+        gap: 0.78rem !important;
+    }
+}
+
+@media (min-width: 3000px) and (min-height: 1900px) {
+    .viewport {
+        padding: 1.15rem 2rem 1.5rem !important;
+    }
+
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 21.75rem)) !important;
+        gap: 1rem !important;
+        justify-content: start !important;
+        align-content: start !important;
+        place-content: start !important;
+        align-items: start !important;
+    }
+
+    .project-card,
+    .stitch-project-card {
+        min-height: 25.35rem !important;
+        height: 25.35rem !important;
+        max-height: 25.35rem !important;
+        padding: 1.2rem !important;
+        gap: 0.78rem !important;
+    }
+}
+
+#confirmDialog {
+    z-index: 120000 !important;
+}
+
+#confirmDialog.active {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#confirmDialog .confirm-dialog {
+    width: min(92vw, 28rem) !important;
+    padding: 1.5rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--panel, var(--surface, #fff)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38) !important;
+}
+
+#confirmDialog .confirm-dialog h3 {
+    margin: 0 0 0.6rem !important;
+    color: var(--text, currentColor) !important;
+}
+
+#confirmDialog .confirm-dialog p {
+    color: var(--muted, currentColor) !important;
+}
+
+#confirmDialog .confirm-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin-top: 1.25rem !important;
+}
+
+#confirmDialog .confirm-cancel,
+#confirmDialog .confirm-delete {
+    min-height: 2.65rem !important;
+    padding: 0.7rem 1rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+#confirmDialog .confirm-cancel {
+    color: var(--text, currentColor) !important;
+    background: var(--surface, transparent) !important;
+}
+
+#confirmDialog .confirm-delete {
+    color: #fff !important;
+    background: color-mix(in srgb, #dc2626 86%, var(--accent, #dc2626) 14%) !important;
+    border-color: color-mix(in srgb, #dc2626 72%, transparent) !important;
+}
+
+body[data-theme^="console"] #confirmDialog .confirm-dialog {
+    background: var(--panel-strong, var(--panel, #050b16)) !important;
+    border-color: color-mix(in srgb, var(--accent, #38bdf8) 44%, transparent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 18%, transparent), 0 28px 80px rgba(0, 0, 0, 0.55) !important;
+}
+
+body[data-theme^="blueprint"] #confirmDialog .confirm-dialog,
+body[data-theme^="blueprint"] #confirmDialog .confirm-cancel,
+body[data-theme^="blueprint"] #confirmDialog .confirm-delete {
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+}
+
+.project-notes-link-editor {
+    display: grid !important;
+    gap: 0.75rem !important;
+    margin-top: 0.85rem !important;
+    padding: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.24))) !important;
+    border-radius: 1rem !important;
+    background: color-mix(in srgb, var(--surface, transparent) 82%, var(--accent, currentColor) 8%) !important;
+}
+
+.project-notes-link-editor-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.project-notes-link-helper,
+.project-notes-link-empty {
+    margin: 0.15rem 0 0 !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+}
+
+.project-notes-add-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    flex: 0 0 2rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    background: transparent !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-link-list--editable {
+    display: grid !important;
+    gap: 0.55rem !important;
+}
+
+.project-notes-link-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) auto auto !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+}
+
+.project-notes-link-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 2.35rem !important;
+    padding: 0.55rem 0.7rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--input-bg, var(--surface, transparent)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 0.75rem !important;
+}
+
+.project-notes-link-open,
+.project-notes-remove-link,
+.project-notes-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.25rem !important;
+    padding: 0.45rem 0.7rem !important;
+    border-radius: 0.7rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.25))) !important;
+    color: var(--accent, currentColor) !important;
+    text-decoration: none !important;
+    background: color-mix(in srgb, var(--surface, transparent) 78%, var(--accent, currentColor) 8%) !important;
+}
+
+.project-notes-link-open.is-empty {
+    appearance: none !important;
+    cursor: pointer !important;
+    color: var(--muted, currentColor) !important;
+}
+
+.project-notes-link-open.is-empty:hover,
+.project-notes-link-open.is-empty:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+.project-notes-remove-link {
+    min-width: 2.25rem !important;
+    color: #dc2626 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+}
+
+.project-notes-legacy-links {
+    display: grid !important;
+    gap: 0.45rem !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tabs {
+    display: flex !important;
+    gap: 0.75rem !important;
+    padding: 0.25rem !important;
+    background: transparent !important;
+    border-bottom: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tab {
+    position: relative !important;
+    bottom: auto !important;
+    min-height: 2.85rem !important;
+    padding: 0.7rem 1.05rem !important;
+    color: var(--muted, currentColor) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.22))) !important;
+    border-radius: 999px !important;
+    box-shadow: var(--card-shadow, 7px 7px 16px rgba(0, 0, 0, 0.16), -7px -7px 16px rgba(255, 255, 255, 0.08)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tab.active {
+    color: var(--accent, currentColor) !important;
+    background: var(--surface, var(--panel, transparent)) !important;
+    box-shadow: var(--inset-shadow, inset 6px 6px 12px rgba(0, 0, 0, 0.16), inset -6px -6px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-tab::before,
+body[data-theme^="blueprint"] #projectModal .modal-tab::after {
+    display: none !important;
+}
+
+body[data-theme^="console"] #projectModal,
+body[data-theme^="console"] #projectModal .modal-content,
+body[data-theme^="console"] #projectModal .modal-body,
+body[data-theme^="console"] #projectModal .tasks-section,
+body[data-theme^="console"] #projectModal .modal-tasks,
+body[data-theme^="console"] #projectModal .modal-tasks-card,
+body[data-theme^="console"] #projectModal .modal-tasks-card-body,
+body[data-theme^="console"] #projectModal .task-list,
+body[data-theme^="console"] #projectModal .task-item,
+body[data-theme^="console"] #projectModal .task-meta-controls {
+    overflow: visible !important;
+}
+
+body[data-theme^="console"] #projectModal .task-priority-control.is-open,
+body[data-theme^="console"] #projectModal .task-item:has(.task-priority-control.is-open) {
+    z-index: 100400 !important;
+}
+
+body[data-theme^="console"] #projectModal .task-priority-popover {
+    z-index: 100500 !important;
+    background: var(--panel-strong, var(--panel, #050b16)) !important;
+    border-color: color-mix(in srgb, var(--accent, #38bdf8) 38%, transparent) !important;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 18%, transparent) !important;
+}
+
+@media (max-width: 720px) {
+    .project-notes-link-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .project-notes-link-open,
+    .project-notes-remove-link {
+        width: 100% !important;
+    }
+}
+
+body[data-theme] #projectModal .modal-title,
+body[data-theme] #projectModal .modal-title-edit-button {
+    color: var(--accent, var(--primary, currentColor)) !important;
+}
+
+/* 2026-05 follow-up: notes link creation modal and 3456 display parity */
+.project-notes-link-list--tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+}
+
+.project-notes-link-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 0.28rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+}
+
+.project-notes-link.project-notes-link--tag,
+a.project-notes-link.project-notes-link--tag.project-card-tag {
+    min-height: 2rem !important;
+    max-width: 100% !important;
+    padding: 0.38rem 0.68rem !important;
+    border-radius: 999px !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 42%, var(--line, transparent)) !important;
+    color: var(--accent, currentColor) !important;
+    background: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-color: color-mix(in srgb, var(--surface, transparent) 84%, var(--accent, currentColor) 16%) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-notes-link.project-notes-link--tag:hover,
+.project-notes-link.project-notes-link--tag:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    outline: none !important;
+}
+
+.project-notes-remove-link--tag {
+    width: 1.65rem !important;
+    min-width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+}
+
+#projectNoteLinkModal {
+    z-index: 121000 !important;
+}
+
+#projectNoteLinkModal.active {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.project-note-link-modal-content {
+    width: min(92vw, 30rem) !important;
+    max-height: min(86vh, 34rem) !important;
+    padding: 1.5rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--panel, var(--surface, #fff)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38) !important;
+}
+
+.project-note-link-modal-header {
+    align-items: flex-start !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.project-note-link-modal-body {
+    display: grid !important;
+    gap: 0.85rem !important;
+}
+
+.project-note-link-field {
+    display: grid !important;
+    gap: 0.38rem !important;
+    color: var(--muted, currentColor) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.project-note-link-field input {
+    width: 100% !important;
+    min-height: 2.75rem !important;
+    padding: 0.7rem 0.85rem !important;
+    color: var(--text, currentColor) !important;
+    background: var(--input-bg, var(--surface, transparent)) !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 0.85rem !important;
+    font: inherit !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    outline: none !important;
+}
+
+.project-note-link-field input:focus {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}
+
+.project-note-link-error {
+    min-height: 1.1rem !important;
+    margin: 0 !important;
+    color: #ef4444 !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+}
+
+.project-note-link-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    margin-top: 0.25rem !important;
+}
+
+.project-note-link-cancel,
+.project-note-link-create {
+    min-height: 2.65rem !important;
+    padding: 0.7rem 1rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.28))) !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-note-link-cancel {
+    color: var(--text, currentColor) !important;
+    background: var(--surface, transparent) !important;
+}
+
+.project-note-link-create {
+    color: var(--button-fg, #fff) !important;
+    background: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="console"] #projectNoteLinkModal .project-note-link-modal-content {
+    background: var(--panel-strong, var(--panel, #050b16)) !important;
+    border-color: color-mix(in srgb, var(--accent, #38bdf8) 44%, transparent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 18%, transparent), 0 28px 80px rgba(0, 0, 0, 0.55) !important;
+}
+
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-modal-content,
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-field input,
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-cancel,
+body[data-theme^="blueprint"] #projectNoteLinkModal .project-note-link-create {
+    box-shadow: var(--card-shadow, 8px 8px 18px rgba(0, 0, 0, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.08)) !important;
+}
+
+@media (min-width: 1680px) and (max-width: 1800px) and (min-height: 1060px) and (max-height: 1185px) and (min-resolution: 1.5dppx) {
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 27rem !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 1.55rem !important;
+        gap: 1.05rem !important;
+    }
+}
+
+@media (min-width: 3000px) and (min-height: 1900px) {
+    .project-grid,
+    body.has-sidebar .project-grid,
+    body.sidebar-collapsed .project-grid,
+    body.control-panel-is-collapsed .project-grid,
+    body[data-theme^="console"] .project-grid,
+    body[data-theme^="glass"] .project-grid,
+    body[data-theme^="blueprint"] .project-grid,
+    body[data-theme^="console"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="glass"].control-panel-is-collapsed .project-grid,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .project-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        align-content: start !important;
+        place-content: start stretch !important;
+    }
+
+    .project-card,
+    .stitch-project-card,
+    body[data-theme^="console"] .project-card,
+    body[data-theme^="console"] .stitch-project-card,
+    body[data-theme^="glass"] .project-card,
+    body[data-theme^="glass"] .stitch-project-card,
+    body[data-theme^="blueprint"] .project-card,
+    body[data-theme^="blueprint"] .stitch-project-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 27rem !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 1.55rem !important;
+        gap: 1.05rem !important;
+    }
+}
+
+/* 2026-05 follow-up: editable note links and UI-matched link surfaces */
+.project-notes-edit-link--tag,
+.project-notes-remove-link--tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.65rem !important;
+    min-width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--line-soft, var(--border, rgba(148, 163, 184, 0.25))) !important;
+    background: var(--surface-2, var(--surface, transparent)) !important;
+    background-color: var(--surface-2, var(--surface, transparent)) !important;
+    background-image: none !important;
+    font: inherit !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+}
+
+.project-notes-edit-link--tag {
+    color: var(--accent, currentColor) !important;
+}
+
+.project-notes-remove-link--tag {
+    color: #dc2626 !important;
+}
+
+.project-notes-edit-link--tag:hover,
+.project-notes-edit-link--tag:focus-visible,
+.project-notes-remove-link--tag:hover,
+.project-notes-remove-link--tag:focus-visible {
+    border-color: currentColor !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 16%, transparent) !important;
+}
+
+body[data-theme^="console"] .project-notes-link-editor {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-link-editor {
+    border-color: var(--line-soft, var(--border, rgba(148, 163, 184, 0.22))) !important;
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-inset-shadow, inset 5px 5px 12px rgba(0, 0, 0, 0.16), inset -5px -5px 12px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-add-link,
+body[data-theme^="blueprint"] .project-notes-link.project-notes-link--tag,
+body[data-theme^="blueprint"] a.project-notes-link.project-notes-link--tag.project-card-tag,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag,
+body[data-theme^="blueprint"] .project-notes-remove-link--tag {
+    border-color: color-mix(in srgb, var(--line, currentColor) 76%, transparent) !important;
+    background: var(--surface-2, var(--panel, transparent)) !important;
+    background-color: var(--surface-2, var(--panel, transparent)) !important;
+    background-image: none !important;
+    box-shadow: var(--neumo-soft-shadow, 4px 4px 10px rgba(0, 0, 0, 0.16), -4px -4px 10px rgba(255, 255, 255, 0.06)) !important;
+}
+
+body[data-theme^="blueprint"] .project-notes-add-link:hover,
+body[data-theme^="blueprint"] .project-notes-add-link:focus-visible,
+body[data-theme^="blueprint"] .project-notes-link.project-notes-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-link.project-notes-link--tag:focus-visible,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-edit-link--tag:focus-visible,
+body[data-theme^="blueprint"] .project-notes-remove-link--tag:hover,
+body[data-theme^="blueprint"] .project-notes-remove-link--tag:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    box-shadow: var(--neumo-inset-shadow, inset 4px 4px 9px rgba(0, 0, 0, 0.16), inset -4px -4px 9px rgba(255, 255, 255, 0.06)) !important;
+}
+
