@@ -2180,32 +2180,39 @@ body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .proje
 
 
 /* ============================================================================
-   Targeted follow-up: larger project-card titles without layout movement
+   Targeted follow-up: visibly larger project-card titles and sort caret spacing
    ============================================================================ */
-.project-card .project-title,
-.stitch-project-card .project-title,
-body[data-theme] .project-card .project-title,
-body[data-theme] .stitch-project-card .project-title,
-body[data-theme^="console"] .project-card .project-title,
-body[data-theme^="blueprint"] .project-card .project-title,
-body[data-theme^="glass"] .project-card .project-title {
-    font-size: clamp(1.14rem, 0.82vw, 1.24rem) !important;
-    line-height: 1.08 !important;
-}
+@media (min-width: 981px) {
+    .project-card .project-title,
+    .stitch-project-card .project-title,
+    body[data-theme] .project-card .project-title,
+    body[data-theme] .stitch-project-card .project-title,
+    body[data-theme^="console"] .project-card .project-title,
+    body[data-theme^="blueprint"] .project-card .project-title,
+    body[data-theme^="glass"] .project-card .project-title {
+        font-size: clamp(1.2rem, 0.92vw, 1.28rem) !important;
+        line-height: 1 !important;
+        letter-spacing: 0.01em !important;
+        white-space: nowrap !important;
+        display: block !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        -webkit-line-clamp: 1 !important;
+        -webkit-box-orient: initial !important;
+    }
 
-.project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-.project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
-body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-body[data-theme] .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
-body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title {
-    font-size: clamp(0.96rem, 0.68vw, 1.02rem) !important;
-    line-height: 1.03 !important;
-    letter-spacing: 0.02em !important;
-}
+    .project-card .project-title-input--card,
+    .stitch-project-card .project-title-input--card,
+    body[data-theme] .project-card .project-title-input--card,
+    body[data-theme] .stitch-project-card .project-title-input--card,
+    body[data-theme^="console"] .project-card .project-title-input--card,
+    body[data-theme^="blueprint"] .project-card .project-title-input--card,
+    body[data-theme^="glass"] .project-card .project-title-input--card {
+        font-size: clamp(1.2rem, 0.92vw, 1.28rem) !important;
+        line-height: 1 !important;
+        letter-spacing: 0.01em !important;
+    }
 
-@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1080px) {
     .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
     .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
     body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
@@ -2213,8 +2220,31 @@ body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .proj
     body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
     body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
     body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title {
-        font-size: 1.2rem !important;
-        line-height: 1.05 !important;
-        letter-spacing: inherit !important;
+        font-size: clamp(1.12rem, 0.84vw, 1.2rem) !important;
+        line-height: 1 !important;
+        letter-spacing: 0.01em !important;
     }
+
+    .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title-input--card,
+    body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    body[data-theme] .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title-input--card,
+    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
+    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card {
+        font-size: clamp(1.12rem, 0.84vw, 1.2rem) !important;
+        line-height: 1 !important;
+        letter-spacing: 0.01em !important;
+    }
+}
+
+#projectSortSelect,
+.top-view-toolbar .view-toolbar-select,
+.view-toolbar.top-view-toolbar .view-toolbar-select,
+body[data-theme] #projectSortSelect,
+body[data-theme^="console"] #projectSortSelect,
+body[data-theme^="blueprint"] #projectSortSelect,
+body[data-theme^="glass"] #projectSortSelect {
+    background-position: right 14px center !important;
+    padding-right: 36px !important;
 }
