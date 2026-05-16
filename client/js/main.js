@@ -3809,7 +3809,8 @@ function ensureSidebarSettingsDropdown() {
 
 function initializeSidebarSections() {
     ensureSidebarSettingsDropdown();
-    ['workspace', 'leaderboard', 'settings'].forEach(sectionKey => {
+    setSidebarSectionExpanded('workspace', true);
+    ['leaderboard', 'settings'].forEach(sectionKey => {
         setSidebarSectionExpanded(sectionKey, false);
     });
 }
