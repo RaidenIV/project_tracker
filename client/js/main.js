@@ -11286,7 +11286,7 @@ function render() {
         emptyState.style.display = 'flex';
         projectGrid.innerHTML = '';
         projectGrid.style.display = 'none';
-        syncMobileProjectDeckView([]);
+        syncMobileProjectListView([]);
         const emptyTitle = emptyState.querySelector('.title');
         const emptySubtitle = emptyState.querySelector('.subtitle');
         if (emptyTitle) {
@@ -11308,7 +11308,7 @@ function render() {
         projectGrid.style.display = 'grid';
         projectGrid.innerHTML = displayProjects.map(renderProjectCard).join('');
         applyProjectGridLayoutPreference();
-        syncMobileProjectDeckView(displayProjects);
+        syncMobileProjectListView(displayProjects);
 
         if (!isMobileWebSidebarViewport() && state.getView() === VIEWS.ACTIVE && !uiState.projectSearch.trim() && uiState.ownerFilter === 'all' && uiState.sortMode === 'manual' && uiState.activeProjectTag === PROJECT_TAG_ALL_FILTER) {
             setTimeout(setupProjectDragAndDrop, 100);
@@ -11609,59 +11609,22 @@ function updateProjectSelect() {
 
 
 // ============================================================================
-// MOBILE PROJECT DECK VIEW
+// MOBILE PROJECT EXPANDABLE LIST VIEW
 // ============================================================================
-const mobileProjectDeckState = {
-    activeProjectId: '',
-    pointerStartX: 0,
-    pointerStartY: 0,
-    pointerId: null,
-    pointerStartedOnCard: false,
-    suppressClickUntil: 0
-};
-
-function getMobileProjectDeckCards(grid = document.getElementById('projectGrid')) {
+function getMobileProjectListCards(grid = document.getElementById('projectGrid')) {
     if (!grid) return [];
     return Array.from(grid.querySelectorAll('.project-card'));
 }
 
-function ensureMobileProjectDeckControls(projectGrid) {
-    if (!projectGrid) return null;
-    let controls = document.getElementById('mobileProjectDeckControls');
-    if (!controls) {
-        controls = document.createElement('div');
-        controls.id = 'mobileProjectDeckControls';
-        controls.className = 'mobile-project-deck-controls';
-        projectGrid.insertAdjacentElement('beforebegin', controls);
-    }
-    controls.className = 'mobile-project-deck-controls';
-    controls.innerHTML = `
-        <button class="mobile-project-deck-button mobile-project-deck-button--prev" type="button" data-mobile-project-deck-prev aria-label="Previous project">
-            <span aria-hidden="true">‹</span>
-        </button>
-        <div class="mobile-project-deck-status" aria-live="polite">
-            <span class="mobile-project-deck-label">Project Deck</span>
-            <strong class="mobile-project-deck-title" data-mobile-project-deck-title>Projects</strong>
-            <span class="mobile-project-deck-count" data-mobile-project-deck-count>0 / 0</span>
-        </div>
-        <button class="mobile-project-deck-button mobile-project-deck-button--next" type="button" data-mobile-project-deck-next aria-label="Next project">
-            <span aria-hidden="true">›</span>
-        </button>
-    `;
-    controls.querySelector('[data-mobile-project-deck-prev]')?.addEventListener('click', event => changeMobileProjectDeckProject(-1, event));
-    controls.querySelector('[data-mobile-project-deck-next]')?.addEventListener('click', event => changeMobileProjectDeckProject(1, event));
-    return controls;
-}
-
-function clearMobileProjectDeckView() {
+function clearMobileProjectListView() {
     const projectGrid = document.getElementById('projectGrid');
-    const controls = document.getElementById('mobileProjectDeckControls');
-    controls?.remove();
-    document.body.classList.remove('mobile-project-deck-view');
+    const deckControls = document.getElementById('mobileProjectDeckControls');
+    deckControls?.remove();
+    document.body.classList.remove('mobile-project-deck-view', 'mobile-project-list-view');
     if (!projectGrid) return;
-    projectGrid.classList.remove('project-grid--mobile-deck');
-    getMobileProjectDeckCards(projectGrid).forEach(card => {
-        card.classList.remove('mobile-deck-card', 'mobile-deck-card--active', 'mobile-deck-card--before', 'mobile-deck-card--after');
+    projectGrid.classList.remove('project-grid--mobile-deck', 'project-grid--mobile-list');
+    getMobileProjectListCards(projectGrid).forEach(card => {
+        card.classList.remove('mobile-deck-card', 'mobile-deck-card--active', 'mobile-deck-card--before', 'mobile-deck-card--after', 'mobile-list-card');
         card.removeAttribute('data-mobile-deck-index');
         card.removeAttribute('data-mobile-deck-state');
         card.removeAttribute('aria-current');
@@ -11672,149 +11635,42 @@ function clearMobileProjectDeckView() {
     });
 }
 
-function getMobileProjectDeckActiveIndex(cards) {
-    if (!cards.length) return 0;
-    const activeProjectId = mobileProjectDeckState.activeProjectId;
-    const activeIndex = cards.findIndex(card => card.dataset.projectId === activeProjectId);
-    if (activeIndex >= 0) return activeIndex;
-    mobileProjectDeckState.activeProjectId = cards[0].dataset.projectId || '';
-    return 0;
-}
-
-function updateMobileProjectDeckCards(activeIndex) {
-    const projectGrid = document.getElementById('projectGrid');
-    const cards = getMobileProjectDeckCards(projectGrid);
-    if (!projectGrid || !cards.length) return;
-    const normalizedIndex = Math.max(0, Math.min(activeIndex, cards.length - 1));
-    cards.forEach((card, index) => {
-        const distance = index - normalizedIndex;
-        const absDistance = Math.min(Math.abs(distance), 6);
-        const isActive = index === normalizedIndex;
-        card.dataset.mobileDeckIndex = String(index);
-        card.dataset.mobileDeckState = isActive ? 'active' : (distance < 0 ? 'before' : 'after');
-        card.classList.add('mobile-deck-card');
-        card.classList.toggle('mobile-deck-card--active', isActive);
-        card.classList.toggle('mobile-deck-card--before', distance < 0);
-        card.classList.toggle('mobile-deck-card--after', distance > 0);
-        card.style.setProperty('--mobile-deck-distance', String(distance));
-        card.style.setProperty('--mobile-deck-abs-distance', String(absDistance));
-        card.style.zIndex = isActive ? '40' : String(Math.max(1, 24 - absDistance));
-        card.setAttribute('aria-current', isActive ? 'true' : 'false');
-        const title = card.querySelector('.project-title')?.textContent?.trim() || 'Project';
-        card.title = isActive ? 'Tap to open this project' : `Tap to bring ${title} to the front`;
-    });
-
-    const controls = ensureMobileProjectDeckControls(projectGrid);
-    if (controls) {
-        const activeCard = cards[normalizedIndex];
-        const title = activeCard?.querySelector('.project-title')?.textContent?.trim() || 'Project';
-        const titleEl = controls.querySelector('[data-mobile-project-deck-title]');
-        const countEl = controls.querySelector('[data-mobile-project-deck-count]');
-        if (titleEl) titleEl.textContent = title;
-        if (countEl) countEl.textContent = `${normalizedIndex + 1} / ${cards.length}`;
-    }
-}
-
-function setMobileProjectDeckActiveIndex(index, event) {
-    event?.preventDefault?.();
-    event?.stopPropagation?.();
-    const cards = getMobileProjectDeckCards();
-    if (!cards.length) return;
-    const normalizedIndex = ((index % cards.length) + cards.length) % cards.length;
-    mobileProjectDeckState.activeProjectId = cards[normalizedIndex]?.dataset.projectId || '';
-    updateMobileProjectDeckCards(normalizedIndex);
-}
-
-function changeMobileProjectDeckProject(delta, event) {
-    event?.preventDefault?.();
-    event?.stopPropagation?.();
-    if (!isMobileWebSidebarViewport()) return;
-    const cards = getMobileProjectDeckCards();
-    if (!cards.length) return;
-    const activeIndex = getMobileProjectDeckActiveIndex(cards);
-    setMobileProjectDeckActiveIndex(activeIndex + delta, event);
-}
-
-function bindMobileProjectDeckEvents(projectGrid) {
-    if (!projectGrid || projectGrid.__mobileProjectDeckEventsBound) return;
-    projectGrid.__mobileProjectDeckEventsBound = true;
-
-    const isInteractiveDeckTarget = target => !!target?.closest?.('button, input, textarea, select, a, [contenteditable="true"], [role="textbox"], details, summary, .project-meatballs-menu, .project-priority-popover, .project-due-date-popover');
-
-    projectGrid.addEventListener('click', event => {
-        if (!isMobileWebSidebarViewport() || !projectGrid.classList.contains('project-grid--mobile-deck')) return;
-        const now = Date.now();
-        if (mobileProjectDeckState.suppressClickUntil && now < mobileProjectDeckState.suppressClickUntil) {
-            event.preventDefault();
-            event.stopPropagation();
-            return;
-        }
-        const card = event.target.closest?.('.project-card');
-        if (!card || !projectGrid.contains(card) || isInteractiveDeckTarget(event.target)) return;
-        if (!card.classList.contains('mobile-deck-card--active')) {
-            const nextIndex = Number(card.dataset.mobileDeckIndex || 0);
-            setMobileProjectDeckActiveIndex(nextIndex, event);
-        }
-    }, true);
-
-    projectGrid.addEventListener('pointerdown', event => {
-        if (!isMobileWebSidebarViewport() || !projectGrid.classList.contains('project-grid--mobile-deck')) return;
-        if (event.pointerType === 'mouse' || isInteractiveDeckTarget(event.target)) return;
-        const card = event.target.closest?.('.project-card');
-        mobileProjectDeckState.pointerStartedOnCard = !!(card && projectGrid.contains(card));
-        if (!mobileProjectDeckState.pointerStartedOnCard) return;
-        mobileProjectDeckState.pointerId = event.pointerId;
-        mobileProjectDeckState.pointerStartX = event.clientX;
-        mobileProjectDeckState.pointerStartY = event.clientY;
-    }, { passive: true });
-
-    projectGrid.addEventListener('pointerup', event => {
-        if (!isMobileWebSidebarViewport() || !projectGrid.classList.contains('project-grid--mobile-deck')) return;
-        if (!mobileProjectDeckState.pointerStartedOnCard || mobileProjectDeckState.pointerId !== event.pointerId) return;
-        const dx = event.clientX - mobileProjectDeckState.pointerStartX;
-        const dy = event.clientY - mobileProjectDeckState.pointerStartY;
-        mobileProjectDeckState.pointerId = null;
-        mobileProjectDeckState.pointerStartedOnCard = false;
-        if (Math.abs(dx) < 44 || Math.abs(dx) <= Math.abs(dy) * 1.15) return;
-        mobileProjectDeckState.suppressClickUntil = Date.now() + 360;
-        changeMobileProjectDeckProject(dx < 0 ? 1 : -1, event);
-    });
-
-    projectGrid.addEventListener('pointercancel', () => {
-        mobileProjectDeckState.pointerId = null;
-        mobileProjectDeckState.pointerStartedOnCard = false;
-    });
-}
-
-function syncMobileProjectDeckView(displayProjects = null) {
+function syncMobileProjectListView(displayProjects = null) {
     const projectGrid = document.getElementById('projectGrid');
     if (!projectGrid) return;
     const projects = Array.isArray(displayProjects) ? displayProjects : getFilteredProjects();
     if (!isMobileWebSidebarViewport() || !projects.length) {
-        clearMobileProjectDeckView();
+        clearMobileProjectListView();
         return;
     }
 
-    const cards = getMobileProjectDeckCards(projectGrid);
+    const cards = getMobileProjectListCards(projectGrid);
     if (!cards.length) {
-        clearMobileProjectDeckView();
+        clearMobileProjectListView();
         return;
     }
 
-    document.body.classList.add('mobile-project-deck-view');
-    projectGrid.classList.add('project-grid--mobile-deck');
-    bindMobileProjectDeckEvents(projectGrid);
-    ensureMobileProjectDeckControls(projectGrid);
+    document.body.classList.remove('mobile-project-deck-view');
+    document.body.classList.add('mobile-project-list-view');
+    document.getElementById('mobileProjectDeckControls')?.remove();
+    projectGrid.classList.remove('project-grid--mobile-deck');
+    projectGrid.classList.add('project-grid--mobile-list');
 
-    const projectIds = new Set(projects.map(project => String(project.id)));
-    if (!mobileProjectDeckState.activeProjectId || !projectIds.has(String(mobileProjectDeckState.activeProjectId))) {
-        mobileProjectDeckState.activeProjectId = String(projects[0].id || '');
-    }
-    updateMobileProjectDeckCards(getMobileProjectDeckActiveIndex(cards));
+    cards.forEach(card => {
+        card.classList.remove('mobile-deck-card', 'mobile-deck-card--active', 'mobile-deck-card--before', 'mobile-deck-card--after');
+        card.classList.add('mobile-list-card');
+        card.removeAttribute('data-mobile-deck-index');
+        card.removeAttribute('data-mobile-deck-state');
+        card.removeAttribute('aria-current');
+        card.setAttribute('title', 'Tap to open this project');
+        card.style.removeProperty('--mobile-deck-distance');
+        card.style.removeProperty('--mobile-deck-abs-distance');
+        card.style.removeProperty('z-index');
+    });
 }
 
-function scheduleMobileProjectDeckSync() {
-    requestAnimationFrame(() => syncMobileProjectDeckView());
+function scheduleMobileProjectListSync() {
+    requestAnimationFrame(() => syncMobileProjectListView());
 }
 
 // ============================================================================
@@ -12809,8 +12665,8 @@ function onAuthSuccess(user) {
 document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
 document.addEventListener('click', closeProjectLayoutMenu);
 window.addEventListener('resize', applyProjectGridLayoutPreference);
-window.addEventListener('resize', scheduleMobileProjectDeckSync);
-window.addEventListener('orientationchange', scheduleMobileProjectDeckSync);
+window.addEventListener('resize', scheduleMobileProjectListSync);
+window.addEventListener('orientationchange', scheduleMobileProjectListSync);
 window.addEventListener('beforeunload', persistOpenProjectModalBeforeUnload);
 
 document.addEventListener('DOMContentLoaded', () => {
