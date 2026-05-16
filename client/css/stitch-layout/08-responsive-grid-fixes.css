@@ -4958,3 +4958,276 @@ body[data-theme].control-panel-is-collapsed .add-project-button svg {
         box-shadow: none !important;
     }
 }
+
+
+/* ============================================================================
+   Targeted fix: minimized sidebar notification indicator, icon scale, modal
+   rendering, and light/dark collapsed logo behavior
+   ============================================================================ */
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .collapsed-sidebar-notification-button.has-unread .collapsed-notification-unread-badge,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-notification-button.has-unread .collapsed-notification-unread-badge {
+        position: absolute !important;
+        top: 0.28rem !important;
+        right: auto !important;
+        left: calc(50% + 0.52rem) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        min-width: 0.86rem !important;
+        height: 0.86rem !important;
+        min-height: 0.86rem !important;
+        padding: 0 0.22rem !important;
+        border-radius: 999px !important;
+        background: var(--accent, currentColor) !important;
+        background-color: var(--accent, currentColor) !important;
+        color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        -webkit-text-fill-color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        border: 1px solid var(--panel, var(--sidebar-bg, #050607)) !important;
+        font-size: 0.58rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        z-index: 4 !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed #collapsedActiveProjectsCard .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed #collapsedActiveProjectsCard .collapsed-sidebar-icon {
+        width: 1.675rem !important;
+        min-width: 1.675rem !important;
+        max-width: 1.675rem !important;
+        height: 1.675rem !important;
+        min-height: 1.675rem !important;
+        max-height: 1.675rem !important;
+    }
+
+    body.control-panel-is-collapsed #collapsedCompletedProjectsCard .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed #collapsedCompletedProjectsCard .collapsed-sidebar-icon {
+        width: 2.01rem !important;
+        min-width: 2.01rem !important;
+        max-width: 2.01rem !important;
+        height: 2.01rem !important;
+        min-height: 2.01rem !important;
+        max-height: 2.01rem !important;
+    }
+
+    body.control-panel-is-collapsed #collapsedSettingsButton .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed #collapsedSettingsButton .collapsed-sidebar-icon {
+        width: 1.675rem !important;
+        min-width: 1.675rem !important;
+        max-width: 1.675rem !important;
+        height: 1.675rem !important;
+        min-height: 1.675rem !important;
+        max-height: 1.675rem !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-logo,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-logo {
+        transition: opacity 160ms ease, filter 160ms ease !important;
+    }
+
+    body[data-color-mode="dark"].control-panel-is-collapsed .collapsed-sidebar-rail-logo {
+        opacity: 0.92 !important;
+        filter: none !important;
+    }
+
+    body[data-color-mode="light"].control-panel-is-collapsed .collapsed-sidebar-rail-logo {
+        opacity: 0.88 !important;
+        filter: none !important;
+    }
+}
+
+.sidebar-rail-modal.active,
+body[data-theme] .sidebar-rail-modal.active {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: clamp(1rem, 3vw, 2rem) !important;
+    z-index: 14000 !important;
+    background: rgba(0, 0, 0, 0.46) !important;
+    backdrop-filter: blur(10px) saturate(120%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(120%) !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar-rail-modal-content,
+body[data-theme] .sidebar-rail-modal-content {
+    position: relative !important;
+    width: min(42rem, calc(100vw - 2rem)) !important;
+    max-height: min(44rem, calc(100vh - 2rem)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    padding: 1.35rem !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    border-radius: 1.1rem !important;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.14)) !important;
+    background: var(--panel, var(--surface, #101116)) !important;
+    background-color: var(--panel, var(--surface, #101116)) !important;
+    color: var(--text, currentColor) !important;
+    -webkit-text-fill-color: var(--text, currentColor) !important;
+    box-shadow: 0 1.4rem 3.6rem rgba(0, 0, 0, 0.36) !important;
+    box-sizing: border-box !important;
+}
+
+body[data-color-mode="light"] .sidebar-rail-modal-content {
+    background: var(--panel, var(--surface, #f7f3ed)) !important;
+    background-color: var(--panel, var(--surface, #f7f3ed)) !important;
+    color: var(--text, #1f1d1a) !important;
+    -webkit-text-fill-color: var(--text, #1f1d1a) !important;
+    box-shadow: 0 1.4rem 3rem rgba(24, 20, 16, 0.18) !important;
+}
+
+.sidebar-rail-leaderboard-modal-content,
+body[data-theme] .sidebar-rail-leaderboard-modal-content {
+    width: min(42rem, calc(100vw - 2rem)) !important;
+}
+
+.sidebar-settings-modal-content,
+body[data-theme] .sidebar-settings-modal-content {
+    width: min(36rem, calc(100vw - 2rem)) !important;
+}
+
+.sidebar-rail-modal-header,
+body[data-theme] .sidebar-rail-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    min-height: 0 !important;
+    padding: 0 0 1rem !important;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar-rail-modal-header h2,
+body[data-theme] .sidebar-rail-modal-header h2 {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.34rem !important;
+    line-height: 1.15 !important;
+    color: var(--text, currentColor) !important;
+    -webkit-text-fill-color: var(--text, currentColor) !important;
+}
+
+.sidebar-rail-modal-header p,
+body[data-theme] .sidebar-rail-modal-header p {
+    margin: 0.42rem 0 0 !important;
+    padding: 0 !important;
+    color: var(--text-muted, var(--muted, currentColor)) !important;
+    -webkit-text-fill-color: var(--text-muted, var(--muted, currentColor)) !important;
+    font-size: 0.85rem !important;
+    line-height: 1.45 !important;
+}
+
+.sidebar-rail-modal-close,
+body[data-theme] .sidebar-rail-modal-close {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    flex: 0 0 2.25rem !important;
+    width: 2.25rem !important;
+    min-width: 2.25rem !important;
+    max-width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    max-height: 2.25rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: -0.35rem -0.35rem 0 0 !important;
+    border-radius: 0.72rem !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--text-muted, var(--muted, currentColor)) !important;
+    -webkit-text-fill-color: var(--text-muted, var(--muted, currentColor)) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.sidebar-rail-modal-close:hover,
+.sidebar-rail-modal-close:focus-visible,
+body[data-theme] .sidebar-rail-modal-close:hover,
+body[data-theme] .sidebar-rail-modal-close:focus-visible {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 55%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 10%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent, currentColor) 10%, transparent) !important;
+    outline: none !important;
+}
+
+.sidebar-rail-modal-close .icon-sm,
+body[data-theme] .sidebar-rail-modal-close .icon-sm {
+    width: 1.18rem !important;
+    min-width: 1.18rem !important;
+    max-width: 1.18rem !important;
+    height: 1.18rem !important;
+    min-height: 1.18rem !important;
+    max-height: 1.18rem !important;
+}
+
+.sidebar-rail-modal-body,
+body[data-theme] .sidebar-rail-modal-body {
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 1rem 0 0 !important;
+    margin: 0 !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+}
+
+body.control-panel-is-collapsed .sidebar-rail-modal .leaderboard-panel-card,
+body[data-theme].control-panel-is-collapsed .sidebar-rail-modal .leaderboard-panel-card,
+body.control-panel-is-collapsed .sidebar-rail-modal .sidebar-rail-leaderboard-card,
+body[data-theme].control-panel-is-collapsed .sidebar-rail-modal .sidebar-rail-leaderboard-card {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+body.control-panel-is-collapsed .sidebar-rail-modal .leaderboard-list,
+body[data-theme].control-panel-is-collapsed .sidebar-rail-modal .leaderboard-list,
+body.control-panel-is-collapsed .sidebar-rail-modal .sidebar-rail-leaderboard-list,
+body[data-theme].control-panel-is-collapsed .sidebar-rail-modal .sidebar-rail-leaderboard-list {
+    display: grid !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-height: min(30rem, calc(100vh - 12rem)) !important;
+    overflow: auto !important;
+    gap: 0.72rem !important;
+    padding: 0.05rem !important;
+}
+
+.sidebar-rail-settings-actions,
+body[data-theme] .sidebar-rail-settings-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.72rem !important;
+}
+
+.sidebar-rail-settings-action,
+body[data-theme] .sidebar-rail-settings-action {
+    min-height: 3.15rem !important;
+    padding: 0.9rem 1rem !important;
+    justify-content: flex-start !important;
+    border-radius: 0.95rem !important;
+    background: var(--surface, rgba(255, 255, 255, 0.05)) !important;
+    background-color: var(--surface, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text, currentColor) !important;
+    -webkit-text-fill-color: var(--text, currentColor) !important;
+    box-sizing: border-box !important;
+}

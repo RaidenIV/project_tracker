@@ -2881,6 +2881,11 @@ function syncThemeBranding() {
         sidebarBottomLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
     }
 
+    const collapsedSidebarRailLogo = document.getElementById('collapsedSidebarRailLogo');
+    if (collapsedSidebarRailLogo) {
+        collapsedSidebarRailLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
+    }
+
     const authLogo = document.querySelector('.auth-logo-img');
     if (authLogo) {
         authLogo.src = DARK_MODE_LOGO_URL;
