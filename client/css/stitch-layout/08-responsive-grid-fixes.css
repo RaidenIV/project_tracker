@@ -2648,3 +2648,139 @@ body[data-theme^="glass"] .control-panel .panel-notification-button:focus-within
     color: var(--accent) !important;
     -webkit-text-fill-color: var(--accent) !important;
 }
+
+/* ============================================================================
+   Targeted fix: collapsed sidebar icon navigation
+   - Adds an icon rail when the sidebar is minimized so the main sidebar actions
+     remain reachable without expanding the panel.
+   - Keeps expanded sidebar spacing and labels intact.
+   ============================================================================ */
+.sidebar-nav-card,
+.sidebar-action-button {
+    gap: 0.65rem !important;
+}
+
+.sidebar-nav-card-icon,
+.sidebar-action-button-icon {
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+    min-width: 1.05rem !important;
+    flex: 0 0 auto !important;
+    color: currentColor !important;
+    stroke: currentColor !important;
+}
+
+.sidebar-nav-card-label,
+.sidebar-action-button-label {
+    min-width: 0 !important;
+}
+
+.sidebar-nav-card-label {
+    margin-right: auto !important;
+}
+
+body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="workspace"],
+body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="settings"] {
+    display: block !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="workspace"],
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"],
+body.control-panel-is-collapsed .sidebar-section-toggle,
+body.control-panel-is-collapsed .new-project-create-panel,
+body.control-panel-is-collapsed .total-completion-section,
+body.control-panel-is-collapsed .leaderboard-panel-card,
+body.control-panel-is-collapsed .sidebar-bottom-logo-wrap,
+body.control-panel-is-collapsed .sidebar-app-brand {
+    display: none !important;
+}
+
+body.control-panel-is-collapsed .sidebar-section-body,
+body.control-panel-is-collapsed #workspaceSectionBody,
+body.control-panel-is-collapsed #settingsSectionBody {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.control-panel-is-collapsed .sidebar-nav-list,
+body.control-panel-is-collapsed .settings-actions,
+body.control-panel-is-collapsed .sidebar-more-menu {
+    display: grid !important;
+    width: 100% !important;
+    gap: 0.52rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.control-panel-is-collapsed .settings-panel-card,
+body.control-panel-is-collapsed .sidebar-more-group {
+    display: grid !important;
+    width: 100% !important;
+    gap: 0.52rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body.control-panel-is-collapsed .sidebar-action-button--more {
+    display: none !important;
+}
+
+body.control-panel-is-collapsed .add-project-button,
+body.control-panel-is-collapsed .sidebar-nav-card,
+body.control-panel-is-collapsed .sidebar-action-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 3rem !important;
+    min-width: 3rem !important;
+    max-width: 3rem !important;
+    height: 3rem !important;
+    min-height: 3rem !important;
+    max-height: 3rem !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    border-radius: 0.95rem !important;
+    overflow: hidden !important;
+    text-align: center !important;
+}
+
+body.control-panel-is-collapsed .add-project-button {
+    font-size: 0 !important;
+    line-height: 0 !important;
+}
+
+body.control-panel-is-collapsed .add-project-button svg,
+body.control-panel-is-collapsed .sidebar-nav-card-icon,
+body.control-panel-is-collapsed .sidebar-action-button-icon {
+    display: block !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    margin: 0 !important;
+}
+
+body.control-panel-is-collapsed .sidebar-nav-card-label,
+body.control-panel-is-collapsed .sidebar-nav-card-count,
+body.control-panel-is-collapsed .sidebar-action-button-label {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}

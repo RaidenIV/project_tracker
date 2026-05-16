@@ -3780,21 +3780,26 @@ function ensureSidebarSettingsDropdown() {
     }
 
     const actionSpecs = [
-        ['sidebarAccountSettingsBtn', 'Account Settings', 'sidebar-action-button'],
-        ['sidebarUiOptionsBtn', 'UI Options', 'sidebar-action-button'],
-        ['sidebarShortcutsBtn', 'Keyboard Shortcuts', 'sidebar-action-button'],
-        ['sidebarHowToGuideBtn', 'How To Guide', 'sidebar-action-button'],
-        ['sidebarSignOutBtn', 'Sign Out', 'sidebar-action-button sidebar-action-button--danger']
+        ['sidebarAccountSettingsBtn', 'Account Settings', 'sidebar-action-button', 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0'],
+        ['sidebarUiOptionsBtn', 'UI Options', 'sidebar-action-button', 'M12 3v3m0 12v3m9-9h-3M6 12H3m15.36-6.36-2.12 2.12M7.76 16.24l-2.12 2.12m12.72 0-2.12-2.12M7.76 7.76 5.64 5.64M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
+        ['sidebarShortcutsBtn', 'Keyboard Shortcuts', 'sidebar-action-button', 'M4.5 6.75h15v10.5h-15V6.75Zm3 7.5h.01m3 0h.01m3 0h.01m3 0h.01M7.5 9.75h.01m3 0h.01m3 0h.01m3 0h.01'],
+        ['sidebarHowToGuideBtn', 'How To Guide', 'sidebar-action-button', 'M12 6.75v12M6.75 5.25h8.25A2.25 2.25 0 0 1 17.25 7.5v12H9A2.25 2.25 0 0 0 6.75 21.75V5.25Zm0 0H5.25A2.25 2.25 0 0 0 3 7.5v12a2.25 2.25 0 0 1 2.25-2.25h1.5'],
+        ['sidebarSignOutBtn', 'Sign Out', 'sidebar-action-button sidebar-action-button--danger', 'M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 12h8.25m0 0-2.25-2.25M20.25 12 18 14.25']
     ];
 
-    actionSpecs.forEach(([id, label, className]) => {
+    actionSpecs.forEach(([id, label, className, iconPath]) => {
         let button = document.getElementById(id);
         if (!button) {
             button = document.createElement('button');
             button.type = 'button';
             button.id = id;
         }
-        button.textContent = label;
+        button.innerHTML = `
+            <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
+            </svg>
+            <span class="sidebar-action-button-label">${label}</span>
+        `;
         button.setAttribute('aria-label', label);
         button.className = `${className} settings-action-button`.trim();
         button.type = 'button';
