@@ -2421,3 +2421,92 @@ body[data-theme^="glass"] .control-panel .panel-notification-button:focus-visibl
 body[data-theme^="glass"] .control-panel .panel-notification-button:focus-within {
     opacity: 1 !important;
 }
+
+/* ============================================================================
+   Targeted fix: settings modal layering and fully hover-revealed notifications
+   - Raises settings overlays above the viewport menu bar so the backdrop blur
+     affects the top menu as well as the main viewport.
+   - Hides the notification button shell, label, and unread count until the
+     button area is hovered or keyboard-focused.
+   ============================================================================ */
+#uiOptionsModal.modal-overlay.active,
+#accountSettingsModal.modal-overlay.active,
+body[data-theme] #uiOptionsModal.modal-overlay.active,
+body[data-theme] #accountSettingsModal.modal-overlay.active,
+body[data-theme^="console"] #uiOptionsModal.modal-overlay.active,
+body[data-theme^="console"] #accountSettingsModal.modal-overlay.active,
+body[data-theme^="blueprint"] #uiOptionsModal.modal-overlay.active,
+body[data-theme^="blueprint"] #accountSettingsModal.modal-overlay.active,
+body[data-theme^="glass"] #uiOptionsModal.modal-overlay.active,
+body[data-theme^="glass"] #accountSettingsModal.modal-overlay.active {
+    z-index: 31000 !important;
+    backdrop-filter: blur(10px) saturate(115%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(115%) !important;
+}
+
+#uiOptionsModal.modal-overlay.active .modal-content,
+#accountSettingsModal.modal-overlay.active .modal-content,
+body[data-theme] #uiOptionsModal.modal-overlay.active .modal-content,
+body[data-theme] #accountSettingsModal.modal-overlay.active .modal-content,
+body[data-theme^="console"] #uiOptionsModal.modal-overlay.active .modal-content,
+body[data-theme^="console"] #accountSettingsModal.modal-overlay.active .modal-content,
+body[data-theme^="blueprint"] #uiOptionsModal.modal-overlay.active .modal-content,
+body[data-theme^="blueprint"] #accountSettingsModal.modal-overlay.active .modal-content,
+body[data-theme^="glass"] #uiOptionsModal.modal-overlay.active .modal-content,
+body[data-theme^="glass"] #accountSettingsModal.modal-overlay.active .modal-content {
+    position: relative !important;
+    z-index: 31010 !important;
+}
+
+.control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme^="console"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme^="glass"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) {
+    opacity: 0 !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .panel-notification-label,
+.control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .notification-unread-badge,
+body[data-theme] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .panel-notification-label,
+body[data-theme] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .notification-unread-badge,
+body[data-theme^="console"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .panel-notification-label,
+body[data-theme^="console"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .notification-unread-badge,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .panel-notification-label,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .notification-unread-badge,
+body[data-theme^="glass"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .panel-notification-label,
+body[data-theme^="glass"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) .notification-unread-badge {
+    opacity: 0 !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    text-shadow: none !important;
+}
+
+.control-panel .panel-notification-button:hover .panel-notification-label,
+.control-panel .panel-notification-button:focus .panel-notification-label,
+.control-panel .panel-notification-button:focus-visible .panel-notification-label,
+.control-panel .panel-notification-button:focus-within .panel-notification-label,
+.control-panel .panel-notification-button:hover .notification-unread-badge,
+.control-panel .panel-notification-button:focus .notification-unread-badge,
+.control-panel .panel-notification-button:focus-visible .notification-unread-badge,
+.control-panel .panel-notification-button:focus-within .notification-unread-badge,
+body[data-theme] .control-panel .panel-notification-button:hover .panel-notification-label,
+body[data-theme] .control-panel .panel-notification-button:focus .panel-notification-label,
+body[data-theme] .control-panel .panel-notification-button:focus-visible .panel-notification-label,
+body[data-theme] .control-panel .panel-notification-button:focus-within .panel-notification-label,
+body[data-theme] .control-panel .panel-notification-button:hover .notification-unread-badge,
+body[data-theme] .control-panel .panel-notification-button:focus .notification-unread-badge,
+body[data-theme] .control-panel .panel-notification-button:focus-visible .notification-unread-badge,
+body[data-theme] .control-panel .panel-notification-button:focus-within .notification-unread-badge {
+    opacity: 1 !important;
+}
+
