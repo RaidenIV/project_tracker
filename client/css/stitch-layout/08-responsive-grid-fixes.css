@@ -2829,3 +2829,139 @@ body.control-panel-is-collapsed .sidebar-action-button-label {
     white-space: nowrap !important;
     border: 0 !important;
 }
+
+/* ============================================================================
+   Targeted fix: settings dropdown icon removal, neumorphic controls,
+   notification count placement, and workspace icon refinements
+   ============================================================================ */
+body:not(.control-panel-is-collapsed) .settings-panel-card .sidebar-action-button-icon,
+body:not(.control-panel-is-collapsed) .sidebar-more-menu .sidebar-action-button-icon,
+body:not(.control-panel-is-collapsed)[data-theme^="console"] .settings-panel-card .sidebar-action-button-icon,
+body:not(.control-panel-is-collapsed)[data-theme^="blueprint"] .settings-panel-card .sidebar-action-button-icon,
+body:not(.control-panel-is-collapsed)[data-theme^="glass"] .settings-panel-card .sidebar-action-button-icon {
+    display: none !important;
+}
+
+body:not(.control-panel-is-collapsed) .settings-panel-card .sidebar-action-button,
+body:not(.control-panel-is-collapsed) .sidebar-more-menu .sidebar-action-button {
+    gap: 0 !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border-bottom-color: transparent !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close {
+    background: var(--surface, var(--panel, transparent)) !important;
+    background-color: var(--surface, var(--panel, transparent)) !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item:hover,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item.active,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item[aria-selected="true"],
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close:hover,
+body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-close:focus-visible {
+    background: var(--surface-2, var(--surface, transparent)) !important;
+    background-color: var(--surface-2, var(--surface, transparent)) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 42%, transparent) !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-meatballs--card .project-meatballs-toggle {
+    background: var(--panel, var(--surface, transparent)) !important;
+    background-color: var(--panel, var(--surface, transparent)) !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: var(--neumo-soft-shadow, var(--shadow-level-1, none)) !important;
+}
+
+body[data-theme^="blueprint"] .project-meatballs--card .project-meatballs-toggle:hover,
+body[data-theme^="blueprint"] .project-meatballs--card .project-meatballs-toggle:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs--card[open] .project-meatballs-toggle {
+    background: var(--surface-2, var(--surface, transparent)) !important;
+    background-color: var(--surface-2, var(--surface, transparent)) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 42%, transparent) !important;
+    box-shadow: var(--neumo-inset-shadow, var(--shadow-pressed, none)) !important;
+}
+
+.control-panel .panel-notification-button,
+body[data-theme] .control-panel .panel-notification-button,
+body[data-theme^="console"] .control-panel .panel-notification-button,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button,
+body[data-theme^="glass"] .control-panel .panel-notification-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 2.15rem !important;
+    gap: 0.28rem !important;
+    padding: 0.42rem 0.72rem !important;
+    justify-self: center !important;
+}
+
+.control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme^="console"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within),
+body[data-theme^="glass"] .control-panel .panel-notification-button:not(:hover):not(:focus):not(:focus-visible):not(:focus-within) {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--heading, currentColor) !important;
+    -webkit-text-fill-color: var(--heading, currentColor) !important;
+}
+
+.control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden) {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 0 0 0.16rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--heading, currentColor) !important;
+    -webkit-text-fill-color: var(--heading, currentColor) !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
+}
+
+.control-panel .panel-notification-button:hover .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:focus .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:focus-visible .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:focus-within .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:hover .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:focus .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:focus-visible .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:focus-within .notification-unread-badge:not(.hidden) {
+    color: var(--heading, currentColor) !important;
+    -webkit-text-fill-color: var(--heading, currentColor) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
