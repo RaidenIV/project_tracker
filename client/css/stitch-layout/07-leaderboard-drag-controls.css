@@ -2118,11 +2118,22 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
 
 
 /* ============================================================================
-   Targeted fix: rich-text editor caret visibility on wrapped/child lines
+   Targeted fix: project modal notes caret on wrapped/formatted lines
+   - Overrides the global non-editable caret-hiding rule for descendants inside
+     the Project Notes contenteditable surface.
    ============================================================================ */
-.rich-text-editor[contenteditable="true"],
-.rich-text-editor[contenteditable="true"] *,
-.project-notes-textarea[contenteditable="true"],
-.project-notes-textarea[contenteditable="true"] * {
-    caret-color: currentColor !important;
+#projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"],
+#projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"] *,
+.project-notes-modal-content .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"],
+.project-notes-modal-content .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"] *,
+body[data-theme^="console"] #projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"],
+body[data-theme^="console"] #projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"] *,
+body[data-theme^="blueprint"] #projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"],
+body[data-theme^="blueprint"] #projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"] *,
+body[data-theme^="glass"] #projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"],
+body[data-theme^="glass"] #projectModal .project-notes-editor .project-notes-textarea.rich-text-editor[contenteditable="true"] * {
+    caret-color: var(--heading, currentColor) !important;
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
 }
