@@ -11770,11 +11770,59 @@ function initializeMobileToolbarSearch() {
     syncSearchState();
 }
 
+// Tracks modal backdrop interactions from their true start point so click-drag
+// gestures that begin inside modal content cannot close a modal when released
+// over the backdrop.
+let __modalBackdropStartTarget = null;
+let __modalBackdropGuardInitialized = false;
+
+function getModalBackdropTarget(target) {
+    if (!target || typeof target.matches !== 'function') return null;
+    return target.matches('.modal-overlay, .auth-overlay') ? target : null;
+}
+
+function initializeModalBackdropDismissalGuard() {
+    if (__modalBackdropGuardInitialized) return;
+    __modalBackdropGuardInitialized = true;
+
+    const rememberStartTarget = event => {
+        __modalBackdropStartTarget = getModalBackdropTarget(event.target);
+    };
+
+    const clearStartTarget = () => {
+        __modalBackdropStartTarget = null;
+    };
+
+    document.addEventListener('pointerdown', rememberStartTarget, true);
+    document.addEventListener('mousedown', rememberStartTarget, true);
+    document.addEventListener('touchstart', rememberStartTarget, true);
+    document.addEventListener('pointercancel', clearStartTarget, true);
+    document.addEventListener('touchcancel', clearStartTarget, true);
+
+    document.addEventListener('click', event => {
+        const clickBackdrop = getModalBackdropTarget(event.target);
+        if (!clickBackdrop) {
+            __modalBackdropStartTarget = null;
+            return;
+        }
+
+        const startedOnSameBackdrop = __modalBackdropStartTarget === clickBackdrop;
+        __modalBackdropStartTarget = null;
+        if (startedOnSameBackdrop) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+    }, true);
+}
+
 // ============================================================================
 // EVENT HANDLERS
 // ============================================================================
 
 function initializeEventHandlers() {
+    initializeModalBackdropDismissalGuard();
+
     // Menu button
     const menuButton = document.getElementById('menuButton');
     const menuDropdown = document.getElementById('menuDropdown');

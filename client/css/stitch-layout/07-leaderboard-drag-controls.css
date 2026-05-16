@@ -2116,3 +2116,13 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-sche
     opacity: 0.78 !important;
 }
 
+
+/* ============================================================================
+   Targeted fix: rich-text editor caret visibility on wrapped/child lines
+   ============================================================================ */
+.rich-text-editor[contenteditable="true"],
+.rich-text-editor[contenteditable="true"] *,
+.project-notes-textarea[contenteditable="true"],
+.project-notes-textarea[contenteditable="true"] * {
+    caret-color: currentColor !important;
+}
