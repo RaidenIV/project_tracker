@@ -1923,6 +1923,61 @@ body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) {
 body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-actions,
 body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-actions,
 body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-actions,
+.project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs-dropdown {
+    position: absolute !important;
+    top: calc(100% + 0.55rem) !important;
+    right: 0 !important;
+    display: none !important;
+    grid-template-columns: minmax(9.5rem, max-content) !important;
+    gap: 0.2rem !important;
+    min-width: 9.5rem !important;
+    padding: 0.42rem !important;
+    border-radius: 0.85rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.24)) !important;
+    background: var(--panel, var(--surface, #0f1117)) !important;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42) !important;
+}
+
+.project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
+    display: grid !important;
+}
+
+.project-meatballs-item,
+body[data-theme^="console"] .project-meatballs-item,
+body[data-theme^="glass"] .project-meatballs-item,
+body[data-theme^="blueprint"] .project-meatballs-item {
+    width: 100% !important;
+    border: 0 !important;
+    border-radius: 0.58rem !important;
+    background: transparent !important;
+    color: var(--heading, currentColor) !important;
+    padding: 0.58rem 0.72rem !important;
+    text-align: left !important;
+    font: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.project-meatballs-item:hover,
+.project-meatballs-item:focus-visible,
+body[data-theme^="console"] .project-meatballs-item:hover,
+body[data-theme^="console"] .project-meatballs-item:focus-visible,
+body[data-theme^="glass"] .project-meatballs-item:hover,
+body[data-theme^="glass"] .project-meatballs-item:focus-visible,
+body[data-theme^="blueprint"] .project-meatballs-item:hover,
+body[data-theme^="blueprint"] .project-meatballs-item:focus-visible {
+    background: color-mix(in srgb, var(--accent, currentColor) 16%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
 .project-meatballs[open],
 .project-meatballs[open] .project-meatballs-dropdown,
 body[data-theme^="console"] .project-meatballs[open],
@@ -1950,7 +2005,7 @@ body[data-theme^="blueprint"] .sidebar-collapsible[data-sidebar-section="workspa
     gap: 0.9rem !important;
 }
 
-@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1200px) {
+@media (min-width: 981px) and (max-width: 1920px) and (min-height: 1081px) and (max-height: 1200px) {
     .control-panel .panel-notification-button,
     body[data-theme^="console"] .control-panel .panel-notification-button,
     body[data-theme^="glass"] .control-panel .panel-notification-button,
@@ -2121,4 +2176,394 @@ body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .proje
 body[data-theme^="blueprint"] .project-meatballs[open],
 body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
     z-index: 25100 !important;
+}
+
+
+/* ============================================================================
+   Targeted follow-up: preserve 1920x1080 leaderboard, expand Workspace by
+   default, improve constrained notification spacing, and raise card menus
+   ============================================================================ */
+@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1080px) {
+    .leaderboard-list > .leaderboard-row,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+        grid-template-columns: 1.35rem 2rem minmax(0, 1fr) auto !important;
+        grid-template-rows: auto !important;
+        grid-template-areas: "rank avatar user score" !important;
+        min-height: 4.65rem !important;
+        padding: 0.6rem !important;
+        column-gap: 0.65rem !important;
+        row-gap: 0 !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-rank {
+        grid-area: rank !important;
+        align-self: center !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar {
+        grid-area: avatar !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        align-self: center !important;
+        justify-self: center !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main {
+        grid-area: user !important;
+        align-self: center !important;
+        display: block !important;
+        text-align: left !important;
+        min-width: 0 !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        width: auto !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        text-align: left !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
+        letter-spacing: inherit !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+    body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
+        grid-area: score !important;
+        justify-self: end !important;
+        align-self: center !important;
+        max-width: none !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
+        letter-spacing: inherit !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1920px) and (min-height: 1081px) and (max-height: 1200px) {
+    .control-panel .panel-notification-button,
+    body[data-theme^="console"] .control-panel .panel-notification-button,
+    body[data-theme^="glass"] .control-panel .panel-notification-button,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        column-gap: 1.15rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-inline: 1.18rem !important;
+        text-align: left !important;
+    }
+
+    .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="console"] .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .panel-notification-label {
+        min-width: 0 !important;
+        padding-right: 0 !important;
+        justify-self: start !important;
+        text-align: left !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge {
+        justify-self: end !important;
+        margin-left: 0 !important;
+    }
+}
+
+.container:has(.project-meatballs[open]),
+.viewport:has(.project-meatballs[open]),
+.project-grid:has(.project-meatballs[open]),
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .container:has(.project-meatballs[open]),
+body[data-theme^="console"] .viewport:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-grid:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .container:has(.project-meatballs[open]),
+body[data-theme^="glass"] .viewport:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-grid:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .container:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .viewport:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-grid:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .stitch-project-card:has(.project-meatballs[open]) {
+    overflow: visible !important;
+    isolation: isolate !important;
+}
+
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .stitch-project-card:has(.project-meatballs[open]) {
+    z-index: 20300 !important;
+}
+
+.project-meatballs,
+body[data-theme^="console"] .project-meatballs,
+body[data-theme^="glass"] .project-meatballs,
+body[data-theme^="blueprint"] .project-meatballs {
+    position: relative !important;
+    z-index: 20350 !important;
+}
+
+.project-meatballs[open],
+.project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs[open],
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs[open],
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs[open],
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
+    z-index: 20400 !important;
+    isolation: isolate !important;
+}
+
+/* ============================================================================
+   Targeted follow-up: centered leaderboard content, card menu stacking, and
+   modal-over-menu layering
+   ============================================================================ */
+.leaderboard-list > .leaderboard-row,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row {
+    align-items: center !important;
+    justify-items: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-rank,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-rank,
+.leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-avatar,
+.leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-main,
+.leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-row-score,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-row-score {
+    justify-self: center !important;
+    text-align: center !important;
+}
+
+.leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="console"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="glass"] .leaderboard-list > .leaderboard-row .leaderboard-user,
+body[data-theme^="blueprint"] .leaderboard-list > .leaderboard-row .leaderboard-user {
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.modal-overlay.active,
+#projectModal.active,
+#accountSettingsModal.active,
+#uiOptionsModal.active,
+#archivedProjectsModal.active,
+#shortcutsModal.active,
+#howToGuideModal.active,
+#commandPaletteModal.active,
+#confirmDialog.active,
+.task-note-modal-overlay.active,
+.project-notes-modal-overlay.active,
+.leaderboard-profile-modal-overlay.active,
+.notifications-modal.active,
+body[data-theme^="console"] .modal-overlay.active,
+body[data-theme^="glass"] .modal-overlay.active,
+body[data-theme^="blueprint"] .modal-overlay.active {
+    z-index: 90000 !important;
+}
+
+.modal-overlay.active .modal-content,
+#projectModal.active .modal-content,
+.task-note-modal-overlay.active > *,
+.project-notes-modal-overlay.active > *,
+.leaderboard-profile-modal-overlay.active > *,
+.notifications-modal.active > *,
+body[data-theme^="console"] .modal-overlay.active .modal-content,
+body[data-theme^="glass"] .modal-overlay.active .modal-content,
+body[data-theme^="blueprint"] .modal-overlay.active .modal-content {
+    position: relative !important;
+    z-index: 90010 !important;
+}
+
+.project-card .project-actions,
+.stitch-project-card .project-actions,
+body[data-theme^="console"] .project-card .project-actions,
+body[data-theme^="glass"] .project-card .project-actions,
+body[data-theme^="blueprint"] .project-card .project-actions {
+    position: relative !important;
+    z-index: 1200 !important;
+    isolation: isolate !important;
+}
+
+.project-card:has(.project-meatballs[open]),
+.stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="console"] .stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="glass"] .stitch-project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]),
+body[data-theme^="blueprint"] .stitch-project-card:has(.project-meatballs[open]) {
+    overflow: visible !important;
+    z-index: 65000 !important;
+    isolation: isolate !important;
+}
+
+.project-card:has(.project-meatballs[open]) .project-header,
+.project-card:has(.project-meatballs[open]) .project-actions,
+.stitch-project-card:has(.project-meatballs[open]) .project-header,
+.stitch-project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-header,
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-header,
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-header,
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-actions {
+    overflow: visible !important;
+    z-index: 66000 !important;
+}
+
+.project-meatballs[open],
+.project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs[open],
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs[open],
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs[open],
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
+    position: relative !important;
+    z-index: 67000 !important;
+    isolation: isolate !important;
+}
+
+.project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="console"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="glass"] .project-meatballs[open] .project-meatballs-dropdown,
+body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
+    position: absolute !important;
+    top: calc(100% + 0.48rem) !important;
+    right: 0 !important;
+    transform: none !important;
+    min-width: 10.5rem !important;
+    max-width: min(16rem, 78vw) !important;
+    overflow: visible !important;
+}
+
+.project-card:has(.project-meatballs[open]) .project-card-tags,
+.project-card:has(.project-meatballs[open]) .project-card-progress,
+.project-card:has(.project-meatballs[open]) .project-preview-list,
+.project-card:has(.project-meatballs[open]) .project-card-notes-bar,
+.project-card:has(.project-meatballs[open]) .project-card-footer,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-tags,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-progress,
+.stitch-project-card:has(.project-meatballs[open]) .project-preview-list,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-notes-bar,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-footer {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* ============================================================================
+   Targeted fix: 1920x1200-only notification badge spacing
+   Keeps 1920x1080 untouched by requiring heights above 1080px.
+   ============================================================================ */
+@media (min-width: 981px) and (max-width: 1920px) and (min-height: 1081px) and (max-height: 1200px) {
+    .control-panel .panel-notification-button,
+    body[data-theme^="console"] .control-panel .panel-notification-button,
+    body[data-theme^="glass"] .control-panel .panel-notification-button,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        justify-content: stretch !important;
+        column-gap: 1.45rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 1rem !important;
+        padding-right: 0.9rem !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-align: left !important;
+    }
+
+    .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="console"] .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .panel-notification-label {
+        grid-column: 1 !important;
+        justify-self: start !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        text-align: left !important;
+        font-size: 0.72rem !important;
+        letter-spacing: 0.055em !important;
+    }
+
+    .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge,
+    body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge {
+        grid-column: 2 !important;
+        position: static !important;
+        inset: auto !important;
+        transform: none !important;
+        justify-self: end !important;
+        align-self: center !important;
+        margin: 0 !important;
+        min-width: 1.45rem !important;
+        width: auto !important;
+        height: 1.45rem !important;
+        padding: 0 0.36rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        line-height: 1 !important;
+    }
 }
