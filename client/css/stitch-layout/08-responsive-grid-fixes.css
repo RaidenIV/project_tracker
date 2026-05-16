@@ -3392,3 +3392,438 @@ body[data-theme].control-panel-is-collapsed .add-project-button svg {
     min-width: 1.2rem !important;
     margin: 0 !important;
 }
+
+/* ============================================================================
+   Targeted fix: traditional collapsed sidebar icon rail
+   - Keeps core sidebar actions visible/clickable as icon-only controls when the
+     sidebar is minimized.
+   - Leaves the expanded sidebar layout unchanged.
+   ============================================================================ */
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .container {
+        grid-template-columns: var(--responsive-sidebar-collapsed-width, 5rem) minmax(0, 1fr) !important;
+        overflow: hidden !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed,
+    body[data-theme].control-panel-is-collapsed .control-panel,
+    body[data-theme].control-panel-is-collapsed .control-panel.collapsed {
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        overflow: hidden !important;
+        transform: none !important;
+        pointer-events: auto !important;
+        z-index: 45 !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-content,
+    body.control-panel-is-collapsed .control-panel-scroll-inner,
+    body[data-theme].control-panel-is-collapsed .control-panel-content,
+    body[data-theme].control-panel-is-collapsed .control-panel-scroll-inner {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        gap: 0.62rem !important;
+        padding: 0.95rem 0.55rem !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        pointer-events: auto !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-scroll-inner > *:not(.control-panel-header),
+    body[data-theme].control-panel-is-collapsed .control-panel-scroll-inner > *:not(.control-panel-header) {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-scroll-inner > .control-panel-header,
+    body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="workspace"],
+    body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="leaderboard"],
+    body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="settings"],
+    body[data-theme].control-panel-is-collapsed .control-panel-scroll-inner > .control-panel-header,
+    body[data-theme].control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="workspace"],
+    body[data-theme].control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="leaderboard"],
+    body[data-theme].control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="settings"] {
+        display: grid !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-items: center !important;
+        align-items: start !important;
+        gap: 0.54rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-header,
+    body.control-panel-is-collapsed .panel-header-main,
+    body.control-panel-is-collapsed .panel-user-info,
+    body[data-theme].control-panel-is-collapsed .control-panel-header,
+    body[data-theme].control-panel-is-collapsed .panel-header-main,
+    body[data-theme].control-panel-is-collapsed .panel-user-info {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-items: center !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: auto !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-avatar-button,
+    body.control-panel-is-collapsed .control-panel .panel-user-pill,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-avatar-button,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-user-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.65rem !important;
+        min-width: 2.65rem !important;
+        max-width: 2.65rem !important;
+        height: 2.65rem !important;
+        min-height: 2.65rem !important;
+        max-height: 2.65rem !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        gap: 0 !important;
+        border-radius: 999px !important;
+        overflow: visible !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-avatar,
+    body.control-panel-is-collapsed .control-panel .panel-avatar-img,
+    body.control-panel-is-collapsed .control-panel .panel-avatar-fallback,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-avatar,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-avatar-img,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-avatar-fallback {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.45rem !important;
+        min-width: 2.45rem !important;
+        height: 2.45rem !important;
+        min-height: 2.45rem !important;
+        margin: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+    body.control-panel-is-collapsed .control-panel .panel-avatar-button .panel-user-level-badge,
+    body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+    body.control-panel-is-collapsed .control-panel .panel-user-pill .panel-user-level-badge,
+    body.control-panel-is-collapsed .control-panel .save-status,
+    body.control-panel-is-collapsed .control-panel .save-status--inline,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-username,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-avatar-button .panel-user-level-badge,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-user-pill .panel-username,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-user-pill .panel-user-level-badge,
+    body[data-theme].control-panel-is-collapsed .control-panel .save-status,
+    body[data-theme].control-panel-is-collapsed .control-panel .save-status--inline {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-notification-button,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-notification-button,
+    body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-notification-button,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .control-panel .panel-notification-button,
+    body[data-theme^="glass"].control-panel-is-collapsed .control-panel .panel-notification-button {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.65rem !important;
+        min-width: 2.65rem !important;
+        max-width: 2.65rem !important;
+        height: 2.65rem !important;
+        min-height: 2.65rem !important;
+        max-height: 2.65rem !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        border: 0 !important;
+        border-radius: 0.9rem !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        color: var(--heading, var(--text, currentColor)) !important;
+        -webkit-text-fill-color: var(--heading, var(--text, currentColor)) !important;
+        overflow: visible !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-notification-button::before,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-notification-button::before {
+        content: "" !important;
+        display: block !important;
+        width: 1.28rem !important;
+        min-width: 1.28rem !important;
+        height: 1.28rem !important;
+        min-height: 1.28rem !important;
+        margin: 0 !important;
+        background: currentColor !important;
+        background-color: currentColor !important;
+        -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>') center / contain no-repeat !important;
+        mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>') center / contain no-repeat !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-notification-button:hover,
+    body.control-panel-is-collapsed .control-panel .panel-notification-button:focus-visible,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-notification-button:hover,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-notification-button:focus-visible {
+        color: var(--accent, currentColor) !important;
+        -webkit-text-fill-color: var(--accent, currentColor) !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-notification-button .panel-notification-label,
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-notification-button .panel-notification-label {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0 0 0 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+    body[data-theme].control-panel-is-collapsed .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+    body[data-theme^="console"].control-panel-is-collapsed .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+    body[data-theme^="blueprint"].control-panel-is-collapsed .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+    body[data-theme^="glass"].control-panel-is-collapsed .control-panel .panel-notification-button .notification-unread-badge:not(.hidden) {
+        position: absolute !important;
+        top: -0.22rem !important;
+        right: -0.18rem !important;
+        inset-inline-start: auto !important;
+        transform: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        min-width: 1.12rem !important;
+        height: 1.12rem !important;
+        min-height: 1.12rem !important;
+        margin: 0 !important;
+        padding: 0 0.32rem !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: var(--accent, currentColor) !important;
+        background-color: var(--accent, currentColor) !important;
+        color: var(--panel, var(--bg, #050607)) !important;
+        -webkit-text-fill-color: var(--panel, var(--bg, #050607)) !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+        z-index: 2 !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-toggle,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-toggle {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body,
+    body.control-panel-is-collapsed #workspaceSectionBody,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body,
+    body[data-theme].control-panel-is-collapsed #workspaceSectionBody {
+        display: grid !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-items: center !important;
+        gap: 0.54rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: auto !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-body,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-body,
+    body.control-panel-is-collapsed #leaderboardSectionBody,
+    body.control-panel-is-collapsed #settingsSectionBody,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-body,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-body,
+    body[data-theme].control-panel-is-collapsed #leaderboardSectionBody,
+    body[data-theme].control-panel-is-collapsed #settingsSectionBody {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .new-project-create-panel,
+    body.control-panel-is-collapsed .total-completion-section,
+    body.control-panel-is-collapsed .sidebar-total-completion-section,
+    body.control-panel-is-collapsed .leaderboard-panel-card,
+    body.control-panel-is-collapsed .settings-panel-card,
+    body.control-panel-is-collapsed .sidebar-bottom-logo-wrap,
+    body.control-panel-is-collapsed .sidebar-app-brand,
+    body[data-theme].control-panel-is-collapsed .new-project-create-panel,
+    body[data-theme].control-panel-is-collapsed .total-completion-section,
+    body[data-theme].control-panel-is-collapsed .sidebar-total-completion-section,
+    body[data-theme].control-panel-is-collapsed .leaderboard-panel-card,
+    body[data-theme].control-panel-is-collapsed .settings-panel-card,
+    body[data-theme].control-panel-is-collapsed .sidebar-bottom-logo-wrap,
+    body[data-theme].control-panel-is-collapsed .sidebar-app-brand {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-nav-list,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-list {
+        display: grid !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-items: center !important;
+        gap: 0.54rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: auto !important;
+    }
+
+    body.control-panel-is-collapsed .add-project-button,
+    body.control-panel-is-collapsed .sidebar-nav-card,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle,
+    body[data-theme].control-panel-is-collapsed .add-project-button,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle,
+    body[data-theme^="console"].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 3rem !important;
+        min-width: 3rem !important;
+        max-width: 3rem !important;
+        height: 3rem !important;
+        min-height: 3rem !important;
+        max-height: 3rem !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        border-radius: 0.95rem !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        color: var(--heading, var(--text, currentColor)) !important;
+        -webkit-text-fill-color: var(--heading, var(--text, currentColor)) !important;
+    }
+
+    body.control-panel-is-collapsed .add-project-button {
+        width: 2.65rem !important;
+        min-width: 2.65rem !important;
+        max-width: 2.65rem !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .add-project-button svg,
+    body.control-panel-is-collapsed .sidebar-nav-card-icon,
+    body.control-panel-is-collapsed .sidebar-section-toggle-icon,
+    body.control-panel-is-collapsed .sidebar-action-button-icon,
+    body[data-theme].control-panel-is-collapsed .add-project-button svg,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card-icon,
+    body[data-theme].control-panel-is-collapsed .sidebar-section-toggle-icon,
+    body[data-theme].control-panel-is-collapsed .sidebar-action-button-icon {
+        display: block !important;
+        width: 1.28rem !important;
+        min-width: 1.28rem !important;
+        height: 1.28rem !important;
+        min-height: 1.28rem !important;
+        margin: 0 !important;
+        color: currentColor !important;
+        stroke: currentColor !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-section-toggle-main,
+    body[data-theme].control-panel-is-collapsed .sidebar-section-toggle-main {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-nav-card-label,
+    body.control-panel-is-collapsed .sidebar-nav-card-count,
+    body.control-panel-is-collapsed .sidebar-section-toggle-label,
+    body.control-panel-is-collapsed .sidebar-section-chevron,
+    body.control-panel-is-collapsed .sidebar-action-button-label,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card-label,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card-count,
+    body[data-theme].control-panel-is-collapsed .sidebar-section-toggle-label,
+    body[data-theme].control-panel-is-collapsed .sidebar-section-chevron,
+    body[data-theme].control-panel-is-collapsed .sidebar-action-button-label {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0 0 0 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed .sidebar-nav-card:hover,
+    body.control-panel-is-collapsed .sidebar-nav-card:focus-visible,
+    body.control-panel-is-collapsed .sidebar-nav-card.active,
+    body.control-panel-is-collapsed .sidebar-nav-card.is-active,
+    body.control-panel-is-collapsed .add-project-button:hover,
+    body.control-panel-is-collapsed .add-project-button:focus-visible,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle:hover,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle:focus-visible,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle:hover,
+    body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle:focus-visible,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card:hover,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card:focus-visible,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card.active,
+    body[data-theme].control-panel-is-collapsed .sidebar-nav-card.is-active,
+    body[data-theme].control-panel-is-collapsed .add-project-button:hover,
+    body[data-theme].control-panel-is-collapsed .add-project-button:focus-visible,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle:hover,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle:focus-visible,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle:hover,
+    body[data-theme].control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="settings"] .sidebar-section-toggle:focus-visible {
+        color: var(--accent, currentColor) !important;
+        -webkit-text-fill-color: var(--accent, currentColor) !important;
+        border-color: color-mix(in srgb, var(--accent, currentColor) 58%, transparent) !important;
+        background: color-mix(in srgb, var(--accent, currentColor) 8%, transparent) !important;
+        background-color: color-mix(in srgb, var(--accent, currentColor) 8%, transparent) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    body.control-panel-is-collapsed .viewport,
+    body.control-panel-is-collapsed .top-app-bar,
+    body[data-theme].control-panel-is-collapsed .viewport,
+    body[data-theme].control-panel-is-collapsed .top-app-bar {
+        min-width: 0 !important;
+    }
+}

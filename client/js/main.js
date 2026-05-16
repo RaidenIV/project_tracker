@@ -3727,6 +3727,8 @@ function buildSidebarSectionToggle(sectionKey, label) {
     button.type = 'button';
     button.dataset.sidebarToggle = sectionKey;
     button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('title', label);
+    button.setAttribute('aria-label', label);
 
     const iconMarkup = sectionKey === 'settings'
         ? `<svg class="sidebar-section-toggle-icon sidebar-section-toggle-icon--settings" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.35 4.32c.42-1.76 2.88-1.76 3.3 0l.08.33a1.7 1.7 0 0 0 2.47 1.05l.3-.17c1.54-.9 3.28.85 2.38 2.38l-.17.3a1.7 1.7 0 0 0 1.05 2.47l.33.08c1.76.42 1.76 2.88 0 3.3l-.33.08a1.7 1.7 0 0 0-1.05 2.47l.17.3c.9 1.54-.85 3.28-2.38 2.38l-.3-.17a1.7 1.7 0 0 0-2.47 1.05l-.08.33c-.42 1.76-2.88 1.76-3.3 0l-.08-.33a1.7 1.7 0 0 0-2.47-1.05l-.3.17c-1.54.9-3.28-.85-2.38-2.38l.17-.3a1.7 1.7 0 0 0-1.05-2.47l-.33-.08c-1.76-.42-1.76-2.88 0-3.3l.33-.08A1.7 1.7 0 0 0 5.3 8.2l-.17-.3c-.9-1.54.85-3.28 2.38-2.38l.3.17a1.7 1.7 0 0 0 2.47-1.05l.08-.33Z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path></svg>`
@@ -3808,6 +3810,7 @@ function ensureSidebarSettingsDropdown() {
             <span class="sidebar-action-button-label">${label}</span>
         `;
         button.setAttribute('aria-label', label);
+        button.setAttribute('title', label);
         button.className = `${className} settings-action-button`.trim();
         button.type = 'button';
         settingsActions.appendChild(button);
@@ -3987,6 +3990,7 @@ function updateNotificationUnreadIndicator() {
     badge.classList.toggle('hidden', unreadCount <= 0);
     button.classList.toggle('has-unread', unreadCount > 0);
     button.setAttribute('aria-label', unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications');
+    button.setAttribute('title', unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications');
 }
 
 function refreshNotificationsModalIfOpen() {

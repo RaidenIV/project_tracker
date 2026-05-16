@@ -213,21 +213,21 @@
                                 <span class="panel-username" id="panelUsername"></span>
                                 <span class="panel-user-level-badge" id="panelUserLevelBadge">LEVEL 1</span>
                             </button>
-                            <button class="panel-notification-button" id="panelNotificationButton" type="button" onclick="openNotificationsModal()"><span class="panel-notification-label">Notifications</span><span class="notification-unread-badge hidden" id="notificationUnreadBadge">0</span></button>
+                            <button class="panel-notification-button" id="panelNotificationButton" type="button" onclick="openNotificationsModal()" title="Notifications" aria-label="Open notifications"><span class="panel-notification-label">Notifications</span><span class="notification-unread-badge hidden" id="notificationUnreadBadge">0</span></button>
                             <div class="save-status save-status--idle save-status--inline" id="saveStatusPill">All changes saved</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="sidebar-collapsible" data-sidebar-section="workspace">
-                    <button class="sidebar-section-toggle" data-sidebar-toggle="workspace" type="button" aria-expanded="true">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="workspace" type="button" aria-expanded="true" title="Workspace" aria-label="Workspace">
                         <span class="sidebar-section-toggle-label">Workspace</span>
                         <svg class="sidebar-section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"></path>
                         </svg>
                     </button>
                     <div class="sidebar-section-body" id="workspaceSectionBody">
-                        <button class="add-project-button" id="addProjectButton">
+                        <button class="add-project-button" id="addProjectButton" type="button" title="New Project" aria-label="New Project">
                             <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -255,7 +255,7 @@
                         </div>
 
                         <div class="sidebar-nav-list">
-                            <button class="sidebar-nav-card active" id="activeProjectsCard" type="button">
+                            <button class="sidebar-nav-card active" id="activeProjectsCard" type="button" title="Active Projects" aria-label="Active Projects">
                                 <svg class="sidebar-nav-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 7.5A2.25 2.25 0 0 1 6 5.25h3.7c.6 0 1.17.24 1.59.66l1.07 1.07c.42.42.99.66 1.59.66H18a2.25 2.25 0 0 1 2.25 2.25v.86"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 10.5h16.5a1.5 1.5 0 0 1 1.46 1.84l-1.25 5.36a2.25 2.25 0 0 1-2.19 1.74H5.58a2.25 2.25 0 0 1-2.2-2.74l1.1-4.72A1.9 1.9 0 0 1 6.33 10.5H3.75Z"></path>
@@ -263,12 +263,12 @@
                                 <span class="sidebar-nav-card-label">ACTIVE</span>
                                 <span class="sidebar-nav-card-count" id="activeProjectsCount">0</span>
                             </button>
-                            <button class="sidebar-nav-card" id="sharedProjectsCard" type="button">
+                            <button class="sidebar-nav-card" id="sharedProjectsCard" type="button" title="Shared Projects" aria-label="Shared Projects">
                                 <span class="sidebar-nav-card-icon sidebar-nav-card-icon--shared" aria-hidden="true"></span>
                                 <span class="sidebar-nav-card-label">Shared</span>
                                 <span class="sidebar-nav-card-count" id="sharedProjectsCount">0</span>
                             </button>
-                            <button class="sidebar-nav-card" id="completedProjectsCard" type="button">
+                            <button class="sidebar-nav-card" id="completedProjectsCard" type="button" title="Completed Projects" aria-label="Completed Projects">
                                 <svg class="sidebar-nav-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                     <rect x="4.5" y="4.5" width="15" height="15" rx="4" ry="4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></rect>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8.25 12.35 2.45 2.4 5.05-5.5"></path>
@@ -276,7 +276,7 @@
                                 <span class="sidebar-nav-card-label">Completed</span>
                                 <span class="sidebar-nav-card-count" id="completedProjectsCount">0</span>
                             </button>
-                            <button class="sidebar-nav-card" id="archivedProjectsMoreBtn" type="button">
+                            <button class="sidebar-nav-card" id="archivedProjectsMoreBtn" type="button" title="Archived Projects" aria-label="Archived Projects">
                                 <svg class="sidebar-nav-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5 5.25 4.5h13.5L21 7.5M4.5 7.5h15v12h-15v-12Zm5.25 4.5h4.5"></path>
                                 </svg>
@@ -306,7 +306,7 @@
                 </div>
 
                 <div class="sidebar-collapsible" data-sidebar-section="leaderboard">
-                    <button class="sidebar-section-toggle" data-sidebar-toggle="leaderboard" type="button" aria-expanded="true">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="leaderboard" type="button" aria-expanded="true" title="Leaderboard" aria-label="Leaderboard">
                         <span class="sidebar-section-toggle-main">
                             <span class="sidebar-section-toggle-icon sidebar-section-toggle-icon--leaderboard" aria-hidden="true"></span>
                             <span class="sidebar-section-toggle-label">Leaderboard</span>
@@ -325,7 +325,7 @@
                 </div>
 
                 <div class="sidebar-collapsible" data-sidebar-section="settings">
-                    <button class="sidebar-section-toggle" data-sidebar-toggle="settings" type="button" aria-expanded="true">
+                    <button class="sidebar-section-toggle" data-sidebar-toggle="settings" type="button" aria-expanded="true" title="Settings" aria-label="Settings">
                         <span class="sidebar-section-toggle-main">
                             <svg class="sidebar-section-toggle-icon sidebar-section-toggle-icon--settings" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.35 4.32c.42-1.76 2.88-1.76 3.3 0l.08.33a1.7 1.7 0 0 0 2.47 1.05l.3-.17c1.54-.9 3.28.85 2.38 2.38l-.17.3a1.7 1.7 0 0 0 1.05 2.47l.33.08c1.76.42 1.76 2.88 0 3.3l-.33.08a1.7 1.7 0 0 0-1.05 2.47l.17.3c.9 1.54-.85 3.28-2.38 2.38l-.3-.17a1.7 1.7 0 0 0-2.47 1.05l-.08.33c-.42 1.76-2.88 1.76-3.3 0l-.08-.33a1.7 1.7 0 0 0-2.47-1.05l-.3.17c-1.54.9-3.28-.85-2.38-2.38l.17-.3a1.7 1.7 0 0 0-1.05-2.47l-.33-.08c-1.76-.42-1.76-2.88 0-3.3l.33-.08A1.7 1.7 0 0 0 5.3 8.2l-.17-.3c-.9-1.54.85-3.28 2.38-2.38l.3.17a1.7 1.7 0 0 0 2.47-1.05l.08-.33Z"></path>
@@ -340,33 +340,33 @@
                     <div class="sidebar-section-body" id="settingsSectionBody">
                         <div class="settings-panel-card">
                             <div class="settings-actions">
-                                <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button">
+                                <button class="sidebar-action-button" id="sidebarAccountSettingsBtn" type="button" title="Account Settings" aria-label="Account Settings">
                                     <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0"></path>
                                     </svg>
                                     <span class="sidebar-action-button-label">Account Settings</span>
                                 </button>
-                                <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button">
+                                <button class="sidebar-action-button" id="sidebarUiOptionsBtn" type="button" title="UI Options" aria-label="UI Options">
                                     <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.35 4.32c.42-1.76 2.88-1.76 3.3 0l.08.33a1.7 1.7 0 0 0 2.47 1.05l.3-.17c1.54-.9 3.28.85 2.38 2.38l-.17.3a1.7 1.7 0 0 0 1.05 2.47l.33.08c1.76.42 1.76 2.88 0 3.3l-.33.08a1.7 1.7 0 0 0-1.05 2.47l.17.3c.9 1.54-.85 3.28-2.38 2.38l-.3-.17a1.7 1.7 0 0 0-2.47 1.05l-.08.33c-.42 1.76-2.88 1.76-3.3 0l-.08-.33a1.7 1.7 0 0 0-2.47-1.05l-.3.17c-1.54.9-3.28-.85-2.38-2.38l.17-.3a1.7 1.7 0 0 0-1.05-2.47l-.33-.08c-1.76-.42-1.76-2.88 0-3.3l.33-.08A1.7 1.7 0 0 0 5.3 8.2l-.17-.3c-.9-1.54.85-3.28 2.38-2.38l.3.17a1.7 1.7 0 0 0 2.47-1.05l.08-.33Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                                     </svg>
                                     <span class="sidebar-action-button-label">UI Options</span>
                                 </button>
                                 <div class="sidebar-more-group" aria-label="More workspace actions">
-                                    <button class="sidebar-action-button sidebar-action-button--more" id="sidebarMoreToggleBtn" type="button">
+                                    <button class="sidebar-action-button sidebar-action-button--more" id="sidebarMoreToggleBtn" type="button" title="More" aria-label="More sidebar actions">
                                         <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.75h.01M12 12h.01M12 17.25h.01"></path>
                                         </svg>
                                         <span class="sidebar-action-button-label">More...</span>
                                     </button>
                                     <div class="sidebar-more-menu" id="sidebarMoreMenu">
-                                        <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button">
+                                        <button class="sidebar-action-button" id="sidebarShortcutsBtn" type="button" title="Keyboard Shortcuts" aria-label="Keyboard Shortcuts">
                                             <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 6.75h15v10.5h-15V6.75Zm3 7.5h.01m3 0h.01m3 0h.01m3 0h.01M7.5 9.75h.01m3 0h.01m3 0h.01m3 0h.01"></path>
                                             </svg>
                                             <span class="sidebar-action-button-label">Keyboard Shortcuts</span>
                                         </button>
-                                        <button class="sidebar-action-button" id="sidebarHowToGuideBtn" type="button">
+                                        <button class="sidebar-action-button" id="sidebarHowToGuideBtn" type="button" title="How To Guide" aria-label="How To Guide">
                                             <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.75v12M6.75 5.25h8.25A2.25 2.25 0 0 1 17.25 7.5v12H9A2.25 2.25 0 0 0 6.75 21.75V5.25Zm0 0H5.25A2.25 2.25 0 0 0 3 7.5v12a2.25 2.25 0 0 1 2.25-2.25h1.5"></path>
                                             </svg>
@@ -374,7 +374,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button">
+                                <button class="sidebar-action-button sidebar-action-button--danger" id="sidebarSignOutBtn" type="button" title="Sign Out" aria-label="Sign Out">
                                     <svg class="sidebar-action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 12h8.25m0 0-2.25-2.25M20.25 12 18 14.25"></path>
                                     </svg>
