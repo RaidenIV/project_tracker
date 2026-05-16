@@ -5679,11 +5679,11 @@ body[data-theme] .stitch-project-card .project-card-action-row .project-due-date
 .stitch-project-card .project-card-footer,
 body[data-theme] .project-card .project-card-footer,
 body[data-theme] .stitch-project-card .project-card-footer {
-    padding-bottom: clamp(0.32rem, 0.42vw, 0.52rem) !important;
+    padding-bottom: clamp(0.16rem, 0.21vw, 0.26rem) !important;
 }
 
 /* ============================================================================
-   Targeted follow-up: project-card progress spacing and neutral task count
+   Targeted follow-up: reduce project-card bottom padding, project-card progress spacing, and neutral task count
    ============================================================================ */
 .project-card .project-card-progress-summary,
 .stitch-project-card .project-card-progress-summary,
