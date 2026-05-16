@@ -9077,6 +9077,7 @@ function renderProjectDueDateControlMarkup(project, surface = 'card') {
     const title = overdue
         ? `Project overdue: ${formatProjectDueDate(dueDate)}`
         : (dueDate ? `Project due ${formatProjectDueDate(dueDate)}` : 'Add project due date');
+    const visibleDueDateLabel = dueDate ? `DUE DATE: ${formatProjectDueDate(dueDate)}` : '';
     const safeSurface = String(surface || 'card').replace(/[^a-zA-Z0-9_-]/g, '') || 'card';
 
     return `
@@ -9089,7 +9090,7 @@ function renderProjectDueDateControlMarkup(project, surface = 'card') {
                 <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
             </svg>
-            ${dueDate ? `<span class="project-due-date-value" aria-hidden="true">${escapeHtml(dueDate)}</span>` : ''}
+            ${dueDate ? `<span class="project-due-date-value" aria-hidden="true">${escapeHtml(visibleDueDateLabel)}</span>` : ''}
             <input class="project-due-date-input"
                    id="project-due-${safeSurface}-${projectId}"
                    type="date"

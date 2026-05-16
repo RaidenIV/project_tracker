@@ -5596,3 +5596,88 @@ body[data-theme] .project-card .project-card-action-row .project-due-date-contro
 body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card {
     position: relative !important;
 }
+
+/* ============================================================================
+   Targeted follow-up: restore card meatball dots, dated project action labels,
+   preview/action spacing, and lower card footer alignment
+   ============================================================================ */
+.project-meatballs--card .project-meatballs-toggle,
+body[data-theme] .project-meatballs--card .project-meatballs-toggle {
+    color: var(--text, currentColor) !important;
+    -webkit-text-fill-color: var(--text, currentColor) !important;
+}
+
+.project-meatballs--card .project-meatballs-toggle:hover,
+.project-meatballs--card .project-meatballs-toggle:focus-visible,
+.project-meatballs--card[open] .project-meatballs-toggle,
+body[data-theme] .project-meatballs--card .project-meatballs-toggle:hover,
+body[data-theme] .project-meatballs--card .project-meatballs-toggle:focus-visible,
+body[data-theme] .project-meatballs--card[open] .project-meatballs-toggle {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+}
+
+.project-meatballs--card .project-meatballs-icon span,
+body[data-theme] .project-meatballs--card .project-meatballs-icon span {
+    background: currentColor !important;
+    background-color: currentColor !important;
+    border-color: currentColor !important;
+}
+
+.project-card .project-preview-list + .project-card-action-row,
+.stitch-project-card .project-preview-list + .project-card-action-row,
+body[data-theme] .project-card .project-preview-list + .project-card-action-row,
+body[data-theme] .stitch-project-card .project-preview-list + .project-card-action-row {
+    margin-top: var(--project-card-slot-gap, 0.62rem) !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date {
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: min(100%, 11.8rem) !important;
+    flex: 0 1 auto !important;
+    gap: 0.42rem !important;
+    padding: 0 0.72rem !important;
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 76%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 10%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent, currentColor) 10%, transparent) !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon {
+    display: none !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    font-size: 0.66rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.045em !important;
+    line-height: 1 !important;
+}
+
+.project-card .project-card-footer,
+.stitch-project-card .project-card-footer,
+body[data-theme] .project-card .project-card-footer,
+body[data-theme] .stitch-project-card .project-card-footer {
+    padding-bottom: clamp(0.32rem, 0.42vw, 0.52rem) !important;
+}
