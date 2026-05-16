@@ -4568,3 +4568,116 @@ body[data-theme].control-panel-is-collapsed .add-project-button svg {
         margin-right: auto !important;
     }
 }
+
+/* ============================================================================
+   Targeted fix: center minimized sidebar icons against the full sidebar width
+   - The collapsed rail lives inside control-panel-content, so make that wrapper
+     fill the entire minimized sidebar column before centering icon buttons.
+   ============================================================================ */
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed,
+    body[data-theme].control-panel-is-collapsed .control-panel,
+    body[data-theme].control-panel-is-collapsed .control-panel.collapsed {
+        position: relative !important;
+        display: block !important;
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-content,
+    body[data-theme].control-panel-is-collapsed .control-panel-content {
+        position: absolute !important;
+        inset: 0 !important;
+        display: block !important;
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transform: none !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail {
+        position: absolute !important;
+        top: 0 !important;
+        right: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        display: flex !important;
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+        transform: none !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body.control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-secondary,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-secondary {
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        align-items: center !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="console"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="glass"].control-panel-is-collapsed .collapsed-sidebar-icon-button {
+        display: flex !important;
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        height: 2.72rem !important;
+        min-height: 2.72rem !important;
+        max-height: 2.72rem !important;
+        padding: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        align-self: center !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-avatar-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-avatar-button {
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon,
+    body.control-panel-is-collapsed .collapsed-panel-avatar,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar {
+        flex: 0 0 auto !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        transform: none !important;
+    }
+}
