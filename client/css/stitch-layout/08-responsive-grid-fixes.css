@@ -2338,3 +2338,86 @@ body[data-theme^="glass"] .viewport:has(.project-meatballs--card[open]) {
     overflow-x: hidden !important;
     scrollbar-gutter: stable !important;
 }
+
+/* ============================================================================
+   Targeted fix: modal-colored Add Tasks label and hover-revealed notifications
+   - Restores the Add Tasks label while matching the project modal surface color
+     so the accent button remains readable in light and dark themes.
+   - Keeps the notification button layout reserved but visually hidden until the
+     button area is hovered or keyboard-focused.
+   ============================================================================ */
+#projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+#projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+#projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme^="console"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="console"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme^="console"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme^="glass"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="glass"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme^="glass"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible {
+    color: var(--panel, var(--surface, #111217)) !important;
+    -webkit-text-fill-color: var(--panel, var(--surface, #111217)) !important;
+    -webkit-text-stroke: 0 transparent !important;
+    text-shadow: none !important;
+    text-indent: 0 !important;
+    overflow: hidden !important;
+}
+
+body[data-theme$="-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme$="-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme$="-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme="light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme="light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme="light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme="console-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme="console-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme="console-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme="blueprint-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme="blueprint-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme="blueprint-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme="glass-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme="glass-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme="glass-light"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible {
+    color: var(--panel, var(--surface, #f8fafc)) !important;
+    -webkit-text-fill-color: var(--panel, var(--surface, #f8fafc)) !important;
+}
+
+.control-panel .panel-notification-button,
+body[data-theme] .control-panel .panel-notification-button,
+body[data-theme^="console"] .control-panel .panel-notification-button,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button,
+body[data-theme^="glass"] .control-panel .panel-notification-button {
+    opacity: 0 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transition: opacity 160ms ease, filter 160ms ease !important;
+}
+
+.control-panel .panel-notification-button:hover,
+.control-panel .panel-notification-button:focus,
+.control-panel .panel-notification-button:focus-visible,
+.control-panel .panel-notification-button:focus-within,
+body[data-theme] .control-panel .panel-notification-button:hover,
+body[data-theme] .control-panel .panel-notification-button:focus,
+body[data-theme] .control-panel .panel-notification-button:focus-visible,
+body[data-theme] .control-panel .panel-notification-button:focus-within,
+body[data-theme^="console"] .control-panel .panel-notification-button:hover,
+body[data-theme^="console"] .control-panel .panel-notification-button:focus,
+body[data-theme^="console"] .control-panel .panel-notification-button:focus-visible,
+body[data-theme^="console"] .control-panel .panel-notification-button:focus-within,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:hover,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:focus,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:focus-visible,
+body[data-theme^="blueprint"] .control-panel .panel-notification-button:focus-within,
+body[data-theme^="glass"] .control-panel .panel-notification-button:hover,
+body[data-theme^="glass"] .control-panel .panel-notification-button:focus,
+body[data-theme^="glass"] .control-panel .panel-notification-button:focus-visible,
+body[data-theme^="glass"] .control-panel .panel-notification-button:focus-within {
+    opacity: 1 !important;
+}
