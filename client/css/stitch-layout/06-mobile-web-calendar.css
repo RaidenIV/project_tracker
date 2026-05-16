@@ -3856,3 +3856,49 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
     }
 }
 
+
+/* ============================================================================
+   Mobile-only patch: keep the expanded sidebar layered above the viewport menu bar
+   Date: 2026-05-16
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    body.mobile-drawer-open .control-panel,
+    body.mobile-drawer-open .control-panel.collapsed,
+    body.mobile-drawer-open.control-panel-is-collapsed .control-panel,
+    body.mobile-drawer-open.control-panel-is-collapsed .control-panel.collapsed,
+    body.mobile-sidebar-open .control-panel,
+    body.mobile-sidebar-open .control-panel.collapsed,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel,
+    body.mobile-sidebar-open.control-panel-is-collapsed .control-panel.collapsed {
+        z-index: 220 !important;
+        isolation: isolate !important;
+    }
+
+    body.mobile-drawer-open .control-panel-content,
+    body.mobile-drawer-open .control-panel-scroll-inner,
+    body.mobile-sidebar-open .control-panel-content,
+    body.mobile-sidebar-open .control-panel-scroll-inner {
+        position: relative !important;
+        z-index: 221 !important;
+    }
+
+    body.mobile-drawer-open .container::after,
+    body.mobile-sidebar-open .container::after {
+        z-index: 180 !important;
+    }
+
+    body.mobile-drawer-open .top-app-bar,
+    body.mobile-drawer-open .viewport,
+    body.mobile-sidebar-open .top-app-bar,
+    body.mobile-sidebar-open .viewport {
+        z-index: 80 !important;
+    }
+
+    body.mobile-drawer-open .panel-edge-toggle,
+    body.mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-sidebar-open .panel-edge-toggle,
+    body.mobile-sidebar-open.control-panel-is-collapsed .panel-edge-toggle {
+        z-index: 230 !important;
+    }
+}

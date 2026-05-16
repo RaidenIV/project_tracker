@@ -10,6 +10,6 @@
 @import url("./stitch-layout/03-mobile-theme-polish.css");
 @import url("./stitch-layout/04-auth-notes-modal-surfaces.css");
 @import url("./stitch-layout/05-project-card-layouts.css");
-@import url("./stitch-layout/06-mobile-web-calendar.css");
+@import url("./stitch-layout/06-mobile-web-calendar.css?v=20260516-mobile-drawer-layering");
 @import url("./stitch-layout/07-leaderboard-drag-controls.css");
-@import url("./stitch-layout/08-responsive-grid-fixes.css?v=20260516-mobile-console-menu-bar");
+@import url("./stitch-layout/08-responsive-grid-fixes.css?v=20260516-sidebar-new-project-spacing");
