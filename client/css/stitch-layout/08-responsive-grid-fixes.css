@@ -6146,3 +6146,68 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
         z-index: 95200 !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: sidebar logo scale, settings spacing, and Blueprint search parity
+   Date: 2026-05-16
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    .sidebar-bottom-logo,
+    body[data-theme^="console"] .sidebar-bottom-logo,
+    body[data-theme^="glass"] .sidebar-bottom-logo,
+    body[data-theme^="blueprint"] .sidebar-bottom-logo {
+        width: clamp(6.56rem, 9.375vw, 9.68rem) !important;
+        max-width: 90% !important;
+    }
+
+    .settings-actions,
+    body[data-theme^="console"] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions,
+    body[data-theme^="console"] #settingsSectionBody .settings-actions,
+    body[data-theme^="console"] .settings-panel-card .settings-actions,
+    body[data-theme^="glass"] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions,
+    body[data-theme^="glass"] #settingsSectionBody .settings-actions,
+    body[data-theme^="glass"] .settings-panel-card .settings-actions,
+    body[data-theme^="blueprint"] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions,
+    body[data-theme^="blueprint"] #settingsSectionBody .settings-actions,
+    body[data-theme^="blueprint"] .settings-panel-card .settings-actions {
+        gap: 1.2rem !important;
+        row-gap: 1.2rem !important;
+    }
+
+    body[data-theme^="blueprint"] .top-view-toolbar,
+    body[data-theme^="blueprint"] .view-toolbar.top-view-toolbar {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) clamp(4rem, 20vw, 5.35rem) !important;
+        align-items: center !important;
+        justify-content: stretch !important;
+        gap: 0.38rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        flex: none !important;
+    }
+
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open {
+        order: initial !important;
+        grid-column: 1 !important;
+        justify-self: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 2.28rem !important;
+        flex: none !important;
+    }
+
+    body[data-theme^="blueprint"] .top-view-toolbar #projectSearchInput,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search,
+    body[data-theme^="blueprint"] .top-view-toolbar .view-toolbar-search-wrap .view-toolbar-search {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 2.28rem !important;
+    }
+}
