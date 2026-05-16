@@ -2679,6 +2679,51 @@ body[data-theme^="glass"] .control-panel .panel-notification-button:focus-within
     margin-right: auto !important;
 }
 
+body:not(.control-panel-is-collapsed) .sidebar-nav-card,
+body:not(.control-panel-is-collapsed)[data-theme^="console"] .sidebar-nav-card,
+body:not(.control-panel-is-collapsed)[data-theme^="blueprint"] .sidebar-nav-card,
+body:not(.control-panel-is-collapsed)[data-theme^="glass"] .sidebar-nav-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 0.65rem !important;
+    text-align: left !important;
+}
+
+body:not(.control-panel-is-collapsed) .sidebar-nav-card-icon {
+    order: 0 !important;
+    display: inline-block !important;
+    flex: 0 0 1.05rem !important;
+    margin: 0 !important;
+}
+
+body:not(.control-panel-is-collapsed) .sidebar-nav-card-label {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+body:not(.control-panel-is-collapsed) .sidebar-nav-card-count {
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    white-space: nowrap !important;
+}
+
+.sidebar-nav-card-icon--shared {
+    background-color: currentColor !important;
+    border: 0 !important;
+    color: currentColor !important;
+    -webkit-mask: url("../../assets/handshake-svgrepo-com.svg") center / contain no-repeat;
+    mask: url("../../assets/handshake-svgrepo-com.svg") center / contain no-repeat;
+}
+
 body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="workspace"],
 body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="settings"] {
     display: block !important;
