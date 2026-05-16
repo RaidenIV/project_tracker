@@ -3060,7 +3060,6 @@ function openUiOptionsModal() {
 
 function closeUiOptionsModal() {
     document.getElementById('uiOptionsModal')?.classList.remove('active');
-    handleSidebarSettingsChildClosed('uiOptionsModal');
 }
 
 function setSaveStatus(status, message) {
@@ -3720,56 +3719,6 @@ function closeLeaderboardProfileModal() {
     modal.classList.remove('active');
 }
 
-
-let sidebarRailSettingsChildModalId = null;
-
-function clearSidebarRailSettingsBackButtons() {
-    document.querySelectorAll('.sidebar-rail-back-button').forEach(button => button.remove());
-}
-
-function openSidebarSettingsRootFromChild(closeFn) {
-    if (typeof closeFn === 'function') closeFn();
-    sidebarRailSettingsChildModalId = null;
-    clearSidebarRailSettingsBackButtons();
-    openSidebarSettingsModal();
-}
-
-function ensureSidebarRailSettingsBackButton(modalId, closeFn) {
-    clearSidebarRailSettingsBackButtons();
-    if (sidebarRailSettingsChildModalId !== modalId) return;
-    const modal = document.getElementById(modalId);
-    const header = modal?.querySelector?.('.account-modal-header');
-    if (!modal || !header) return;
-
-    const button = document.createElement('button');
-    button.className = 'sidebar-rail-back-button';
-    button.type = 'button';
-    button.setAttribute('aria-label', 'Back to minimized sidebar settings');
-    button.innerHTML = `
-        <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        <span>Back</span>
-    `;
-    button.addEventListener('click', () => {
-        openSidebarSettingsRootFromChild(typeof closeFn === 'function' ? closeFn : null);
-    });
-    header.insertBefore(button, header.firstElementChild || null);
-}
-
-function openSidebarSettingsChildModal(modalId, openFn, closeFn) {
-    closeSidebarSettingsModal();
-    sidebarRailSettingsChildModalId = modalId;
-    if (typeof openFn === 'function') openFn();
-    ensureSidebarRailSettingsBackButton(modalId, closeFn);
-}
-
-function handleSidebarSettingsChildClosed(modalId) {
-    if (sidebarRailSettingsChildModalId !== modalId) return;
-    sidebarRailSettingsChildModalId = null;
-    clearSidebarRailSettingsBackButtons();
-}
-
 function openSidebarLeaderboardModal() {
     renderLeaderboardPanel();
     let modal = document.getElementById('sidebarLeaderboardModal');
@@ -3850,16 +3799,20 @@ function openSidebarSettingsModal() {
     `;
 
     modal.querySelector('[data-rail-settings-action="account"]')?.addEventListener('click', () => {
-        openSidebarSettingsChildModal('accountSettingsModal', openAccountSettingsModal, closeAccountSettingsModal);
+        closeSidebarSettingsModal();
+        openAccountSettingsModal();
     });
     modal.querySelector('[data-rail-settings-action="ui"]')?.addEventListener('click', () => {
-        openSidebarSettingsChildModal('uiOptionsModal', openUiOptionsModal, closeUiOptionsModal);
+        closeSidebarSettingsModal();
+        openUiOptionsModal();
     });
     modal.querySelector('[data-rail-settings-action="shortcuts"]')?.addEventListener('click', () => {
-        openSidebarSettingsChildModal('shortcutsModal', openShortcutsModal, closeShortcutsModal);
+        closeSidebarSettingsModal();
+        openShortcutsModal();
     });
     modal.querySelector('[data-rail-settings-action="guide"]')?.addEventListener('click', () => {
-        openSidebarSettingsChildModal('howToGuideModal', openHowToGuideModal, closeHowToGuideModal);
+        closeSidebarSettingsModal();
+        openHowToGuideModal();
     });
     modal.querySelector('[data-rail-settings-action="signout"]')?.addEventListener('click', () => {
         closeSidebarSettingsModal();
@@ -4327,7 +4280,6 @@ function closeAccountSettingsModal() {
     accountState.pendingProfilePic = null;
     setAccountStatus('');
     document.getElementById('accountSettingsModal')?.classList.remove('active');
-    handleSidebarSettingsChildClosed('accountSettingsModal');
 }
 
 function triggerProfilePicUpload() {
@@ -11241,7 +11193,6 @@ function openHowToGuideModal() {
 
 function closeHowToGuideModal() {
     document.getElementById('howToGuideModal')?.classList.remove('active');
-    handleSidebarSettingsChildClosed('howToGuideModal');
 }
 
 
@@ -11502,7 +11453,6 @@ function openShortcutsModal() {
 
 function closeShortcutsModal() {
     document.getElementById('shortcutsModal')?.classList.remove('active');
-    handleSidebarSettingsChildClosed('shortcutsModal');
 }
 
 function switchToSharedView() {
