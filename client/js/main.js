@@ -5690,24 +5690,34 @@ function positionProjectNoteDetectedLinkPrompt(prompt, editor) {
     let top = editorRect.top + Math.min(editorRect.height - 8, Math.max(38, editorRect.scrollHeight || editorRect.height));
 
     const selection = window.getSelection?.();
+    const savedRanges = [];
     if (selection?.rangeCount) {
-        const range = selection.getRangeAt(0).cloneRange();
-        if (editor.contains(range.startContainer)) {
-            range.collapse(false);
-            const marker = document.createElement('span');
-            marker.textContent = '\u200b';
-            marker.className = 'project-note-detected-link-marker';
-            try {
-                range.insertNode(marker);
-                const markerRect = marker.getBoundingClientRect();
-                if (markerRect.width || markerRect.height) {
-                    left = markerRect.right + 6;
-                    top = markerRect.bottom + 6;
-                }
-                marker.remove();
-                editor.focus({ preventScroll: true });
-            } catch {
-                marker.remove?.();
+        for (let index = 0; index < selection.rangeCount; index += 1) {
+            savedRanges.push(selection.getRangeAt(index).cloneRange());
+        }
+    }
+
+    if (document.createRange && editor) {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        const marker = document.createElement('span');
+        marker.textContent = '\u200b';
+        marker.className = 'project-note-detected-link-marker';
+        try {
+            range.insertNode(marker);
+            const markerRect = marker.getBoundingClientRect();
+            if (markerRect.width || markerRect.height) {
+                left = markerRect.right + 6;
+                top = markerRect.bottom + 6;
+            }
+        } catch {
+            // Keep the safe fallback position inside the editor.
+        } finally {
+            marker.remove?.();
+            if (selection && savedRanges.length) {
+                selection.removeAllRanges();
+                savedRanges.forEach(savedRange => selection.addRange(savedRange));
             }
         }
     }
@@ -5756,15 +5766,23 @@ function handleProjectNoteBodyInput(projectId, tabId, surface = 'modal', editor 
     const safeSurface = getSafeProjectNotesSurface(surface);
     const targetEditor = editor || document.getElementById(`project-notes-body-${safeSurface}`);
     if (!targetEditor) return;
+    const visiblePrompt = document.getElementById('projectNoteDetectedLinkPrompt');
+    if (visiblePrompt?.classList.contains('is-visible')) {
+        const activePrompt = projectNoteDetectedLinkState.active;
+        if (activePrompt
+            && String(activePrompt.projectId) === String(projectId)
+            && String(activePrompt.tabId) === String(tabId)
+            && String(activePrompt.surface) === String(safeSurface)) {
+            requestAnimationFrame(() => positionProjectNoteDetectedLinkPrompt(visiblePrompt, targetEditor));
+            return;
+        }
+    }
     clearTimeout(projectNoteDetectedLinkState.promptTimer);
     projectNoteDetectedLinkState.promptTimer = setTimeout(() => {
         const activeElement = document.activeElement;
         if (activeElement !== targetEditor && !targetEditor.contains(activeElement)) return;
         const candidate = getLatestProjectNoteUrlCandidate(targetEditor);
-        if (!candidate) {
-            hideProjectNoteDetectedLinkPrompt();
-            return;
-        }
+        if (!candidate) return;
         showProjectNoteDetectedLinkPrompt(String(projectId), String(tabId), safeSurface, targetEditor, candidate);
     }, 220);
 }
@@ -9047,12 +9065,11 @@ function normalizeLegacyProjectNoteEntry(entry, index = 0, fallbackTitle = '') {
     const explicitLinks = typeof entry === 'object' && entry !== null
         ? (entry.links ?? entry.hyperlinks ?? entry.urls ?? entry.urlList ?? entry.linkList ?? entry.link ?? entry.url ?? entry.href ?? [])
         : [];
-    const bodyLinks = extractLinksFromText(body);
     return normalizeProjectNotesTab({
         id: entry?.id || entry?._id || fallbackId,
         title,
         body,
-        links: [...normalizeProjectNoteLinks(explicitLinks), ...bodyLinks]
+        links: normalizeProjectNoteLinks(explicitLinks)
     }, index);
 }
 
@@ -9177,9 +9194,7 @@ function normalizeProjectNotesTab(tab, index = 0) {
     const id = String(tab?.id || tab?._id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
     const title = String(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
     const body = String(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
-    const explicitLinks = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []);
-    const bodyLinks = extractLinksFromText(body);
-    const links = normalizeProjectNoteLinks([...explicitLinks, ...bodyLinks]);
+    const links = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []);
     return { id, title, body, links };
 }
 
