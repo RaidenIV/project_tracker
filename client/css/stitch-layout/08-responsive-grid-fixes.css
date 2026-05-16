@@ -2278,14 +2278,27 @@ body[data-theme^="glass"] #projectSortSelect {
     padding-right: 2.62rem !important;
 }
 
-#projectModal .modal-paste-actions .paste-button:first-child,
-body[data-theme] #projectModal .modal-paste-actions .paste-button:first-child,
-body[data-theme^="console"] #projectModal .modal-paste-actions .paste-button:first-child,
-body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:first-child,
-body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-button:first-child {
+#projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+#projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+#projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme^="console"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="console"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme^="console"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible,
+body[data-theme^="glass"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button),
+body[data-theme^="glass"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):hover,
+body[data-theme^="glass"] #projectModal .modal-paste-actions > .paste-button:not(.paste-undo-button):not(.modal-copy-all-tasks-button):focus-visible {
     color: transparent !important;
     -webkit-text-fill-color: transparent !important;
+    -webkit-text-stroke: 0 transparent !important;
     text-shadow: none !important;
+    text-indent: -9999px !important;
+    overflow: hidden !important;
 }
 
 .project-card:has(.project-meatballs--card[open]),
@@ -2313,4 +2326,15 @@ body[data-theme] .stitch-project-card:has(.project-meatballs--card[open]) .proje
     height: 2.1rem !important;
     min-height: 2.1rem !important;
     max-height: 2.1rem !important;
+}
+
+/* Keep the viewport scroll container active when a project-card actions menu is open. */
+.viewport:has(.project-meatballs--card[open]),
+body[data-theme] .viewport:has(.project-meatballs--card[open]),
+body[data-theme^="console"] .viewport:has(.project-meatballs--card[open]),
+body[data-theme^="blueprint"] .viewport:has(.project-meatballs--card[open]),
+body[data-theme^="glass"] .viewport:has(.project-meatballs--card[open]) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable !important;
 }
