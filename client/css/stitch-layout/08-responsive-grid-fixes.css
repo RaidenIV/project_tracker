@@ -4178,3 +4178,318 @@ body[data-theme].control-panel-is-collapsed .add-project-button svg {
         overflow: hidden !important;
     }
 }
+
+/* ============================================================================
+   Corrected minimized sidebar: dedicated icon rail
+   - Uses a collapsed-only rail instead of trying to reflow the expanded sidebar.
+   - Keeps the expanded sidebar untouched and restores all primary actions as
+     top-aligned, centered, clickable icons when minimized.
+   ============================================================================ */
+.collapsed-sidebar-rail {
+    display: none;
+}
+
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .container,
+    body[data-theme].control-panel-is-collapsed .container {
+        grid-template-columns: var(--responsive-sidebar-collapsed-width, 5rem) minmax(0, 1fr) !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed,
+    body[data-theme].control-panel-is-collapsed .control-panel,
+    body[data-theme].control-panel-is-collapsed .control-panel.collapsed {
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+        transform: none !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-content,
+    body[data-theme].control-panel-is-collapsed .control-panel-content {
+        display: flex !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel .control-panel-scroll-inner,
+    body[data-theme].control-panel-is-collapsed .control-panel .control-panel-scroll-inner {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        padding: 0.82rem 0.5rem 0.86rem !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        gap: 0.52rem !important;
+        box-sizing: border-box !important;
+    }
+
+    body:not(.control-panel-is-collapsed) .collapsed-sidebar-rail,
+    body:not(.control-panel-is-collapsed) .collapsed-sidebar-icon-button {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body.control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-secondary,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-secondary {
+        display: flex !important;
+        flex: 0 0 auto !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 0.52rem !important;
+        pointer-events: auto !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-icons {
+        margin-top: 0.34rem !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-secondary,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-secondary {
+        margin-top: 0.34rem !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="console"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="glass"].control-panel-is-collapsed .collapsed-sidebar-icon-button {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 2.72rem !important;
+        width: 2.72rem !important;
+        min-width: 2.72rem !important;
+        max-width: 2.72rem !important;
+        height: 2.72rem !important;
+        min-height: 2.72rem !important;
+        max-height: 2.72rem !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        border: 1px solid transparent !important;
+        border-radius: 0.95rem !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        color: var(--text-muted, var(--muted, var(--text, currentColor))) !important;
+        -webkit-text-fill-color: var(--text-muted, var(--muted, var(--text, currentColor))) !important;
+        box-shadow: none !important;
+        outline: none !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        box-sizing: border-box !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-avatar-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-avatar-button {
+        flex-basis: 2.72rem !important;
+        width: 2.72rem !important;
+        min-width: 2.72rem !important;
+        max-width: 2.72rem !important;
+        height: 2.72rem !important;
+        min-height: 2.72rem !important;
+        max-height: 2.72rem !important;
+        border-radius: 999px !important;
+        overflow: visible !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-new-project-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-new-project-button {
+        background: var(--accent, currentColor) !important;
+        background-color: var(--accent, currentColor) !important;
+        color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        -webkit-text-fill-color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        border-color: var(--accent, currentColor) !important;
+        box-shadow: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button:hover,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button:focus-visible,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button.active,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button.is-active,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button:hover,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button:focus-visible,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button.active,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button.is-active {
+        color: var(--accent, currentColor) !important;
+        -webkit-text-fill-color: var(--accent, currentColor) !important;
+        border-color: color-mix(in srgb, var(--accent, currentColor) 54%, transparent) !important;
+        background: color-mix(in srgb, var(--accent, currentColor) 10%, transparent) !important;
+        background-color: color-mix(in srgb, var(--accent, currentColor) 10%, transparent) !important;
+        box-shadow: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-new-project-button:hover,
+    body.control-panel-is-collapsed .collapsed-sidebar-new-project-button:focus-visible,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-new-project-button:hover,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-new-project-button:focus-visible {
+        color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        -webkit-text-fill-color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        background: var(--accent, currentColor) !important;
+        background-color: var(--accent, currentColor) !important;
+        filter: brightness(1.06) !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon {
+        display: block !important;
+        flex: 0 0 1.28rem !important;
+        width: 1.28rem !important;
+        min-width: 1.28rem !important;
+        max-width: 1.28rem !important;
+        height: 1.28rem !important;
+        min-height: 1.28rem !important;
+        max-height: 1.28rem !important;
+        margin: 0 !important;
+        color: currentColor !important;
+        stroke: currentColor !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon--shared,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon--shared {
+        background: currentColor !important;
+        -webkit-mask: url("../../assets/handshake-svgrepo-com.svg") center / contain no-repeat !important;
+        mask: url("../../assets/handshake-svgrepo-com.svg") center / contain no-repeat !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon--leaderboard,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon--leaderboard {
+        background: currentColor !important;
+        -webkit-mask: url("../../assets/trophy.svg") center / contain no-repeat !important;
+        mask: url("../../assets/trophy.svg") center / contain no-repeat !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-panel-avatar,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.52rem !important;
+        min-width: 2.52rem !important;
+        max-width: 2.52rem !important;
+        height: 2.52rem !important;
+        min-height: 2.52rem !important;
+        max-height: 2.52rem !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        background: color-mix(in srgb, var(--accent, currentColor) 12%, transparent) !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-panel-avatar-img,
+    body.control-panel-is-collapsed .collapsed-panel-avatar-fallback,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar-img,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar-fallback {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border-radius: inherit !important;
+        object-fit: cover !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-panel-avatar-img.hidden,
+    body.control-panel-is-collapsed .collapsed-panel-avatar-fallback.hidden,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar-img.hidden,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar-fallback.hidden {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-panel-avatar-fallback svg,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar-fallback svg {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-notification-unread-badge:not(.hidden),
+    body[data-theme].control-panel-is-collapsed .collapsed-notification-unread-badge:not(.hidden) {
+        position: absolute !important;
+        top: -0.14rem !important;
+        right: -0.14rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        min-width: 1.08rem !important;
+        height: 1.08rem !important;
+        min-height: 1.08rem !important;
+        padding: 0 0.3rem !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+        background: var(--accent, currentColor) !important;
+        background-color: var(--accent, currentColor) !important;
+        color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        -webkit-text-fill-color: var(--panel, var(--sidebar-bg, #050607)) !important;
+        border: 1px solid var(--panel, var(--sidebar-bg, #050607)) !important;
+        font-size: 0.64rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        z-index: 2 !important;
+        pointer-events: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-notification-unread-badge.hidden,
+    body[data-theme].control-panel-is-collapsed .collapsed-notification-unread-badge.hidden {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .viewport,
+    body.control-panel-is-collapsed .top-app-bar,
+    body[data-theme].control-panel-is-collapsed .viewport,
+    body[data-theme].control-panel-is-collapsed .top-app-bar {
+        min-width: 0 !important;
+    }
+}

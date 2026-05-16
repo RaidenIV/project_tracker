@@ -188,7 +188,63 @@
         </button>
         <div class="control-panel" id="controlPanel">
             <div class="control-panel-content">
+                <nav class="collapsed-sidebar-rail" id="collapsedSidebarRail" aria-label="Collapsed sidebar navigation">
+                    <div class="collapsed-sidebar-rail-top">
+                        <button class="collapsed-sidebar-icon-button collapsed-sidebar-avatar-button" id="collapsedPanelUserPill" type="button" title="Account Settings" aria-label="Open account settings">
+                            <div class="collapsed-panel-avatar" aria-hidden="true">
+                                <img class="collapsed-panel-avatar-img hidden" id="collapsedPanelAvatarImg" alt="">
+                                <span class="collapsed-panel-avatar-fallback" id="collapsedPanelAvatarFallback">U</span>
+                            </div>
+                        </button>
+                        <button class="collapsed-sidebar-icon-button collapsed-sidebar-new-project-button" id="collapsedAddProjectButton" type="button" title="New Project" aria-label="New Project">
+                            <svg class="collapsed-sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </button>
+                        <div class="collapsed-sidebar-workspace-icons" aria-label="Workspace views">
+                            <button class="collapsed-sidebar-icon-button collapsed-sidebar-workspace-button active" id="collapsedActiveProjectsCard" type="button" title="Active Projects" aria-label="Active Projects">
+                                <svg class="collapsed-sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 7.5A2.25 2.25 0 0 1 6 5.25h3.7c.6 0 1.17.24 1.59.66l1.07 1.07c.42.42.99.66 1.59.66H18a2.25 2.25 0 0 1 2.25 2.25v.86"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 10.5h16.5a1.5 1.5 0 0 1 1.46 1.84l-1.25 5.36a2.25 2.25 0 0 1-2.19 1.74H5.58a2.25 2.25 0 0 1-2.2-2.74l1.1-4.72A1.9 1.9 0 0 1 6.33 10.5H3.75Z"></path>
+                                </svg>
+                            </button>
+                            <button class="collapsed-sidebar-icon-button collapsed-sidebar-workspace-button" id="collapsedSharedProjectsCard" type="button" title="Shared Projects" aria-label="Shared Projects">
+                                <span class="collapsed-sidebar-icon collapsed-sidebar-icon--shared" aria-hidden="true"></span>
+                            </button>
+                            <button class="collapsed-sidebar-icon-button collapsed-sidebar-workspace-button" id="collapsedCompletedProjectsCard" type="button" title="Completed Projects" aria-label="Completed Projects">
+                                <svg class="collapsed-sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <rect x="4.5" y="4.5" width="15" height="15" rx="4" ry="4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></rect>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8.25 12.35 2.45 2.4 5.05-5.5"></path>
+                                </svg>
+                            </button>
+                            <button class="collapsed-sidebar-icon-button collapsed-sidebar-workspace-button" id="collapsedArchivedProjectsMoreBtn" type="button" title="Archived Projects" aria-label="Archived Projects">
+                                <svg class="collapsed-sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5 5.25 4.5h13.5L21 7.5M4.5 7.5h15v12h-15v-12Zm5.25 4.5h4.5"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapsed-sidebar-rail-secondary" aria-label="Sidebar actions">
+                        <button class="collapsed-sidebar-icon-button collapsed-sidebar-notification-button" id="collapsedPanelNotificationButton" type="button" title="Notifications" aria-label="Open notifications">
+                            <svg class="collapsed-sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span class="collapsed-notification-unread-badge hidden" id="collapsedNotificationUnreadBadge">0</span>
+                        </button>
+                        <button class="collapsed-sidebar-icon-button collapsed-sidebar-leaderboard-button" id="collapsedLeaderboardButton" type="button" title="Leaderboard" aria-label="Leaderboard">
+                            <span class="collapsed-sidebar-icon collapsed-sidebar-icon--leaderboard" aria-hidden="true"></span>
+                        </button>
+                        <button class="collapsed-sidebar-icon-button collapsed-sidebar-settings-button" id="collapsedSettingsButton" type="button" title="Settings" aria-label="Settings">
+                            <svg class="collapsed-sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.35 4.32c.42-1.76 2.88-1.76 3.3 0l.08.33a1.7 1.7 0 0 0 2.47 1.05l.3-.17c1.54-.9 3.28.85 2.38 2.38l-.17.3a1.7 1.7 0 0 0 1.05 2.47l.33.08c1.76.42 1.76 2.88 0 3.3l-.33.08a1.7 1.7 0 0 0-1.05 2.47l.17.3c.9 1.54-.85 3.28-2.38 2.38l-.3-.17a1.7 1.7 0 0 0-2.47 1.05l-.08.33c-.42 1.76-2.88 1.76-3.3 0l-.08-.33a1.7 1.7 0 0 0-2.47-1.05l-.3.17c-1.54.9-3.28-.85-2.38-2.38l.17-.3a1.7 1.7 0 0 0-1.05-2.47l-.33-.08c-1.76-.42-1.76-2.88 0-3.3l.33-.08A1.7 1.7 0 0 0 5.3 8.2l-.17-.3c-.9-1.54.85-3.28 2.38-2.38l.3.17a1.7 1.7 0 0 0 2.47-1.05l.08-.33Z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </nav>
                 <div class="control-panel-scroll-inner">
+
 
                 <div class="sidebar-app-brand" aria-label="TaskCom Project Command Center">
                     <div class="sidebar-title-row">

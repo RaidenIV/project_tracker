@@ -3343,6 +3343,15 @@ function setAvatarUI(imageEl, fallbackEl, profilePic, name) {
     fallbackEl.setAttribute('aria-label', hasImage ? '' : `${name || 'User'} default profile icon`);
 }
 
+function syncCollapsedAvatarUI(profilePic, name) {
+    setAvatarUI(
+        document.getElementById('collapsedPanelAvatarImg'),
+        document.getElementById('collapsedPanelAvatarFallback'),
+        profilePic,
+        name
+    );
+}
+
 function applyAccountUI(user) {
     if (!user) return;
     accountState.user = { ...(accountState.user || {}), ...user };
@@ -3361,6 +3370,8 @@ function applyAccountUI(user) {
         accountState.user.profilePic,
         accountState.user.username
     );
+
+    syncCollapsedAvatarUI(accountState.user.profilePic, accountState.user.username);
 
     const effectiveAccountProfilePic = accountState.pendingProfilePic !== null
         ? accountState.pendingProfilePic
@@ -3982,15 +3993,31 @@ function getCompetitiveAchievementDateLabel(achievement = {}) {
 function updateNotificationUnreadIndicator() {
     const badge = document.getElementById('notificationUnreadBadge');
     const button = document.getElementById('panelNotificationButton');
+    const collapsedBadge = document.getElementById('collapsedNotificationUnreadBadge');
+    const collapsedButton = document.getElementById('collapsedPanelNotificationButton');
     if (!badge || !button) return;
     const items = buildNotificationItems();
     const readKeys = loadReadNotificationKeys();
     const unreadCount = items.reduce((count, item) => count + (readKeys.has(getNotificationItemKey(item)) ? 0 : 1), 0);
-    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    const unreadLabel = unreadCount > 99 ? '99+' : String(unreadCount);
+    const buttonLabel = unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications';
+    const buttonTitle = unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications';
+
+    badge.textContent = unreadLabel;
     badge.classList.toggle('hidden', unreadCount <= 0);
     button.classList.toggle('has-unread', unreadCount > 0);
-    button.setAttribute('aria-label', unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications');
-    button.setAttribute('title', unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications');
+    button.setAttribute('aria-label', buttonLabel);
+    button.setAttribute('title', buttonTitle);
+
+    if (collapsedBadge) {
+        collapsedBadge.textContent = unreadLabel;
+        collapsedBadge.classList.toggle('hidden', unreadCount <= 0);
+    }
+    if (collapsedButton) {
+        collapsedButton.classList.toggle('has-unread', unreadCount > 0);
+        collapsedButton.setAttribute('aria-label', buttonLabel);
+        collapsedButton.setAttribute('title', buttonTitle);
+    }
 }
 
 function refreshNotificationsModalIfOpen() {
@@ -6756,8 +6783,16 @@ function syncViewTitle() {
 // ============================================================================
 
 function setSidebarProjectsNav(activeId) {
+    const collapsedNavMap = {
+        activeProjectsCard: 'collapsedActiveProjectsCard',
+        sharedProjectsCard: 'collapsedSharedProjectsCard',
+        completedProjectsCard: 'collapsedCompletedProjectsCard',
+        archivedProjectsMoreBtn: 'collapsedArchivedProjectsMoreBtn'
+    };
     ['activeProjectsCard', 'sharedProjectsCard', 'completedProjectsCard', 'archivedProjectsMoreBtn'].forEach(id => {
         document.getElementById(id)?.classList.toggle('active', id === activeId);
+        const collapsedId = collapsedNavMap[id];
+        document.getElementById(collapsedId)?.classList.toggle('active', id === activeId);
     });
 }
 
@@ -11722,6 +11757,29 @@ function initializeEventHandlers() {
     document.getElementById('completedProjectsCard')?.addEventListener('click', switchToCompletedView);
     document.getElementById('sharedProjectsCard')?.addEventListener('click', switchToSharedView);
     document.getElementById('archivedProjectsMoreBtn')?.addEventListener('click', switchToArchivedView);
+
+    document.getElementById('collapsedPanelUserPill')?.addEventListener('click', () => {
+        document.getElementById('panelUserPill')?.click();
+    });
+    document.getElementById('collapsedPanelNotificationButton')?.addEventListener('click', () => {
+        document.getElementById('panelNotificationButton')?.click();
+    });
+    document.getElementById('collapsedAddProjectButton')?.addEventListener('click', () => {
+        expandControlPanel();
+        requestAnimationFrame(() => document.getElementById('addProjectButton')?.click());
+    });
+    document.getElementById('collapsedActiveProjectsCard')?.addEventListener('click', switchToActiveView);
+    document.getElementById('collapsedCompletedProjectsCard')?.addEventListener('click', switchToCompletedView);
+    document.getElementById('collapsedSharedProjectsCard')?.addEventListener('click', switchToSharedView);
+    document.getElementById('collapsedArchivedProjectsMoreBtn')?.addEventListener('click', switchToArchivedView);
+    document.getElementById('collapsedLeaderboardButton')?.addEventListener('click', () => {
+        expandControlPanel();
+        requestAnimationFrame(() => setSidebarSectionExpanded('leaderboard', true));
+    });
+    document.getElementById('collapsedSettingsButton')?.addEventListener('click', () => {
+        expandControlPanel();
+        requestAnimationFrame(() => setSidebarSectionExpanded('settings', true));
+    });
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
