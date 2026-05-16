@@ -2965,3 +2965,188 @@ body[data-theme] .control-panel .panel-notification-button:focus-within .notific
     background-color: transparent !important;
     border-color: transparent !important;
 }
+
+/* ============================================================================
+   Targeted fix: sidebar section icons, console workspace hover-only states,
+   and notification unread badge restoration
+   ============================================================================ */
+.sidebar-section-toggle-main,
+body[data-theme] .sidebar-section-toggle-main {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    gap: 0.55rem !important;
+}
+
+.sidebar-section-toggle-icon,
+body[data-theme] .sidebar-section-toggle-icon {
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+    min-width: 1.05rem !important;
+    flex: 0 0 1.05rem !important;
+    color: var(--muted, currentColor) !important;
+    stroke: currentColor !important;
+}
+
+.sidebar-section-toggle-icon--leaderboard,
+body[data-theme] .sidebar-section-toggle-icon--leaderboard {
+    display: inline-block !important;
+    background-color: currentColor !important;
+    -webkit-mask: url("../../assets/trophy.svg") center / contain no-repeat !important;
+    mask: url("../../assets/trophy.svg") center / contain no-repeat !important;
+}
+
+.sidebar-section-toggle:hover .sidebar-section-toggle-icon,
+.sidebar-section-toggle:focus-visible .sidebar-section-toggle-icon,
+body[data-theme] .sidebar-section-toggle:hover .sidebar-section-toggle-icon,
+body[data-theme] .sidebar-section-toggle:focus-visible .sidebar-section-toggle-icon {
+    color: var(--accent, currentColor) !important;
+}
+
+body[data-theme^="console"] .sidebar-nav-card.active:not(:hover):not(:focus-visible),
+body[data-theme^="console"] .sidebar-nav-card.is-active:not(:hover):not(:focus-visible) {
+    background: var(--panel, transparent) !important;
+    background-color: var(--panel, transparent) !important;
+    background-image: none !important;
+    border-color: var(--line, transparent) !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    color: var(--heading, currentColor) !important;
+    -webkit-text-fill-color: var(--heading, currentColor) !important;
+    filter: none !important;
+}
+
+body[data-theme^="console"] .sidebar-nav-card.active:not(:hover):not(:focus-visible) .sidebar-nav-card-icon,
+body[data-theme^="console"] .sidebar-nav-card.active:not(:hover):not(:focus-visible) .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card.active:not(:hover):not(:focus-visible) .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card.is-active:not(:hover):not(:focus-visible) .sidebar-nav-card-icon,
+body[data-theme^="console"] .sidebar-nav-card.is-active:not(:hover):not(:focus-visible) .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card.is-active:not(:hover):not(:focus-visible) .sidebar-nav-card-count {
+    color: var(--heading, currentColor) !important;
+    -webkit-text-fill-color: var(--heading, currentColor) !important;
+    text-shadow: none !important;
+}
+
+body[data-theme^="console"] .sidebar-nav-card .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card .section-count-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+body[data-theme^="console"] .sidebar-nav-card:hover .sidebar-nav-card-icon,
+body[data-theme^="console"] .sidebar-nav-card:hover .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card:hover .sidebar-nav-card-count,
+body[data-theme^="console"] .sidebar-nav-card:focus-visible .sidebar-nav-card-icon,
+body[data-theme^="console"] .sidebar-nav-card:focus-visible .sidebar-nav-card-label,
+body[data-theme^="console"] .sidebar-nav-card:focus-visible .sidebar-nav-card-count {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+}
+
+.control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme^="console"] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme^="blueprint"] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+body[data-theme^="glass"] .control-panel .panel-notification-button .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:hover .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:focus .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:focus-visible .notification-unread-badge:not(.hidden),
+.control-panel .panel-notification-button:focus-within .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:hover .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:focus .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:focus-visible .notification-unread-badge:not(.hidden),
+body[data-theme] .control-panel .panel-notification-button:focus-within .notification-unread-badge:not(.hidden) {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 1.12rem !important;
+    height: 1.12rem !important;
+    min-height: 1.12rem !important;
+    margin: 0 0 0 0.34rem !important;
+    padding: 0 0.34rem !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--accent) !important;
+    background-color: var(--accent) !important;
+    color: var(--panel, var(--bg, #050607)) !important;
+    -webkit-text-fill-color: var(--panel, var(--bg, #050607)) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+
+/* Show the leaderboard trophy as an icon-only sidebar control while collapsed. */
+body.control-panel-is-collapsed .control-panel-scroll-inner > .sidebar-collapsible[data-sidebar-section="leaderboard"],
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 3rem !important;
+    min-width: 3rem !important;
+    max-width: 3rem !important;
+    height: 3rem !important;
+    min-height: 3rem !important;
+    max-height: 3rem !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    border-radius: 0.95rem !important;
+    color: var(--heading, currentColor) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle:hover,
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: var(--accent, currentColor) !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle-main {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle-label,
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-chevron,
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-body,
+body.control-panel-is-collapsed #leaderboardSectionBody {
+    display: none !important;
+}
+
+body.control-panel-is-collapsed .sidebar-collapsible[data-sidebar-section="leaderboard"] .sidebar-section-toggle-icon {
+    display: block !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    margin: 0 !important;
+}
