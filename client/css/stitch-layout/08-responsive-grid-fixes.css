@@ -5704,3 +5704,14 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
     text-shadow: none !important;
 }
 
+/* ============================================================================
+   Targeted fix: expanded sidebar New Project spacing
+   - Adds more breathing room between the Workspace dropdown header and New Project.
+   - Does not affect the minimized icon rail or collapsed sidebar controls.
+   ============================================================================ */
+@media (min-width: 769px) {
+    body:not(.control-panel-is-collapsed) #workspaceSectionBody > #addProjectButton,
+    body[data-theme]:not(.control-panel-is-collapsed) #workspaceSectionBody > #addProjectButton {
+        margin-top: clamp(0.75rem, 0.9vw, 1rem) !important;
+    }
+}
