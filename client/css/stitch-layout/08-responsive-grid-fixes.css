@@ -4493,3 +4493,78 @@ body[data-theme].control-panel-is-collapsed .add-project-button svg {
         min-width: 0 !important;
     }
 }
+
+/* ============================================================================
+   Targeted fix: horizontally centered minimized sidebar icon rail
+   - Anchors the dedicated collapsed rail to the full sidebar column.
+   - Gives each icon button the full rail width so icons center against the rail,
+     not against inherited expanded-sidebar spacing.
+   ============================================================================ */
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed,
+    body[data-theme].control-panel-is-collapsed .control-panel,
+    body[data-theme].control-panel-is-collapsed .control-panel.collapsed {
+        position: relative !important;
+    }
+
+    body.control-panel-is-collapsed .control-panel-content,
+    body[data-theme].control-panel-is-collapsed .control-panel-content {
+        position: relative !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        box-sizing: border-box !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body.control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-secondary,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-secondary {
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="console"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="glass"].control-panel-is-collapsed .collapsed-sidebar-icon-button {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        align-self: stretch !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon,
+    body.control-panel-is-collapsed .collapsed-panel-avatar,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar {
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
