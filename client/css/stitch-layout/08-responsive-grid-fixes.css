@@ -2142,3 +2142,39 @@ body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
     position: relative !important;
     z-index: 30010 !important;
 }
+
+/* Keep the project-card actions menu above the card body when the responsive card layout uses clipped header slots. */
+.project-card:has(.project-meatballs[open]) .project-header,
+.stitch-project-card:has(.project-meatballs[open]) .project-header,
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-header,
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-header,
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-header {
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 25200 !important;
+}
+
+.project-card:has(.project-meatballs[open]) .project-actions,
+.stitch-project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="console"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="glass"] .project-card:has(.project-meatballs[open]) .project-actions,
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .project-actions {
+    position: relative !important;
+    overflow: visible !important;
+    z-index: 25300 !important;
+}
+
+.project-card:has(.project-meatballs[open]) .project-card-tags,
+.project-card:has(.project-meatballs[open]) .project-card-progress,
+.project-card:has(.project-meatballs[open]) .project-preview-list,
+.project-card:has(.project-meatballs[open]) .project-card-notes-bar,
+.project-card:has(.project-meatballs[open]) .project-card-footer,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-tags,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-progress,
+.stitch-project-card:has(.project-meatballs[open]) .project-preview-list,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-notes-bar,
+.stitch-project-card:has(.project-meatballs[open]) .project-card-footer {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
