@@ -2362,8 +2362,7 @@ function captureActiveProjectNoteEdits(projectId, surface = 'modal', data = null
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
     tab.links = normalizeProjectNoteLinks([
         ...normalizeProjectNoteLinks(tab.links || []),
-        ...collectProjectNoteLinksFromSurface(activeTab.id, surface),
-        ...extractLinksFromText(tab.body || '')
+        ...collectProjectNoteLinksFromSurface(activeTab.id, surface)
     ]);
     return notesData;
 }
@@ -5330,7 +5329,7 @@ function collectProjectNoteLinksFromSurface(tabId, surface = 'modal') {
 function renderProjectNotesLinksMarkup(projectId, tabId, links = [], canEdit = false, surface = 'modal', legacyText = '') {
     const safeLinks = normalizeProjectNoteLinks(links);
     const linkedItems = safeLinks.filter(link => link.href);
-    const legacyLinks = extractLinksFromText(legacyText).filter(link => !linkedItems.some(savedLink => savedLink.href && savedLink.href === link.href));
+    const legacyLinks = [];
     if (!canEdit && !linkedItems.length && !legacyLinks.length) return '';
 
     const safeSurface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '');
@@ -5510,8 +5509,11 @@ function buildProjectNotesEditorMarkup(projectId, project, surface = 'modal') {
                      role="textbox"
                      aria-multiline="true"
                      data-placeholder="Write project notes here..."
+                     data-project-id="${projectId}"
+                     data-project-note-tab-id="${activeTab.id}"
+                     data-project-notes-surface="${safeSurface}"
                      contenteditable="${canEdit ? 'true' : 'false'}"
-                     ${canEdit ? `onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', getRichTextEditorValue(this), '${safeSurface}')"` : ''}>${getRichTextDisplayHtml(activeTab.body || '')}</div>
+                     ${canEdit ? `oninput="handleProjectNoteBodyInput('${projectId}', '${activeTab.id}', '${safeSurface}', this)" onblur="updateProjectNoteBody('${projectId}', '${activeTab.id}', getRichTextEditorValue(this), '${safeSurface}')"` : ''}>${getRichTextDisplayHtml(activeTab.body || '')}</div>
                 ${renderProjectNotesLinksMarkup(projectId, activeTab.id, activeTab.links || [], canEdit, safeSurface, activeTab.body || '')}
                 ${canEdit ? `<div class="project-notes-actions"><button class="modal-done-btn project-notes-save-button" type="button" onmousedown="commitPendingProjectNoteTabName('${projectId}', '${safeSurface}')" onclick="saveActiveProjectNoteFromSurface('${projectId}', '${safeSurface}')">Save Notes</button></div>` : ''}
             </div>
@@ -5616,6 +5618,208 @@ function updateProjectNoteBody(projectId, tabId, bodyValue, surface = 'modal') {
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
 
+
+const projectNoteDetectedLinkState = {
+    declined: new Set(),
+    promptTimer: null,
+    active: null
+};
+
+function getLatestProjectNoteUrlCandidate(editor) {
+    const plainText = getRichTextPlainText(editor?.innerHTML || editor?.textContent || '');
+    if (!plainText) return null;
+    const matches = Array.from(plainText.matchAll(/\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi));
+    if (!matches.length) return null;
+    const last = matches[matches.length - 1];
+    const rawUrl = String(last[1] || '').replace(/[),.;:!?]+$/g, '');
+    const href = normalizeProjectNoteHref(rawUrl);
+    if (!href) return null;
+    return {
+        rawUrl,
+        href,
+        label: rawUrl,
+        textSnapshot: plainText,
+        endIndex: Number(last.index || 0) + rawUrl.length
+    };
+}
+
+function getProjectNoteDeclinedLinkKey(projectId, tabId, surface, href, textSnapshot = '') {
+    const snapshotKey = String(textSnapshot || '').slice(-240);
+    return [projectId, tabId, surface, href, snapshotKey].map(value => String(value ?? '')).join('|');
+}
+
+function ensureProjectNoteDetectedLinkPrompt() {
+    let prompt = document.getElementById('projectNoteDetectedLinkPrompt');
+    if (prompt) return prompt;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="project-note-detected-link-prompt" id="projectNoteDetectedLinkPrompt" role="dialog" aria-live="polite" aria-hidden="true">
+            <span class="project-note-detected-link-label">Add this link?</span>
+            <button class="project-note-detected-link-choice project-note-detected-link-choice--yes" type="button" aria-label="Yes, add this link" title="Yes">✓</button>
+            <button class="project-note-detected-link-choice project-note-detected-link-choice--no" type="button" aria-label="No, do not add this link" title="No">×</button>
+        </div>
+    `);
+    prompt = document.getElementById('projectNoteDetectedLinkPrompt');
+    prompt.querySelector('.project-note-detected-link-choice--yes')?.addEventListener('mousedown', event => event.preventDefault());
+    prompt.querySelector('.project-note-detected-link-choice--no')?.addEventListener('mousedown', event => event.preventDefault());
+    prompt.querySelector('.project-note-detected-link-choice--yes')?.addEventListener('click', confirmDetectedProjectNoteLink);
+    prompt.querySelector('.project-note-detected-link-choice--no')?.addEventListener('click', declineDetectedProjectNoteLink);
+    return prompt;
+}
+
+function hideProjectNoteDetectedLinkPrompt() {
+    const prompt = document.getElementById('projectNoteDetectedLinkPrompt');
+    if (!prompt) return;
+    prompt.classList.remove('is-visible');
+    prompt.setAttribute('aria-hidden', 'true');
+    prompt.style.left = '';
+    prompt.style.top = '';
+    delete prompt.dataset.projectId;
+    delete prompt.dataset.tabId;
+    delete prompt.dataset.surface;
+    delete prompt.dataset.href;
+    delete prompt.dataset.label;
+    delete prompt.dataset.textSnapshot;
+    projectNoteDetectedLinkState.active = null;
+}
+
+function positionProjectNoteDetectedLinkPrompt(prompt, editor) {
+    const editorRect = editor?.getBoundingClientRect?.();
+    if (!prompt || !editorRect) return;
+    let left = editorRect.left + Math.min(editorRect.width - 12, Math.max(12, editorRect.width * 0.62));
+    let top = editorRect.top + Math.min(editorRect.height - 8, Math.max(38, editorRect.scrollHeight || editorRect.height));
+
+    const selection = window.getSelection?.();
+    if (selection?.rangeCount) {
+        const range = selection.getRangeAt(0).cloneRange();
+        if (editor.contains(range.startContainer)) {
+            range.collapse(false);
+            const marker = document.createElement('span');
+            marker.textContent = '\u200b';
+            marker.className = 'project-note-detected-link-marker';
+            try {
+                range.insertNode(marker);
+                const markerRect = marker.getBoundingClientRect();
+                if (markerRect.width || markerRect.height) {
+                    left = markerRect.right + 6;
+                    top = markerRect.bottom + 6;
+                }
+                marker.remove();
+                editor.focus({ preventScroll: true });
+            } catch {
+                marker.remove?.();
+            }
+        }
+    }
+
+    const promptRect = prompt.getBoundingClientRect();
+    const maxLeft = Math.max(8, window.innerWidth - (promptRect.width || 180) - 8);
+    const maxTop = Math.max(8, window.innerHeight - (promptRect.height || 42) - 8);
+    prompt.style.left = `${Math.min(Math.max(8, left), maxLeft)}px`;
+    prompt.style.top = `${Math.min(Math.max(8, top), maxTop)}px`;
+}
+
+function showProjectNoteDetectedLinkPrompt(projectId, tabId, surface, editor, candidate) {
+    if (!candidate?.href || !state.canEdit(projectId)) {
+        hideProjectNoteDetectedLinkPrompt();
+        return;
+    }
+    const declineKey = getProjectNoteDeclinedLinkKey(projectId, tabId, surface, candidate.href, candidate.textSnapshot);
+    if (projectNoteDetectedLinkState.declined.has(declineKey)) {
+        hideProjectNoteDetectedLinkPrompt();
+        return;
+    }
+
+    const data = getProjectNotesDataForProject(projectId);
+    const tab = data.tabs.find(item => item.id === tabId);
+    const existingLinks = normalizeProjectNoteLinks(tab?.links || []);
+    if (existingLinks.some(link => link.href && link.href.toLowerCase() === candidate.href.toLowerCase())) {
+        hideProjectNoteDetectedLinkPrompt();
+        return;
+    }
+
+    const prompt = ensureProjectNoteDetectedLinkPrompt();
+    prompt.dataset.projectId = projectId;
+    prompt.dataset.tabId = tabId;
+    prompt.dataset.surface = surface;
+    prompt.dataset.href = candidate.href;
+    prompt.dataset.label = candidate.label || candidate.href;
+    prompt.dataset.textSnapshot = candidate.textSnapshot || '';
+    prompt.classList.add('is-visible');
+    prompt.setAttribute('aria-hidden', 'false');
+    projectNoteDetectedLinkState.active = { projectId, tabId, surface, href: candidate.href };
+    requestAnimationFrame(() => positionProjectNoteDetectedLinkPrompt(prompt, editor));
+}
+
+function handleProjectNoteBodyInput(projectId, tabId, surface = 'modal', editor = null) {
+    if (!state.canEdit(projectId)) return;
+    const safeSurface = getSafeProjectNotesSurface(surface);
+    const targetEditor = editor || document.getElementById(`project-notes-body-${safeSurface}`);
+    if (!targetEditor) return;
+    clearTimeout(projectNoteDetectedLinkState.promptTimer);
+    projectNoteDetectedLinkState.promptTimer = setTimeout(() => {
+        const activeElement = document.activeElement;
+        if (activeElement !== targetEditor && !targetEditor.contains(activeElement)) return;
+        const candidate = getLatestProjectNoteUrlCandidate(targetEditor);
+        if (!candidate) {
+            hideProjectNoteDetectedLinkPrompt();
+            return;
+        }
+        showProjectNoteDetectedLinkPrompt(String(projectId), String(tabId), safeSurface, targetEditor, candidate);
+    }, 220);
+}
+
+function openProjectNoteLinkModalWithSuggestion(projectId, tabId, surface = 'modal', suggestion = {}) {
+    if (!state.canEdit(projectId)) return;
+    let data = getProjectNotesDataForProject(projectId);
+    data = captureActiveProjectNoteEdits(projectId, surface, data);
+    const tab = data.tabs.find(item => item.id === tabId);
+    if (!tab) return;
+    stageProjectNotesData(projectId, data, { persist: true });
+
+    const modal = ensureProjectNoteLinkModal();
+    const textInput = document.getElementById('projectNoteLinkTextInput');
+    const urlInput = document.getElementById('projectNoteLinkUrlInput');
+    const errorEl = document.getElementById('projectNoteLinkError');
+    modal.dataset.projectId = projectId;
+    modal.dataset.tabId = tabId;
+    modal.dataset.surface = getSafeProjectNotesSurface(surface);
+    modal.dataset.mode = 'create';
+    delete modal.dataset.linkId;
+    configureProjectNoteLinkModal('create');
+    const suggestedHref = normalizeProjectNoteHref(suggestion.href || suggestion.rawUrl || '');
+    const suggestedLabel = String(suggestion.label || suggestion.rawUrl || suggestedHref || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    if (textInput) textInput.value = suggestedLabel;
+    if (urlInput) urlInput.value = suggestedHref;
+    if (errorEl) errorEl.textContent = '';
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => textInput?.focus({ preventScroll: true }));
+}
+
+function confirmDetectedProjectNoteLink(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const prompt = document.getElementById('projectNoteDetectedLinkPrompt');
+    if (!prompt) return;
+    const { projectId, tabId, surface, href, label } = prompt.dataset;
+    hideProjectNoteDetectedLinkPrompt();
+    if (!projectId || !tabId || !href) return;
+    openProjectNoteLinkModalWithSuggestion(projectId, tabId, surface || 'modal', { href, label: label || href });
+}
+
+function declineDetectedProjectNoteLink(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const prompt = document.getElementById('projectNoteDetectedLinkPrompt');
+    if (!prompt) return;
+    const { projectId, tabId, surface, href, textSnapshot } = prompt.dataset;
+    if (projectId && tabId && href) {
+        projectNoteDetectedLinkState.declined.add(getProjectNoteDeclinedLinkKey(projectId, tabId, surface || 'modal', href, textSnapshot || ''));
+    }
+    hideProjectNoteDetectedLinkPrompt();
+}
+
 function ensureProjectNoteLinkModal() {
     let modal = document.getElementById('projectNoteLinkModal');
     if (modal) return modal;
@@ -5685,29 +5889,7 @@ function configureProjectNoteLinkModal(mode = 'create') {
 function addProjectNoteLink(projectId, tabId, surface = 'modal', event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    if (!state.canEdit(projectId)) return;
-    let data = getProjectNotesDataForProject(projectId);
-    data = captureActiveProjectNoteEdits(projectId, surface, data);
-    const tab = data.tabs.find(item => item.id === tabId);
-    if (!tab) return;
-    stageProjectNotesData(projectId, data, { persist: true });
-
-    const modal = ensureProjectNoteLinkModal();
-    const textInput = document.getElementById('projectNoteLinkTextInput');
-    const urlInput = document.getElementById('projectNoteLinkUrlInput');
-    const errorEl = document.getElementById('projectNoteLinkError');
-    modal.dataset.projectId = projectId;
-    modal.dataset.tabId = tabId;
-    modal.dataset.surface = String(surface || 'modal').replace(/[^a-zA-Z0-9_-]/g, '') || 'modal';
-    modal.dataset.mode = 'create';
-    delete modal.dataset.linkId;
-    configureProjectNoteLinkModal('create');
-    if (textInput) textInput.value = '';
-    if (urlInput) urlInput.value = '';
-    if (errorEl) errorEl.textContent = '';
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => textInput?.focus({ preventScroll: true }));
+    openProjectNoteLinkModalWithSuggestion(projectId, tabId, surface, {});
 }
 
 function editProjectNoteLink(projectId, tabId, linkId, surface = 'modal', event) {
@@ -5882,8 +6064,7 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
     tab.links = normalizeProjectNoteLinks([
         ...normalizeProjectNoteLinks(tab.links || []),
-        ...collectProjectNoteLinksFromSurface(activeTab.id, surface),
-        ...extractLinksFromText(tab.body || '')
+        ...collectProjectNoteLinksFromSurface(activeTab.id, surface)
     ]);
     saveProjectNotesData(projectId, data, { renderSurface: surface });
 }
@@ -12388,6 +12569,7 @@ window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
 window.getRichTextEditorValue = getRichTextEditorValue;
 window.applyRichTextCommand = applyRichTextCommand;
+window.handleProjectNoteBodyInput = handleProjectNoteBodyInput;
 window.addProjectNoteLink = addProjectNoteLink;
 window.closeProjectNoteLinkModal = closeProjectNoteLinkModal;
 window.editProjectNoteLink = editProjectNoteLink;

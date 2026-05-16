@@ -8,7 +8,7 @@
 @import url("./stitch-layout/01-shell-cards-sidebar.css");
 @import url("./stitch-layout/02-tasks-notes-bulk-accent.css");
 @import url("./stitch-layout/03-mobile-theme-polish.css");
-@import url("./stitch-layout/04-auth-notes-modal-surfaces.css");
+@import url("./stitch-layout/04-auth-notes-modal-surfaces.css?v=20260516-notes-link-detect-confirm");
 @import url("./stitch-layout/05-project-card-layouts.css");
 @import url("./stitch-layout/06-mobile-web-calendar.css");
 @import url("./stitch-layout/07-leaderboard-drag-controls.css?v=20260516-project-notes-caret-descendants");

@@ -3745,3 +3745,85 @@ body[data-theme^="blueprint"] .project-notes-remove-link--tag:focus-visible {
     box-shadow: var(--neumo-inset-shadow, inset 4px 4px 9px rgba(0, 0, 0, 0.16), inset -4px -4px 9px rgba(255, 255, 255, 0.06)) !important;
 }
 
+
+/* ============================================================================
+   Targeted patch: project notes detected-link confirmation prompt
+   ============================================================================ */
+.project-note-detected-link-prompt {
+    position: fixed !important;
+    z-index: 100050 !important;
+    display: none !important;
+    align-items: center !important;
+    gap: 0.42rem !important;
+    max-width: min(18rem, calc(100vw - 1rem)) !important;
+    padding: 0.42rem 0.5rem 0.42rem 0.65rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, currentColor) 42%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    border-radius: 999px !important;
+    background: var(--panel, #111827) !important;
+    background-color: var(--panel, #111827) !important;
+    color: var(--heading, #f8fafc) !important;
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.28) !important;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    pointer-events: auto !important;
+}
+
+.project-note-detected-link-prompt.is-visible {
+    display: inline-flex !important;
+}
+
+.project-note-detected-link-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+}
+
+.project-note-detected-link-choice {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.55rem !important;
+    min-width: 1.55rem !important;
+    height: 1.55rem !important;
+    min-height: 1.55rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    font: inherit !important;
+    font-size: 0.9rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+}
+
+.project-note-detected-link-choice--yes {
+    border-color: color-mix(in srgb, var(--accent, currentColor) 56%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 14%, transparent) !important;
+    color: var(--accent, currentColor) !important;
+}
+
+.project-note-detected-link-choice--no {
+    border-color: color-mix(in srgb, var(--muted, #94a3b8) 44%, transparent) !important;
+    background: color-mix(in srgb, var(--surface-2, #1f2937) 88%, transparent) !important;
+    color: var(--muted, #94a3b8) !important;
+}
+
+.project-note-detected-link-choice:hover,
+.project-note-detected-link-choice:focus-visible {
+    outline: none !important;
+    transform: translateY(-1px) !important;
+}
+
+body[data-theme^="blueprint"] .project-note-detected-link-prompt {
+    background: var(--surface-1, var(--panel, #151821)) !important;
+    background-color: var(--surface-1, var(--panel, #151821)) !important;
+    box-shadow: var(--neumo-raised-shadow, 8px 8px 18px rgba(0, 0, 0, 0.22), -8px -8px 18px rgba(255, 255, 255, 0.05)) !important;
+}
+
+body[data-theme^="glass"] .project-note-detected-link-prompt {
+    background: color-mix(in srgb, var(--panel, rgba(15, 23, 42, 0.82)) 82%, transparent) !important;
+    background-color: color-mix(in srgb, var(--panel, rgba(15, 23, 42, 0.82)) 82%, transparent) !important;
+    backdrop-filter: blur(18px) saturate(145%) !important;
+}
