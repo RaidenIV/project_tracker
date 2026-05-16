@@ -5681,3 +5681,26 @@ body[data-theme] .project-card .project-card-footer,
 body[data-theme] .stitch-project-card .project-card-footer {
     padding-bottom: clamp(0.32rem, 0.42vw, 0.52rem) !important;
 }
+
+/* ============================================================================
+   Targeted follow-up: project-card progress spacing and neutral task count
+   ============================================================================ */
+.project-card .project-card-progress-summary,
+.stitch-project-card .project-card-progress-summary,
+body[data-theme] .project-card .project-card-progress-summary,
+body[data-theme] .stitch-project-card .project-card-progress-summary {
+    padding-bottom: 0.6rem !important;
+}
+
+.project-card .project-card-tasks-remaining,
+.stitch-project-card .project-card-tasks-remaining,
+body[data-theme] .project-card .project-card-tasks-remaining,
+body[data-theme] .stitch-project-card .project-card-tasks-remaining,
+body[data-theme^="console"] .project-card .project-card-tasks-remaining,
+body[data-theme^="glass"] .project-card .project-card-tasks-remaining,
+body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
+    color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    -webkit-text-fill-color: var(--muted, rgba(148, 163, 184, 0.82)) !important;
+    text-shadow: none !important;
+}
+
