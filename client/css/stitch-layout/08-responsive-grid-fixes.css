@@ -2178,20 +2178,23 @@ body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .proje
     z-index: 1 !important;
 }
 
-
 /* ============================================================================
-   Targeted follow-up: visibly larger project-card titles and sort caret spacing
+   Targeted fix: visible project-card title scaling and controlled sort arrow offset
+   - Uses the already-reserved title slot so no card controls or fixed slots move.
+   - Replaces the native select arrow with a matching chevron so its inset can be
+     controlled consistently across browsers.
    ============================================================================ */
 @media (min-width: 981px) {
-    .project-card .project-title,
-    .stitch-project-card .project-title,
-    body[data-theme] .project-card .project-title,
-    body[data-theme] .stitch-project-card .project-title,
-    body[data-theme^="console"] .project-card .project-title,
-    body[data-theme^="blueprint"] .project-card .project-title,
-    body[data-theme^="glass"] .project-card .project-title {
-        font-size: clamp(1.2rem, 0.92vw, 1.28rem) !important;
+    .project-card.stitch-project-card .project-title,
+    .stitch-project-card.project-card .project-title,
+    body[data-theme] .project-card.stitch-project-card .project-title,
+    body[data-theme] .stitch-project-card.project-card .project-title,
+    body[data-theme^="console"] .project-card.stitch-project-card .project-title,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card .project-title,
+    body[data-theme^="glass"] .project-card.stitch-project-card .project-title {
+        font-size: clamp(1.34rem, 1.03vw, 1.48rem) !important;
         line-height: 1 !important;
+        font-weight: 900 !important;
         letter-spacing: 0.01em !important;
         white-space: nowrap !important;
         display: block !important;
@@ -2201,50 +2204,60 @@ body[data-theme^="blueprint"] .project-card:has(.project-meatballs[open]) .proje
         -webkit-box-orient: initial !important;
     }
 
-    .project-card .project-title-input--card,
-    .stitch-project-card .project-title-input--card,
-    body[data-theme] .project-card .project-title-input--card,
-    body[data-theme] .stitch-project-card .project-title-input--card,
-    body[data-theme^="console"] .project-card .project-title-input--card,
-    body[data-theme^="blueprint"] .project-card .project-title-input--card,
-    body[data-theme^="glass"] .project-card .project-title-input--card {
-        font-size: clamp(1.2rem, 0.92vw, 1.28rem) !important;
+    .project-card.stitch-project-card .project-title-input--card,
+    .stitch-project-card.project-card .project-title-input--card,
+    body[data-theme] .project-card.stitch-project-card .project-title-input--card,
+    body[data-theme] .stitch-project-card.project-card .project-title-input--card,
+    body[data-theme^="console"] .project-card.stitch-project-card .project-title-input--card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card .project-title-input--card,
+    body[data-theme^="glass"] .project-card.stitch-project-card .project-title-input--card {
+        font-size: clamp(1.34rem, 1.03vw, 1.48rem) !important;
         line-height: 1 !important;
+        font-weight: 900 !important;
         letter-spacing: 0.01em !important;
     }
 
-    .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-    .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
-    body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-    body[data-theme] .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title,
-    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title,
-    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title {
-        font-size: clamp(1.12rem, 0.84vw, 1.2rem) !important;
+    .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title,
+    .project-grid[data-layout-effective-columns="4"] .stitch-project-card.project-card .project-title,
+    body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title,
+    body[data-theme] .project-grid[data-layout-effective-columns="4"] .stitch-project-card.project-card .project-title,
+    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title,
+    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title,
+    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title {
+        font-size: clamp(1.26rem, 0.93vw, 1.38rem) !important;
         line-height: 1 !important;
-        letter-spacing: 0.01em !important;
     }
 
-    .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
-    .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title-input--card,
-    body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
-    body[data-theme] .project-grid[data-layout-effective-columns="4"] .stitch-project-card .project-title-input--card,
-    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
-    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card,
-    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card .project-title-input--card {
-        font-size: clamp(1.12rem, 0.84vw, 1.2rem) !important;
+    .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title-input--card,
+    .project-grid[data-layout-effective-columns="4"] .stitch-project-card.project-card .project-title-input--card,
+    body[data-theme] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title-input--card,
+    body[data-theme] .project-grid[data-layout-effective-columns="4"] .stitch-project-card.project-card .project-title-input--card,
+    body[data-theme^="console"] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title-input--card,
+    body[data-theme^="blueprint"] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title-input--card,
+    body[data-theme^="glass"] .project-grid[data-layout-effective-columns="4"] .project-card.stitch-project-card .project-title-input--card {
+        font-size: clamp(1.26rem, 0.93vw, 1.38rem) !important;
         line-height: 1 !important;
-        letter-spacing: 0.01em !important;
     }
 }
 
 #projectSortSelect,
-.top-view-toolbar .view-toolbar-select,
-.view-toolbar.top-view-toolbar .view-toolbar-select,
 body[data-theme] #projectSortSelect,
 body[data-theme^="console"] #projectSortSelect,
 body[data-theme^="blueprint"] #projectSortSelect,
 body[data-theme^="glass"] #projectSortSelect {
-    background-position: right 14px center !important;
-    padding-right: 36px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e5e7eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-size: 0.82rem 0.82rem !important;
+    background-position: right 1.18rem center !important;
+    padding-right: 3.05rem !important;
+}
+
+body[data-theme$="-light"] #projectSortSelect,
+body[data-theme="light"] #projectSortSelect,
+body[data-theme="blueprint-light"] #projectSortSelect,
+body[data-theme="glass-light"] #projectSortSelect,
+body[data-theme="console-light"] #projectSortSelect {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111827' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
 }
