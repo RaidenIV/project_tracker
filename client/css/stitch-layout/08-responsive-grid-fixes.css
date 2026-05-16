@@ -6211,3 +6211,259 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
         height: 2.28rem !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: settings modal layering and Project Deck View
+   Date: 2026-05-16
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    #accountSettingsModal.modal-overlay.active,
+    #uiOptionsModal.modal-overlay.active,
+    #shortcutsModal.modal-overlay.active,
+    #howToGuideModal.modal-overlay.active,
+    body[data-theme^="console"] #accountSettingsModal.modal-overlay.active,
+    body[data-theme^="console"] #uiOptionsModal.modal-overlay.active,
+    body[data-theme^="console"] #shortcutsModal.modal-overlay.active,
+    body[data-theme^="console"] #howToGuideModal.modal-overlay.active,
+    body[data-theme^="glass"] #accountSettingsModal.modal-overlay.active,
+    body[data-theme^="glass"] #uiOptionsModal.modal-overlay.active,
+    body[data-theme^="glass"] #shortcutsModal.modal-overlay.active,
+    body[data-theme^="glass"] #howToGuideModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #accountSettingsModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #uiOptionsModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #shortcutsModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #howToGuideModal.modal-overlay.active {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 250000 !important;
+        isolation: isolate !important;
+        transform: none !important;
+    }
+
+    #accountSettingsModal.modal-overlay.active > .modal-content,
+    #uiOptionsModal.modal-overlay.active > .modal-content,
+    #shortcutsModal.modal-overlay.active > .modal-content,
+    #howToGuideModal.modal-overlay.active > .modal-content,
+    body[data-theme^="console"] #accountSettingsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="console"] #uiOptionsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="console"] #shortcutsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="console"] #howToGuideModal.modal-overlay.active > .modal-content,
+    body[data-theme^="glass"] #accountSettingsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="glass"] #uiOptionsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="glass"] #shortcutsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="glass"] #howToGuideModal.modal-overlay.active > .modal-content,
+    body[data-theme^="blueprint"] #accountSettingsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="blueprint"] #uiOptionsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="blueprint"] #shortcutsModal.modal-overlay.active > .modal-content,
+    body[data-theme^="blueprint"] #howToGuideModal.modal-overlay.active > .modal-content {
+        position: relative !important;
+        z-index: 250001 !important;
+    }
+
+    #mobileProjectDeckControls.mobile-project-deck-controls {
+        display: grid !important;
+        grid-template-columns: 2.65rem minmax(0, 1fr) 2.65rem !important;
+        align-items: center !important;
+        gap: 0.62rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 0.72rem !important;
+        padding: 0.62rem !important;
+        border: 1px solid color-mix(in srgb, var(--accent, currentColor) 24%, var(--line, rgba(148, 163, 184, 0.22))) !important;
+        border-radius: 1.05rem !important;
+        background: var(--panel, rgba(15, 23, 42, 0.92)) !important;
+        background-color: var(--panel, rgba(15, 23, 42, 0.92)) !important;
+        box-shadow: var(--shadow, 0 0.8rem 2rem rgba(0, 0, 0, 0.18)) !important;
+        box-sizing: border-box !important;
+    }
+
+    body[data-theme^="blueprint"] #mobileProjectDeckControls.mobile-project-deck-controls {
+        border-color: color-mix(in srgb, var(--line, currentColor) 58%, transparent) !important;
+        background: var(--surface-1, var(--panel, #151821)) !important;
+        background-color: var(--surface-1, var(--panel, #151821)) !important;
+        box-shadow: var(--neumo-raised-shadow, 8px 8px 18px rgba(0, 0, 0, 0.22), -8px -8px 18px rgba(255, 255, 255, 0.05)) !important;
+    }
+
+    body[data-theme^="glass"] #mobileProjectDeckControls.mobile-project-deck-controls {
+        background: color-mix(in srgb, var(--panel, rgba(15, 23, 42, 0.72)) 76%, transparent) !important;
+        background-color: color-mix(in srgb, var(--panel, rgba(15, 23, 42, 0.72)) 76%, transparent) !important;
+        backdrop-filter: blur(18px) saturate(140%) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    }
+
+    .mobile-project-deck-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.65rem !important;
+        height: 2.65rem !important;
+        min-width: 2.65rem !important;
+        min-height: 2.65rem !important;
+        padding: 0 !important;
+        border-radius: 0.9rem !important;
+        border: 1px solid color-mix(in srgb, var(--accent, currentColor) 36%, transparent) !important;
+        background: color-mix(in srgb, var(--accent, currentColor) 9%, transparent) !important;
+        color: var(--heading, currentColor) !important;
+        -webkit-text-fill-color: var(--heading, currentColor) !important;
+        font-size: 1.85rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+    }
+
+    .mobile-project-deck-button:active {
+        transform: translateY(1px) scale(0.98) !important;
+    }
+
+    .mobile-project-deck-status {
+        display: grid !important;
+        grid-template-rows: auto auto auto !important;
+        justify-items: center !important;
+        align-items: center !important;
+        min-width: 0 !important;
+        gap: 0.12rem !important;
+        text-align: center !important;
+    }
+
+    .mobile-project-deck-label,
+    .mobile-project-deck-count {
+        display: block !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        color: var(--muted, rgba(148, 163, 184, 0.84)) !important;
+        -webkit-text-fill-color: var(--muted, rgba(148, 163, 184, 0.84)) !important;
+        font-size: 0.61rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.12em !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .mobile-project-deck-title {
+        display: block !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        color: var(--heading, currentColor) !important;
+        -webkit-text-fill-color: var(--heading, currentColor) !important;
+        font-size: clamp(0.88rem, 3.5vw, 1.05rem) !important;
+        font-weight: 900 !important;
+        line-height: 1.1 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck,
+    body[data-theme^="console"] #projectGrid.project-grid--mobile-deck,
+    body[data-theme^="glass"] #projectGrid.project-grid--mobile-deck,
+    body[data-theme^="blueprint"] #projectGrid.project-grid--mobile-deck {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: calc(100dvh - var(--mobile-app-bar-height, 3.5rem) - 8.5rem) !important;
+        margin: 0 !important;
+        padding: 0.22rem 0 4rem !important;
+        overflow: visible !important;
+        perspective: 900px !important;
+        touch-action: pan-y !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card,
+    body[data-theme^="console"] #projectGrid.project-grid--mobile-deck .project-card,
+    body[data-theme^="glass"] #projectGrid.project-grid--mobile-deck .project-card,
+    body[data-theme^="blueprint"] #projectGrid.project-grid--mobile-deck .project-card {
+        position: relative !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        transform-origin: top center !important;
+        transition: max-height 0.28s ease, min-height 0.28s ease, margin 0.28s ease, opacity 0.22s ease, filter 0.22s ease, transform 0.28s ease, box-shadow 0.22s ease !important;
+        will-change: transform, max-height !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card + .project-card,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card + .stitch-project-card {
+        margin-top: -1rem !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active),
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) {
+        min-height: 3.75rem !important;
+        max-height: 3.75rem !important;
+        overflow: hidden !important;
+        opacity: calc(0.86 - (min(var(--mobile-deck-abs-distance, 1), 5) * 0.045)) !important;
+        filter: saturate(0.88) brightness(0.9) !important;
+        transform: translateY(calc(min(var(--mobile-deck-abs-distance, 1), 5) * -0.05rem)) scale(calc(1 - (min(var(--mobile-deck-abs-distance, 1), 5) * 0.012))) !important;
+        cursor: pointer !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card.mobile-deck-card--active,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card.mobile-deck-card--active {
+        min-height: min(72dvh, 43rem) !important;
+        max-height: none !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+        filter: none !important;
+        transform: translateY(0) scale(1) !important;
+        cursor: pointer !important;
+        box-shadow: var(--shadow-lg, 0 1.2rem 3rem rgba(0, 0, 0, 0.26)) !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) > :not(.project-header),
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) > :not(.project-header) {
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) .project-header,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) .project-header {
+        min-height: 3.75rem !important;
+        height: 3.75rem !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding-block: 0 !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) .project-title-container,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) .project-title-container,
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) .project-card-title-stack,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) .project-card-title-stack {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) .project-title,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) .project-title {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) .project-sync-text,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) .project-sync-text,
+    #projectGrid.project-grid--mobile-deck .project-card:not(.mobile-deck-card--active) .project-actions,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card:not(.mobile-deck-card--active) .project-actions {
+        display: none !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card.mobile-deck-card--before,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card.mobile-deck-card--before {
+        transform-origin: bottom center !important;
+    }
+
+    #projectGrid.project-grid--mobile-deck .project-card.mobile-deck-card--after,
+    #projectGrid.project-grid--mobile-deck .stitch-project-card.mobile-deck-card--after {
+        transform-origin: top center !important;
+    }
+}
