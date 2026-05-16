@@ -2122,3 +2122,23 @@ body[data-theme^="blueprint"] .project-meatballs[open],
 body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdown {
     z-index: 25100 !important;
 }
+
+/* Ensure the project modal always renders above the sticky top menu bar and any open card menus. */
+#projectModal.modal-overlay,
+#projectModal.modal-overlay.active,
+body[data-theme^="console"] #projectModal.modal-overlay,
+body[data-theme^="console"] #projectModal.modal-overlay.active,
+body[data-theme^="glass"] #projectModal.modal-overlay,
+body[data-theme^="glass"] #projectModal.modal-overlay.active,
+body[data-theme^="blueprint"] #projectModal.modal-overlay,
+body[data-theme^="blueprint"] #projectModal.modal-overlay.active {
+    z-index: 30000 !important;
+}
+
+#projectModal .modal-content#modalContent,
+body[data-theme^="console"] #projectModal .modal-content#modalContent,
+body[data-theme^="glass"] #projectModal .modal-content#modalContent,
+body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
+    position: relative !important;
+    z-index: 30010 !important;
+}
