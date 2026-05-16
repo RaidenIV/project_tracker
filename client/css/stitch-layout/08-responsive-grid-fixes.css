@@ -5866,4 +5866,50 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
         min-width: 0 !important;
         max-width: 100% !important;
     }
+
+    body[data-theme^="blueprint"]:not(.mobile-drawer-open) .panel-edge-toggle,
+    body[data-theme^="blueprint"]:not(.mobile-drawer-open):not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body[data-theme^="blueprint"]:not(.mobile-drawer-open).control-panel-is-collapsed .panel-edge-toggle,
+    body[data-theme^="blueprint"]:not(.mobile-drawer-open).mobile-sidebar-open .panel-edge-toggle {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        position: fixed !important;
+        top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        left: 0.5rem !important;
+        right: auto !important;
+        bottom: auto !important;
+        z-index: 95020 !important;
+        width: 2.28rem !important;
+        height: 2.28rem !important;
+        min-width: 2.28rem !important;
+        min-height: 2.28rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 0.78rem !important;
+        transform: none !important;
+    }
+
+    body[data-theme^="blueprint"].mobile-drawer-open .panel-edge-toggle,
+    body[data-theme^="blueprint"].mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        position: fixed !important;
+        top: calc(0.65rem + env(safe-area-inset-top, 0px)) !important;
+        left: calc(var(--mobile-web-drawer-width, min(86vw, 22rem)) - 3.1rem) !important;
+        right: auto !important;
+        bottom: auto !important;
+        z-index: 95020 !important;
+        width: 2.28rem !important;
+        height: 2.28rem !important;
+        min-width: 2.28rem !important;
+        min-height: 2.28rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 0.78rem !important;
+        transform: none !important;
+    }
 }
