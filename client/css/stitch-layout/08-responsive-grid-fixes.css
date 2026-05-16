@@ -4681,3 +4681,280 @@ body[data-theme].control-panel-is-collapsed .add-project-button svg {
         transform: none !important;
     }
 }
+
+
+/* ============================================================================
+   Targeted fix: minimized sidebar rail spacing, modal actions, and bottom logo
+   ============================================================================ */
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .collapsed-sidebar-rail,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail {
+        padding-top: 0.95rem !important;
+        padding-bottom: 0.8rem !important;
+        gap: 1.04rem !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body.control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-secondary,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-top,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-secondary {
+        gap: 1.04rem !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-secondary,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-icons,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-secondary {
+        margin-top: 0 !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="console"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="blueprint"].control-panel-is-collapsed .collapsed-sidebar-icon-button,
+    body[data-theme^="glass"].control-panel-is-collapsed .collapsed-sidebar-icon-button {
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        height: 2.72rem !important;
+        min-height: 2.72rem !important;
+        max-height: 2.72rem !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button::before {
+        content: "";
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: 2.54rem;
+        height: 2.54rem;
+        transform: translate(-50%, -50%);
+        border: 1px solid transparent;
+        border-radius: 0.82rem;
+        background: transparent;
+        background-color: transparent;
+        box-shadow: none;
+        opacity: 1;
+        pointer-events: none;
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+        z-index: 0;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button:hover::before,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button:focus-visible::before,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button.active::before,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button.is-active::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button:hover::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button:focus-visible::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button.active::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button.is-active::before {
+        border-color: color-mix(in srgb, var(--accent, currentColor) 58%, transparent) !important;
+        background: color-mix(in srgb, var(--accent, currentColor) 12%, transparent) !important;
+        background-color: color-mix(in srgb, var(--accent, currentColor) 12%, transparent) !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-new-project-button::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-new-project-button::before {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.78rem;
+        border-color: var(--accent, currentColor) !important;
+        background: var(--accent, currentColor) !important;
+        background-color: var(--accent, currentColor) !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-new-project-button:hover::before,
+    body.control-panel-is-collapsed .collapsed-sidebar-new-project-button:focus-visible::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-new-project-button:hover::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-new-project-button:focus-visible::before {
+        filter: brightness(1.06) !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-avatar-button::before,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-avatar-button::before {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-icon,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon {
+        position: relative !important;
+        z-index: 1 !important;
+        width: 1.34rem !important;
+        min-width: 1.34rem !important;
+        max-width: 1.34rem !important;
+        height: 1.34rem !important;
+        min-height: 1.34rem !important;
+        max-height: 1.34rem !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-panel-avatar,
+    body[data-theme].control-panel-is-collapsed .collapsed-panel-avatar {
+        position: relative !important;
+        z-index: 1 !important;
+        width: 2.34rem !important;
+        min-width: 2.34rem !important;
+        max-width: 2.34rem !important;
+        height: 2.34rem !important;
+        min-height: 2.34rem !important;
+        max-height: 2.34rem !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-notification-unread-badge:not(.hidden),
+    body[data-theme].control-panel-is-collapsed .collapsed-notification-unread-badge:not(.hidden) {
+        top: 0.16rem !important;
+        right: 1.12rem !important;
+        z-index: 3 !important;
+    }
+
+    body:not(.control-panel-is-collapsed) .collapsed-sidebar-rail-logo-wrap,
+    body:not(.control-panel-is-collapsed) .collapsed-sidebar-rail-logo {
+        display: none !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-logo-wrap,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-logo-wrap {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        min-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        max-width: var(--responsive-sidebar-collapsed-width, 5rem) !important;
+        margin: auto 0 0 !important;
+        padding: 0.4rem 0 0.25rem !important;
+        pointer-events: none !important;
+        box-sizing: border-box !important;
+    }
+
+    body.control-panel-is-collapsed .collapsed-sidebar-rail-logo,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-rail-logo {
+        display: block !important;
+        width: 2.75rem !important;
+        max-width: calc(var(--responsive-sidebar-collapsed-width, 5rem) - 1.2rem) !important;
+        height: auto !important;
+        object-fit: contain !important;
+        opacity: 0.9 !important;
+    }
+}
+
+.sidebar-rail-modal.active {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 12000 !important;
+    backdrop-filter: blur(8px) saturate(120%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(120%) !important;
+}
+
+.sidebar-rail-modal-content {
+    width: min(36rem, calc(100vw - 2rem)) !important;
+    max-height: min(44rem, calc(100vh - 2rem)) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.sidebar-rail-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    padding-bottom: 1rem !important;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+.sidebar-rail-modal-header h2 {
+    margin: 0 !important;
+    font-size: 1.24rem !important;
+    line-height: 1.1 !important;
+}
+
+.sidebar-rail-modal-header p {
+    margin: 0.35rem 0 0 !important;
+    color: var(--text-muted, var(--muted, currentColor)) !important;
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+}
+
+.sidebar-rail-modal-body {
+    min-height: 0 !important;
+    overflow: auto !important;
+    padding-top: 1rem !important;
+}
+
+.sidebar-rail-leaderboard-card {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.sidebar-rail-leaderboard-list {
+    max-height: 26rem !important;
+    overflow: auto !important;
+}
+
+.sidebar-rail-settings-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.72rem !important;
+}
+
+.sidebar-rail-settings-action {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-height: 2.9rem !important;
+    padding: 0.82rem 1rem !important;
+    border-radius: 0.95rem !important;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
+    background: var(--surface, rgba(255, 255, 255, 0.04)) !important;
+    color: var(--text, currentColor) !important;
+    -webkit-text-fill-color: var(--text, currentColor) !important;
+    font: inherit !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.03em !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+.sidebar-rail-settings-action:hover,
+.sidebar-rail-settings-action:focus-visible {
+    border-color: var(--accent, currentColor) !important;
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+    outline: none !important;
+}
+
+.sidebar-rail-settings-action--danger:hover,
+.sidebar-rail-settings-action--danger:focus-visible {
+    border-color: var(--danger, #ef4444) !important;
+    color: var(--danger, #ef4444) !important;
+    -webkit-text-fill-color: var(--danger, #ef4444) !important;
+}
+
+/* Keep minimized rail highlights constrained to the rounded-square pseudo surface. */
+@media (min-width: 981px) {
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button:hover,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button:focus-visible,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button.active,
+    body.control-panel-is-collapsed .collapsed-sidebar-icon-button.is-active,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button:hover,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button:focus-visible,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button.active,
+    body[data-theme].control-panel-is-collapsed .collapsed-sidebar-icon-button.is-active {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+}

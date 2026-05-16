@@ -3714,6 +3714,115 @@ function closeLeaderboardProfileModal() {
     modal.classList.remove('active');
 }
 
+function openSidebarLeaderboardModal() {
+    renderLeaderboardPanel();
+    let modal = document.getElementById('sidebarLeaderboardModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal-overlay sidebar-rail-modal sidebar-leaderboard-modal';
+        modal.id = 'sidebarLeaderboardModal';
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeSidebarLeaderboardModal();
+        });
+        document.body.appendChild(modal);
+    }
+
+    const list = document.getElementById('leaderboardList');
+    const listMarkup = list ? list.innerHTML : '<div class="side-panel-empty">No rankings yet</div>';
+    modal.innerHTML = `
+        <div class="modal-content sidebar-rail-modal-content sidebar-leaderboard-modal-content" role="dialog" aria-modal="true" aria-labelledby="sidebarLeaderboardModalTitle">
+            <div class="sidebar-rail-modal-header">
+                <div>
+                    <h2 id="sidebarLeaderboardModalTitle">Leaderboard</h2>
+                    <p>Current team ranking and completion activity.</p>
+                </div>
+                <button class="modal-close sidebar-rail-modal-close" type="button" onclick="closeSidebarLeaderboardModal()" aria-label="Close leaderboard">
+                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="sidebar-rail-modal-body">
+                <div class="leaderboard-panel-card sidebar-rail-leaderboard-card">
+                    <div class="leaderboard-list sidebar-rail-leaderboard-list">${listMarkup}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    modal.classList.add('active');
+}
+
+function closeSidebarLeaderboardModal() {
+    const modal = document.getElementById('sidebarLeaderboardModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+}
+
+function openSidebarSettingsModal() {
+    let modal = document.getElementById('sidebarSettingsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal-overlay sidebar-rail-modal sidebar-settings-modal';
+        modal.id = 'sidebarSettingsModal';
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeSidebarSettingsModal();
+        });
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div class="modal-content sidebar-rail-modal-content sidebar-settings-modal-content" role="dialog" aria-modal="true" aria-labelledby="sidebarSettingsModalTitle">
+            <div class="sidebar-rail-modal-header">
+                <div>
+                    <h2 id="sidebarSettingsModalTitle">Settings</h2>
+                    <p>Open account, interface, keyboard, guide, and session actions.</p>
+                </div>
+                <button class="modal-close sidebar-rail-modal-close" type="button" onclick="closeSidebarSettingsModal()" aria-label="Close settings">
+                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="sidebar-rail-modal-body sidebar-rail-settings-actions">
+                <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="account">Account Settings</button>
+                <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="ui">UI Options</button>
+                <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="shortcuts">Keyboard Shortcuts</button>
+                <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="guide">How To Guide</button>
+                <button class="sidebar-rail-settings-action sidebar-rail-settings-action--danger" type="button" data-rail-settings-action="signout">Sign Out</button>
+            </div>
+        </div>
+    `;
+
+    modal.querySelector('[data-rail-settings-action="account"]')?.addEventListener('click', () => {
+        closeSidebarSettingsModal();
+        openAccountSettingsModal();
+    });
+    modal.querySelector('[data-rail-settings-action="ui"]')?.addEventListener('click', () => {
+        closeSidebarSettingsModal();
+        openUiOptionsModal();
+    });
+    modal.querySelector('[data-rail-settings-action="shortcuts"]')?.addEventListener('click', () => {
+        closeSidebarSettingsModal();
+        openShortcutsModal();
+    });
+    modal.querySelector('[data-rail-settings-action="guide"]')?.addEventListener('click', () => {
+        closeSidebarSettingsModal();
+        openHowToGuideModal();
+    });
+    modal.querySelector('[data-rail-settings-action="signout"]')?.addEventListener('click', () => {
+        closeSidebarSettingsModal();
+        logout();
+    });
+
+    modal.classList.add('active');
+}
+
+function closeSidebarSettingsModal() {
+    const modal = document.getElementById('sidebarSettingsModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+}
+
 function setSidebarSectionExpanded(sectionKey, expanded) {
     const normalizedKey = String(sectionKey || '');
     if (!normalizedKey) return;
@@ -6940,6 +7049,14 @@ function bindProjectEditModeExitHandlers() {
     // Escape closes task-note modal first, then exits drag edit mode.
     document.addEventListener('keydown', (e) => {
         if (isTypingTarget(e.target)) return;
+        if (e.key === 'Escape' && document.getElementById('sidebarLeaderboardModal')?.classList.contains('active')) {
+            closeSidebarLeaderboardModal();
+            return;
+        }
+        if (e.key === 'Escape' && document.getElementById('sidebarSettingsModal')?.classList.contains('active')) {
+            closeSidebarSettingsModal();
+            return;
+        }
         if (e.key === 'Escape' && document.getElementById('leaderboardProfileModal')?.classList.contains('active')) {
             closeLeaderboardProfileModal();
             return;
@@ -11772,14 +11889,8 @@ function initializeEventHandlers() {
     document.getElementById('collapsedCompletedProjectsCard')?.addEventListener('click', switchToCompletedView);
     document.getElementById('collapsedSharedProjectsCard')?.addEventListener('click', switchToSharedView);
     document.getElementById('collapsedArchivedProjectsMoreBtn')?.addEventListener('click', switchToArchivedView);
-    document.getElementById('collapsedLeaderboardButton')?.addEventListener('click', () => {
-        expandControlPanel();
-        requestAnimationFrame(() => setSidebarSectionExpanded('leaderboard', true));
-    });
-    document.getElementById('collapsedSettingsButton')?.addEventListener('click', () => {
-        expandControlPanel();
-        requestAnimationFrame(() => setSidebarSectionExpanded('settings', true));
-    });
+    document.getElementById('collapsedLeaderboardButton')?.addEventListener('click', openSidebarLeaderboardModal);
+    document.getElementById('collapsedSettingsButton')?.addEventListener('click', openSidebarSettingsModal);
 
     // Click outside modal to close
     const projectModal = document.getElementById('projectModal');
@@ -12181,6 +12292,10 @@ window.openArchivedProjectsModal = openArchivedProjectsModal;
 window.closeArchivedProjectsModal = closeArchivedProjectsModal;
 window.openLeaderboardProfileModal = openLeaderboardProfileModal;
 window.closeLeaderboardProfileModal = closeLeaderboardProfileModal;
+window.openSidebarLeaderboardModal = openSidebarLeaderboardModal;
+window.closeSidebarLeaderboardModal = closeSidebarLeaderboardModal;
+window.openSidebarSettingsModal = openSidebarSettingsModal;
+window.closeSidebarSettingsModal = closeSidebarSettingsModal;
 window.openNotificationsModal = openNotificationsModal;
 window.closeNotificationsModal = closeNotificationsModal;
 
