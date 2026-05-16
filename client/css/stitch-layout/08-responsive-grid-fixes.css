@@ -2261,3 +2261,56 @@ body[data-theme="glass-light"] #projectSortSelect,
 body[data-theme="console-light"] #projectSortSelect {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111827' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
 }
+
+/* ============================================================================
+   Targeted fix: sort arrow inset, transparent Add Tasks label, and stable card menu open state
+   - Pulls the controlled select chevron back toward the right edge without
+     returning it to the clipped native-arrow position.
+   - Makes only the project modal Add Tasks button label transparent.
+   - Prevents an open card actions menu from triggering card lift/scale effects.
+   ============================================================================ */
+#projectSortSelect,
+body[data-theme] #projectSortSelect,
+body[data-theme^="console"] #projectSortSelect,
+body[data-theme^="blueprint"] #projectSortSelect,
+body[data-theme^="glass"] #projectSortSelect {
+    background-position: right 0.82rem center !important;
+    padding-right: 2.62rem !important;
+}
+
+#projectModal .modal-paste-actions .paste-button:first-child,
+body[data-theme] #projectModal .modal-paste-actions .paste-button:first-child,
+body[data-theme^="console"] #projectModal .modal-paste-actions .paste-button:first-child,
+body[data-theme^="blueprint"] #projectModal .modal-paste-actions .paste-button:first-child,
+body[data-theme^="glass"] #projectModal .modal-paste-actions .paste-button:first-child {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+}
+
+.project-card:has(.project-meatballs--card[open]),
+.stitch-project-card:has(.project-meatballs--card[open]),
+body[data-theme] .project-card:has(.project-meatballs--card[open]),
+body[data-theme] .stitch-project-card:has(.project-meatballs--card[open]),
+body[data-theme^="console"] .project-card:has(.project-meatballs--card[open]),
+body[data-theme^="console"] .stitch-project-card:has(.project-meatballs--card[open]),
+body[data-theme^="blueprint"] .project-card:has(.project-meatballs--card[open]),
+body[data-theme^="blueprint"] .stitch-project-card:has(.project-meatballs--card[open]),
+body[data-theme^="glass"] .project-card:has(.project-meatballs--card[open]),
+body[data-theme^="glass"] .stitch-project-card:has(.project-meatballs--card[open]) {
+    transform: none !important;
+    scale: 1 !important;
+}
+
+.project-card:has(.project-meatballs--card[open]) .project-meatballs--card,
+.stitch-project-card:has(.project-meatballs--card[open]) .project-meatballs--card,
+body[data-theme] .project-card:has(.project-meatballs--card[open]) .project-meatballs--card,
+body[data-theme] .stitch-project-card:has(.project-meatballs--card[open]) .project-meatballs--card {
+    flex: 0 0 2.1rem !important;
+    width: 2.1rem !important;
+    min-width: 2.1rem !important;
+    max-width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-height: 2.1rem !important;
+    max-height: 2.1rem !important;
+}
