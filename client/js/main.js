@@ -10985,6 +10985,8 @@ function editModalTask(taskId) {
         taskInput.focus({ preventScroll: true });
         if (taskInput.getAttribute('contenteditable') === 'true') {
             selectRichTextEditorContents(taskInput);
+            syncRichTextToolbarState(taskInput);
+            scheduleRichTextToolbarStateSync(taskInput);
         } else {
             taskInput.select?.();
         }
