@@ -1976,22 +1976,51 @@ function queryRichTextCommandStateForEditor(editor, command) {
         .some(element => element && (element === editor || editor.contains(element)) && elementHasRichTextCommand(element, command, editor));
 }
 
+function isModalTaskRichTextEditor(editor) {
+    return !!editor?.classList?.contains('modal-task-edit-editor');
+}
+
+function getRichTextToolbarButtonsForEditor(editor) {
+    if (!editor?.id) return [];
+    return Array.from(document.querySelectorAll(`.rich-text-toolbar-button[data-rich-text-editor="${editor.id}"]`));
+}
+
+function setRichTextToolbarButtonState(button, command, isActive) {
+    if (!button) return;
+    const nextActive = !!isActive;
+    button.classList.toggle('is-active', nextActive);
+    button.setAttribute('aria-pressed', String(nextActive));
+    button.dataset.richTextActive = String(nextActive);
+    const label = getRichTextToolbarButtonLabel(command || button.getAttribute('data-rich-text-command'));
+    button.setAttribute('aria-label', nextActive ? `${label} active` : label);
+    button.setAttribute('title', nextActive ? `${label} active` : label);
+}
+
+function setTaskEditToolbarCommandState(editor, command, isActive) {
+    if (!isModalTaskRichTextEditor(editor) || !command) return;
+    getRichTextToolbarButtonsForEditor(editor)
+        .filter(button => button.getAttribute('data-rich-text-command') === command)
+        .forEach(button => setRichTextToolbarButtonState(button, command, isActive));
+}
+
+function getTaskEditToolbarCommandButtonState(editor, command) {
+    if (!isModalTaskRichTextEditor(editor) || !command) return false;
+    return getRichTextToolbarButtonsForEditor(editor)
+        .some(button => button.getAttribute('data-rich-text-command') === command
+            && (button.getAttribute('aria-pressed') === 'true' || button.dataset.richTextActive === 'true' || button.classList.contains('is-active')));
+}
+
 function syncRichTextToolbarState(editorOrId) {
     const editor = typeof editorOrId === 'string' ? document.getElementById(editorOrId) : editorOrId;
     if (!editor || !editor.id) return;
 
     const isEditorActive = editor.getAttribute('contenteditable') === 'true' && (isSelectionInsideRichTextEditor(editor) || isRichTextEditorControlActive(editor));
-    const buttons = document.querySelectorAll(`.rich-text-toolbar-button[data-rich-text-editor="${editor.id}"]`);
+    const buttons = getRichTextToolbarButtonsForEditor(editor);
 
     buttons.forEach(button => {
         const command = button.getAttribute('data-rich-text-command');
         const isActive = !!(isEditorActive && command && queryRichTextCommandStateForEditor(editor, command));
-        button.classList.toggle('is-active', isActive);
-        button.setAttribute('aria-pressed', String(isActive));
-        button.dataset.richTextActive = String(isActive);
-        const label = getRichTextToolbarButtonLabel(command);
-        button.setAttribute('aria-label', isActive ? `${label} active` : label);
-        button.setAttribute('title', isActive ? `${label} active` : label);
+        setRichTextToolbarButtonState(button, command, isActive);
     });
 }
 
@@ -2014,6 +2043,10 @@ function applyRichTextCommand(editorId, command) {
     if (!editor || editor.getAttribute('contenteditable') !== 'true') return;
     const safeCommand = { bold: 'bold', italic: 'italic', underline: 'underline' }[command];
     if (!safeCommand) return;
+    const isTaskEditor = isModalTaskRichTextEditor(editor);
+    const wasTaskCommandActive = isTaskEditor
+        ? (queryRichTextCommandStateForEditor(editor, safeCommand) || getTaskEditToolbarCommandButtonState(editor, safeCommand))
+        : false;
     editor.focus({ preventScroll: true });
     try {
         document.execCommand('styleWithCSS', false, false);
@@ -2022,8 +2055,17 @@ function applyRichTextCommand(editorId, command) {
     }
     document.execCommand(safeCommand, false, null);
     syncRichTextToolbarState(editor);
+    if (isTaskEditor) {
+        const nextTaskCommandActive = queryRichTextCommandStateForEditor(editor, safeCommand);
+        setTaskEditToolbarCommandState(editor, safeCommand, nextTaskCommandActive || !wasTaskCommandActive);
+    }
     scheduleRichTextToolbarStateSync(editor);
-    window.setTimeout(() => syncRichTextToolbarState(editor), 0);
+    window.setTimeout(() => {
+        syncRichTextToolbarState(editor);
+        if (isTaskEditor && !queryRichTextCommandStateForEditor(editor, safeCommand)) {
+            setTaskEditToolbarCommandState(editor, safeCommand, !wasTaskCommandActive);
+        }
+    }, 0);
 }
 
 function buildRichTextToolbarMarkup(editorId, disabled = false) {
@@ -11057,6 +11099,7 @@ function editModalTask(taskId) {
             syncRichTextToolbarState(taskInput);
             scheduleRichTextToolbarStateSync(taskInput);
             window.setTimeout(() => syncRichTextToolbarState(taskInput), 0);
+            window.setTimeout(() => syncRichTextToolbarState(taskInput), 60);
         } else {
             taskInput.select?.();
         }
