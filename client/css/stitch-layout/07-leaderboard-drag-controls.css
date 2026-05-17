@@ -2241,3 +2241,40 @@ body[data-theme^="glass"] #projectModal .task-item.is-editing .task-edit-rich-to
         inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 48%, transparent),
         0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
 }
+
+/* ============================================================================
+   Targeted fix: reliable active state for all rich-text format buttons
+   ============================================================================ */
+.rich-text-toolbar-button[data-rich-text-active="true"],
+.rich-text-toolbar-button.is-active,
+.rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="console"] .rich-text-toolbar-button[data-rich-text-active="true"],
+body[data-theme^="console"] .rich-text-toolbar-button.is-active,
+body[data-theme^="console"] .rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="blueprint"] .rich-text-toolbar-button[data-rich-text-active="true"],
+body[data-theme^="blueprint"] .rich-text-toolbar-button.is-active,
+body[data-theme^="blueprint"] .rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="glass"] .rich-text-toolbar-button[data-rich-text-active="true"],
+body[data-theme^="glass"] .rich-text-toolbar-button.is-active,
+body[data-theme^="glass"] .rich-text-toolbar-button[aria-pressed="true"] {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 88%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 32%, transparent) !important;
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 52%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 20%, transparent) !important;
+}
+
+#projectModal .task-item.is-editing .task-edit-rich-toolbar .rich-text-toolbar-button[data-rich-text-active="true"],
+#projectModal .task-item.is-editing .task-edit-rich-toolbar .rich-text-toolbar-button.is-active,
+#projectModal .task-item.is-editing .task-edit-rich-toolbar .rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="console"] #projectModal .task-item.is-editing .task-edit-rich-toolbar .rich-text-toolbar-button[data-rich-text-active="true"],
+body[data-theme^="blueprint"] #projectModal .task-item.is-editing .task-edit-rich-toolbar .rich-text-toolbar-button[data-rich-text-active="true"],
+body[data-theme^="glass"] #projectModal .task-item.is-editing .task-edit-rich-toolbar .rich-text-toolbar-button[data-rich-text-active="true"] {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 92%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 38%, transparent) !important;
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 60%, transparent),
+        0 0 0 2px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+}

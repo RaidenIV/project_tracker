@@ -1407,13 +1407,25 @@ function initializeRichTextInputShortcuts() {
     document.__richTextInputShortcutsBound = true;
     document.addEventListener('keydown', event => {
         handleRichTextShortcutKeydown(event);
-        if (event.target?.closest?.('.rich-text-editor[contenteditable="true"]')) {
-            scheduleRichTextToolbarStateSync(event.target.closest('.rich-text-editor[contenteditable="true"]'));
-        }
+        const editor = event.target?.closest?.('.rich-text-editor[contenteditable="true"]');
+        if (editor) scheduleRichTextToolbarStateSync(editor);
     }, true);
 
-    ['keyup', 'mouseup', 'input', 'focusin'].forEach(eventName => {
+    ['keyup', 'mouseup', 'pointerup', 'input', 'focusin'].forEach(eventName => {
         document.addEventListener(eventName, event => {
+            const editor = event.target?.closest?.('.rich-text-editor[contenteditable="true"]');
+            if (editor) scheduleRichTextToolbarStateSync(editor);
+        }, true);
+    });
+
+    ['mousedown', 'pointerdown'].forEach(eventName => {
+        document.addEventListener(eventName, event => {
+            const toolbarButton = event.target?.closest?.('.rich-text-toolbar-button[data-rich-text-editor]');
+            if (toolbarButton) {
+                const editor = document.getElementById(toolbarButton.getAttribute('data-rich-text-editor'));
+                if (editor) scheduleRichTextToolbarStateSync(editor);
+                return;
+            }
             const editor = event.target?.closest?.('.rich-text-editor[contenteditable="true"]');
             if (editor) scheduleRichTextToolbarStateSync(editor);
         }, true);
@@ -1910,20 +1922,76 @@ function queryRichTextCommandState(command) {
     }
 }
 
+function getRichTextSelectionNodeElement(node) {
+    if (!node) return null;
+    return node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+}
+
+function elementHasRichTextCommand(element, command, stopAt = null) {
+    let current = element;
+    while (current && current !== stopAt && current.nodeType === Node.ELEMENT_NODE) {
+        const tagName = current.tagName?.toLowerCase?.() || '';
+        const style = current.getAttribute?.('style') || '';
+        if (command === 'bold') {
+            const fontWeight = window.getComputedStyle ? window.getComputedStyle(current).fontWeight : '';
+            if (tagName === 'strong' || tagName === 'b' || /font-weight\s*:\s*(bold|[6-9]00)/i.test(style) || Number.parseInt(fontWeight, 10) >= 600) return true;
+        }
+        if (command === 'italic') {
+            const fontStyle = window.getComputedStyle ? window.getComputedStyle(current).fontStyle : '';
+            if (tagName === 'em' || tagName === 'i' || /font-style\s*:\s*italic/i.test(style) || fontStyle === 'italic') return true;
+        }
+        if (command === 'underline') {
+            const textDecoration = window.getComputedStyle ? window.getComputedStyle(current).textDecorationLine : '';
+            if (tagName === 'u' || /text-decoration(?:-line)?\s*:[^;]*underline/i.test(style) || String(textDecoration).includes('underline')) return true;
+        }
+        current = current.parentElement;
+    }
+    return false;
+}
+
+function isRichTextToolbarButtonForEditor(element, editor) {
+    const button = element?.closest?.('.rich-text-toolbar-button[data-rich-text-editor]');
+    return !!button && !!editor?.id && button.getAttribute('data-rich-text-editor') === editor.id;
+}
+
+function isRichTextEditorControlActive(editor) {
+    const activeElement = document.activeElement;
+    return activeElement === editor || !!editor.contains(activeElement) || isRichTextToolbarButtonForEditor(activeElement, editor);
+}
+
+function queryRichTextCommandStateForEditor(editor, command) {
+    if (!editor || !command || editor.getAttribute('contenteditable') !== 'true') return false;
+
+    const selection = window.getSelection?.();
+    const selectionInsideEditor = isSelectionInsideRichTextEditor(editor);
+    if (selectionInsideEditor && queryRichTextCommandState(command)) return true;
+
+    if (!selection || selection.rangeCount === 0) return false;
+    const anchorElement = getRichTextSelectionNodeElement(selection.anchorNode);
+    const focusElement = getRichTextSelectionNodeElement(selection.focusNode);
+    const range = selection.getRangeAt(0);
+    const commonElement = getRichTextSelectionNodeElement(range.commonAncestorContainer);
+
+    return [anchorElement, focusElement, commonElement]
+        .some(element => element && (element === editor || editor.contains(element)) && elementHasRichTextCommand(element, command, editor));
+}
+
 function syncRichTextToolbarState(editorOrId) {
     const editor = typeof editorOrId === 'string' ? document.getElementById(editorOrId) : editorOrId;
     if (!editor || !editor.id) return;
 
-    const isEditorActive = editor.getAttribute('contenteditable') === 'true' && isSelectionInsideRichTextEditor(editor);
+    const isEditorActive = editor.getAttribute('contenteditable') === 'true' && (isSelectionInsideRichTextEditor(editor) || isRichTextEditorControlActive(editor));
     const buttons = document.querySelectorAll(`.rich-text-toolbar-button[data-rich-text-editor="${editor.id}"]`);
 
     buttons.forEach(button => {
         const command = button.getAttribute('data-rich-text-command');
-        const isActive = !!(isEditorActive && command && queryRichTextCommandState(command));
+        const isActive = !!(isEditorActive && command && queryRichTextCommandStateForEditor(editor, command));
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', String(isActive));
+        button.dataset.richTextActive = String(isActive);
         const label = getRichTextToolbarButtonLabel(command);
         button.setAttribute('aria-label', isActive ? `${label} active` : label);
+        button.setAttribute('title', isActive ? `${label} active` : label);
     });
 }
 
@@ -1955,6 +2023,7 @@ function applyRichTextCommand(editorId, command) {
     document.execCommand(safeCommand, false, null);
     syncRichTextToolbarState(editor);
     scheduleRichTextToolbarStateSync(editor);
+    window.setTimeout(() => syncRichTextToolbarState(editor), 0);
 }
 
 function buildRichTextToolbarMarkup(editorId, disabled = false) {
@@ -10987,6 +11056,7 @@ function editModalTask(taskId) {
             selectRichTextEditorContents(taskInput);
             syncRichTextToolbarState(taskInput);
             scheduleRichTextToolbarStateSync(taskInput);
+            window.setTimeout(() => syncRichTextToolbarState(taskInput), 0);
         } else {
             taskInput.select?.();
         }
