@@ -1864,6 +1864,38 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reor
     text-underline-offset: 0.12em !important;
 }
 
+
+/* ============================================================================
+   Targeted patch: rich text formatting while editing modal tasks
+   ============================================================================ */
+.task-edit-rich-toolbar {
+    display: none !important;
+    margin: 0 0 0.45rem !important;
+}
+
+.task-item.is-editing .task-edit-rich-toolbar {
+    display: inline-flex !important;
+}
+
+.modal-task-edit-editor.rich-text-editor {
+    min-height: 2.75rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    cursor: text !important;
+}
+
+.modal-task-edit-editor.rich-text-editor,
+.modal-task-edit-editor.rich-text-editor * {
+    caret-color: var(--heading, currentColor) !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+.project-notes-save-button.is-saved {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 58%, transparent) !important;
+}
+
 /* Targeted patch: long-press movable tabs and calendar task scheduling */
 .modal-tab[data-movable-tab-id],
 .task-category-tab-wrap[data-task-category-reorder],

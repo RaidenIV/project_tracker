@@ -1342,12 +1342,12 @@ function normalizeTask(task = {}, index = 0) {
     return {
         ...task,
         id: Number.isFinite(numericId) ? numericId : fallbackId,
-        text: typeof task?.text === 'string' ? task.text : '',
-        note: typeof task?.note === 'string' ? task.note : (typeof task?.notes === 'string' ? task.notes : ''),
+        text: typeof task?.text === 'string' ? decodeHtmlEntities(task.text) : '',
+        note: typeof task?.note === 'string' ? decodeHtmlEntities(task.note) : (typeof task?.notes === 'string' ? decodeHtmlEntities(task.notes) : ''),
         completed: parseTaskCompletedValue(task?.completed),
         completedDate: task?.completedDate ? String(task.completedDate) : null,
         completedBy: task?.completedBy ? String(task.completedBy) : '',
-        completedByName: task?.completedByName ? String(task.completedByName) : '',
+        completedByName: task?.completedByName ? decodeHtmlEntities(task.completedByName) : '',
         dueDate: normalizeTaskDueDate(task?.dueDate || task?.due_date || task?.deadline || ''),
         tag,
         category
@@ -1372,6 +1372,42 @@ function isTypingTarget(target) {
     if (!target) return false;
     const element = target.closest?.('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"]');
     return !!element;
+}
+
+function isAnyModalActive() {
+    if (typeof document === 'undefined') return false;
+    return !!document.querySelector('.modal-overlay.active, .auth-overlay:not(.hidden), .command-palette-overlay.active');
+}
+
+function getRichTextShortcutCommand(event) {
+    if (!event || !(event.ctrlKey || event.metaKey) || event.altKey) return '';
+    const key = String(event.key || '').toLowerCase();
+    return { b: 'bold', i: 'italic', u: 'underline' }[key] || '';
+}
+
+function handleRichTextShortcutKeydown(event, editorId = '') {
+    const command = getRichTextShortcutCommand(event);
+    if (!command) return false;
+
+    const target = event.target;
+    const editor = editorId
+        ? document.getElementById(editorId)
+        : target?.closest?.('.rich-text-editor[contenteditable="true"], [contenteditable="true"].rich-text-editor');
+
+    if (!editor || editor.getAttribute('contenteditable') !== 'true') return false;
+
+    event.preventDefault();
+    event.stopPropagation();
+    applyRichTextCommand(editor.id, command);
+    return true;
+}
+
+function initializeRichTextInputShortcuts() {
+    if (typeof document === 'undefined' || document.__richTextInputShortcutsBound) return;
+    document.__richTextInputShortcutsBound = true;
+    document.addEventListener('keydown', event => {
+        handleRichTextShortcutKeydown(event);
+    }, true);
 }
 
 function getTaskCategoryTabPositionClass(index, total) {
@@ -1806,6 +1842,16 @@ function getRichTextEditorValue(editorOrId) {
     if (!editor) return '';
     const html = sanitizeRichTextHtml(editor.innerHTML || '');
     return getRichTextPlainText(html) ? html : '';
+}
+
+function selectRichTextEditorContents(editor) {
+    if (!editor || typeof window === 'undefined') return;
+    const selection = window.getSelection?.();
+    const range = document.createRange?.();
+    if (!selection || !range) return;
+    range.selectNodeContents(editor);
+    selection.removeAllRanges();
+    selection.addRange(range);
 }
 
 function applyRichTextCommand(editorId, command) {
@@ -3093,9 +3139,9 @@ function normalizeProject(project) {
         ...project,
         id: project.id || project._id || String(Date.now()),
         _id: project._id || project.id,
-        title: project.title || 'Untitled Project',
+        title: decodeHtmlEntities(project.title || 'Untitled Project'),
         notes: getProjectNotesValueFromProject(project),
-        description: typeof project.description === 'string' ? project.description : (typeof project.summary === 'string' ? project.summary : ''),
+        description: typeof project.description === 'string' ? decodeHtmlEntities(project.description) : (typeof project.summary === 'string' ? decodeHtmlEntities(project.summary) : ''),
         projectPriorityTag: getProjectPriorityTag(project),
         dueDate: getProjectDueDate(project),
         calendarNotes: normalizeProjectCalendarNotes(project.calendarNotes || project.projectCalendarNotes || {}),
@@ -3107,7 +3153,7 @@ function normalizeProject(project) {
         archived: isProjectArchived(project),
         completed: isProjectCompleted(project),
         completedBy: project.completedBy ? String(project.completedBy) : '',
-        completedByName: project.completedByName ? String(project.completedByName) : '',
+        completedByName: project.completedByName ? decodeHtmlEntities(project.completedByName) : '',
         dateCreated: project.dateCreated || new Date().toISOString(),
         lastModified: project.lastModified || project.dateCreated || new Date().toISOString(),
         __syncedLastModified: project.__syncedLastModified || project.lastModified || project.dateCreated || null
@@ -4873,7 +4919,7 @@ async function addProject() {
 }
 
 function normalizeProjectTitleInput(value) {
-    return String(value ?? '').trim().replace(/\s+/g, ' ');
+    return decodeHtmlEntities(value).trim().replace(/\s+/g, ' ');
 }
 
 function getProjectTitleWarningMessage(value) {
@@ -5077,7 +5123,7 @@ function completeProject(projectId) {
 }
 
 function normalizeProjectDescription(value) {
-    return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, 280);
+    return decodeHtmlEntities(value).trim().replace(/\s+/g, ' ').slice(0, 280);
 }
 
 function promptForRequiredProjectDescription() {
@@ -6070,21 +6116,34 @@ function deleteProjectNoteLink(projectId, tabId, linkId, surface = 'modal', even
 
 function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!state.canEdit(projectId)) return;
-    commitPendingProjectNoteTabName(projectId, surface);
+    const safeSurface = getSafeProjectNotesSurface(surface);
+    commitPendingProjectNoteTabName(projectId, safeSurface);
     const data = getProjectNotesDataForProject(projectId);
     const activeTab = data.tabs.find(item => item.id === data.activeTabId) || data.tabs[0];
     if (!activeTab) return;
-    const titleInput = document.getElementById(`project-notes-title-${surface}`);
-    const bodyEditor = document.getElementById(`project-notes-body-${surface}`);
+    const titleInput = document.getElementById(`project-notes-title-${safeSurface}`);
+    const bodyEditor = document.getElementById(`project-notes-body-${safeSurface}`);
     const tab = data.tabs.find(item => item.id === activeTab.id);
     if (!tab) return;
-    if (titleInput) tab.title = String(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
+    if (titleInput) tab.title = decodeHtmlEntities(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
     tab.links = normalizeProjectNoteLinks([
         ...normalizeProjectNoteLinks(tab.links || []),
-        ...collectProjectNoteLinksFromSurface(activeTab.id, surface)
+        ...collectProjectNoteLinksFromSurface(activeTab.id, safeSurface)
     ]);
-    saveProjectNotesData(projectId, data, { renderSurface: surface });
+    saveProjectNotesData(projectId, data, { renderSurface: safeSurface });
+    requestAnimationFrame(() => {
+        const button = document.querySelector(`[data-project-notes-editor="${safeSurface}"] .project-notes-save-button`);
+        if (!button) return;
+        button.textContent = 'Notes Saved!';
+        button.classList.add('is-saved');
+        window.clearTimeout(button.__notesSavedResetTimer);
+        button.__notesSavedResetTimer = window.setTimeout(() => {
+            if (!button.isConnected) return;
+            button.textContent = 'Save Notes';
+            button.classList.remove('is-saved');
+        }, 1800);
+    });
 }
 
 function ensureProjectNotesModal() {
@@ -9192,8 +9251,8 @@ function normalizeProjectNotesValue(value = '') {
 function normalizeProjectNotesTab(tab, index = 0) {
     const fallbackId = index === 0 ? PROJECT_NOTES_DEFAULT_TAB_ID : `notes-${Date.now()}-${index}`;
     const id = String(tab?.id || tab?._id || fallbackId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || fallbackId;
-    const title = String(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
-    const body = String(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
+    const title = decodeHtmlEntities(tab?.title || tab?.name || tab?.label || `Note ${index + 1}`).trim().replace(/\s+/g, ' ').slice(0, 40) || `Note ${index + 1}`;
+    const body = decodeHtmlEntities(tab?.body ?? tab?.text ?? tab?.note ?? tab?.content ?? tab?.html ?? tab?.value ?? '');
     const links = normalizeProjectNoteLinks(tab?.links ?? tab?.hyperlinks ?? tab?.urls ?? tab?.urlList ?? tab?.linkList ?? tab?.link ?? tab?.url ?? tab?.href ?? []);
     return { id, title, body, links };
 }
@@ -9344,14 +9403,17 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                       data-task-text="${normalizedTask.id}"
                       id="modal-task-text-${normalizedTask.id}"
                       onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${getTaskDisplayHtml(normalizedTask.text, 'New task')}</span>
-                <textarea class="task-input task-input--textarea"
-                          id="modal-task-input-${normalizedTask.id}"
-                          placeholder="New task"
-                          rows="1"
-                          style="display: none;"
-                          oninput="autoResizeModalTaskInput(this)"
-                          onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
-                          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); finishEditModalTask('${projectId}', ${normalizedTask.id}); } if(event.key==='Escape'){ event.preventDefault(); this.blur(); }">${escapeHtml(getTaskPlainText(normalizedTask.text))}</textarea>
+                ${state.canEdit(projectId) ? `<div class="task-edit-rich-toolbar" id="modal-task-toolbar-${normalizedTask.id}">${buildRichTextToolbarMarkup(`modal-task-input-${normalizedTask.id}`)}</div>` : ''}
+                <div class="task-input task-input--textarea modal-task-edit-editor rich-text-editor"
+                     id="modal-task-input-${normalizedTask.id}"
+                     role="textbox"
+                     aria-multiline="true"
+                     data-placeholder="New task"
+                     contenteditable="${state.canEdit(projectId) ? 'true' : 'false'}"
+                     style="display: none;"
+                     oninput="autoResizeModalTaskInput(this)"
+                     onblur="finishEditModalTask('${projectId}', ${normalizedTask.id})"
+                     onkeydown="handleModalTaskEditKeydown('${projectId}', ${normalizedTask.id}, event)">${getRichTextDisplayHtml(normalizedTask.text || '')}</div>
             </div>
             <div class="task-meta-controls" onclick="event.stopPropagation();">
                 <button class="task-copy-button"
@@ -10807,6 +10869,18 @@ function autoResizeModalTaskInput(input) {
     input.style.height = `${Math.max(input.scrollHeight, 44)}px`;
 }
 
+function handleModalTaskEditKeydown(projectId, taskId, event) {
+    if (handleRichTextShortcutKeydown(event, `modal-task-input-${taskId}`)) return;
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        finishEditModalTask(projectId, taskId);
+    }
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        event.currentTarget?.blur?.();
+    }
+}
+
 function editModalTask(taskId) {
     const taskText = document.getElementById(`modal-task-text-${taskId}`);
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
@@ -10817,7 +10891,11 @@ function editModalTask(taskId) {
         taskInput.style.display = 'block';
         autoResizeModalTaskInput(taskInput);
         taskInput.focus({ preventScroll: true });
-        taskInput.select();
+        if (taskInput.getAttribute('contenteditable') === 'true') {
+            selectRichTextEditorContents(taskInput);
+        } else {
+            taskInput.select?.();
+        }
     }
 }
 
@@ -10826,7 +10904,10 @@ function finishEditModalTask(projectId, taskId) {
     const taskInput = document.getElementById(`modal-task-input-${taskId}`);
     const taskItem = taskInput?.closest?.('[data-task-item]');
     if (taskText && taskInput) {
-        const trimmed = taskInput.value.trim();
+        const nextValue = taskInput.getAttribute('contenteditable') === 'true'
+            ? getRichTextEditorValue(taskInput)
+            : sanitizeRichTextHtml(taskInput.value || '');
+        const trimmed = getTaskPlainText(nextValue).trim();
         const wasNewTaskDraft = String(uiState.newTaskDraft?.projectId || '') === String(projectId)
             && Number(uiState.newTaskDraft?.taskId) === Number(taskId);
         taskItem?.classList.remove('is-editing');
@@ -10838,8 +10919,8 @@ function finishEditModalTask(projectId, taskId) {
             return;
         }
         if (wasNewTaskDraft) uiState.newTaskDraft = null;
-        updateTaskText(projectId, taskId, trimmed);
-        taskText.innerHTML = getTaskDisplayHtml(trimmed, 'New task');
+        updateTaskText(projectId, taskId, nextValue);
+        taskText.innerHTML = getTaskDisplayHtml(nextValue, 'New task');
         taskText.style.display = 'block';
         taskInput.style.display = 'none';
         taskInput.style.height = '';
@@ -12341,6 +12422,7 @@ function initializeEventHandlers() {
     document.getElementById('projectTaskPreviewToggleBtn')?.addEventListener('click', () => {
         setProjectCardTaskPreviewEnabled(!isProjectCardTaskPreviewEnabled());
     });
+    initializeRichTextInputShortcuts();
     document.getElementById('commandPaletteInput')?.addEventListener('input', (e) => {
         uiState.commandQuery = e.target.value || '';
         uiState.commandActiveIndex = 0;
@@ -12350,6 +12432,10 @@ function initializeEventHandlers() {
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         const isCommandPaletteInput = uiState.commandPaletteOpen && e.target?.id === 'commandPaletteInput';
+        const modalActive = isAnyModalActive() && !uiState.commandPaletteOpen;
+        if (modalActive) {
+            return;
+        }
         if (isTypingTarget(e.target) && !isCommandPaletteInput) {
             return;
         }
@@ -12544,6 +12630,7 @@ window.cancelEditProjectDescription = cancelEditProjectDescription;
 window.finishEditProjectDescription = finishEditProjectDescription;
 window.editModalTask = editModalTask;
 window.finishEditModalTask = finishEditModalTask;
+window.handleModalTaskEditKeydown = handleModalTaskEditKeydown;
 window.autoResizeModalTaskInput = autoResizeModalTaskInput;
 window.addTaskToModal = addTaskToModal;
 window.updateTaskDueDate = updateTaskDueDate;
