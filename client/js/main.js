@@ -1407,7 +1407,21 @@ function initializeRichTextInputShortcuts() {
     document.__richTextInputShortcutsBound = true;
     document.addEventListener('keydown', event => {
         handleRichTextShortcutKeydown(event);
+        if (event.target?.closest?.('.rich-text-editor[contenteditable="true"]')) {
+            scheduleRichTextToolbarStateSync(event.target.closest('.rich-text-editor[contenteditable="true"]'));
+        }
     }, true);
+
+    ['keyup', 'mouseup', 'input', 'focusin'].forEach(eventName => {
+        document.addEventListener(eventName, event => {
+            const editor = event.target?.closest?.('.rich-text-editor[contenteditable="true"]');
+            if (editor) scheduleRichTextToolbarStateSync(editor);
+        }, true);
+    });
+
+    document.addEventListener('selectionchange', () => {
+        scheduleRichTextToolbarStateSync();
+    });
 }
 
 function getTaskCategoryTabPositionClass(index, total) {
@@ -1854,6 +1868,79 @@ function selectRichTextEditorContents(editor) {
     selection.addRange(range);
 }
 
+function getRichTextToolbarCommands() {
+    return ['bold', 'italic', 'underline'];
+}
+
+function getRichTextToolbarButtonLabel(command) {
+    return ({ bold: 'Bold', italic: 'Italic', underline: 'Underline' })[command] || 'Format';
+}
+
+function getRichTextToolbarButtonInnerMarkup(command) {
+    if (command === 'bold') return '<strong>B</strong>';
+    if (command === 'italic') return '<em>I</em>';
+    if (command === 'underline') return '<span>U</span>';
+    return '';
+}
+
+function isSelectionInsideRichTextEditor(editor) {
+    if (!editor || typeof window === 'undefined') return false;
+    const selection = window.getSelection?.();
+    if (!selection || selection.rangeCount === 0) {
+        const activeElement = document.activeElement;
+        return activeElement === editor || !!editor.contains(activeElement);
+    }
+
+    const anchor = selection.anchorNode;
+    const focus = selection.focusNode;
+    const containsNode = node => {
+        if (!node) return false;
+        const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        return element === editor || !!editor.contains(element);
+    };
+
+    return containsNode(anchor) || containsNode(focus);
+}
+
+function queryRichTextCommandState(command) {
+    try {
+        return !!document.queryCommandState(command);
+    } catch {
+        return false;
+    }
+}
+
+function syncRichTextToolbarState(editorOrId) {
+    const editor = typeof editorOrId === 'string' ? document.getElementById(editorOrId) : editorOrId;
+    if (!editor || !editor.id) return;
+
+    const isEditorActive = editor.getAttribute('contenteditable') === 'true' && isSelectionInsideRichTextEditor(editor);
+    const buttons = document.querySelectorAll(`.rich-text-toolbar-button[data-rich-text-editor="${editor.id}"]`);
+
+    buttons.forEach(button => {
+        const command = button.getAttribute('data-rich-text-command');
+        const isActive = !!(isEditorActive && command && queryRichTextCommandState(command));
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+        const label = getRichTextToolbarButtonLabel(command);
+        button.setAttribute('aria-label', isActive ? `${label} active` : label);
+    });
+}
+
+function syncAllRichTextToolbarStates() {
+    document.querySelectorAll('.rich-text-editor[contenteditable="true"][id]').forEach(editor => {
+        syncRichTextToolbarState(editor);
+    });
+}
+
+function scheduleRichTextToolbarStateSync(editorOrId = null) {
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+        if (editorOrId) syncRichTextToolbarState(editorOrId);
+        else syncAllRichTextToolbarStates();
+    });
+}
+
 function applyRichTextCommand(editorId, command) {
     const editor = document.getElementById(editorId);
     if (!editor || editor.getAttribute('contenteditable') !== 'true') return;
@@ -1866,16 +1953,21 @@ function applyRichTextCommand(editorId, command) {
         // Some browsers no-op or reject styleWithCSS. The formatting command still runs below.
     }
     document.execCommand(safeCommand, false, null);
+    syncRichTextToolbarState(editor);
+    scheduleRichTextToolbarStateSync(editor);
 }
 
 function buildRichTextToolbarMarkup(editorId, disabled = false) {
     if (disabled) return '';
     const safeEditorId = String(editorId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const buttons = getRichTextToolbarCommands().map(command => {
+        const label = getRichTextToolbarButtonLabel(command);
+        const modifierClass = `rich-text-toolbar-button--${command}`;
+        return `<button class="rich-text-toolbar-button ${modifierClass}" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', '${command}')" aria-label="${label}" aria-pressed="false" title="${label}" data-rich-text-editor="${safeEditorId}" data-rich-text-command="${command}">${getRichTextToolbarButtonInnerMarkup(command)}</button>`;
+    }).join('');
     return `
-        <div class="rich-text-toolbar" role="toolbar" aria-label="Text formatting tools">
-            <button class="rich-text-toolbar-button rich-text-toolbar-button--bold" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'bold')" aria-label="Bold" title="Bold"><strong>B</strong></button>
-            <button class="rich-text-toolbar-button rich-text-toolbar-button--italic" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'italic')" aria-label="Italic" title="Italic"><em>I</em></button>
-            <button class="rich-text-toolbar-button rich-text-toolbar-button--underline" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', 'underline')" aria-label="Underline" title="Underline"><span>U</span></button>
+        <div class="rich-text-toolbar" role="toolbar" aria-label="Text formatting tools" data-rich-text-editor="${safeEditorId}">
+            ${buttons}
         </div>`;
 }
 

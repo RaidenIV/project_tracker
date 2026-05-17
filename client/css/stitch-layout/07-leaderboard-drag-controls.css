@@ -1825,6 +1825,29 @@ body[data-theme^="glass"] .project-calendar-draggable-task.is-calendar-task-reor
     outline: none !important;
 }
 
+.rich-text-toolbar-button.is-active,
+.rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="console"] .rich-text-toolbar-button.is-active,
+body[data-theme^="console"] .rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="blueprint"] .rich-text-toolbar-button.is-active,
+body[data-theme^="blueprint"] .rich-text-toolbar-button[aria-pressed="true"],
+body[data-theme^="glass"] .rich-text-toolbar-button.is-active,
+body[data-theme^="glass"] .rich-text-toolbar-button[aria-pressed="true"] {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 72%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 20%, transparent) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 34%, transparent) !important;
+}
+
+.rich-text-toolbar-button.is-active:hover,
+.rich-text-toolbar-button[aria-pressed="true"]:hover,
+.rich-text-toolbar-button.is-active:focus-visible,
+.rich-text-toolbar-button[aria-pressed="true"]:focus-visible {
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 82%, transparent) !important;
+    background: color-mix(in srgb, var(--accent, currentColor) 26%, transparent) !important;
+}
+
 .rich-text-toolbar-button--italic em {
     font-style: italic !important;
 }
