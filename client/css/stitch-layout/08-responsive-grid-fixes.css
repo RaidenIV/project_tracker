@@ -6330,3 +6330,236 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
         margin: 0 !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: task input zoom, contextual formatting tools, tag scroll,
+   sort alignment, add-tag button fit, task-tab padding, and member badge text
+   Date: 2026-05-19
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    #projectModal .modal-task-entry-editor.paste-box,
+    #projectModal .modal-task-edit-editor.rich-text-editor,
+    body[data-theme^="console"] #projectModal .modal-task-entry-editor.paste-box,
+    body[data-theme^="console"] #projectModal .modal-task-edit-editor.rich-text-editor,
+    body[data-theme^="glass"] #projectModal .modal-task-entry-editor.paste-box,
+    body[data-theme^="glass"] #projectModal .modal-task-edit-editor.rich-text-editor,
+    body[data-theme^="blueprint"] #projectModal .modal-task-entry-editor.paste-box,
+    body[data-theme^="blueprint"] #projectModal .modal-task-edit-editor.rich-text-editor {
+        font-size: 16px !important;
+        line-height: 1.45 !important;
+        -webkit-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
+    }
+
+    #projectModal .modal-paste-section > .rich-text-toolbar,
+    body[data-theme^="console"] #projectModal .modal-paste-section > .rich-text-toolbar,
+    body[data-theme^="glass"] #projectModal .modal-paste-section > .rich-text-toolbar,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-section > .rich-text-toolbar {
+        display: none !important;
+    }
+
+    #projectModal .modal-paste-section:focus-within > .rich-text-toolbar,
+    body[data-theme^="console"] #projectModal .modal-paste-section:focus-within > .rich-text-toolbar,
+    body[data-theme^="glass"] #projectModal .modal-paste-section:focus-within > .rich-text-toolbar,
+    body[data-theme^="blueprint"] #projectModal .modal-paste-section:focus-within > .rich-text-toolbar {
+        display: inline-flex !important;
+    }
+
+    #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar,
+    body[data-theme^="console"] #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar,
+    body[data-theme^="glass"] #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar,
+    body[data-theme^="blueprint"] #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar {
+        display: none !important;
+    }
+
+    #projectModal.modal-overlay.active .task-item.is-editing .task-main-content:focus-within .task-edit-rich-toolbar,
+    body[data-theme^="console"] #projectModal.modal-overlay.active .task-item.is-editing .task-main-content:focus-within .task-edit-rich-toolbar,
+    body[data-theme^="glass"] #projectModal.modal-overlay.active .task-item.is-editing .task-main-content:focus-within .task-edit-rich-toolbar,
+    body[data-theme^="blueprint"] #projectModal.modal-overlay.active .task-item.is-editing .task-main-content:focus-within .task-edit-rich-toolbar {
+        display: inline-flex !important;
+    }
+
+    .view-filter-chips,
+    .view-filter-chips:not(:empty),
+    body[data-theme^="console"] .view-filter-chips,
+    body[data-theme^="console"] .view-filter-chips:not(:empty),
+    body[data-theme^="glass"] .view-filter-chips,
+    body[data-theme^="glass"] .view-filter-chips:not(:empty),
+    body[data-theme^="blueprint"] .view-filter-chips,
+    body[data-theme^="blueprint"] .view-filter-chips:not(:empty) {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.45rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        overscroll-behavior-x: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-x pan-y !important;
+        scrollbar-width: none !important;
+    }
+
+    .view-filter-chips::-webkit-scrollbar,
+    body[data-theme^="console"] .view-filter-chips::-webkit-scrollbar,
+    body[data-theme^="glass"] .view-filter-chips::-webkit-scrollbar,
+    body[data-theme^="blueprint"] .view-filter-chips::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    .view-filter-chips .filter-chip,
+    body[data-theme^="console"] .view-filter-chips .filter-chip,
+    body[data-theme^="glass"] .view-filter-chips .filter-chip,
+    body[data-theme^="blueprint"] .view-filter-chips .filter-chip {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+
+    #projectModal .modal-task-controls-row,
+    body[data-theme^="console"] #projectModal .modal-task-controls-row,
+    body[data-theme^="glass"] #projectModal .modal-task-controls-row,
+    body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(8.25rem, 42vw) !important;
+        align-items: end !important;
+        gap: 0.65rem !important;
+        margin-bottom: 0.95rem !important;
+    }
+
+    #projectModal .hide-completed-toggle,
+    body[data-theme^="console"] #projectModal .hide-completed-toggle,
+    body[data-theme^="glass"] #projectModal .hide-completed-toggle,
+    body[data-theme^="blueprint"] #projectModal .hide-completed-toggle {
+        grid-column: 1 !important;
+        align-self: end !important;
+        justify-self: start !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #projectModal .task-sort-control,
+    body[data-theme^="console"] #projectModal .task-sort-control,
+    body[data-theme^="glass"] #projectModal .task-sort-control,
+    body[data-theme^="blueprint"] #projectModal .task-sort-control {
+        grid-column: 2 !important;
+        align-self: end !important;
+        justify-self: end !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    #projectModal .task-sort-select,
+    body[data-theme^="console"] #projectModal .task-sort-select,
+    body[data-theme^="glass"] #projectModal .task-sort-select,
+    body[data-theme^="blueprint"] #projectModal .task-sort-select {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.72rem center !important;
+        background-size: 0.78rem 0.78rem !important;
+    }
+
+    .project-grid .project-card .project-card-tags,
+    .project-grid .stitch-project-card .project-card-tags,
+    .project-card .project-card-tags,
+    .stitch-project-card .project-card-tags,
+    .project-card .project-card-tags.project-card-tags--empty,
+    .stitch-project-card .project-card-tags.project-card-tags--empty,
+    body[data-theme^="console"] .project-grid .project-card .project-card-tags,
+    body[data-theme^="console"] .project-card .project-card-tags,
+    body[data-theme^="console"] .project-card .project-card-tags.project-card-tags--empty,
+    body[data-theme^="glass"] .project-grid .project-card .project-card-tags,
+    body[data-theme^="glass"] .project-card .project-card-tags,
+    body[data-theme^="glass"] .project-card .project-card-tags.project-card-tags--empty,
+    body[data-theme^="blueprint"] .project-grid .project-card .project-card-tags,
+    body[data-theme^="blueprint"] .project-card .project-card-tags,
+    body[data-theme^="blueprint"] .project-card .project-card-tags.project-card-tags--empty {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        overflow: visible !important;
+        align-items: center !important;
+        align-content: center !important;
+        min-height: 1.96rem !important;
+        height: auto !important;
+        max-height: none !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .project-card .project-card-tag--add,
+    .stitch-project-card .project-card-tag--add,
+    body[data-theme^="console"] .project-card .project-card-tag--add,
+    body[data-theme^="glass"] .project-card .project-card-tag--add,
+    body[data-theme^="blueprint"] .project-card .project-card-tag--add {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.78rem !important;
+        min-width: 1.78rem !important;
+        max-width: 1.78rem !important;
+        height: 1.78rem !important;
+        min-height: 1.78rem !important;
+        max-height: 1.78rem !important;
+        flex: 0 0 1.78rem !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+        padding-top: 0.12rem !important;
+        min-height: auto !important;
+    }
+
+    #projectModal .task-category-toolbar,
+    #projectModal .task-category-tabs,
+    body[data-theme^="console"] #projectModal .task-category-toolbar,
+    body[data-theme^="console"] #projectModal .task-category-tabs,
+    body[data-theme^="glass"] #projectModal .task-category-toolbar,
+    body[data-theme^="glass"] #projectModal .task-category-tabs,
+    body[data-theme^="blueprint"] #projectModal .task-category-toolbar,
+    body[data-theme^="blueprint"] #projectModal .task-category-tabs {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item:has(.members-count),
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item:has(.members-count),
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item:has(.members-count),
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item:has(.members-count) {
+        color: var(--accent, currentColor) !important;
+        -webkit-text-fill-color: var(--accent, currentColor) !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-item .members-count,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-item .members-count,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-item .members-count,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-item .members-count {
+        display: none !important;
+    }
+}
