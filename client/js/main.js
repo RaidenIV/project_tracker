@@ -639,6 +639,18 @@ function formatTaskDueDate(value) {
     return parsed.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatTaskDueDateShort(value) {
+    const dueDate = normalizeTaskDueDate(value);
+    if (!dueDate) return 'No due date';
+    const [year, month, day] = dueDate.split('-').map(Number);
+    if (![year, month, day].every(Number.isFinite)) return dueDate;
+    return `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}/${String(year).slice(-2)}`;
+}
+
+function formatTaskDueDateForViewport(value) {
+    return isMobileWebSidebarViewport() ? formatTaskDueDateShort(value) : formatTaskDueDate(value);
+}
+
 function getProjectDueDate(project = {}) {
     return normalizeTaskDueDate(project?.dueDate || project?.projectDueDate || project?.deadline || '');
 }
@@ -919,7 +931,7 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
             <div class="project-calendar-selected-header">
                 <div>
                     <div class="project-calendar-selected-label">Selected Day</div>
-                    <h4 class="project-calendar-selected-title">${escapeHtml(formatTaskDueDate(selectedDate))}</h4>
+                    <h4 class="project-calendar-selected-title">${escapeHtml(formatTaskDueDateForViewport(selectedDate))}</h4>
                 </div>
                 ${projectDueDate === selectedDate ? '<span class="project-calendar-project-due-pill">Project Due</span>' : ''}
             </div>
@@ -939,7 +951,7 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                                         ${canEditCalendar ? `
                                             <button class="project-calendar-remove-task-button"
                                                     type="button"
-                                                    title="Remove this task from ${escapeHtml(formatTaskDueDate(selectedDate))}"
+                                                    title="Remove this task from ${escapeHtml(formatTaskDueDateForViewport(selectedDate))}"
                                                     aria-label="Remove task from selected day"
                                                     onclick="removeProjectCalendarTaskFromDay(${projectIdLiteral}, ${taskIdLiteral}, ${selectedDateLiteral}, event)">
                                                 Remove
@@ -1047,7 +1059,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
                                 ` : ''}
                                 ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
                                 <span class="project-calendar-draggable-task-text">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
-                                <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDate(dueDate)) : 'No due date'}</span>
+                                <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDateForViewport(dueDate)) : 'No due date'}</span>
                                 ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
                             </div>
                         `;
@@ -2943,10 +2955,19 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
     return row;
 }
 
+function getMobileSafeThemeName(themeName) {
+    const meta = THEME_OPTIONS[themeName];
+    if (!meta || meta.family !== 'blueprint') return themeName;
+    if (typeof isMobileWebSidebarViewport !== 'function' || !isMobileWebSidebarViewport()) return themeName;
+    return meta.mode === 'light' ? 'console-light' : 'console-dark';
+}
+
 function normalizeThemeName(themeName) {
     const normalized = String(themeName || '').trim();
-    if (THEME_OPTIONS[normalized]) return normalized;
-    return LEGACY_THEME_MAP[normalized] || 'blueprint-dark';
+    const resolvedTheme = THEME_OPTIONS[normalized]
+        ? normalized
+        : (LEGACY_THEME_MAP[normalized] || 'blueprint-dark');
+    return getMobileSafeThemeName(resolvedTheme);
 }
 
 function getCurrentColorMode() {
@@ -3260,7 +3281,18 @@ function applyTheme(themeName, persist = true) {
 
 function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
     const currentMode = getThemeMeta(uiState.theme).mode || 'dark';
-    applyTheme(buildThemeName(themeFamily, preferredMode || currentMode), persist);
+    const safeThemeFamily = isMobileWebSidebarViewport() && themeFamily === 'blueprint' ? 'console' : themeFamily;
+    applyTheme(buildThemeName(safeThemeFamily, preferredMode || currentMode), persist);
+}
+
+function syncMobileThemeAvailability() {
+    if (!isMobileWebSidebarViewport()) return;
+    const safeTheme = normalizeThemeName(uiState.theme);
+    if (safeTheme !== uiState.theme) {
+        applyTheme(safeTheme, false);
+        return;
+    }
+    renderThemeOptions();
 }
 
 function renderThemeOptions() {
@@ -7089,9 +7121,23 @@ function updateTaskDueDate(projectId, taskId, dueDateValue) {
     if (dueControl) {
         const normalizedTask = updatedTasks.find(task => normalizeTask(task).id === taskId);
         const overdue = isTaskOverdue(normalizedTask);
+        const visibleTaskDueDate = dueDate ? formatTaskDueDateForViewport(dueDate) : '';
+        let mobileDueDateValue = dueControl.querySelector('.task-due-date-mobile-value');
         dueControl.classList.toggle('has-due-date', !!dueDate);
         dueControl.classList.toggle('is-overdue', overdue);
-        dueControl.setAttribute('title', overdue ? `Overdue: ${formatTaskDueDate(dueDate)}` : (dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date'));
+        dueControl.setAttribute('title', overdue ? `Overdue: ${visibleTaskDueDate}` : (dueDate ? `Due ${visibleTaskDueDate}` : 'Add due date'));
+        if (dueInput) {
+            dueInput.setAttribute('aria-label', dueDate ? `Task due date: ${visibleTaskDueDate}` : 'Task due date');
+        }
+        if (dueDate) {
+            if (!mobileDueDateValue) {
+                dueInput?.insertAdjacentHTML('beforebegin', `<span class="task-due-date-mobile-value" aria-hidden="true">${escapeHtml(visibleTaskDueDate)}</span>`);
+                mobileDueDateValue = dueControl.querySelector('.task-due-date-mobile-value');
+            }
+            if (mobileDueDateValue) mobileDueDateValue.textContent = visibleTaskDueDate;
+        } else {
+            mobileDueDateValue?.remove();
+        }
         if (overdue && !dueControl.querySelector('.task-due-overdue-icon')) {
             dueControl.insertAdjacentHTML('afterbegin', renderWarningTriangleIcon('task-due-overdue-icon'));
         } else if (!overdue) {
@@ -9568,7 +9614,8 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
     const hasTaskNote = getRichTextPlainText(normalizedTask.note).length > 0;
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
     const taskOverdue = isTaskOverdue(normalizedTask);
-    const dueDateLabel = taskOverdue ? `Overdue: ${formatTaskDueDate(dueDate)}` : (dueDate ? `Due ${formatTaskDueDate(dueDate)}` : 'Add due date');
+    const visibleTaskDueDate = dueDate ? formatTaskDueDateForViewport(dueDate) : '';
+    const dueDateLabel = taskOverdue ? `Overdue: ${visibleTaskDueDate}` : (dueDate ? `Due ${visibleTaskDueDate}` : 'Add due date');
     const priorityBulkCount = getIncompleteTaskCountForPriority(project, normalizedTask.tag);
     const priorityBulkLabel = getPriorityTagLabel(normalizedTask.tag);
     const canManualReorder = sortMode === DEFAULT_TASK_SORT_MODE;
@@ -9633,11 +9680,12 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                        onclick="openTaskDueDatePicker('${projectId}', ${normalizedTask.id}, event)"
                        onpointerdown="event.stopPropagation();">
                     ${taskOverdue ? renderWarningTriangleIcon('task-due-overdue-icon') : ''}
+                    ${dueDate ? `<span class="task-due-date-mobile-value" aria-hidden="true">${escapeHtml(visibleTaskDueDate)}</span>` : ''}
                     <input class="task-due-date-input"
                            id="modal-task-due-${normalizedTask.id}"
                            type="date"
                            value="${escapeHtml(dueDate)}"
-                           aria-label="Task due date"
+                           aria-label="Task due date${dueDate ? `: ${escapeHtml(visibleTaskDueDate)}` : ''}"
                            onchange="updateTaskDueDate('${projectId}', ${normalizedTask.id}, this.value)"
                            onclick="openTaskDueDatePicker('${projectId}', ${normalizedTask.id}, event)"
                            onpointerdown="event.stopPropagation();">
@@ -13156,6 +13204,7 @@ function onAuthSuccess(user) {
 document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
 document.addEventListener('click', closeProjectLayoutMenu);
 window.addEventListener('resize', applyProjectGridLayoutPreference);
+window.addEventListener('resize', syncMobileThemeAvailability);
 window.addEventListener('resize', scheduleMobileProjectListSync);
 window.addEventListener('orientationchange', scheduleMobileProjectListSync);
 window.addEventListener('beforeunload', persistOpenProjectModalBeforeUnload);
@@ -13164,6 +13213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.setHideCompletedTasks(true);
     loadSavedViewsFromStorage();
     loadThemePreference();
+    syncMobileThemeAvailability();
     loadAccentColorPreference();
     loadProjectSortPreference();
     loadProjectCardTaskPreviewPreference();

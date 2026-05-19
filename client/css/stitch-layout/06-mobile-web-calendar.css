@@ -3902,3 +3902,91 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
         z-index: 230 !important;
     }
 }
+
+.task-due-date-mobile-value {
+    display: none !important;
+}
+
+/* ============================================================================
+   Mobile-only patch: remove Neumorphism option, protect project modal menu,
+   and display task dates as MM/DD/YY
+   Date: 2026-05-19
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    [data-theme-family-option="blueprint"] {
+        display: none !important;
+    }
+
+    #projectModal.modal-overlay.active,
+    body[data-theme^="console"] #projectModal.modal-overlay.active,
+    body[data-theme^="glass"] #projectModal.modal-overlay.active,
+    body[data-theme^="blueprint"] #projectModal.modal-overlay.active {
+        z-index: 1000 !important;
+    }
+
+    #projectModal .modal-content#modalContent,
+    body[data-theme^="console"] #projectModal .modal-content#modalContent,
+    body[data-theme^="glass"] #projectModal .modal-content#modalContent,
+    body[data-theme^="blueprint"] #projectModal .modal-content#modalContent {
+        position: relative !important;
+        z-index: 1001 !important;
+    }
+
+    #projectModal .modal-top-menu-shell,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell {
+        position: relative !important;
+        z-index: 1002 !important;
+        isolation: isolate !important;
+    }
+
+    #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        position: relative !important;
+        z-index: 1003 !important;
+    }
+
+    #projectModal .task-due-date-mobile-value,
+    body[data-theme^="console"] #projectModal .task-due-date-mobile-value,
+    body[data-theme^="glass"] #projectModal .task-due-date-mobile-value,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-mobile-value {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 4.55rem !important;
+        color: currentColor !important;
+        font-size: 0.72rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0.01em !important;
+        white-space: nowrap !important;
+        pointer-events: none !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date {
+        min-width: 5.2rem !important;
+    }
+
+    #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="console"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="glass"] #projectModal .task-due-date-control.has-due-date .task-due-date-input,
+    body[data-theme^="blueprint"] #projectModal .task-due-date-control.has-due-date .task-due-date-input {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+        caret-color: transparent !important;
+    }
+}
+
