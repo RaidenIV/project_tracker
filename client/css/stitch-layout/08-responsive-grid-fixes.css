@@ -6568,14 +6568,50 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
    Targeted fix: sidebar notification placement, active workspace text, and
    project-card overdue icon clipping
    ============================================================================ */
-.control-panel .panel-user-info > .panel-notification-button,
-body[data-theme] .control-panel .panel-user-info > .panel-notification-button,
-body[data-theme^="console"] .control-panel .panel-user-info > .panel-notification-button,
-body[data-theme^="blueprint"] .control-panel .panel-user-info > .panel-notification-button,
-body[data-theme^="glass"] .control-panel .panel-user-info > .panel-notification-button {
-    align-self: flex-start !important;
-    width: auto !important;
+body:not(.control-panel-is-collapsed) .control-panel .panel-user-info,
+body:not(.control-panel-is-collapsed)[data-theme] .control-panel .panel-user-info,
+body:not(.control-panel-is-collapsed)[data-theme^="console"] .control-panel .panel-user-info,
+body:not(.control-panel-is-collapsed)[data-theme^="blueprint"] .control-panel .panel-user-info,
+body:not(.control-panel-is-collapsed)[data-theme^="glass"] .control-panel .panel-user-info {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+        "account status"
+        "notifications notifications" !important;
+    align-items: center !important;
+    justify-items: start !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0.34rem !important;
+}
+
+body:not(.control-panel-is-collapsed) .control-panel .panel-avatar-button,
+body:not(.control-panel-is-collapsed) .control-panel .panel-user-pill,
+body:not(.control-panel-is-collapsed)[data-theme] .control-panel .panel-avatar-button,
+body:not(.control-panel-is-collapsed)[data-theme] .control-panel .panel-user-pill {
+    grid-area: account !important;
+    justify-self: start !important;
+}
+
+body:not(.control-panel-is-collapsed) .control-panel .save-status--inline,
+body:not(.control-panel-is-collapsed)[data-theme] .control-panel .save-status--inline {
+    grid-area: status !important;
+    justify-self: end !important;
+    align-self: center !important;
+}
+
+body:not(.control-panel-is-collapsed) .control-panel .panel-user-info > .panel-notification-button,
+body:not(.control-panel-is-collapsed)[data-theme] .control-panel .panel-user-info > .panel-notification-button,
+body:not(.control-panel-is-collapsed)[data-theme^="console"] .control-panel .panel-user-info > .panel-notification-button,
+body:not(.control-panel-is-collapsed)[data-theme^="blueprint"] .control-panel .panel-user-info > .panel-notification-button,
+body:not(.control-panel-is-collapsed)[data-theme^="glass"] .control-panel .panel-user-info > .panel-notification-button {
+    grid-area: notifications !important;
+    justify-self: start !important;
+    align-self: start !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    width: fit-content !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     margin: 0 !important;
 }
 
@@ -6598,11 +6634,14 @@ body[data-theme^="glass"] .control-panel .sidebar-nav-card.is-active .sidebar-na
 body[data-theme^="console"] .project-card .project-card-overdue-warning,
 body[data-theme^="blueprint"] .project-card .project-card-overdue-warning,
 body[data-theme^="glass"] .project-card .project-card-overdue-warning {
+    display: inline-flex !important;
+    align-items: center !important;
     height: auto !important;
-    min-height: 1.28rem !important;
+    min-height: 1.36rem !important;
     max-height: none !important;
     overflow: visible !important;
     line-height: 1.2 !important;
+    padding-top: 0.03rem !important;
 }
 
 .project-card .project-card-overdue-icon,
@@ -6611,11 +6650,12 @@ body[data-theme^="console"] .project-card .project-card-overdue-icon,
 body[data-theme^="blueprint"] .project-card .project-card-overdue-icon,
 body[data-theme^="glass"] .project-card .project-card-overdue-icon {
     display: block !important;
-    flex: 0 0 0.98rem !important;
-    width: 0.98rem !important;
-    min-width: 0.98rem !important;
-    height: 0.98rem !important;
-    min-height: 0.98rem !important;
+    flex: 0 0 1.02rem !important;
+    width: 1.02rem !important;
+    min-width: 1.02rem !important;
+    height: 1.02rem !important;
+    min-height: 1.02rem !important;
     overflow: visible !important;
+    transform: translateY(0.04rem) !important;
 }
 
