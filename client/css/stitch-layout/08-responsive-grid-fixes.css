@@ -6792,3 +6792,37 @@ body[data-theme] .stitch-project-card .project-card-action-row .project-due-date
     z-index: 1 !important;
     pointer-events: none !important;
 }
+
+
+/* ============================================================================
+   Targeted fix: project-card set due-date icon order
+   - When a project due date is set, hide the calendar icon on card pills.
+   - For overdue project due dates, place the warning icon before DUE DATE text.
+   ============================================================================ */
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon {
+    display: none !important;
+    flex: 0 0 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon {
+    order: 0 !important;
+    margin: 0 0.08rem 0 0 !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
+    order: 1 !important;
+}
