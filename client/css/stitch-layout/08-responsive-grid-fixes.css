@@ -6660,25 +6660,25 @@ body[data-theme^="glass"] .project-card .project-card-overdue-icon {
 }
 
 /* ============================================================================
-   Targeted fix: keep preview tasks below project-card overdue text
+   Targeted fix: reserve a fixed overdue-warning row without moving previews
    ============================================================================ */
-@media (min-width: 981px) {
-    .project-card.stitch-project-card:has(.project-card-overdue-warning),
-    .stitch-project-card.project-card:has(.project-card-overdue-warning),
-    body[data-theme^="console"] .project-card.stitch-project-card:has(.project-card-overdue-warning),
-    body[data-theme^="blueprint"] .project-card.stitch-project-card:has(.project-card-overdue-warning),
-    body[data-theme^="glass"] .project-card.stitch-project-card:has(.project-card-overdue-warning) {
-        --project-card-progress-slot: 4.72rem;
-        --project-preview-row-height: 1.80rem;
-        --project-preview-row-gap: 0.30rem;
+@media (min-width: 981px) and (max-width: 1920px) and (max-height: 1200px) {
+    .project-card.stitch-project-card,
+    .stitch-project-card.project-card,
+    body[data-theme^="console"] .project-card.stitch-project-card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card,
+    body[data-theme^="glass"] .project-card.stitch-project-card {
+        --project-card-progress-slot: 4.05rem;
+        --project-preview-row-height: 1.79rem;
+        --project-preview-row-gap: 0.27rem;
     }
 
-    .project-card:has(.project-card-overdue-warning) .project-card-progress,
-    .stitch-project-card:has(.project-card-overdue-warning) .project-card-progress,
-    body[data-theme^="console"] .project-card:has(.project-card-overdue-warning) .project-card-progress,
-    body[data-theme^="blueprint"] .project-card:has(.project-card-overdue-warning) .project-card-progress,
-    body[data-theme^="glass"] .project-card:has(.project-card-overdue-warning) .project-card-progress {
-        grid-template-rows: 0.95rem 0.68rem 0.98rem 1.36rem !important;
+    .project-card .project-card-progress,
+    .stitch-project-card .project-card-progress,
+    body[data-theme^="console"] .project-card .project-card-progress,
+    body[data-theme^="blueprint"] .project-card .project-card-progress,
+    body[data-theme^="glass"] .project-card .project-card-progress {
+        grid-template-rows: 0.82rem 0.52rem 0.74rem 1.31rem !important;
         gap: 0.22rem !important;
         height: var(--project-card-progress-slot) !important;
         min-height: var(--project-card-progress-slot) !important;
@@ -6688,23 +6688,23 @@ body[data-theme^="glass"] .project-card .project-card-overdue-icon {
         z-index: 2 !important;
     }
 
-    .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
-    .stitch-project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
-    body[data-theme^="console"] .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
-    body[data-theme^="blueprint"] .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
-    body[data-theme^="glass"] .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning {
-        min-height: 1.36rem !important;
-        height: 1.36rem !important;
-        max-height: 1.36rem !important;
+    .project-card .project-card-overdue-warning,
+    .stitch-project-card .project-card-overdue-warning,
+    body[data-theme^="console"] .project-card .project-card-overdue-warning,
+    body[data-theme^="blueprint"] .project-card .project-card-overdue-warning,
+    body[data-theme^="glass"] .project-card .project-card-overdue-warning {
+        min-height: 1.31rem !important;
+        height: 1.31rem !important;
+        max-height: 1.31rem !important;
         align-self: start !important;
         overflow: visible !important;
     }
 
-    .project-card:has(.project-card-overdue-warning) .project-preview-list,
-    .stitch-project-card:has(.project-card-overdue-warning) .project-preview-list,
-    body[data-theme^="console"] .project-card:has(.project-card-overdue-warning) .project-preview-list,
-    body[data-theme^="blueprint"] .project-card:has(.project-card-overdue-warning) .project-preview-list,
-    body[data-theme^="glass"] .project-card:has(.project-card-overdue-warning) .project-preview-list {
+    .project-card .project-preview-list,
+    .stitch-project-card .project-preview-list,
+    body[data-theme^="console"] .project-card .project-preview-list,
+    body[data-theme^="blueprint"] .project-card .project-preview-list,
+    body[data-theme^="glass"] .project-card .project-preview-list {
         grid-row: 4 !important;
         margin-top: 0 !important;
         height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
@@ -6713,5 +6713,25 @@ body[data-theme^="glass"] .project-card .project-card-overdue-icon {
         position: relative !important;
         z-index: 1 !important;
     }
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon {
+    display: inline-flex !important;
+    flex: 0 0 0.92rem !important;
+    width: 0.92rem !important;
+    min-width: 0.92rem !important;
+    height: 0.92rem !important;
+    min-height: 0.92rem !important;
+    order: 0 !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
+    order: 1 !important;
 }
 
