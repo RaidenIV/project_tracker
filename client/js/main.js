@@ -1535,6 +1535,10 @@ function isTaskPriorityMenuOpen(projectId, taskId) {
     return uiState.openTaskPriorityMenu?.projectId === projectId && uiState.openTaskPriorityMenu?.taskId === taskId;
 }
 
+function isTaskActionMenuOpen(projectId, taskId) {
+    return uiState.openTaskActionMenu?.projectId === projectId && uiState.openTaskActionMenu?.taskId === taskId;
+}
+
 function isProjectPriorityMenuOpen(projectId, surface = 'modal') {
     return uiState.openProjectPriorityMenu?.projectId === projectId && uiState.openProjectPriorityMenu?.surface === surface;
 }
@@ -1545,9 +1549,11 @@ function isTaskCategoryMenuOpen(projectId, category) {
 
 function closeOpenTaskMenus({ rerender = true } = {}) {
     const priorityMenu = uiState.openTaskPriorityMenu;
+    const actionMenu = uiState.openTaskActionMenu;
     const projectPriorityMenu = uiState.openProjectPriorityMenu;
     const categoryMenu = uiState.openTaskCategoryMenu;
     uiState.openTaskPriorityMenu = null;
+    uiState.openTaskActionMenu = null;
     uiState.openProjectPriorityMenu = null;
     uiState.openTaskCategoryMenu = null;
 
@@ -1557,6 +1563,10 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
     if (priorityMenu?.projectId) {
         renderModalTaskList(priorityMenu.projectId);
         rerenderedProjects.add(priorityMenu.projectId);
+    }
+    if (actionMenu?.projectId && !rerenderedProjects.has(actionMenu.projectId)) {
+        renderModalTaskList(actionMenu.projectId);
+        rerenderedProjects.add(actionMenu.projectId);
     }
     if (categoryMenu?.projectId && !rerenderedProjects.has(categoryMenu.projectId)) {
         renderTaskCategoryControls(categoryMenu.projectId);
@@ -1570,12 +1580,14 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
 function handleTaskFloatingMenuDocumentClick(event) {
     if (
         event.target.closest('.task-priority-control') ||
+        event.target.closest('.task-action-menu-control') ||
+        event.target.closest('.task-action-menu-popover') ||
         event.target.closest('.project-priority-control') ||
         event.target.closest('.task-category-menu-button') ||
         event.target.closest('.task-category-tab-wrap') ||
         event.target.closest('.task-category-menu-popover')
     ) return;
-    if (!uiState.openTaskPriorityMenu && !uiState.openProjectPriorityMenu && !uiState.openTaskCategoryMenu) return;
+    if (!uiState.openTaskPriorityMenu && !uiState.openTaskActionMenu && !uiState.openProjectPriorityMenu && !uiState.openTaskCategoryMenu) return;
     closeOpenTaskMenus();
 }
 
@@ -1733,6 +1745,7 @@ const uiState = {
         settings: true
     },
     openTaskPriorityMenu: null,
+    openTaskActionMenu: null,
     openProjectPriorityMenu: null,
     openTaskCategoryMenu: null,
     newTaskDraft: null,
@@ -8335,7 +8348,7 @@ function suppressNextTaskClick(event) {
     function isAbove(el)   { return el.hasAttribute('data-is-above'); }
     function isToggled(el) { return el.hasAttribute('data-is-toggled'); }
     function isTaskDragIgnoredTarget(target) {
-        return !!target.closest?.('button, input, textarea, select, a, .task-bulk-select, .task-checkbox, .task-meta-controls, .task-due-date-control, .task-due-date-input, .task-priority-control, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
+        return !!target.closest?.('button, input, textarea, select, a, .task-bulk-select, .task-checkbox, .task-meta-controls, .task-due-date-control, .task-due-date-input, .task-priority-control, .task-action-menu-control, .task-action-menu-popover, .task-note-button, .delete-button, [contenteditable="true"], [role="textbox"]');
     }
     function getTaskScrollContainer() {
         const modalScroll = taskList.closest('.modal-scroll-inner');
@@ -9621,6 +9634,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
     const normalizedTask = normalizeTask(task);
     const project = state.findProject(projectId);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
+    const actionMenuOpen = isTaskActionMenuOpen(projectId, normalizedTask.id);
     const hasTaskNote = getRichTextPlainText(normalizedTask.note).length > 0;
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
     const taskOverdue = isTaskOverdue(normalizedTask);
@@ -9743,6 +9757,53 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
                 </button>
+                <div class="task-action-menu-control ${actionMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+                    <button class="task-action-menu-button"
+                            type="button"
+                            aria-label="Task actions"
+                            aria-expanded="${actionMenuOpen ? 'true' : 'false'}"
+                            onclick="toggleTaskActionMenu('${projectId}', ${normalizedTask.id}, event)">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M12 5.5h.01M12 12h.01M12 18.5h.01"></path>
+                        </svg>
+                    </button>
+                    ${actionMenuOpen ? `
+                        <div class="task-action-menu-popover" role="menu" aria-label="Task actions" onclick="event.stopPropagation();">
+                            <button class="task-action-menu-option" type="button" role="menuitem" onclick="copyTaskToClipboard('${projectId}', ${normalizedTask.id}, event); closeTaskActionMenu('${projectId}')">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>Copy Text</span>
+                            </button>
+                            <label class="task-action-menu-option task-action-menu-option--date" role="menuitem" title="${escapeHtml(dueDateLabel)}">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2.5"></rect><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                                <span>${dueDate ? `Due ${escapeHtml(visibleTaskDueDate)}` : 'Due Date'}</span>
+                                <input class="task-action-menu-date-input"
+                                       type="date"
+                                       value="${escapeHtml(dueDate)}"
+                                       aria-label="Task due date${dueDate ? `: ${escapeHtml(visibleTaskDueDate)}` : ''}"
+                                       onchange="updateTaskDueDate('${projectId}', ${normalizedTask.id}, this.value); closeTaskActionMenu('${projectId}')"
+                                       onclick="event.stopPropagation();"
+                                       onpointerdown="event.stopPropagation();">
+                            </label>
+                            <button class="task-action-menu-option" type="button" role="menuitem" onclick="closeTaskActionMenu('${projectId}', false); openTaskNoteModal('${projectId}', ${normalizedTask.id}, event); renderModalTaskList('${projectId}')">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path></svg>
+                                <span>${hasTaskNote ? 'Edit Notes' : 'Add Notes'}</span>
+                            </button>
+                            <div class="task-action-menu-label">Priority</div>
+                            <div class="task-action-priority-grid" role="group" aria-label="Set task priority">
+                                ${TASK_TAG_OPTIONS.map(option => `
+                                    <button class="task-action-priority-option ${normalizedTask.tag === option.value ? 'is-active' : ''}" type="button" onclick="selectTaskPriority('${projectId}', ${normalizedTask.id}, '${option.value}')" title="${escapeHtml(option.label)}">
+                                        <span class="task-tag-flag task-tag-flag--${option.value}" aria-hidden="true"></span>
+                                        <span>${escapeHtml(option.label)}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <button class="task-action-menu-option task-action-menu-option--danger" type="button" role="menuitem" onclick="closeTaskActionMenu('${projectId}', false); deleteTaskFromModal('${projectId}', ${normalizedTask.id})">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         </div>
     `;
@@ -10010,11 +10071,31 @@ function setProjectTaskCategoryFilter(projectId, categoryValue) {
     renderModalTaskList(projectId);
 }
 
+function toggleTaskActionMenu(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const isOpen = isTaskActionMenuOpen(projectId, taskId);
+    uiState.openTaskPriorityMenu = null;
+    uiState.openProjectPriorityMenu = null;
+    uiState.openTaskCategoryMenu = null;
+    uiState.openTaskActionMenu = isOpen ? null : { projectId, taskId };
+    renderModalTaskList(projectId);
+}
+
+function closeTaskActionMenu(projectId = null, rerender = true) {
+    const actionMenu = uiState.openTaskActionMenu;
+    uiState.openTaskActionMenu = null;
+    if (!rerender) return;
+    const nextProjectId = projectId || actionMenu?.projectId;
+    if (nextProjectId) renderModalTaskList(nextProjectId);
+}
+
 function toggleTaskPriorityMenu(projectId, taskId, event) {
     event?.stopPropagation?.();
     const isOpen = isTaskPriorityMenuOpen(projectId, taskId);
     uiState.openTaskCategoryMenu = null;
     uiState.openProjectPriorityMenu = null;
+    uiState.openTaskActionMenu = null;
     uiState.openTaskPriorityMenu = isOpen ? null : { projectId, taskId };
     renderModalTaskList(projectId);
 }
@@ -10022,6 +10103,7 @@ function toggleTaskPriorityMenu(projectId, taskId, event) {
 function selectTaskPriority(projectId, taskId, tagValue) {
     updateTaskTag(projectId, taskId, tagValue);
     uiState.openTaskPriorityMenu = null;
+    uiState.openTaskActionMenu = null;
     renderModalTaskList(projectId);
 }
 
@@ -10031,6 +10113,7 @@ function toggleTaskCategoryMenu(projectId, category, event) {
     event?.stopImmediatePropagation?.();
     const isOpen = isTaskCategoryMenuOpen(projectId, category);
     uiState.openTaskPriorityMenu = null;
+    uiState.openTaskActionMenu = null;
     uiState.openProjectPriorityMenu = null;
     uiState.openTaskCategoryMenu = isOpen ? null : { projectId, category };
     renderTaskCategoryControls(projectId);
@@ -10958,6 +11041,7 @@ function openProjectModal(projectId, options = {}) {
     setupProjectNotesTabReorder(project.id, 'modal');
 
     modal.classList.add('active');
+    document.body.classList.add('project-modal-open');
     updateUndoButton();
 
     if (options.restoreState) {
@@ -11017,6 +11101,7 @@ function toggleHideCompleted() {
 function closeProjectModal() {
     const modal = document.getElementById('projectModal');
     modal.classList.remove('active');
+    document.body.classList.remove('project-modal-open');
     clearOpenProjectModalState();
     state.clearAllTaskSelections();
     render();
@@ -12981,6 +13066,8 @@ window.toggleProjectPriorityMenu = toggleProjectPriorityMenu;
 window.selectProjectPriority = selectProjectPriority;
 window.updateTaskCategory = updateTaskCategory;
 window.setProjectTaskCategoryFilter = setProjectTaskCategoryFilter;
+window.toggleTaskActionMenu = toggleTaskActionMenu;
+window.closeTaskActionMenu = closeTaskActionMenu;
 window.toggleTaskPriorityMenu = toggleTaskPriorityMenu;
 window.selectTaskPriority = selectTaskPriority;
 window.completeTasksByCategory = completeTasksByCategory;

@@ -4346,3 +4346,365 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
     }
 }
 
+
+/* Hide the mobile-only task action menu on non-mobile layouts. */
+#projectModal .task-action-menu-control {
+    display: none !important;
+}
+
+/* ============================================================================
+   Mobile-only patch: modal toolbar hiding, task action ellipsis menu,
+   toolbar vertical alignment, and UI Options swatch cleanup
+   Date: 2026-05-22
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    body.project-modal-open .top-app-bar,
+    body.project-modal-open .panel-edge-toggle,
+    body.project-modal-open.mobile-drawer-open .top-app-bar,
+    body.project-modal-open.mobile-drawer-open .panel-edge-toggle {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    body[data-theme] .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-drawer-open .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar {
+        --mobile-toolbar-control-size: 2.34rem;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        min-height: calc(var(--mobile-toolbar-control-size) + 0.7rem + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        padding-bottom: 0.35rem !important;
+        gap: 0.42rem !important;
+    }
+
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-sidebar-open .panel-edge-toggle,
+    body.mobile-drawer-open .panel-edge-toggle {
+        top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        width: 2.34rem !important;
+        min-width: 2.34rem !important;
+        max-width: 2.34rem !important;
+        height: 2.34rem !important;
+        min-height: 2.34rem !important;
+        max-height: 2.34rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    body[data-theme] .top-app-bar-title,
+    body[data-theme] .top-app-bar > .top-app-bar-title,
+    body[data-theme] .top-app-bar .top-view-toolbar,
+    body[data-theme] .top-app-bar .view-toolbar.top-view-toolbar,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap:focus-within,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap.is-mobile-search-open,
+    body[data-theme] .top-app-bar #projectSearchInput,
+    body[data-theme] .top-app-bar .view-toolbar-search,
+    body[data-theme] .top-app-bar #projectSortSelect {
+        align-self: center !important;
+        vertical-align: middle !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body[data-theme] .top-app-bar .top-view-toolbar,
+    body[data-theme] .top-app-bar .view-toolbar.top-view-toolbar {
+        height: 2.34rem !important;
+        min-height: 2.34rem !important;
+        max-height: 2.34rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+    }
+
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap:focus-within,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap.is-mobile-search-open,
+    body[data-theme] .top-app-bar #projectSearchInput,
+    body[data-theme] .top-app-bar .view-toolbar-search,
+    body[data-theme] .top-app-bar #projectSortSelect {
+        height: 2.34rem !important;
+        min-height: 2.34rem !important;
+        max-height: 2.34rem !important;
+        line-height: 1 !important;
+    }
+
+    #projectModal .task-item,
+    body[data-theme^="console"] #projectModal .task-item,
+    body[data-theme^="glass"] #projectModal .task-item,
+    body[data-theme^="blueprint"] #projectModal .task-item {
+        grid-template-columns: auto auto auto minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-main-content,
+    body[data-theme^="console"] #projectModal .task-main-content,
+    body[data-theme^="glass"] #projectModal .task-main-content,
+    body[data-theme^="blueprint"] #projectModal .task-main-content {
+        grid-column: 4 !important;
+        min-width: 0 !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme^="console"] #projectModal .task-meta-controls,
+    body[data-theme^="glass"] #projectModal .task-meta-controls,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls {
+        grid-column: 5 !important;
+        grid-row: 1 !important;
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        width: auto !important;
+        min-width: 2.38rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+        align-self: center !important;
+        justify-self: end !important;
+    }
+
+    #projectModal .task-meta-controls > .task-copy-button,
+    #projectModal .task-meta-controls > .task-due-date-control,
+    #projectModal .task-meta-controls > .task-note-button,
+    #projectModal .task-meta-controls > .task-priority-control,
+    #projectModal .task-meta-controls > .delete-button,
+    body[data-theme^="console"] #projectModal .task-meta-controls > .task-copy-button,
+    body[data-theme^="console"] #projectModal .task-meta-controls > .task-due-date-control,
+    body[data-theme^="console"] #projectModal .task-meta-controls > .task-note-button,
+    body[data-theme^="console"] #projectModal .task-meta-controls > .task-priority-control,
+    body[data-theme^="console"] #projectModal .task-meta-controls > .delete-button,
+    body[data-theme^="glass"] #projectModal .task-meta-controls > .task-copy-button,
+    body[data-theme^="glass"] #projectModal .task-meta-controls > .task-due-date-control,
+    body[data-theme^="glass"] #projectModal .task-meta-controls > .task-note-button,
+    body[data-theme^="glass"] #projectModal .task-meta-controls > .task-priority-control,
+    body[data-theme^="glass"] #projectModal .task-meta-controls > .delete-button,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls > .task-copy-button,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls > .task-due-date-control,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls > .task-note-button,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls > .task-priority-control,
+    body[data-theme^="blueprint"] #projectModal .task-meta-controls > .delete-button {
+        display: none !important;
+    }
+
+    #projectModal .task-action-menu-control,
+    body[data-theme^="console"] #projectModal .task-action-menu-control,
+    body[data-theme^="glass"] #projectModal .task-action-menu-control,
+    body[data-theme^="blueprint"] #projectModal .task-action-menu-control {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.34rem !important;
+        min-width: 2.34rem !important;
+        height: 2.34rem !important;
+        min-height: 2.34rem !important;
+        overflow: visible !important;
+        z-index: 4 !important;
+    }
+
+    #projectModal .task-action-menu-button,
+    body[data-theme^="console"] #projectModal .task-action-menu-button,
+    body[data-theme^="glass"] #projectModal .task-action-menu-button,
+    body[data-theme^="blueprint"] #projectModal .task-action-menu-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.34rem !important;
+        height: 2.34rem !important;
+        padding: 0 !important;
+        border-radius: 0.78rem !important;
+        border: 1px solid var(--line, rgba(148, 163, 184, 0.25)) !important;
+        background: var(--surface, rgba(15, 23, 42, 0.72)) !important;
+        color: var(--heading, #f8fafc) !important;
+        box-shadow: none !important;
+    }
+
+    #projectModal .task-action-menu-control.is-open .task-action-menu-button,
+    #projectModal .task-action-menu-button:focus-visible,
+    body[data-theme^="console"] #projectModal .task-action-menu-control.is-open .task-action-menu-button,
+    body[data-theme^="console"] #projectModal .task-action-menu-button:focus-visible {
+        border-color: var(--accent, #ff8a00) !important;
+        color: var(--accent, #ff8a00) !important;
+        outline: none !important;
+    }
+
+    #projectModal .task-action-menu-button .icon,
+    #projectModal .task-action-menu-button svg {
+        width: 1.08rem !important;
+        height: 1.08rem !important;
+        stroke: currentColor !important;
+    }
+
+    #projectModal .task-action-menu-popover,
+    body[data-theme^="console"] #projectModal .task-action-menu-popover,
+    body[data-theme^="glass"] #projectModal .task-action-menu-popover,
+    body[data-theme^="blueprint"] #projectModal .task-action-menu-popover {
+        position: absolute !important;
+        top: calc(100% + 0.42rem) !important;
+        right: 0 !important;
+        z-index: 260 !important;
+        display: grid !important;
+        width: min(76vw, 17.5rem) !important;
+        min-width: 13.5rem !important;
+        gap: 0.25rem !important;
+        padding: 0.45rem !important;
+        border-radius: 1rem !important;
+        border: 1px solid var(--line, rgba(148, 163, 184, 0.26)) !important;
+        background: var(--panel, rgba(12, 13, 20, 0.98)) !important;
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.42) !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-action-menu-option,
+    #projectModal .task-action-priority-option,
+    body[data-theme^="console"] #projectModal .task-action-menu-option,
+    body[data-theme^="console"] #projectModal .task-action-priority-option,
+    body[data-theme^="glass"] #projectModal .task-action-menu-option,
+    body[data-theme^="glass"] #projectModal .task-action-priority-option,
+    body[data-theme^="blueprint"] #projectModal .task-action-menu-option,
+    body[data-theme^="blueprint"] #projectModal .task-action-priority-option {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.62rem !important;
+        width: 100% !important;
+        min-height: 2.45rem !important;
+        padding: 0.55rem 0.7rem !important;
+        border: 0 !important;
+        border-radius: 0.72rem !important;
+        background: transparent !important;
+        color: var(--heading, #f8fafc) !important;
+        font: inherit !important;
+        font-size: 0.82rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1 !important;
+        text-align: left !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-action-menu-option:hover,
+    #projectModal .task-action-menu-option:focus-visible,
+    #projectModal .task-action-priority-option:hover,
+    #projectModal .task-action-priority-option:focus-visible,
+    #projectModal .task-action-priority-option.is-active {
+        background: color-mix(in srgb, var(--accent, #ff8a00) 16%, transparent) !important;
+        color: var(--accent, #ff8a00) !important;
+        outline: none !important;
+    }
+
+    #projectModal .task-action-menu-option--danger:hover,
+    #projectModal .task-action-menu-option--danger:focus-visible {
+        color: #ff5f67 !important;
+        background: rgba(255, 95, 103, 0.12) !important;
+    }
+
+    #projectModal .task-action-menu-option .icon,
+    #projectModal .task-action-priority-option .task-tag-flag,
+    #projectModal .task-action-menu-option svg {
+        flex: 0 0 1rem !important;
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+
+    #projectModal .task-action-menu-option--date {
+        cursor: pointer !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .task-action-menu-date-input {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+        cursor: pointer !important;
+    }
+
+    #projectModal .task-action-menu-label,
+    body[data-theme^="console"] #projectModal .task-action-menu-label {
+        margin: 0.35rem 0.55rem 0.1rem !important;
+        color: var(--muted, #9ca3af) !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+    }
+
+    #projectModal .task-action-priority-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.15rem !important;
+    }
+
+    #uiOptionsModal .accent-color-grid,
+    body[data-theme] #uiOptionsModal .accent-color-grid {
+        gap: 0.9rem !important;
+        align-items: center !important;
+    }
+
+    #uiOptionsModal .accent-color-swatch,
+    body[data-theme] #uiOptionsModal .accent-color-swatch,
+    #uiOptionsModal .accent-color-swatch:hover,
+    #uiOptionsModal .accent-color-swatch:focus-visible,
+    #uiOptionsModal .accent-color-swatch.is-active,
+    body[data-theme] #uiOptionsModal .accent-color-swatch:hover,
+    body[data-theme] #uiOptionsModal .accent-color-swatch:focus-visible,
+    body[data-theme] #uiOptionsModal .accent-color-swatch.is-active {
+        width: 1.8rem !important;
+        min-width: 1.8rem !important;
+        max-width: 1.8rem !important;
+        height: 1.8rem !important;
+        min-height: 1.8rem !important;
+        max-height: 1.8rem !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        transform: none !important;
+    }
+
+    #uiOptionsModal .accent-color-swatch span,
+    body[data-theme] #uiOptionsModal .accent-color-swatch span,
+    #uiOptionsModal .accent-color-swatch.is-active span,
+    body[data-theme] #uiOptionsModal .accent-color-swatch.is-active span {
+        width: 1.8rem !important;
+        height: 1.8rem !important;
+        border-radius: 999px !important;
+        background: var(--swatch-color) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    #uiOptionsModal .accent-color-swatch.is-active span,
+    body[data-theme] #uiOptionsModal .accent-color-swatch.is-active span {
+        transform: scale(1.08) !important;
+    }
+}
