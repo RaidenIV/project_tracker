@@ -7437,7 +7437,7 @@ function setProjectCardSortMode(sortMode, persist = true) {
 
 function syncViewTitle() {
     if (state.getView() === VIEWS.ARCHIVED) {
-        setViewTitle('Archived Projects');
+        setViewTitle('Archived');
     } else if (state.getView() === VIEWS.COMPLETED) {
         setViewTitle('Completed Projects');
     } else if (uiState.ownerFilter === 'shared') {
@@ -7465,6 +7465,16 @@ function setSidebarProjectsNav(activeId) {
     });
 }
 
+function syncSidebarProjectsNavFromView() {
+    const activeIdByCategory = {
+        active: 'activeProjectsCard',
+        shared: 'sharedProjectsCard',
+        completed: 'completedProjectsCard',
+        archived: 'archivedProjectsMoreBtn'
+    };
+    setSidebarProjectsNav(activeIdByCategory[getCurrentProjectCategoryValue()] || 'activeProjectsCard');
+}
+
 function switchToActiveView() {
     // Reset the internal view filter so clicking "Active" after "Shared"
     // shows all active projects.
@@ -7488,7 +7498,7 @@ function switchToArchivedView() {
     uiState.activeSavedViewId = '';
     state.setView(VIEWS.ARCHIVED);
     setSidebarProjectsNav('archivedProjectsMoreBtn');
-    setViewTitle('Archived Projects');
+    setViewTitle('Archived');
     render();
 }
 
@@ -9590,10 +9600,10 @@ function renderProjectDueDateControlMarkup(project, surface = 'card') {
                onclick="event.stopPropagation();"
                onpointerdown="event.stopPropagation();">
             ${overdue ? renderWarningTriangleIcon('project-due-overdue-icon') : ''}
-            <svg class="project-due-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            ${!dueDate ? `<svg class="project-due-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
-            </svg>
+            </svg>` : ''}
             ${dueDate ? `<span class="project-due-date-value" aria-hidden="true">${escapeHtml(visibleDueDateLabel)}</span>` : ''}
             <input class="project-due-date-input"
                    id="project-due-${safeSurface}-${projectId}"
@@ -11459,7 +11469,7 @@ function getCommandPaletteActions() {
         { id: 'new-project', title: 'Create new project', copy: 'Add a project and open it immediately.', run: () => addProject() },
         { id: 'view-active', title: 'Switch to Active Projects', copy: 'Show active projects.', run: () => switchToActiveView() },
         { id: 'view-completed', title: 'Switch to Completed Projects', copy: 'Show completed projects.', run: () => switchToCompletedView() },
-        { id: 'view-archived', title: 'Switch to Archived Projects', copy: 'Show archived projects.', run: () => switchToArchivedView() },
+        { id: 'view-archived', title: 'Switch to Archived', copy: 'Show archived projects.', run: () => switchToArchivedView() },
         { id: 'toggle-panel', title: 'Toggle control panel', copy: 'Collapse or expand the side panel.', run: () => {
             document.getElementById('panelEdgeToggle')?.click();
         } },
@@ -11805,6 +11815,7 @@ function render() {
 
     runRenderStep('total completion', updateTotalCompletion);
     runRenderStep('view title', syncViewTitle);
+    runRenderStep('sidebar project nav', syncSidebarProjectsNavFromView);
     runRenderStep('shared projects panel', renderSharedProjectsPanel);
     runRenderStep('archived projects panel', renderArchivedProjectsPanel);
     runRenderStep('leaderboard panel', renderLeaderboardPanel);
