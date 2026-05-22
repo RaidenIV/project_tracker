@@ -6659,3 +6659,59 @@ body[data-theme^="glass"] .project-card .project-card-overdue-icon {
     transform: translateY(0.04rem) !important;
 }
 
+/* ============================================================================
+   Targeted fix: keep preview tasks below project-card overdue text
+   ============================================================================ */
+@media (min-width: 981px) {
+    .project-card.stitch-project-card:has(.project-card-overdue-warning),
+    .stitch-project-card.project-card:has(.project-card-overdue-warning),
+    body[data-theme^="console"] .project-card.stitch-project-card:has(.project-card-overdue-warning),
+    body[data-theme^="blueprint"] .project-card.stitch-project-card:has(.project-card-overdue-warning),
+    body[data-theme^="glass"] .project-card.stitch-project-card:has(.project-card-overdue-warning) {
+        --project-card-progress-slot: 4.72rem;
+        --project-preview-row-height: 1.80rem;
+        --project-preview-row-gap: 0.30rem;
+    }
+
+    .project-card:has(.project-card-overdue-warning) .project-card-progress,
+    .stitch-project-card:has(.project-card-overdue-warning) .project-card-progress,
+    body[data-theme^="console"] .project-card:has(.project-card-overdue-warning) .project-card-progress,
+    body[data-theme^="blueprint"] .project-card:has(.project-card-overdue-warning) .project-card-progress,
+    body[data-theme^="glass"] .project-card:has(.project-card-overdue-warning) .project-card-progress {
+        grid-template-rows: 0.95rem 0.68rem 0.98rem 1.36rem !important;
+        gap: 0.22rem !important;
+        height: var(--project-card-progress-slot) !important;
+        min-height: var(--project-card-progress-slot) !important;
+        max-height: var(--project-card-progress-slot) !important;
+        overflow: visible !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
+    .stitch-project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
+    body[data-theme^="console"] .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
+    body[data-theme^="blueprint"] .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning,
+    body[data-theme^="glass"] .project-card:has(.project-card-overdue-warning) .project-card-overdue-warning {
+        min-height: 1.36rem !important;
+        height: 1.36rem !important;
+        max-height: 1.36rem !important;
+        align-self: start !important;
+        overflow: visible !important;
+    }
+
+    .project-card:has(.project-card-overdue-warning) .project-preview-list,
+    .stitch-project-card:has(.project-card-overdue-warning) .project-preview-list,
+    body[data-theme^="console"] .project-card:has(.project-card-overdue-warning) .project-preview-list,
+    body[data-theme^="blueprint"] .project-card:has(.project-card-overdue-warning) .project-preview-list,
+    body[data-theme^="glass"] .project-card:has(.project-card-overdue-warning) .project-preview-list {
+        grid-row: 4 !important;
+        margin-top: 0 !important;
+        height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+        min-height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+        max-height: calc((var(--project-preview-row-height) * 3) + (var(--project-preview-row-gap) * 2)) !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+}
+
