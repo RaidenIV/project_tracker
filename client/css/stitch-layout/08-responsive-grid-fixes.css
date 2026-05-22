@@ -6563,3 +6563,59 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
         display: none !important;
     }
 }
+
+/* ============================================================================
+   Targeted fix: sidebar notification placement, active workspace text, and
+   project-card overdue icon clipping
+   ============================================================================ */
+.control-panel .panel-user-info > .panel-notification-button,
+body[data-theme] .control-panel .panel-user-info > .panel-notification-button,
+body[data-theme^="console"] .control-panel .panel-user-info > .panel-notification-button,
+body[data-theme^="blueprint"] .control-panel .panel-user-info > .panel-notification-button,
+body[data-theme^="glass"] .control-panel .panel-user-info > .panel-notification-button {
+    align-self: flex-start !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+.control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+}
+
+.project-card .project-card-overdue-warning,
+.stitch-project-card .project-card-overdue-warning,
+body[data-theme^="console"] .project-card .project-card-overdue-warning,
+body[data-theme^="blueprint"] .project-card .project-card-overdue-warning,
+body[data-theme^="glass"] .project-card .project-card-overdue-warning {
+    height: auto !important;
+    min-height: 1.28rem !important;
+    max-height: none !important;
+    overflow: visible !important;
+    line-height: 1.2 !important;
+}
+
+.project-card .project-card-overdue-icon,
+.stitch-project-card .project-card-overdue-icon,
+body[data-theme^="console"] .project-card .project-card-overdue-icon,
+body[data-theme^="blueprint"] .project-card .project-card-overdue-icon,
+body[data-theme^="glass"] .project-card .project-card-overdue-icon {
+    display: block !important;
+    flex: 0 0 0.98rem !important;
+    width: 0.98rem !important;
+    min-width: 0.98rem !important;
+    height: 0.98rem !important;
+    min-height: 0.98rem !important;
+    overflow: visible !important;
+}
+
