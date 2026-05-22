@@ -7284,3 +7284,161 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         flex-basis: 1.35rem !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: toolbar search width, hamburger balance, and fixed card footer
+   Date: 2026-05-22
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme] .container .top-app-bar,
+    html body[data-theme^="console"] .container .top-app-bar,
+    html body[data-theme^="glass"] .container .top-app-bar,
+    html body[data-theme^="blueprint"] .container .top-app-bar {
+        --mobile-toolbar-control-size: 2.34rem;
+        --mobile-toolbar-vertical-pad: 0.505rem;
+        align-items: center !important;
+    }
+
+    html body[data-theme] .panel-edge-toggle,
+    html body[data-theme]:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    html body[data-theme].control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme].mobile-sidebar-open .panel-edge-toggle,
+    html body[data-theme].mobile-drawer-open .panel-edge-toggle {
+        top: calc(var(--mobile-toolbar-vertical-pad, 0.505rem) + env(safe-area-inset-top, 0px)) !important;
+        height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .panel-edge-toggle svg,
+    html body[data-theme] .panel-edge-toggle .icon {
+        display: block !important;
+        margin: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    html body[data-theme] .container .top-app-bar .top-view-toolbar,
+    html body[data-theme] .container .top-app-bar .view-toolbar.top-view-toolbar,
+    html body[data-theme^="console"] .container .top-app-bar .top-view-toolbar,
+    html body[data-theme^="glass"] .container .top-app-bar .top-view-toolbar,
+    html body[data-theme^="blueprint"] .container .top-app-bar .top-view-toolbar {
+        grid-template-columns: minmax(0, 1fr) clamp(4.85rem, 24vw, 5.95rem) !important;
+        justify-content: start !important;
+        align-items: center !important;
+    }
+
+    html body[data-theme] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
+    html body[data-theme] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    html body[data-theme] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open,
+    html body[data-theme^="console"] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
+    html body[data-theme^="glass"] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
+    html body[data-theme^="blueprint"] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap {
+        justify-self: start !important;
+        width: 75% !important;
+        max-width: 75% !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card.stitch-project-card,
+    html body[data-theme] .container .viewport .stitch-project-card.project-card,
+    html body[data-theme^="console"] .container .viewport .project-card.stitch-project-card,
+    html body[data-theme^="glass"] .container .viewport .project-card.stitch-project-card,
+    html body[data-theme^="blueprint"] .container .viewport .project-card.stitch-project-card {
+        position: relative !important;
+        --mobile-project-card-footer-x: clamp(1.05rem, 4.4vw, 1.55rem);
+        --mobile-project-card-footer-y: clamp(1.05rem, 4.2vw, 1.45rem);
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-footer,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-footer,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-footer,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-footer,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-footer {
+        position: absolute !important;
+        left: var(--mobile-project-card-footer-x, 1.2rem) !important;
+        right: var(--mobile-project-card-footer-x, 1.2rem) !important;
+        bottom: var(--mobile-project-card-footer-y, 1.25rem) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-rows: minmax(2.72rem, auto) !important;
+        align-items: center !important;
+        align-content: center !important;
+        column-gap: 0.85rem !important;
+        row-gap: 0 !important;
+        width: auto !important;
+        min-height: 2.72rem !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+        z-index: 2 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-footer-left,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-footer-left {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: start !important;
+        align-self: center !important;
+        justify-content: flex-start !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-meta,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-meta,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-meta,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-meta,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-meta {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
+        align-self: center !important;
+        justify-content: flex-end !important;
+        min-width: max-content !important;
+        margin: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-access,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-access,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-access {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-height: 2.72rem !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-status,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-status,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-status {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 2.72rem !important;
+        height: 2.72rem !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+    }
+}
