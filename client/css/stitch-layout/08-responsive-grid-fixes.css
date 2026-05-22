@@ -6801,7 +6801,8 @@ body[data-theme] .stitch-project-card .project-card-action-row .project-due-date
     height: 0.78rem !important;
     min-height: 0.78rem !important;
     margin: 0 0 0 0.04rem !important;
-    color: #ef4444 !important;
+    color: var(--accent, #ff8a00) !important;
+    stroke: var(--accent, #ff8a00) !important;
     background: transparent !important;
     border-radius: 0 !important;
     transform: translateY(0.01rem) !important;
@@ -6842,3 +6843,101 @@ body[data-theme] .project-card .project-card-action-row .project-due-date-contro
 body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
     order: 1 !important;
 }
+
+
+/* ============================================================================
+   Targeted fix: accent-colored project due-date warning icon
+   - Uses the active UI accent color for overdue project due-date warning icons.
+   ============================================================================ */
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon {
+    color: var(--accent, #ff8a00) !important;
+    stroke: var(--accent, #ff8a00) !important;
+}
+
+/* ============================================================================
+   Targeted fix: active sidebar project type icon/text + due-date warning accent
+   - Keeps the selected project type label and icon on the active accent color.
+   - Forces the overdue project due-date warning SVG paths to inherit the accent.
+   ============================================================================ */
+.control-panel .sidebar-nav-card.active .sidebar-nav-card-icon,
+.control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon,
+.control-panel .sidebar-nav-card.active .sidebar-nav-card-icon *,
+.control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon *,
+.control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+.control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon,
+body[data-theme] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon,
+body[data-theme] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon *,
+body[data-theme] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon *,
+body[data-theme] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon *,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon *,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="console"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon *,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon *,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="blueprint"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon *,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon *,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.active .sidebar-nav-card-label,
+body[data-theme^="glass"] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-label {
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    stroke: var(--accent, #ff8a00) !important;
+}
+
+.control-panel .sidebar-nav-card.active .sidebar-nav-card-icon--shared,
+.control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon--shared,
+body[data-theme] .control-panel .sidebar-nav-card.active .sidebar-nav-card-icon--shared,
+body[data-theme] .control-panel .sidebar-nav-card.is-active .sidebar-nav-card-icon--shared {
+    background-color: var(--accent, #ff8a00) !important;
+}
+
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.active,
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active,
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.active .collapsed-sidebar-icon,
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active .collapsed-sidebar-icon,
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.active .collapsed-sidebar-icon *,
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active .collapsed-sidebar-icon *,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.active,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.active .collapsed-sidebar-icon,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active .collapsed-sidebar-icon,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.active .collapsed-sidebar-icon *,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active .collapsed-sidebar-icon * {
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    stroke: var(--accent, #ff8a00) !important;
+}
+
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.active .collapsed-sidebar-icon--shared,
+body.control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active .collapsed-sidebar-icon--shared,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.active .collapsed-sidebar-icon--shared,
+body[data-theme].control-panel-is-collapsed .collapsed-sidebar-workspace-button.is-active .collapsed-sidebar-icon--shared {
+    background-color: var(--accent, #ff8a00) !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon *,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon *,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon *,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon * {
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    stroke: var(--accent, #ff8a00) !important;
+}
+
