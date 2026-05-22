@@ -4065,3 +4065,284 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
         margin-bottom: 0 !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: card warning visibility, toolbar equal-height controls,
+   larger card titles, and matched UI toggles
+   Date: 2026-05-22
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-sidebar-open .panel-edge-toggle {
+        top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        left: 0.5rem !important;
+        bottom: auto !important;
+        width: 2.28rem !important;
+        min-width: 2.28rem !important;
+        max-width: 2.28rem !important;
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        max-height: 2.28rem !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        align-items: center !important;
+        justify-content: center !important;
+        align-self: center !important;
+    }
+
+    body.mobile-drawer-open .panel-edge-toggle,
+    body.mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle {
+        width: 2.28rem !important;
+        min-width: 2.28rem !important;
+        max-width: 2.28rem !important;
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        max-height: 2.28rem !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body[data-theme] .top-app-bar,
+    body[data-theme] .top-view-toolbar,
+    body[data-theme] .view-toolbar.top-view-toolbar,
+    body[data-theme].control-panel-is-collapsed .top-app-bar,
+    body[data-theme].mobile-drawer-open .top-app-bar,
+    body[data-theme].mobile-sidebar-open .top-app-bar {
+        align-items: center !important;
+    }
+
+    body[data-theme] .top-app-bar .top-view-toolbar,
+    body[data-theme] .top-app-bar .view-toolbar.top-view-toolbar,
+    body[data-theme].control-panel-is-collapsed .top-app-bar .top-view-toolbar,
+    body[data-theme].mobile-drawer-open .top-app-bar .top-view-toolbar,
+    body[data-theme].mobile-sidebar-open .top-app-bar .top-view-toolbar {
+        align-self: center !important;
+        align-items: center !important;
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        max-height: 2.28rem !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open,
+    body[data-theme] .top-app-bar .top-view-toolbar #projectSortSelect,
+    body[data-theme] .top-app-bar .top-view-toolbar #projectSearchInput,
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search {
+        height: 2.28rem !important;
+        min-height: 2.28rem !important;
+        max-height: 2.28rem !important;
+        align-self: center !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .stitch-project-card .project-title,
+    .project-card .project-title,
+    body[data-theme^="console"] .stitch-project-card .project-title,
+    body[data-theme^="console"] .project-card .project-title,
+    body[data-theme^="glass"] .stitch-project-card .project-title,
+    body[data-theme^="glass"] .project-card .project-title,
+    body[data-theme^="blueprint"] .stitch-project-card .project-title,
+    body[data-theme^="blueprint"] .project-card .project-title {
+        font-size: clamp(1.38rem, 5.8vw, 1.72rem) !important;
+        line-height: 1.08 !important;
+        letter-spacing: 0.015em !important;
+    }
+
+    .project-card.stitch-project-card,
+    .stitch-project-card.project-card,
+    body[data-theme^="console"] .project-card.stitch-project-card,
+    body[data-theme^="blueprint"] .project-card.stitch-project-card,
+    body[data-theme^="glass"] .project-card.stitch-project-card {
+        --project-card-title-slot: 3.1rem;
+        --project-card-header-slot: 6.05rem;
+        --project-card-progress-slot: 5.05rem;
+    }
+
+    .project-card .project-card-progress,
+    .stitch-project-card .project-card-progress,
+    body[data-theme^="console"] .project-card .project-card-progress,
+    body[data-theme^="blueprint"] .project-card .project-card-progress,
+    body[data-theme^="glass"] .project-card .project-card-progress {
+        grid-template-rows: 1rem 0.72rem 1.05rem 1.36rem !important;
+        gap: 0.28rem !important;
+        min-height: var(--project-card-progress-slot) !important;
+        height: var(--project-card-progress-slot) !important;
+        max-height: var(--project-card-progress-slot) !important;
+        overflow: visible !important;
+    }
+
+    .project-card .project-card-overdue-warning,
+    .stitch-project-card .project-card-overdue-warning,
+    body[data-theme^="console"] .project-card .project-card-overdue-warning,
+    body[data-theme^="blueprint"] .project-card .project-card-overdue-warning,
+    body[data-theme^="glass"] .project-card .project-card-overdue-warning {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.35rem !important;
+        min-height: 1.36rem !important;
+        height: 1.36rem !important;
+        max-height: 1.36rem !important;
+        margin: 0 !important;
+        padding: 0.08rem 0 0 !important;
+        overflow: visible !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        color: var(--accent, #ff8a00) !important;
+        -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    }
+
+    .project-card .project-card-overdue-warning span,
+    .stitch-project-card .project-card-overdue-warning span {
+        display: inline-block !important;
+        min-width: max-content !important;
+        overflow: visible !important;
+        line-height: 1 !important;
+    }
+
+    .project-card .project-card-overdue-icon,
+    .stitch-project-card .project-card-overdue-icon,
+    body[data-theme^="console"] .project-card .project-card-overdue-icon,
+    body[data-theme^="blueprint"] .project-card .project-card-overdue-icon,
+    body[data-theme^="glass"] .project-card .project-card-overdue-icon {
+        width: 0.9rem !important;
+        height: 0.9rem !important;
+        flex: 0 0 0.9rem !important;
+        overflow: visible !important;
+        color: var(--accent, #ff8a00) !important;
+        stroke: var(--accent, #ff8a00) !important;
+    }
+
+    #uiOptionsModal {
+        --mobile-options-toggle-width: clamp(6.8rem, 31vw, 9.6rem);
+        --mobile-options-toggle-height: clamp(2.35rem, 7.8vw, 3rem);
+        --mobile-options-toggle-padding: 0.25rem;
+    }
+
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle,
+    #projectTaskPreviewToggleBtn.ui-options-switch,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch {
+        position: relative !important;
+        display: inline-flex !important;
+        width: var(--mobile-options-toggle-width) !important;
+        min-width: var(--mobile-options-toggle-width) !important;
+        max-width: var(--mobile-options-toggle-width) !important;
+        height: var(--mobile-options-toggle-height) !important;
+        min-height: var(--mobile-options-toggle-height) !important;
+        max-height: var(--mobile-options-toggle-height) !important;
+        padding: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--accent, #ff8a00) 48%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+        border-radius: 999px !important;
+        background: var(--surface, rgba(127, 127, 127, 0.1)) !important;
+        box-shadow: var(--inset-shadow, none) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle-track,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle-track {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        align-items: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: var(--mobile-options-toggle-padding) !important;
+        border-radius: inherit !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle-option,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle-option {
+        position: relative !important;
+        z-index: 2 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+    }
+
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle-thumb,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle-thumb,
+    #projectTaskPreviewToggleBtn .ui-options-switch-thumb,
+    body[data-theme] #projectTaskPreviewToggleBtn .ui-options-switch-thumb {
+        position: absolute !important;
+        top: var(--mobile-options-toggle-padding) !important;
+        left: var(--mobile-options-toggle-padding) !important;
+        width: calc((100% - (var(--mobile-options-toggle-padding) * 2)) / 2) !important;
+        height: calc(100% - (var(--mobile-options-toggle-padding) * 2)) !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: var(--accent, #ff8a00) !important;
+        box-shadow: 0 0 14px color-mix(in srgb, var(--accent, #ff8a00) 24%, transparent) !important;
+        transform: translateX(0) !important;
+        transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s ease !important;
+        z-index: 1 !important;
+    }
+
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb,
+    #projectTaskPreviewToggleBtn.ui-options-switch.is-active .ui-options-switch-thumb,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch.is-active .ui-options-switch-thumb {
+        transform: translateX(100%) !important;
+    }
+
+    #projectTaskPreviewToggleBtn.ui-options-switch::before,
+    #projectTaskPreviewToggleBtn.ui-options-switch::after,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch::before,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch::after {
+        position: relative !important;
+        z-index: 2 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 1 1 50% !important;
+        height: 100% !important;
+        color: var(--muted, currentColor) !important;
+        font-size: clamp(0.62rem, 2.2vw, 0.78rem) !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+        pointer-events: none !important;
+    }
+
+    #projectTaskPreviewToggleBtn.ui-options-switch::before,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch::before {
+        content: "Off" !important;
+    }
+
+    #projectTaskPreviewToggleBtn.ui-options-switch::after,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch::after {
+        content: "On" !important;
+    }
+
+    #projectTaskPreviewToggleBtn.ui-options-switch:not(.is-active)::before,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch:not(.is-active)::before,
+    #projectTaskPreviewToggleBtn.ui-options-switch.is-active::after,
+    body[data-theme] #projectTaskPreviewToggleBtn.ui-options-switch.is-active::after,
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light,
+    #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-option--dark,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle:not(.is-dark) .color-mode-toggle-option--light,
+    body[data-theme] #uiOptionsModal .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-option--dark {
+        color: var(--panel, var(--surface, #fff)) !important;
+        -webkit-text-fill-color: var(--panel, var(--surface, #fff)) !important;
+    }
+}
+
