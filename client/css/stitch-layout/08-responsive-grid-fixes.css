@@ -6941,3 +6941,76 @@ body[data-theme] .stitch-project-card .project-card-action-row .project-due-date
     stroke: var(--accent, #ff8a00) !important;
 }
 
+/* ============================================================================
+   Targeted fix: selected project type sidebar count accent
+   - Keeps the selected ACTIVE, SHARED, COMPLETED, or ARCHIVED sidebar button's
+     label, number, and icon on the active UI accent color.
+   ============================================================================ */
+#activeProjectsCard.active .sidebar-nav-card-icon,
+#activeProjectsCard.is-active .sidebar-nav-card-icon,
+#activeProjectsCard.active .sidebar-nav-card-icon *,
+#activeProjectsCard.is-active .sidebar-nav-card-icon *,
+#activeProjectsCard.active .sidebar-nav-card-label,
+#activeProjectsCard.is-active .sidebar-nav-card-label,
+#activeProjectsCard.active .sidebar-nav-card-count,
+#activeProjectsCard.is-active .sidebar-nav-card-count,
+#sharedProjectsCard.active .sidebar-nav-card-label,
+#sharedProjectsCard.is-active .sidebar-nav-card-label,
+#sharedProjectsCard.active .sidebar-nav-card-count,
+#sharedProjectsCard.is-active .sidebar-nav-card-count,
+#completedProjectsCard.active .sidebar-nav-card-icon,
+#completedProjectsCard.is-active .sidebar-nav-card-icon,
+#completedProjectsCard.active .sidebar-nav-card-icon *,
+#completedProjectsCard.is-active .sidebar-nav-card-icon *,
+#completedProjectsCard.active .sidebar-nav-card-label,
+#completedProjectsCard.is-active .sidebar-nav-card-label,
+#completedProjectsCard.active .sidebar-nav-card-count,
+#completedProjectsCard.is-active .sidebar-nav-card-count,
+#archivedProjectsMoreBtn.active .sidebar-nav-card-icon,
+#archivedProjectsMoreBtn.is-active .sidebar-nav-card-icon,
+#archivedProjectsMoreBtn.active .sidebar-nav-card-icon *,
+#archivedProjectsMoreBtn.is-active .sidebar-nav-card-icon *,
+#archivedProjectsMoreBtn.active .sidebar-nav-card-label,
+#archivedProjectsMoreBtn.is-active .sidebar-nav-card-label,
+#archivedProjectsMoreBtn.active .sidebar-nav-card-count,
+#archivedProjectsMoreBtn.is-active .sidebar-nav-card-count,
+body[data-theme] #activeProjectsCard.active .sidebar-nav-card-icon,
+body[data-theme] #activeProjectsCard.is-active .sidebar-nav-card-icon,
+body[data-theme] #activeProjectsCard.active .sidebar-nav-card-icon *,
+body[data-theme] #activeProjectsCard.is-active .sidebar-nav-card-icon *,
+body[data-theme] #activeProjectsCard.active .sidebar-nav-card-label,
+body[data-theme] #activeProjectsCard.is-active .sidebar-nav-card-label,
+body[data-theme] #activeProjectsCard.active .sidebar-nav-card-count,
+body[data-theme] #activeProjectsCard.is-active .sidebar-nav-card-count,
+body[data-theme] #sharedProjectsCard.active .sidebar-nav-card-label,
+body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-label,
+body[data-theme] #sharedProjectsCard.active .sidebar-nav-card-count,
+body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-count,
+body[data-theme] #completedProjectsCard.active .sidebar-nav-card-icon,
+body[data-theme] #completedProjectsCard.is-active .sidebar-nav-card-icon,
+body[data-theme] #completedProjectsCard.active .sidebar-nav-card-icon *,
+body[data-theme] #completedProjectsCard.is-active .sidebar-nav-card-icon *,
+body[data-theme] #completedProjectsCard.active .sidebar-nav-card-label,
+body[data-theme] #completedProjectsCard.is-active .sidebar-nav-card-label,
+body[data-theme] #completedProjectsCard.active .sidebar-nav-card-count,
+body[data-theme] #completedProjectsCard.is-active .sidebar-nav-card-count,
+body[data-theme] #archivedProjectsMoreBtn.active .sidebar-nav-card-icon,
+body[data-theme] #archivedProjectsMoreBtn.is-active .sidebar-nav-card-icon,
+body[data-theme] #archivedProjectsMoreBtn.active .sidebar-nav-card-icon *,
+body[data-theme] #archivedProjectsMoreBtn.is-active .sidebar-nav-card-icon *,
+body[data-theme] #archivedProjectsMoreBtn.active .sidebar-nav-card-label,
+body[data-theme] #archivedProjectsMoreBtn.is-active .sidebar-nav-card-label,
+body[data-theme] #archivedProjectsMoreBtn.active .sidebar-nav-card-count,
+body[data-theme] #archivedProjectsMoreBtn.is-active .sidebar-nav-card-count {
+    color: var(--accent, #ff8a00) !important;
+    -webkit-text-fill-color: var(--accent, #ff8a00) !important;
+    stroke: var(--accent, #ff8a00) !important;
+}
+
+#sharedProjectsCard.active .sidebar-nav-card-icon--shared,
+#sharedProjectsCard.is-active .sidebar-nav-card-icon--shared,
+body[data-theme] #sharedProjectsCard.active .sidebar-nav-card-icon--shared,
+body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
+    background-color: var(--accent, #ff8a00) !important;
+}
+
