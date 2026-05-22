@@ -6735,3 +6735,60 @@ body[data-theme] .stitch-project-card .project-card-action-row .project-due-date
     order: 1 !important;
 }
 
+
+
+/* ============================================================================
+   Targeted fix: project-card due-date overdue badge placement
+   - Keeps the calendar icon before the DUE DATE text.
+   - Moves the overdue project-date badge into the due-date pill flow so it
+     cannot clip against the pill edge or overlap the card padding.
+   ============================================================================ */
+.project-card .project-card-action-row,
+.stitch-project-card .project-card-action-row,
+body[data-theme] .project-card .project-card-action-row,
+body[data-theme] .stitch-project-card .project-card-action-row {
+    overflow: visible !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date {
+    overflow: visible !important;
+    gap: 0.34rem !important;
+    padding-right: 0.48rem !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-icon {
+    order: 0 !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
+    order: 1 !important;
+}
+
+.project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+.stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+body[data-theme] .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon {
+    position: static !important;
+    order: 2 !important;
+    flex: 0 0 0.78rem !important;
+    width: 0.78rem !important;
+    min-width: 0.78rem !important;
+    height: 0.78rem !important;
+    min-height: 0.78rem !important;
+    margin: 0 0 0 0.04rem !important;
+    color: #ef4444 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    transform: translateY(0.01rem) !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
