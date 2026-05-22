@@ -4708,3 +4708,265 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
         transform: scale(1.08) !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: toolbar sort restore, title sync placement, swatch ring,
+   and modal task sort alignment
+   Date: 2026-05-22
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    body[data-theme] .top-app-bar,
+    body[data-theme^="console"] .top-app-bar,
+    body[data-theme^="glass"] .top-app-bar,
+    body[data-theme^="blueprint"] .top-app-bar,
+    body.control-panel-is-collapsed .top-app-bar,
+    body.mobile-drawer-open .top-app-bar,
+    body.mobile-sidebar-open .top-app-bar {
+        --mobile-toolbar-control-size: 2.34rem;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        min-height: calc(var(--mobile-toolbar-control-size) + 0.7rem + env(safe-area-inset-top, 0px)) !important;
+        padding-top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        padding-bottom: 0.35rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .panel-edge-toggle,
+    body:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    body.control-panel-is-collapsed .panel-edge-toggle,
+    body.mobile-sidebar-open .panel-edge-toggle,
+    body.mobile-drawer-open .panel-edge-toggle {
+        top: calc(0.35rem + env(safe-area-inset-top, 0px)) !important;
+        width: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-width: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-width: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        box-sizing: border-box !important;
+    }
+
+    body[data-theme] .top-app-bar .top-view-toolbar,
+    body[data-theme] .top-app-bar .view-toolbar.top-view-toolbar,
+    body[data-theme].control-panel-is-collapsed .top-app-bar .top-view-toolbar,
+    body[data-theme].mobile-drawer-open .top-app-bar .top-view-toolbar,
+    body[data-theme].mobile-sidebar-open .top-app-bar .top-view-toolbar {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        align-self: center !important;
+        height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        gap: 0.34rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap:focus-within,
+    body[data-theme] .top-app-bar .view-toolbar-search-wrap.is-mobile-search-open,
+    body[data-theme] .top-app-bar #projectSearchInput,
+    body[data-theme] .top-app-bar .view-toolbar-search,
+    body[data-theme] .top-app-bar #projectSortSelect,
+    body[data-theme] .top-app-bar .view-toolbar-select#projectSortSelect {
+        align-self: center !important;
+        height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        line-height: 1 !important;
+        box-sizing: border-box !important;
+    }
+
+    body[data-theme] .top-app-bar #projectSortSelect,
+    body[data-theme] .top-app-bar .view-toolbar-select#projectSortSelect,
+    body[data-theme^="console"] .top-app-bar #projectSortSelect,
+    body[data-theme^="glass"] .top-app-bar #projectSortSelect,
+    body[data-theme^="blueprint"] .top-app-bar #projectSortSelect {
+        order: 2 !important;
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        flex: 0 0 clamp(4.65rem, 22vw, 6.15rem) !important;
+        width: clamp(4.65rem, 22vw, 6.15rem) !important;
+        min-width: clamp(4.65rem, 22vw, 6.15rem) !important;
+        max-width: clamp(4.65rem, 22vw, 6.15rem) !important;
+        padding: 0 1.15rem 0 0.5rem !important;
+        vertical-align: middle !important;
+    }
+
+    .project-card .project-title-container,
+    .stitch-project-card .project-title-container,
+    body[data-theme^="console"] .project-card .project-title-container,
+    body[data-theme^="glass"] .project-card .project-title-container,
+    body[data-theme^="blueprint"] .project-card .project-title-container {
+        display: block !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    .project-card .project-card-title-stack,
+    .stitch-project-card .project-card-title-stack,
+    body[data-theme^="console"] .project-card .project-card-title-stack,
+    body[data-theme^="glass"] .project-card .project-card-title-stack,
+    body[data-theme^="blueprint"] .project-card .project-card-title-stack {
+        display: grid !important;
+        grid-template-rows: auto auto !important;
+        align-items: start !important;
+        justify-items: start !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    .project-card .project-title,
+    .stitch-project-card .project-title,
+    body[data-theme^="console"] .project-card .project-title,
+    body[data-theme^="glass"] .project-card .project-title,
+    body[data-theme^="blueprint"] .project-card .project-title {
+        grid-row: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .project-card .project-sync-text,
+    .stitch-project-card .project-sync-text,
+    .project-card-title-stack .project-sync-text,
+    body[data-theme^="console"] .project-card .project-sync-text,
+    body[data-theme^="glass"] .project-card .project-sync-text,
+    body[data-theme^="blueprint"] .project-card .project-sync-text {
+        grid-row: 2 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: clamp(0.64rem, 2.35vw, 0.78rem) !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #uiOptionsModal .accent-color-grid,
+    body[data-theme] #uiOptionsModal .accent-color-grid {
+        align-items: center !important;
+        justify-items: center !important;
+        gap: 0.9rem !important;
+    }
+
+    #uiOptionsModal .accent-color-swatch,
+    body[data-theme] #uiOptionsModal .accent-color-swatch,
+    #uiOptionsModal .accent-color-swatch:hover,
+    #uiOptionsModal .accent-color-swatch:focus-visible,
+    body[data-theme] #uiOptionsModal .accent-color-swatch:hover,
+    body[data-theme] #uiOptionsModal .accent-color-swatch:focus-visible {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        max-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        max-height: 2.35rem !important;
+        padding: 0.22rem !important;
+        border: 2px solid transparent !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+    }
+
+    #uiOptionsModal .accent-color-swatch.is-active,
+    body[data-theme] #uiOptionsModal .accent-color-swatch.is-active {
+        border-color: var(--swatch-color, var(--accent, #ff8a00)) !important;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--swatch-color, var(--accent, #ff8a00)) 35%, transparent) !important;
+    }
+
+    #uiOptionsModal .accent-color-swatch span,
+    body[data-theme] #uiOptionsModal .accent-color-swatch span,
+    #uiOptionsModal .accent-color-swatch.is-active span,
+    body[data-theme] #uiOptionsModal .accent-color-swatch.is-active span {
+        width: 1.55rem !important;
+        min-width: 1.55rem !important;
+        max-width: 1.55rem !important;
+        height: 1.55rem !important;
+        min-height: 1.55rem !important;
+        max-height: 1.55rem !important;
+        border-radius: 999px !important;
+        background: var(--swatch-color) !important;
+        box-shadow: none !important;
+        outline: none !important;
+        transform: none !important;
+    }
+
+    #projectModal .modal-task-controls-row,
+    body[data-theme^="console"] #projectModal .modal-task-controls-row,
+    body[data-theme^="glass"] #projectModal .modal-task-controls-row,
+    body[data-theme^="blueprint"] #projectModal .modal-task-controls-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.75rem !important;
+    }
+
+    #projectModal .hide-completed-toggle,
+    #projectModal .task-sort-control,
+    body[data-theme^="console"] #projectModal .hide-completed-toggle,
+    body[data-theme^="console"] #projectModal .task-sort-control,
+    body[data-theme^="glass"] #projectModal .hide-completed-toggle,
+    body[data-theme^="glass"] #projectModal .task-sort-control,
+    body[data-theme^="blueprint"] #projectModal .hide-completed-toggle,
+    body[data-theme^="blueprint"] #projectModal .task-sort-control {
+        display: inline-flex !important;
+        align-items: center !important;
+        align-self: center !important;
+        min-height: 2.5rem !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-sort-select,
+    body[data-theme^="console"] #projectModal .task-sort-select,
+    body[data-theme^="glass"] #projectModal .task-sort-select,
+    body[data-theme^="blueprint"] #projectModal .task-sort-select {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        margin: 0 !important;
+        padding: 0 0.82rem !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+        background-image: none !important;
+        background-position: initial !important;
+        background-size: initial !important;
+        background-repeat: no-repeat !important;
+    }
+
+    #projectModal .task-sort-select::-ms-expand {
+        display: none !important;
+    }
+}
