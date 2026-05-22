@@ -7286,7 +7286,7 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
 }
 
 /* ============================================================================
-   Mobile-only patch: toolbar search width, hamburger balance, and fixed card footer
+   Mobile-only patch: toolbar search width, hamburger balance, due-date overdue button, and fixed card footer
    Date: 2026-05-22
    Scope: mobile web only; must not affect >= 981px
    ============================================================================ */
@@ -7300,6 +7300,7 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         align-items: center !important;
     }
 
+    /* Fix: hamburger button — equal padding on top and bottom */
     html body[data-theme] .panel-edge-toggle,
     html body[data-theme]:not(.control-panel-is-collapsed) .panel-edge-toggle,
     html body[data-theme].control-panel-is-collapsed .panel-edge-toggle,
@@ -7309,8 +7310,8 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         height: var(--mobile-toolbar-control-size, 2.34rem) !important;
         min-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
         max-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+        padding-top: var(--mobile-toolbar-vertical-pad, 0.505rem) !important;
+        padding-bottom: var(--mobile-toolbar-vertical-pad, 0.505rem) !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -7334,6 +7335,7 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         align-items: center !important;
     }
 
+    /* Fix: search bar 25% narrower (75% → 56%) so toolbar elements don't truncate */
     html body[data-theme] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
     html body[data-theme] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap:focus-within,
     html body[data-theme] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open,
@@ -7341,8 +7343,34 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
     html body[data-theme^="glass"] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
     html body[data-theme^="blueprint"] .container .top-app-bar .top-view-toolbar .view-toolbar-search-wrap {
         justify-self: start !important;
-        width: 75% !important;
-        max-width: 75% !important;
+        width: 56% !important;
+        max-width: 56% !important;
+    }
+
+    /* Fix: due-date button — expand to fit text + overdue warning icon without truncation */
+    html body[data-theme] .container .viewport .project-card .project-card-due-date:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-due-date:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .project-card .project-due-date-btn:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .stitch-project-card .project-due-date-btn:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .project-card .project-due-date-control--card:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .stitch-project-card .project-due-date-control--card:has(.project-due-date-icon) {
+        white-space: nowrap !important;
+        overflow: visible !important;
+        width: auto !important;
+        min-width: max-content !important;
+        flex-shrink: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-footer-left:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-footer-left:has(.project-due-date-icon) {
+        overflow: visible !important;
+        min-width: max-content !important;
+        flex-shrink: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-footer:has(.project-due-date-icon),
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-footer:has(.project-due-date-icon) {
+        grid-template-columns: minmax(max-content, 1fr) auto !important;
     }
 
     html body[data-theme] .container .viewport .project-card.stitch-project-card,
