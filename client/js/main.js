@@ -12246,11 +12246,34 @@ function renderPanelEdgeToggleIcon(isOpen) {
         </svg>`;
 }
 
+function scrollMobileWebSidebarToTop() {
+    if (!isMobileWebSidebarViewport()) return;
+    const controlPanel = document.getElementById('controlPanel');
+    const scrollInner = controlPanel?.querySelector?.('.control-panel-scroll-inner');
+    [controlPanel, scrollInner].forEach(element => {
+        if (!element) return;
+        element.scrollTop = 0;
+        element.scrollLeft = 0;
+        if (typeof element.scrollTo === 'function') {
+            try {
+                element.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            } catch (err) {
+                element.scrollTop = 0;
+                element.scrollLeft = 0;
+            }
+        }
+    });
+}
+
 function setMobileWebSidebarOpen(isOpen) {
     const nextOpen = !!isOpen && isMobileWebSidebarViewport();
     document.body.classList.toggle('mobile-drawer-open', nextOpen);
     document.body.classList.remove('mobile-sidebar-open');
     document.getElementById('controlPanel')?.setAttribute('aria-hidden', nextOpen ? 'false' : 'true');
+    if (nextOpen) {
+        scrollMobileWebSidebarToTop();
+        requestAnimationFrame(scrollMobileWebSidebarToTop);
+    }
     renderPanelEdgeToggleIcon(nextOpen);
 }
 

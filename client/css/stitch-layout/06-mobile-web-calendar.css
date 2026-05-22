@@ -3990,3 +3990,78 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
     }
 }
 
+
+/* ============================================================================
+   Mobile-only patch: sidebar reset, settings spacing, UI Options theme removal,
+   and viewport menu vertical alignment
+   Date: 2026-05-22
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    body.mobile-drawer-open #controlPanel .control-panel-scroll-inner,
+    body.mobile-drawer-open .control-panel .control-panel-scroll-inner,
+    body.mobile-drawer-open.control-panel-is-collapsed #controlPanel .control-panel-scroll-inner {
+        scroll-behavior: auto !important;
+        overscroll-behavior: contain !important;
+    }
+
+    body.mobile-drawer-open[data-theme] #settingsSectionBody .settings-panel-card .settings-actions,
+    body.mobile-drawer-open[data-theme] #settingsSectionBody .settings-actions,
+    body.mobile-drawer-open[data-theme] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions {
+        gap: 2.1rem !important;
+        row-gap: 2.1rem !important;
+    }
+
+    body.mobile-drawer-open[data-theme] #settingsSectionBody .settings-actions > .sidebar-more-group,
+    body.mobile-drawer-open[data-theme] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions > .sidebar-more-group {
+        gap: 2.1rem !important;
+        row-gap: 2.1rem !important;
+    }
+
+    body.mobile-drawer-open[data-theme] #settingsSectionBody .settings-actions > .sidebar-more-group > .sidebar-more-menu,
+    body.mobile-drawer-open[data-theme] .sidebar-collapsible[data-sidebar-section="settings"] .settings-actions > .sidebar-more-group > .sidebar-more-menu {
+        gap: 1.225rem !important;
+        row-gap: 1.225rem !important;
+    }
+
+    #uiOptionsModal .ui-options-modal-content .account-modal-header + .ui-options-section-label,
+    body[data-theme] #uiOptionsModal .ui-options-modal-content .account-modal-header + .ui-options-section-label,
+    #uiOptionsModal .ui-options-modal-content #themeGrid,
+    body[data-theme] #uiOptionsModal .ui-options-modal-content #themeGrid {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+    }
+
+    #uiOptionsModal #uiOptionsModeToggleRow,
+    body[data-theme] #uiOptionsModal #uiOptionsModeToggleRow {
+        margin-top: 0 !important;
+    }
+
+    body[data-theme] .top-app-bar .top-view-toolbar,
+    body[data-theme] .top-app-bar .view-toolbar.top-view-toolbar,
+    body[data-theme].control-panel-is-collapsed .top-app-bar .top-view-toolbar,
+    body[data-theme].mobile-drawer-open .top-app-bar .top-view-toolbar,
+    body[data-theme].mobile-sidebar-open .top-app-bar .top-view-toolbar {
+        align-self: flex-start !important;
+        align-items: flex-start !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search-wrap,
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search-wrap:focus-within,
+    body[data-theme] .top-app-bar .top-view-toolbar .view-toolbar-search-wrap.is-mobile-search-open,
+    body[data-theme] .top-app-bar .top-view-toolbar #projectSortSelect {
+        align-self: flex-start !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+}
