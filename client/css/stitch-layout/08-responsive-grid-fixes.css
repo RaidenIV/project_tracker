@@ -7586,3 +7586,155 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         white-space: nowrap !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: project action icons, due-date overflow, and footer baseline
+   Date: 2026-05-23
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme] .container .viewport .project-card .project-card-action-row,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        width: max-content !important;
+        min-width: max-content !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        padding: 0 0.68rem !important;
+        gap: 0.36rem !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card.has-due-date .project-due-overdue-icon {
+        flex: 0 0 0.9rem !important;
+        width: 0.9rem !important;
+        min-width: 0.9rem !important;
+        height: 0.9rem !important;
+        min-height: 0.9rem !important;
+        margin: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-priority-card-indicator .task-tag-flag,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-priority-card-indicator .task-tag-flag,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-priority-card-indicator .task-tag-flag,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-priority-card-indicator .task-tag-flag,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-priority-card-indicator .task-tag-flag,
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-card-notes-button .icon,
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-card-notes-button svg,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-card-notes-button .icon,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-card-notes-button svg,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-card-notes-button .icon,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-card-notes-button svg,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-card-notes-button .icon,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-card-notes-button svg,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-card-notes-button .icon,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-card-notes-button svg {
+        width: 1.62rem !important;
+        min-width: 1.62rem !important;
+        height: 1.62rem !important;
+        min-height: 1.62rem !important;
+        flex-basis: 1.62rem !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-card-notes-button.task-note-button.has-note::after,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-card-notes-button.task-note-button.has-note::after,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-card-notes-button.task-note-button.has-note::after,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-card-notes-button.task-note-button.has-note::after,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-card-notes-button.task-note-button.has-note::after {
+        position: absolute !important;
+        top: 0.64rem !important;
+        right: 0.64rem !important;
+        left: auto !important;
+        bottom: auto !important;
+        width: 0.48rem !important;
+        min-width: 0.48rem !important;
+        height: 0.48rem !important;
+        min-height: 0.48rem !important;
+        border-radius: 999px !important;
+        transform: none !important;
+        pointer-events: none !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-footer,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-footer,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-footer,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-footer,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-footer {
+        align-items: end !important;
+        align-content: end !important;
+        grid-template-rows: auto !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-footer-left,
+    html body[data-theme] .container .viewport .project-card .project-card-meta,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-meta,
+    html body[data-theme] .container .viewport .project-card .project-card-access,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-access,
+    html body[data-theme] .container .viewport .project-card .project-card-status,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-status,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-meta,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-meta,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-footer-left,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-meta,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-status {
+        align-self: end !important;
+        align-items: flex-end !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-access,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-access,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-access,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-access {
+        min-height: 0 !important;
+        height: auto !important;
+        line-height: 1 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
