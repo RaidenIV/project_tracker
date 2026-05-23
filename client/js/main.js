@@ -3187,15 +3187,50 @@ function persistSavedViews() {
 }
 
 const PROJECT_SORT_MODES = new Set(['recent', 'manual', 'alpha', 'remaining', 'progress', 'priority']);
+const PROJECT_SORT_LABELS = {
+    recent: { desktop: 'Sort: Recent', mobile: 'Recent' },
+    manual: { desktop: 'Sort: Manual', mobile: 'Manual' },
+    alpha: { desktop: 'Sort: A-Z', mobile: 'A-Z' },
+    remaining: { desktop: 'Sort: Remaining', mobile: 'Remaining' },
+    progress: { desktop: 'Sort: Progress', mobile: 'Progress' },
+    priority: { desktop: 'Sort: Priority', mobile: 'Priority' }
+};
+let __projectSortLabelSyncInitialized = false;
 
 function normalizeProjectSortMode(sortMode) {
     const normalized = String(sortMode || '').trim();
     return PROJECT_SORT_MODES.has(normalized) ? normalized : 'recent';
 }
 
+function syncProjectSortLabels() {
+    const sortSelect = document.getElementById('projectSortSelect');
+    if (!sortSelect) return;
+
+    const useMobileLabels = typeof isMobileWebSidebarViewport === 'function' && isMobileWebSidebarViewport();
+    Array.from(sortSelect.options || []).forEach(option => {
+        const labels = PROJECT_SORT_LABELS[option.value];
+        if (labels) option.textContent = useMobileLabels ? labels.mobile : labels.desktop;
+    });
+}
+
 function syncProjectSortSelect() {
     const sortSelect = document.getElementById('projectSortSelect');
-    if (sortSelect) sortSelect.value = uiState.sortMode;
+    if (!sortSelect) return;
+
+    syncProjectSortLabels();
+    sortSelect.value = uiState.sortMode;
+}
+
+function initializeProjectSortLabelSync() {
+    if (__projectSortLabelSyncInitialized) {
+        syncProjectSortLabels();
+        return;
+    }
+
+    __projectSortLabelSyncInitialized = true;
+    window.addEventListener('resize', syncProjectSortLabels);
+    window.addEventListener('orientationchange', () => requestAnimationFrame(syncProjectSortLabels));
+    syncProjectSortLabels();
 }
 
 function loadProjectSortPreference() {
@@ -12647,6 +12682,7 @@ function initializeEventHandlers() {
     syncControlPanelState();
     initializeMobileWebSidebar();
     initializeMobileToolbarSearch();
+    initializeProjectSortLabelSync();
 
     // Add project button
     document.getElementById('addProjectButton')?.addEventListener('click', addProject);
