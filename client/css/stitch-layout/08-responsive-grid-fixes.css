@@ -7857,3 +7857,62 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
     }
 }
 
+
+/* ============================================================================
+   Mobile-only patch: hide viewport hamburger while project modal is open
+   Date: 2026-05-23
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body.project-modal-open[data-theme] .panel-edge-toggle,
+    html body.project-modal-open[data-theme]:not(.control-panel-is-collapsed) .panel-edge-toggle,
+    html body.project-modal-open[data-theme].control-panel-is-collapsed .panel-edge-toggle,
+    html body.project-modal-open[data-theme].mobile-sidebar-open .panel-edge-toggle,
+    html body.project-modal-open[data-theme].mobile-drawer-open .panel-edge-toggle,
+    html body.project-modal-open[data-theme^="console"] .panel-edge-toggle,
+    html body.project-modal-open[data-theme^="glass"] .panel-edge-toggle,
+    html body.project-modal-open[data-theme^="blueprint"] .panel-edge-toggle {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -1 !important;
+    }
+
+    html body.project-modal-open[data-theme] .container .top-app-bar,
+    html body.project-modal-open[data-theme^="console"] .container .top-app-bar,
+    html body.project-modal-open[data-theme^="glass"] .container .top-app-bar,
+    html body.project-modal-open[data-theme^="blueprint"] .container .top-app-bar,
+    html body.project-modal-open[data-theme].control-panel-is-collapsed .container .top-app-bar,
+    html body.project-modal-open[data-theme].mobile-sidebar-open .container .top-app-bar,
+    html body.project-modal-open[data-theme].mobile-drawer-open .container .top-app-bar {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -1 !important;
+    }
+
+    html body.project-modal-open[data-theme] #projectModal.modal-overlay,
+    html body.project-modal-open[data-theme^="console"] #projectModal.modal-overlay,
+    html body.project-modal-open[data-theme^="glass"] #projectModal.modal-overlay,
+    html body.project-modal-open[data-theme^="blueprint"] #projectModal.modal-overlay {
+        z-index: 100000 !important;
+    }
+
+    html body.project-modal-open[data-theme] #projectModal .modal-content#modalContent,
+    html body.project-modal-open[data-theme^="console"] #projectModal .modal-content#modalContent,
+    html body.project-modal-open[data-theme^="glass"] #projectModal .modal-content#modalContent,
+    html body.project-modal-open[data-theme^="blueprint"] #projectModal .modal-content#modalContent,
+    html body.project-modal-open[data-theme] #projectModal .modal-top-menu-shell,
+    html body.project-modal-open[data-theme^="console"] #projectModal .modal-top-menu-shell,
+    html body.project-modal-open[data-theme^="glass"] #projectModal .modal-top-menu-shell,
+    html body.project-modal-open[data-theme^="blueprint"] #projectModal .modal-top-menu-shell,
+    html body.project-modal-open[data-theme] #projectModal .modal-menu-bar,
+    html body.project-modal-open[data-theme^="console"] #projectModal .modal-menu-bar,
+    html body.project-modal-open[data-theme^="glass"] #projectModal .modal-menu-bar,
+    html body.project-modal-open[data-theme^="blueprint"] #projectModal .modal-menu-bar {
+        position: relative !important;
+        z-index: 100001 !important;
+    }
+}
