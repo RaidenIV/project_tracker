@@ -6551,6 +6551,8 @@ function toggleTask(projectId, taskId) {
     if (shouldAnimateAway) {
         const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
         if (taskElement) {
+            const nextTasks = project.tasks.map(t => t.id === taskId ? applyTaskCompletionAttribution(t) : t);
+            updateProjectProgressDisplay(projectId, getProjectProgressPercentageFromTasks(nextTasks));
             const checkbox = taskElement.querySelector(`[data-task-checkbox="${taskId}"]`);
             if (checkbox) {
                 checkbox.classList.add('checked', 'checkmark-pop');
@@ -7045,19 +7047,25 @@ function deleteSelectedTasks(projectId, event) {
     });
 }
 
+function updateProjectProgressDisplay(projectId, percentage) {
+    const normalizedPercentage = Math.max(0, Math.min(100, Math.round(Number(percentage) || 0)));
+    const progressBar = document.querySelector(`[data-progress-bar="${projectId}"]`);
+    const progressText = document.querySelector(`[data-progress-text="${projectId}"]`);
+    if (progressBar) progressBar.style.width = normalizedPercentage + '%';
+    if (progressText) progressText.textContent = normalizedPercentage + '%';
+}
+
+function getProjectProgressPercentageFromTasks(tasks = []) {
+    const normalizedTasks = Array.isArray(tasks) ? tasks : [];
+    const totalTasks = normalizedTasks.length;
+    const completedTasks = normalizedTasks.filter(t => isTaskCompleted(t)).length;
+    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+}
+
 function updateProjectProgress(projectId) {
     const project = state.findProject(projectId);
     if (!project) return;
-    
-    const completedTasks = project.tasks.filter(t => isTaskCompleted(t)).length;
-    const totalTasks = project.tasks.length;
-    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    
-    const progressBar = document.querySelector(`[data-progress-bar="${projectId}"]`);
-    const progressText = document.querySelector(`[data-progress-text="${projectId}"]`);
-    
-    if (progressBar) progressBar.style.width = percentage + '%';
-    if (progressText) progressText.textContent = percentage + '%';
+    updateProjectProgressDisplay(projectId, getProjectProgressPercentageFromTasks(project.tasks));
 }
 
 function deleteTask(projectId, taskId) {
@@ -10889,10 +10897,10 @@ function openProjectModal(projectId, options = {}) {
         </div>
 
         <div class="modal-progress">
+            <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
             <div class="progress-bar-container">
                 <div class="progress-bar" data-progress-bar="${project.id}" style="width: ${percentage}%"></div>
             </div>
-            <div class="progress-text-large" data-progress-text="${project.id}">${percentage}%</div>
         </div>
 
         
@@ -10906,12 +10914,15 @@ function openProjectModal(projectId, options = {}) {
                 <div class="modal-tasks-card-body">
                     <div class="modal-task-controls-row">
                         <div class="hide-completed-toggle">
-                            <div class="toggle-label">Hide completed tasks</div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="hide-completed-checkbox" ${hideCompleted ? 'checked' : ''} 
-                                       onchange="toggleHideCompleted()">
-                                <span class="toggle-slider"></span>
-                            </label>
+                            <span class="toggle-label">Hide Completed Tasks</span>
+                            <button class="ui-options-switch hide-completed-switch ${hideCompleted ? 'is-active' : ''}"
+                                    id="hide-completed-toggle"
+                                    type="button"
+                                    aria-pressed="${hideCompleted ? 'true' : 'false'}"
+                                    aria-label="Hide Completed Tasks"
+                                    onclick="toggleHideCompleted()">
+                                <span class="ui-options-switch-thumb" aria-hidden="true"></span>
+                            </button>
                         </div>
                         <div class="task-sort-control">
                             <select class="task-sort-select" id="task-sort-select-${project.id}" aria-label="Sort tasks" onchange="setProjectTaskSortMode('${project.id}', this.value)">
@@ -11119,17 +11130,27 @@ function saveProjectNotes(projectId) {
 }
 
 function toggleHideCompleted() {
+    const toggle = document.getElementById('hide-completed-toggle');
     const checkbox = document.getElementById('hide-completed-checkbox');
-    if (!checkbox) return;
-    state.setHideCompletedTasks(checkbox.checked);
+    const currentValue = toggle
+        ? toggle.classList.contains('is-active') || toggle.getAttribute('aria-pressed') === 'true'
+        : !!checkbox?.checked;
+    const nextValue = !currentValue;
+    state.setHideCompletedTasks(nextValue);
+
+    if (toggle) {
+        toggle.classList.toggle('is-active', nextValue);
+        toggle.setAttribute('aria-pressed', String(nextValue));
+    }
+    if (checkbox) checkbox.checked = nextValue;
 
     const modalContent = document.getElementById('modalContent');
     const progressBar = modalContent?.querySelector('[data-progress-bar]');
     const projectId = progressBar?.getAttribute('data-progress-bar');
     if (!projectId) return;
 
-    setProjectHideCompletedPreference(projectId, checkbox.checked);
-    if (!checkbox.checked) {
+    setProjectHideCompletedPreference(projectId, nextValue);
+    if (!nextValue) {
         resetProjectCompletedTaskLimitPreference(projectId);
     }
     renderModalTaskList(projectId);
