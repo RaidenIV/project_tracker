@@ -9692,3 +9692,73 @@ html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-d
         transform: none !important;
     }
 }
+
+
+/* ============================================================================
+   Project modal ellipsis chrome + owner label spacing cleanup
+   Date: 2026-05-23
+   Scope: desktop and mobile project modal/menu/card labels only
+   ============================================================================ */
+#projectModal .modal-menu-bar > .project-meatballs--modal,
+#projectModal .modal-menu-bar > .project-meatballs--modal[open],
+#projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+#projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:hover,
+#projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus,
+#projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus-visible,
+#projectModal .modal-menu-bar > .project-meatballs--modal[open] .project-meatballs-toggle,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal[open],
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:hover,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus-visible,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal[open] .project-meatballs-toggle,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal[open],
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:hover,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus-visible,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal[open] .project-meatballs-toggle,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal[open],
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:hover,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus-visible,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal[open] .project-meatballs-toggle,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal[open],
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:hover,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle:focus-visible,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal[open] .project-meatballs-toggle {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+#projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal .project-meatballs-toggle {
+    border-width: 0 !important;
+}
+
+.project-card .project-card-access,
+.stitch-project-card .project-card-access,
+body[data-theme] .project-card .project-card-access,
+body[data-theme] .stitch-project-card .project-card-access,
+body[data-theme^="console"] .project-card .project-card-access,
+body[data-theme^="console"] .stitch-project-card .project-card-access,
+body[data-theme^="glass"] .project-card .project-card-access,
+body[data-theme^="glass"] .stitch-project-card .project-card-access,
+body[data-theme^="blueprint"] .project-card .project-card-access,
+body[data-theme^="blueprint"] .stitch-project-card .project-card-access {
+    column-gap: 0.25em !important;
+}

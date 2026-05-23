@@ -12033,8 +12033,8 @@ function renderProjectCard(project) {
     const projectTags = getProjectTags(project);
     const projectDescription = getProjectCardDescription(project);
     const accessLabel = isViewer || isEditor
-        ? `Owner: <strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
-        : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner: <strong>Me</strong>');
+        ? `Owner:&nbsp;<strong>${escapeHtml(project.ownerName || 'Unknown')}</strong>`
+        : (isShared ? `Shared with <strong>${collaborators.length} user${collaborators.length === 1 ? '' : 's'}</strong>` : 'Owner:&nbsp;<strong>Me</strong>');
 
     const statusLabel = isProjectArchived(project)
         ? '<span class="project-card-status project-card-status--archived">ARCHIVED</span>'
