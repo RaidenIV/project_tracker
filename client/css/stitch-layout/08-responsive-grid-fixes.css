@@ -9489,3 +9489,48 @@ html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-d
         transform: translate(1.56rem, -50%) !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only project modal menu bar 25% height reduction
+   Date: 2026-05-23
+   Scope: mobile project modal menu bar only
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    html body[data-theme^="console"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    html body[data-theme^="glass"] #projectModal .modal-top-menu-shell .modal-menu-bar,
+    html body[data-theme^="blueprint"] #projectModal .modal-top-menu-shell .modal-menu-bar {
+        padding: 0.165rem 0.42rem !important;
+    }
+
+    html body[data-theme] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme] #projectModal .modal-menu-bar > .project-meatballs--modal,
+    html body[data-theme] #projectModal .modal-menu-bar > .modal-menu-close,
+    html body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme^="console"] #projectModal .modal-menu-bar > .project-meatballs--modal,
+    html body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-menu-close,
+    html body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme^="glass"] #projectModal .modal-menu-bar > .project-meatballs--modal,
+    html body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-menu-close,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .project-meatballs--modal,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-menu-close {
+        height: clamp(1.65rem, 6vw, 1.99rem) !important;
+        min-height: clamp(1.65rem, 6vw, 1.99rem) !important;
+        max-height: clamp(1.65rem, 6vw, 1.99rem) !important;
+        border-radius: clamp(0.46rem, 1.5vw, 0.64rem) !important;
+    }
+
+    html body[data-theme] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item.active,
+    html body[data-theme] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item[aria-selected="true"],
+    html body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item.active,
+    html body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item[aria-selected="true"],
+    html body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item.active,
+    html body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item[aria-selected="true"],
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item.active,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item[aria-selected="true"] {
+        height: clamp(1.65rem, 6vw, 1.99rem) !important;
+        min-height: clamp(1.65rem, 6vw, 1.99rem) !important;
+        max-height: clamp(1.65rem, 6vw, 1.99rem) !important;
+    }
+}
