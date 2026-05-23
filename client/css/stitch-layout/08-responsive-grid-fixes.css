@@ -8369,3 +8369,157 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         margin: 0 !important;
     }
 }
+
+/* ============================================================================
+   Project modal desktop/mobile tab-icon pass + progress/owner alignment fixes
+   Date: 2026-05-23
+   Scope: project modal menu tabs, project modal progress spacing, project-card footer alignment
+   ============================================================================ */
+#projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+body[data-theme] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item {
+    position: relative !important;
+    flex: 0 0 clamp(3rem, 4vw, 3.7rem) !important;
+    width: clamp(3rem, 4vw, 3.7rem) !important;
+    min-width: clamp(3rem, 4vw, 3.7rem) !important;
+    max-width: clamp(3rem, 4vw, 3.7rem) !important;
+    min-height: clamp(2.7rem, 3.5vw, 3.2rem) !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+    text-indent: 0 !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .modal-tab-icon,
+body[data-theme] #projectModal .modal-tab-icon,
+body[data-theme^="console"] #projectModal .modal-tab-icon,
+body[data-theme^="glass"] #projectModal .modal-tab-icon,
+body[data-theme^="blueprint"] #projectModal .modal-tab-icon {
+    width: 1.34rem !important;
+    height: 1.34rem !important;
+    min-width: 1.34rem !important;
+    min-height: 1.34rem !important;
+    stroke-width: 1.9 !important;
+    display: block !important;
+    pointer-events: none !important;
+}
+
+#projectModal .modal-menu-bar > .modal-tab.modal-menu-item .modal-tab-count,
+body[data-theme] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item .modal-tab-count,
+body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item .modal-tab-count,
+body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item .modal-tab-count,
+body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item .modal-tab-count {
+    position: absolute !important;
+    top: 0.42rem !important;
+    right: 0.42rem !important;
+    margin: 0 !important;
+    min-width: 1rem !important;
+    height: 1rem !important;
+    padding: 0 0.24rem !important;
+    font-size: 0.64rem !important;
+    line-height: 1 !important;
+    transform: translate(35%, -35%) !important;
+    z-index: 2 !important;
+}
+
+#projectModal .modal-progress .progress-bar-container,
+body[data-theme] #projectModal .modal-progress .progress-bar-container,
+body[data-theme^="console"] #projectModal .modal-progress .progress-bar-container,
+body[data-theme^="glass"] #projectModal .modal-progress .progress-bar-container,
+body[data-theme^="blueprint"] #projectModal .modal-progress .progress-bar-container {
+    margin-bottom: 16px !important;
+}
+
+.project-card .project-card-footer,
+.stitch-project-card .project-card-footer,
+body[data-theme] .project-card .project-card-footer,
+body[data-theme] .stitch-project-card .project-card-footer,
+body[data-theme^="console"] .project-card .project-card-footer,
+body[data-theme^="glass"] .project-card .project-card-footer,
+body[data-theme^="blueprint"] .project-card .project-card-footer {
+    align-items: end !important;
+    align-content: end !important;
+}
+
+.project-card .project-card-footer-left,
+.stitch-project-card .project-card-footer-left,
+.project-card .project-card-meta,
+.stitch-project-card .project-card-meta,
+body[data-theme] .project-card .project-card-footer-left,
+body[data-theme] .stitch-project-card .project-card-footer-left,
+body[data-theme] .project-card .project-card-meta,
+body[data-theme] .stitch-project-card .project-card-meta,
+body[data-theme^="console"] .project-card .project-card-footer-left,
+body[data-theme^="console"] .project-card .project-card-meta,
+body[data-theme^="glass"] .project-card .project-card-footer-left,
+body[data-theme^="glass"] .project-card .project-card-meta,
+body[data-theme^="blueprint"] .project-card .project-card-footer-left,
+body[data-theme^="blueprint"] .project-card .project-card-meta {
+    align-self: end !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    margin-bottom: 0 !important;
+}
+
+.project-card .project-card-access,
+.stitch-project-card .project-card-access,
+.project-card .project-card-status,
+.stitch-project-card .project-card-status,
+body[data-theme] .project-card .project-card-access,
+body[data-theme] .stitch-project-card .project-card-access,
+body[data-theme] .project-card .project-card-status,
+body[data-theme] .stitch-project-card .project-card-status,
+body[data-theme^="console"] .project-card .project-card-access,
+body[data-theme^="console"] .project-card .project-card-status,
+body[data-theme^="glass"] .project-card .project-card-access,
+body[data-theme^="glass"] .project-card .project-card-status,
+body[data-theme^="blueprint"] .project-card .project-card-access,
+body[data-theme^="blueprint"] .project-card .project-card-status {
+    align-self: flex-end !important;
+    line-height: 1 !important;
+}
+
+@media (max-width: 980px) {
+    html body[data-theme] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme^="console"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme^="glass"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.modal-menu-item {
+        flex-basis: clamp(3.7rem, 15vw, 4.75rem) !important;
+        width: clamp(3.7rem, 15vw, 4.75rem) !important;
+        min-width: clamp(3.7rem, 15vw, 4.75rem) !important;
+        max-width: clamp(3.7rem, 15vw, 4.75rem) !important;
+        min-height: clamp(3.35rem, 13vw, 4.2rem) !important;
+    }
+
+    html body[data-theme] #projectModal .modal-tab-icon,
+    html body[data-theme^="console"] #projectModal .modal-tab-icon,
+    html body[data-theme^="glass"] #projectModal .modal-tab-icon,
+    html body[data-theme^="blueprint"] #projectModal .modal-tab-icon {
+        width: 1.48rem !important;
+        height: 1.48rem !important;
+        min-width: 1.48rem !important;
+        min-height: 1.48rem !important;
+    }
+
+    html body[data-theme] #projectModal .modal-progress,
+    html body[data-theme^="console"] #projectModal .modal-progress,
+    html body[data-theme^="glass"] #projectModal .modal-progress,
+    html body[data-theme^="blueprint"] #projectModal .modal-progress {
+        gap: 0.76rem !important;
+    }
+
+    html body[data-theme] #projectModal .modal-progress .progress-bar-container,
+    html body[data-theme^="console"] #projectModal .modal-progress .progress-bar-container,
+    html body[data-theme^="glass"] #projectModal .modal-progress .progress-bar-container,
+    html body[data-theme^="blueprint"] #projectModal .modal-progress .progress-bar-container {
+        margin-bottom: 0 !important;
+    }
+}

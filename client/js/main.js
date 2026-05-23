@@ -2168,7 +2168,7 @@ function getModalPasteTaskEntries(pasteBox) {
         .map(line => ({ text: line, plainText: line }));
 }
 
-const DEFAULT_MODAL_TAB_ORDER = ['tasks', 'notes', 'members', 'history', 'calendar'];
+const DEFAULT_MODAL_TAB_ORDER = ['tasks', 'notes', 'members', 'calendar'];
 const MOVABLE_TAB_LONG_PRESS_MS = 360;
 
 function moveArrayItem(list = [], fromIndex = -1, toIndex = -1) {
@@ -4698,12 +4698,11 @@ function captureProjectModalState(projectId) {
     const modal = document.getElementById('projectModal');
     if (!modal?.classList.contains('active')) return null;
     const scrollEl = document.querySelector('#modalContent .modal-scroll-inner');
-    const activeTab = document.querySelector(`#modalContent .modal-tab.active`);
     if (!scrollEl) return null;
     return {
         projectId: String(projectId),
         scrollTop: scrollEl.scrollTop,
-        activeTab: activeTab ? activeTab.id.replace(/-(.+)$/, '').split('-')[0] : 'tasks'
+        activeTab: getProjectModalActiveTab(projectId)
     };
 }
 
@@ -4726,14 +4725,20 @@ function restoreProjectModalScrollPosition(projectId, modalState) {
 }
 
 function getProjectModalActiveTab(projectId) {
+    const validTabs = ['tasks', 'notes', 'members', 'history', 'calendar'];
+    const modal = document.getElementById('projectModal');
+    const storedTab = modal?.dataset?.activeTab;
+    if (validTabs.includes(storedTab)) return storedTab;
+
     const activeTab = document.querySelector(`#modalContent .modal-tab.active`);
     if (!activeTab) return 'tasks';
     const suffix = `-tab-${projectId}`;
     if (activeTab.id.endsWith(suffix)) {
         const tabName = activeTab.id.slice(0, -suffix.length);
-        return ['tasks', 'notes', 'members', 'history', 'calendar'].includes(tabName) ? tabName : 'tasks';
+        return validTabs.includes(tabName) ? tabName : 'tasks';
     }
-    return activeTab.id.replace(/-(.+)$/, '').split('-')[0] || 'tasks';
+    const fallbackTab = activeTab.id.replace(/-(.+)$/, '').split('-')[0] || 'tasks';
+    return validTabs.includes(fallbackTab) ? fallbackTab : 'tasks';
 }
 
 function saveOpenProjectModalState(projectId, activeTab = null) {
@@ -10049,6 +10054,7 @@ function renderModalTaskList(projectId) {
     renderTaskSelectAllControl(projectId, displayTasks);
     renderTaskBulkActions(projectId);
     renderTaskCategoryControls(projectId);
+    updateProjectProgress(projectId);
 
     setTimeout(() => setupTaskDragAndDrop(projectId), 100);
 }
@@ -10598,6 +10604,7 @@ function buildProjectMeatballsMenuMarkup(project, surface = 'card') {
             <div class="project-meatballs-dropdown" role="menu" onclick="event.stopPropagation();">
                 ${canEditProject ? `<button class="project-meatballs-item" type="button" role="menuitem" onclick="event.preventDefault(); event.stopPropagation(); closeProjectMeatballsMenus(); ${editAction}">Edit</button>` : ''}
                 <button class="project-meatballs-item" type="button" role="menuitem" onclick="openProjectMetadataDetails(${projectIdLiteral}, event)">Details</button>
+                ${surface === 'modal' ? `<button class="project-meatballs-item" type="button" role="menuitem" onclick="event.preventDefault(); event.stopPropagation(); closeProjectMeatballsMenus(); switchModalTab(${projectIdLiteral}, 'history')">History</button>` : ''}
                 ${canDeleteProject ? `<button class="project-meatballs-item project-meatballs-item--danger" type="button" role="menuitem" onclick="event.preventDefault(); event.stopPropagation(); closeProjectMeatballsMenus(); ${deleteAction}">Delete Project</button>` : ''}
             </div>
         </details>
@@ -10734,49 +10741,75 @@ function deleteProjectCalendarNote(projectId, dateKey, event) {
     saveOpenProjectModalState(projectId, 'calendar');
 }
 
+function getProjectModalTabIconMarkup(tabId) {
+    const icons = {
+        tasks: `<svg class="modal-tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M9 6h11M9 12h11M9 18h11"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M4 6h.01M4 12h.01M4 18h.01"></path>
+                </svg>`,
+        notes: `<svg class="modal-tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M8 7h8M8 11h8M8 15h4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path>
+                </svg>`,
+        members: `<svg class="modal-tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"></path>
+                    <circle cx="10" cy="7" r="4" stroke-width="2.1"></circle>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path>
+                </svg>`,
+        calendar: `<svg class="modal-tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2.5" stroke-width="2.1"></rect>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M16 2v4M8 2v4M3 10h18"></path>
+                </svg>`
+    };
+    return icons[tabId] || '';
+}
+
 function buildProjectModalMenuTabs(project, collaborators = []) {
     const projectId = project?.id || '';
     const projectIdLiteral = serializeInlineJsString(projectId);
+    const collaboratorCount = Array.isArray(collaborators) ? collaborators.length : 0;
     const tabDefinitions = {
         tasks: {
             className: '',
-            title: '',
-            html: 'Tasks'
+            title: 'Tasks',
+            ariaLabel: 'Tasks',
+            html: getProjectModalTabIconMarkup('tasks')
         },
         notes: {
             className: `modal-tab--notes ${projectHasNotes(project?.notes) ? 'has-note' : ''}`.trim(),
             title: formatProjectNotesPreview(project?.notes) || 'Project notes',
-            html: 'Notes'
+            ariaLabel: 'Notes',
+            html: getProjectModalTabIconMarkup('notes')
         },
         members: {
             className: '',
-            title: '',
-            html: `Members ${collaborators.length > 0 ? `<span class="members-count">${collaborators.length}</span>` : ''}`
-        },
-        history: {
-            className: '',
-            title: '',
-            html: 'History'
+            title: collaboratorCount > 0 ? `Members (${collaboratorCount})` : 'Members',
+            ariaLabel: collaboratorCount > 0 ? `Members, ${collaboratorCount}` : 'Members',
+            html: `${getProjectModalTabIconMarkup('members')}${collaboratorCount > 0 ? `<span class="members-count modal-tab-count" aria-hidden="true">${collaboratorCount}</span>` : ''}`
         },
         calendar: {
             className: '',
-            title: '',
-            html: 'Calendar'
+            title: 'Calendar',
+            ariaLabel: 'Calendar',
+            html: getProjectModalTabIconMarkup('calendar')
         }
     };
 
-    return getProjectModalTabOrder().map(tabId => {
+    return getProjectModalTabOrder().filter(tabId => tabId !== 'history').map(tabId => {
         const tab = tabDefinitions[tabId];
         if (!tab) return '';
         const titleAttr = tab.title ? ` title="${escapeHtml(tab.title)}"` : '';
+        const ariaLabel = escapeHtml(tab.ariaLabel || tab.title || tabId);
         return `<button class="modal-tab modal-menu-item ${tabId === 'tasks' ? 'active' : ''} ${tab.className}"
                        role="menuitem"
                        id="${tabId}-tab-${escapeHtml(String(projectId))}"
                        data-movable-tab-id="${escapeHtml(tabId)}"
                        type="button"
+                       aria-label="${ariaLabel}"
                        onclick="switchModalTab(${projectIdLiteral}, '${tabId}')"${titleAttr}>${tab.html}</button>`;
     }).join('');
 }
+
 
 function openProjectModal(projectId, options = {}) {
     const project = state.findProject(projectId);
@@ -10806,6 +10839,7 @@ function openProjectModal(projectId, options = {}) {
     const modal = document.getElementById('projectModal');
     const content = document.getElementById('modalContent');
     modal?.classList.remove('is-calendar-tab-active');
+    if (modal) modal.dataset.activeTab = 'tasks';
     
     const selectedTasks = state.getSelectedTasks(projectId);
     const modalMenuBarMarkup = `
@@ -11061,22 +11095,24 @@ function openProjectModal(projectId, options = {}) {
 
 
 function switchModalTab(projectId, tab) {
-    const normalizedTab = tab === 'calendar' ? 'calendar' : tab;
-    ['tasks', 'notes', 'members', 'history', 'calendar'].forEach(s => {
+    const validTabs = ['tasks', 'notes', 'members', 'history', 'calendar'];
+    const normalizedTab = validTabs.includes(tab) ? tab : 'tasks';
+    validTabs.forEach(s => {
         const sec = document.getElementById(`${s}-section-${projectId}`);
         const btn = document.getElementById(`${s}-tab-${projectId}`);
-        if (!sec || !btn) return;
-        if (s === normalizedTab) { sec.classList.remove('hidden'); btn.classList.add('active'); }
-        else                    { sec.classList.add('hidden');    btn.classList.remove('active'); }
+        if (sec) sec.classList.toggle('hidden', s !== normalizedTab);
+        if (btn) btn.classList.toggle('active', s === normalizedTab);
     });
 
     const projectModal = document.getElementById('projectModal');
+    if (projectModal) projectModal.dataset.activeTab = normalizedTab;
     projectModal?.classList.toggle('is-calendar-tab-active', normalizedTab === 'calendar');
 
     if (projectModal?.classList.contains('active')) {
         saveOpenProjectModalState(projectId, normalizedTab);
     }
 }
+
 
 function saveProjectNotes(projectId) {
     saveActiveProjectNoteFromSurface(projectId, 'modal');
