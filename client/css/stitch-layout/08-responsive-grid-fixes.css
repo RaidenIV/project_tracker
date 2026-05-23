@@ -8159,3 +8159,119 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         margin-bottom: 0.35rem !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only fix: flush sticky task tabs and modal overdue due-date label
+   Date: 2026-05-23
+   Scope: mobile project modal only; keeps desktop layouts unchanged
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme] #projectModal .modal-tasks-card > .task-category-controls,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        border-top: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .task-category-toolbar,
+    html body[data-theme] #projectModal .task-category-tabs,
+    html body[data-theme^="console"] #projectModal .task-category-toolbar,
+    html body[data-theme^="console"] #projectModal .task-category-tabs,
+    html body[data-theme^="glass"] #projectModal .task-category-toolbar,
+    html body[data-theme^="glass"] #projectModal .task-category-tabs,
+    html body[data-theme^="blueprint"] #projectModal .task-category-toolbar,
+    html body[data-theme^="blueprint"] #projectModal .task-category-tabs {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-title-row,
+    html body[data-theme^="console"] #projectModal .modal-title-row,
+    html body[data-theme^="glass"] #projectModal .modal-title-row,
+    html body[data-theme^="blueprint"] #projectModal .modal-title-row {
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        column-gap: 0.55rem !important;
+        row-gap: 0.3rem !important;
+    }
+
+    html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date,
+    html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date,
+    html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date,
+    html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.35rem !important;
+        flex: 0 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 1.8rem !important;
+        padding: 0.12rem 0.35rem 0.12rem 0 !important;
+        margin: 0 0 0 0.1rem !important;
+        color: #ef4444 !important;
+        -webkit-text-fill-color: #ef4444 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-overdue-icon,
+    html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-overdue-icon,
+    html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-overdue-icon,
+    html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-overdue-icon {
+        position: static !important;
+        display: block !important;
+        flex: 0 0 1.05rem !important;
+        width: 1.05rem !important;
+        min-width: 1.05rem !important;
+        height: 1.05rem !important;
+        min-height: 1.05rem !important;
+        margin: 0 !important;
+        transform: none !important;
+        color: currentColor !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        z-index: 1 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-value,
+    html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-value,
+    html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-value,
+    html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-value {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-width: 0 !important;
+        max-width: min(100%, 18rem) !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+        font-size: clamp(0.78rem, 2.6vw, 0.95rem) !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0.06em !important;
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-input,
+    html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-input,
+    html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-input,
+    html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.is-overdue.has-due-date .project-due-date-input {
+        position: absolute !important;
+        inset: 0 !important;
+        opacity: 0 !important;
+    }
+}
+
