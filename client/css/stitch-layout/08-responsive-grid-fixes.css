@@ -9159,3 +9159,91 @@ html body[data-theme^="blueprint"] #projectModal .modal-menu-bar > .modal-tab.mo
         min-height: clamp(1rem, 4vw, 1.18rem) !important;
     }
 }
+
+
+/* ============================================================================
+   Desktop follow-up: modal actions dropdown dismissal, due-date label, and progress gap
+   Date: 2026-05-23
+   Scope: project modal desktop refinements; keeps existing mobile modal controls intact
+   ============================================================================ */
+#projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date,
+html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.36rem !important;
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 1.45rem !important;
+    padding: 0.1rem 0.36rem 0.1rem 0.05rem !important;
+    margin: 0 0 0 0.35rem !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    line-height: 1 !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-value,
+html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-value,
+html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-value,
+html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-value,
+html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-value {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    font-size: clamp(0.68rem, 0.72vw, 0.82rem) !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.06em !important;
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-overdue-icon,
+html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-overdue-icon,
+html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-overdue-icon,
+html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-overdue-icon,
+html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-overdue-icon {
+    position: static !important;
+    display: block !important;
+    flex: 0 0 0.95rem !important;
+    width: 0.95rem !important;
+    min-width: 0.95rem !important;
+    height: 0.95rem !important;
+    min-height: 0.95rem !important;
+    margin: 0 !important;
+    transform: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+#projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-input,
+html body[data-theme] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-input,
+html body[data-theme^="console"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-input,
+html body[data-theme^="glass"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-input,
+html body[data-theme^="blueprint"] #projectModal .modal-title-row .project-due-date-control--modal.has-due-date .project-due-date-input {
+    position: absolute !important;
+    inset: 0 !important;
+    opacity: 0 !important;
+}
+
+@media (min-width: 981px) {
+    #projectModal .modal-progress,
+    html body[data-theme] #projectModal .modal-progress,
+    html body[data-theme^="console"] #projectModal .modal-progress,
+    html body[data-theme^="glass"] #projectModal .modal-progress,
+    html body[data-theme^="blueprint"] #projectModal .modal-progress {
+        gap: 0.76rem !important;
+    }
+}

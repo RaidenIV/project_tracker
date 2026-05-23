@@ -10593,6 +10593,13 @@ function closeProjectMeatballsMenus() {
     });
 }
 
+function handleProjectMeatballsDocumentClick(event) {
+    const clickedMenu = event.target.closest?.('.project-meatballs');
+    if (clickedMenu?.hasAttribute('open')) return;
+    if (!document.querySelector('.project-meatballs[open]')) return;
+    closeProjectMeatballsMenus();
+}
+
 function buildProjectMeatballsMenuMarkup(project, surface = 'card') {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const canEditProject = state.canEdit(project?.id);
@@ -13087,6 +13094,7 @@ window.updateProjectCalendarTaskPriority = updateProjectCalendarTaskPriority;
 window.createProjectCalendarTask = createProjectCalendarTask;
 window.removeProjectCalendarTaskFromDay = removeProjectCalendarTaskFromDay;
 window.closeProjectMeatballsMenus = closeProjectMeatballsMenus;
+window.handleProjectMeatballsDocumentClick = handleProjectMeatballsDocumentClick;
 window.closeConfirmDialog = closeConfirmDialog;
 window.pasteTasks = pasteTasks;
 window.pasteTasksInModal = pasteTasksInModal;
@@ -13381,6 +13389,7 @@ function onAuthSuccess(user) {
 // ============================================================================
 
 document.addEventListener('click', handleTaskFloatingMenuDocumentClick);
+document.addEventListener('click', handleProjectMeatballsDocumentClick, true);
 document.addEventListener('click', closeProjectLayoutMenu);
 window.addEventListener('resize', applyProjectGridLayoutPreference);
 window.addEventListener('resize', syncMobileThemeAvailability);
