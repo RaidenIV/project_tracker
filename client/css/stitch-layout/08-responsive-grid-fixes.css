@@ -7916,3 +7916,119 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         z-index: 100001 !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only patch: project modal task controls stacked layout
+   Date: 2026-05-23
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .modal-task-controls-row,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .modal-task-controls-row,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .modal-task-controls-row,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .modal-task-controls-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 0 1rem !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        justify-self: stretch !important;
+        align-self: stretch !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-label,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-label,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-label,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-label {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        text-align: left !important;
+        line-height: 1.2 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-switch,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-switch,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-switch,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .hide-completed-toggle .toggle-switch {
+        flex: 0 0 auto !important;
+        align-self: center !important;
+        margin: 0 0 0 auto !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        justify-self: stretch !important;
+        align-self: stretch !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control::before,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control::before,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control::before,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-control::before {
+        content: "Sort tasks" !important;
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        color: var(--muted, currentColor) !important;
+        font: inherit !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        text-align: left !important;
+        letter-spacing: 0.03em !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: 3.35rem !important;
+        min-height: 3.35rem !important;
+        margin: 0 !important;
+        padding: 0 3rem 0 1.15rem !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+        background-position: right 1.15rem center !important;
+    }
+}
+
