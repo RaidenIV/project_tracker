@@ -8086,3 +8086,76 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
         z-index: 9420 !important;
     }
 }
+
+/* ============================================================================
+   Mobile-only fix: sidebar close button placement and compact lower sections
+   Date: 2026-05-23
+   Scope: mobile sidebar only; keeps desktop/sidebar content unchanged
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme].mobile-sidebar-open .panel-edge-toggle,
+    html body[data-theme].mobile-sidebar-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme].mobile-drawer-open .panel-edge-toggle,
+    html body[data-theme].mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme^="console"].mobile-sidebar-open .panel-edge-toggle,
+    html body[data-theme^="console"].mobile-sidebar-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme^="console"].mobile-drawer-open .panel-edge-toggle,
+    html body[data-theme^="console"].mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme^="glass"].mobile-sidebar-open .panel-edge-toggle,
+    html body[data-theme^="glass"].mobile-sidebar-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme^="glass"].mobile-drawer-open .panel-edge-toggle,
+    html body[data-theme^="glass"].mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme^="blueprint"].mobile-sidebar-open .panel-edge-toggle,
+    html body[data-theme^="blueprint"].mobile-sidebar-open.control-panel-is-collapsed .panel-edge-toggle,
+    html body[data-theme^="blueprint"].mobile-drawer-open .panel-edge-toggle,
+    html body[data-theme^="blueprint"].mobile-drawer-open.control-panel-is-collapsed .panel-edge-toggle {
+        position: fixed !important;
+        top: calc(0.65rem + env(safe-area-inset-top, 0px)) !important;
+        left: calc(var(--mobile-web-drawer-width, min(86vw, 22rem)) - var(--mobile-toolbar-control-size, 2.34rem) - 0.65rem) !important;
+        right: auto !important;
+        bottom: auto !important;
+        z-index: 95200 !important;
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-width: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-width: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        min-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        max-height: var(--mobile-toolbar-control-size, 2.34rem) !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"],
+    html body[data-theme^="console"] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"],
+    html body[data-theme^="glass"] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"],
+    html body[data-theme^="blueprint"] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] {
+        margin-bottom: 0.45rem !important;
+    }
+
+    html body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="settings"],
+    html body[data-theme^="console"] .control-panel .sidebar-collapsible[data-sidebar-section="settings"],
+    html body[data-theme^="glass"] .control-panel .sidebar-collapsible[data-sidebar-section="settings"],
+    html body[data-theme^="blueprint"] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] {
+        margin-top: 0 !important;
+        margin-bottom: 0.45rem !important;
+    }
+
+    html body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle,
+    html body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle,
+    html body[data-theme^="console"] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle,
+    html body[data-theme^="console"] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle,
+    html body[data-theme^="glass"] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle,
+    html body[data-theme^="glass"] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle,
+    html body[data-theme^="blueprint"] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle,
+    html body[data-theme^="blueprint"] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle {
+        margin-bottom: 0.35rem !important;
+    }
+}
