@@ -7738,3 +7738,122 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
     }
 }
 
+/* ============================================================================
+   Mobile-only patch: card calendar button parity and status badge centering
+   Date: 2026-05-23
+   Scope: mobile web only; must not affect >= 981px
+   ============================================================================ */
+@media (max-width: 980px) {
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date),
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date),
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date),
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date),
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 3.15rem !important;
+        width: 3.15rem !important;
+        min-width: 3.15rem !important;
+        max-width: 3.15rem !important;
+        height: 3.15rem !important;
+        min-height: 3.15rem !important;
+        max-height: 3.15rem !important;
+        aspect-ratio: 1 / 1 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 1.08rem !important;
+        border: 1px solid var(--line, rgba(148, 163, 184, 0.24)) !important;
+        background: var(--surface-2, rgba(255, 255, 255, 0.06)) !important;
+        background-color: var(--surface-2, rgba(255, 255, 255, 0.06)) !important;
+        color: var(--muted, currentColor) !important;
+        -webkit-text-fill-color: var(--muted, currentColor) !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+        transform: none !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):hover,
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):focus-within,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):hover,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):focus-within,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):hover,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):focus-within,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):hover,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):focus-within,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):hover,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date):focus-within {
+        border-color: var(--accent, currentColor) !important;
+        color: var(--accent, currentColor) !important;
+        -webkit-text-fill-color: var(--accent, currentColor) !important;
+        background: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+        background-color: var(--surface-2, rgba(255, 255, 255, 0.08)) !important;
+        outline: none !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-icon,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-icon,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-icon,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-icon,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-icon {
+        display: block !important;
+        flex: 0 0 1.62rem !important;
+        width: 1.62rem !important;
+        min-width: 1.62rem !important;
+        max-width: 1.62rem !important;
+        height: 1.62rem !important;
+        min-height: 1.62rem !important;
+        max-height: 1.62rem !important;
+        margin: 0 !important;
+        stroke: currentColor !important;
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        pointer-events: none !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-input,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-input,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-input,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-input,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row .project-due-date-control--card:not(.has-due-date) .project-due-date-input {
+        position: absolute !important;
+        inset: 0 !important;
+        display: block !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        max-height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-status,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-status,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-status {
+        display: inline-flex !important;
+        align-self: end !important;
+        align-items: center !important;
+        justify-content: center !important;
+        justify-items: center !important;
+        text-align: center !important;
+        min-height: 2.72rem !important;
+        height: 2.72rem !important;
+        padding-inline: 1.22rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+    }
+}
+
