@@ -8032,3 +8032,57 @@ body[data-theme] #sharedProjectsCard.is-active .sidebar-nav-card-icon--shared {
     }
 }
 
+
+/* ============================================================================
+   Mobile-only fix: task action dropdown top-layer stacking
+   Date: 2026-05-23
+   Scope: mobile project modal only; keeps the open task dropdown above task cards
+   ============================================================================ */
+@media (max-width: 980px) {
+    #projectModal.modal-overlay.active .modal-content,
+    #projectModal.modal-overlay.active .modal-body,
+    #projectModal.modal-overlay.active .modal-section[id^="tasks-section-"],
+    #projectModal.modal-overlay.active .modal-tasks-card,
+    #projectModal.modal-overlay.active .modal-tasks-card-body,
+    #projectModal.modal-overlay.active .task-list,
+    body[data-theme] #projectModal.modal-overlay.active .modal-content,
+    body[data-theme] #projectModal.modal-overlay.active .modal-body,
+    body[data-theme] #projectModal.modal-overlay.active .modal-section[id^="tasks-section-"],
+    body[data-theme] #projectModal.modal-overlay.active .modal-tasks-card,
+    body[data-theme] #projectModal.modal-overlay.active .modal-tasks-card-body,
+    body[data-theme] #projectModal.modal-overlay.active .task-list {
+        overflow: visible !important;
+    }
+
+    #projectModal.modal-overlay.active .task-item,
+    body[data-theme] #projectModal.modal-overlay.active .task-item {
+        position: relative !important;
+        z-index: 1 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open),
+    body[data-theme] #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open),
+    body[data-theme^="console"] #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open),
+    body[data-theme^="glass"] #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open),
+    body[data-theme^="blueprint"] #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open) {
+        z-index: 9400 !important;
+    }
+
+    #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open) .task-meta-controls,
+    #projectModal.modal-overlay.active .task-action-menu-control.is-open,
+    body[data-theme] #projectModal.modal-overlay.active .task-item:has(.task-action-menu-control.is-open) .task-meta-controls,
+    body[data-theme] #projectModal.modal-overlay.active .task-action-menu-control.is-open {
+        position: relative !important;
+        z-index: 9410 !important;
+        overflow: visible !important;
+    }
+
+    #projectModal.modal-overlay.active .task-action-menu-control.is-open .task-action-menu-popover,
+    body[data-theme] #projectModal.modal-overlay.active .task-action-menu-control.is-open .task-action-menu-popover,
+    body[data-theme^="console"] #projectModal.modal-overlay.active .task-action-menu-control.is-open .task-action-menu-popover,
+    body[data-theme^="glass"] #projectModal.modal-overlay.active .task-action-menu-control.is-open .task-action-menu-popover,
+    body[data-theme^="blueprint"] #projectModal.modal-overlay.active .task-action-menu-control.is-open .task-action-menu-popover {
+        z-index: 9420 !important;
+    }
+}
