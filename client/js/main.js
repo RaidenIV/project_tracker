@@ -4033,7 +4033,12 @@ function syncSidebarLeaderboardModalContent() {
     const sourceList = document.getElementById('leaderboardList');
     const modalList = modal.querySelector('.sidebar-rail-leaderboard-list');
     const modalCard = modal.querySelector('.sidebar-rail-leaderboard-card');
-    if (modalList && sourceList) modalList.innerHTML = sourceList.innerHTML;
+    if (modalList && sourceList) {
+        modalList.innerHTML = sourceList.innerHTML;
+        modalList.style.minHeight = sourceList.style.minHeight || '';
+        modalList.classList.toggle('is-loading', sourceList.classList.contains('is-loading'));
+        modalList.setAttribute('aria-busy', sourceList.getAttribute('aria-busy') || 'false');
+    }
     if (modalCard && modalList) syncLeaderboardCardChrome(modalCard, modalList);
 }
 
@@ -4046,10 +4051,20 @@ function renderLeaderboardPanel() {
     syncLeaderboardCardChrome(leaderboardCard, list);
 
     if (accountState.leaderboardLoading) {
+        const lockedHeight = Math.ceil(list.getBoundingClientRect?.().height || list.offsetHeight || 0);
+        if (lockedHeight > 0) {
+            list.style.minHeight = `${lockedHeight}px`;
+        }
+        list.classList.add('is-loading');
+        list.setAttribute('aria-busy', 'true');
         list.innerHTML = '<div class="side-panel-empty">Loading rankings…</div>';
         syncSidebarLeaderboardModalContent();
         return;
     }
+
+    list.classList.remove('is-loading');
+    list.setAttribute('aria-busy', 'false');
+    list.style.minHeight = '';
 
     const currentUserId = String(accountState.user?.id || getCurrentUser?.()?.id || '');
     const rankedEntries = Array.isArray(accountState.leaderboard) ? [...accountState.leaderboard] : [];

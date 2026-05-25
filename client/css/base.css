@@ -9329,21 +9329,29 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 
 .invite-known-select {
     width: 100%;
-    padding: 8px 12px;
+    padding: 8px 40px 8px 12px;
     border-radius: 9px;
-    border: 1px solid rgba(120,120,130,0.22);
-    background: var(--panel);
+    border: 1px solid var(--line-soft, rgba(120,120,130,0.22));
+    background-color: var(--surface);
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 21px) 50%, calc(100% - 15px) 50%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
     color: var(--heading);
     font-size: 13px;
     font-weight: 700;
     font-family: inherit;
     outline: none;
-    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7);
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .invite-known-select:focus {
     border-color: var(--accent);
-    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .leaderboard-mode-tabs {
@@ -9383,4 +9391,15 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     margin: 0 0 8px;
+}
+
+.leaderboard-list.is-loading {
+    align-items: stretch;
+}
+
+.leaderboard-list.is-loading .side-panel-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: inherit;
 }
