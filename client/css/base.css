@@ -9403,3 +9403,25 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     justify-content: center;
     min-height: inherit;
 }
+
+
+/* ============================================================================
+   ROUND 18 OVERRIDES
+   - center the light/dark mode toggle knob in its track
+   - keep leaderboard loading copy dark in every color mode
+   ============================================================================ */
+
+.color-mode-toggle .color-mode-toggle-thumb {
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translate3d(0, -50%, 0) !important;
+}
+
+.color-mode-toggle.is-dark .color-mode-toggle-thumb {
+    transform: translate3d(50px, -50%, 0) !important;
+}
+
+.leaderboard-list.is-loading .side-panel-empty,
+.sidebar-rail-leaderboard-list.is-loading .side-panel-empty {
+    color: #111827 !important;
+}
