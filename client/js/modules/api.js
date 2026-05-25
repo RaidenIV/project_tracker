@@ -342,12 +342,16 @@ export async function saveStatsToServer(stats) {
     }
 }
 
-export async function loadLeaderboardFromServer() {
+export async function loadLeaderboardFromServer(mode = 'weekly') {
+    const normalizedMode = ['weekly', 'monthly', 'all'].includes(String(mode || '').toLowerCase())
+        ? String(mode).toLowerCase()
+        : 'weekly';
+    const query = `?mode=${encodeURIComponent(normalizedMode)}`;
     try {
-        return await request('GET', API_ENDPOINTS.LEADERBOARD) || { currentUser: null, leaders: [] };
+        return await request('GET', `${API_ENDPOINTS.LEADERBOARD}${query}`) || { currentUser: null, leaders: [], leaderboardMode: normalizedMode };
     } catch (err) {
         console.error('Error loading leaderboard:', err);
-        return { currentUser: null, leaders: [] };
+        return { currentUser: null, leaders: [], leaderboardMode: normalizedMode };
     }
 }
 

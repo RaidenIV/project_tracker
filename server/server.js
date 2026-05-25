@@ -1568,6 +1568,7 @@ app.get('/api/account', authenticateToken, async (req, res) => {
                 activeProjects
             },
             leaderboard: leaderboardPayload.leaderboard,
+            leaderboardMode: leaderboardPayload.leaderboardMode,
             currentLeaderboardRank: leaderboardPayload.currentLeaderboardRank,
             currentLeaderboardEntry: leaderboardPayload.currentLeaderboardEntry
         });
@@ -1848,7 +1849,50 @@ async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey,
     await Promise.all(updates);
 }
 
-async function buildLeaderboardData(currentUserId) {
+function normalizeLeaderboardMode(mode = 'weekly') {
+    const normalized = String(mode || '').trim().toLowerCase();
+    return ['weekly', 'monthly', 'all'].includes(normalized) ? normalized : 'weekly';
+}
+
+function getLeaderboardModeScore(row = {}, mode = 'weekly') {
+    switch (normalizeLeaderboardMode(mode)) {
+        case 'monthly':
+            return Math.max(0, Math.round(Number(row.monthlyCompletedTasks || 0) || 0));
+        case 'all':
+            return Math.max(0, Math.round(Number(row.completedTasks || 0) || 0));
+        case 'weekly':
+        default:
+            return Math.max(0, Math.round(Number(row.weeklyCompletedTasks || 0) || 0));
+    }
+}
+
+function buildLeaderboardScoreBreakdown(row = {}) {
+    return {
+        weeklyCompletedTasks: Math.max(0, Math.round(Number(row.weeklyCompletedTasks || 0) || 0)),
+        monthlyCompletedTasks: Math.max(0, Math.round(Number(row.monthlyCompletedTasks || 0) || 0)),
+        allTimeCompletedTasks: Math.max(0, Math.round(Number(row.completedTasks || 0) || 0))
+    };
+}
+
+function rankLeaderboardRows(rows = [], mode = 'weekly') {
+    const leaderboardMode = normalizeLeaderboardMode(mode);
+    return rows.map(row => ({
+        ...row,
+        leaderboardMode,
+        leaderboardScore: getLeaderboardModeScore(row, leaderboardMode),
+        scoreBreakdown: buildLeaderboardScoreBreakdown(row)
+    })).sort((a, b) => {
+        return (b.leaderboardScore - a.leaderboardScore)
+            || (b.completedTasks - a.completedTasks)
+            || (b.completedProjects - a.completedProjects)
+            || (b.sharedCompletedTasks - a.sharedCompletedTasks)
+            || (a.remainingTasks - b.remainingTasks)
+            || String(a.username || '').localeCompare(String(b.username || ''));
+    }).map((row, index) => ({ ...row, rank: index + 1 }));
+}
+
+async function buildLeaderboardData(currentUserId, mode = 'weekly') {
+    const leaderboardMode = normalizeLeaderboardMode(mode);
     const [accounts, projects, statsRecords] = await Promise.all([
         Account.find({}, 'username profilePic').lean(),
         Project.find({ archived: false }, 'owner completed completedDate completedBy completedByName tasks collaborators').lean(),
@@ -1994,7 +2038,7 @@ async function buildLeaderboardData(currentUserId) {
         });
     });
 
-    let leaderboard = Array.from(rows.values()).map(row => {
+    const computedRows = Array.from(rows.values()).map(row => {
         const activeProjectCompletionPercentage = row.activeProjects > 0
             ? Math.round((row.activeProgressRaw / row.activeProjects) * 100)
             : 0;
@@ -2004,21 +2048,27 @@ async function buildLeaderboardData(currentUserId) {
             projectCompletionPercentage: row.totalProjects > 0 ? Math.round((row.completedProjects / row.totalProjects) * 100) : 0,
             activeProjectCompletionPercentage,
             sharedCompletionPercentage: row.sharedTasks > 0 ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100) : 0,
-            leaderboardScore: Math.max(0, Math.round(row.weeklyCompletedTasks || 0)),
-            scoreBreakdown: { weeklyCompletedTasks: Math.max(0, Math.round(row.weeklyCompletedTasks || 0)) }
+            scoreBreakdown: buildLeaderboardScoreBreakdown(row)
         };
-    }).sort((a, b) => {
-        return (b.leaderboardScore - a.leaderboardScore)
-            || (b.completedTasks - a.completedTasks)
-            || (b.completedProjects - a.completedProjects)
-            || (b.sharedCompletedTasks - a.sharedCompletedTasks)
-            || (a.remainingTasks - b.remainingTasks)
-            || String(a.username || '').localeCompare(String(b.username || ''));
-    }).map((row, index) => ({ ...row, rank: index + 1 }));
+    });
 
-    const statsDocs = await Stats.find({ userId: { $in: leaderboard.map(row => row.userId) } });
+    const weeklyLeaderboard = rankLeaderboardRows(computedRows, 'weekly');
+    const statsDocs = await Stats.find({ userId: { $in: weeklyLeaderboard.map(row => row.userId) } });
     const statsDocMap = new Map(statsDocs.map(stats => [String(stats.userId || ''), stats]));
-    await updateCompetitiveRankHistory(leaderboard, statsDocMap, currentWeekKey, todayKey, previousDayKey);
+    await updateCompetitiveRankHistory(weeklyLeaderboard, statsDocMap, currentWeekKey, todayKey, previousDayKey);
+    const weeklyRankByUserId = new Map(weeklyLeaderboard.map(row => [String(row.userId || ''), row]));
+
+    let leaderboard = rankLeaderboardRows(computedRows.map(row => {
+        const weeklyRow = weeklyRankByUserId.get(String(row.userId || '')) || {};
+        return {
+            ...row,
+            playerLevel: weeklyRow.playerLevel || row.playerLevel,
+            previousWeekRank: weeklyRow.previousWeekRank || row.previousWeekRank,
+            rankBeforePreviousWeek: weeklyRow.rankBeforePreviousWeek || row.rankBeforePreviousWeek,
+            currentWeekRank: weeklyRow.currentWeekRank || weeklyRow.rank || row.currentWeekRank,
+            rankOneStreak: weeklyRow.rankOneStreak || row.rankOneStreak
+        };
+    }), leaderboardMode);
 
     const maxFor = (field, filter = () => true) => Math.max(0, ...leaderboard.filter(filter).map(row => Number(row[field] || 0)));
     const maxEfficiency = maxFor('totalCompletionPercentage', row => row.totalProjects >= 3);
@@ -2079,6 +2129,7 @@ async function buildLeaderboardData(currentUserId) {
         weeklyCompletedProjects: row.weeklyCompletedProjects,
         monthlyCompletedProjects: row.monthlyCompletedProjects,
         playerLevel: row.playerLevel,
+        leaderboardMode: row.leaderboardMode || leaderboardMode,
         leaderboardScore: row.leaderboardScore,
         scoreBreakdown: row.scoreBreakdown,
         competitiveAchievements: row.competitiveAchievements,
@@ -2089,6 +2140,7 @@ async function buildLeaderboardData(currentUserId) {
     const currentUserEntry = formattedLeaderboard.find(row => row.userId === currentUserKey) || null;
     return {
         leaderboard: formattedLeaderboard.slice(0, 10),
+        leaderboardMode,
         currentLeaderboardRank: currentUserEntry?.rank || null,
         currentLeaderboardEntry: currentUserEntry
     };
@@ -2096,7 +2148,7 @@ async function buildLeaderboardData(currentUserId) {
 
 app.get('/api/leaderboard', authenticateToken, async (req, res) => {
     try {
-        const leaderboardPayload = await buildLeaderboardData(req.user.id);
+        const leaderboardPayload = await buildLeaderboardData(req.user.id, req.query?.mode);
         res.json(leaderboardPayload);
     } catch (err) {
         console.error('Error fetching leaderboard:', err);

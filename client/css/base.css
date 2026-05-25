@@ -9315,3 +9315,72 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
         padding: 0 !important;
     }
 }
+
+/* Level-up achievement, invite dropdown, and leaderboard modes */
+.account-achievement-star.is-level-up,
+.personal-progression-modal-star.is-level-up {
+    -webkit-mask-image: url("../assets/fast.png");
+    mask-image: url("../assets/fast.png");
+}
+
+.account-achievement-card.is-level-up-achievement.is-unlocked {
+    border-color: color-mix(in srgb, var(--accent) 42%, rgba(120,120,130,0.24));
+}
+
+.invite-known-select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 9px;
+    border: 1px solid rgba(120,120,130,0.22);
+    background: var(--panel);
+    color: var(--heading);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    outline: none;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7);
+}
+
+.invite-known-select:focus {
+    border-color: var(--accent);
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.12), -2px -2px 5px rgba(255,255,255,0.7), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.leaderboard-mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0 0 8px;
+}
+
+.leaderboard-mode-tab {
+    min-height: 30px;
+    border: 1px solid rgba(120,120,130,0.22);
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--muted);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+
+.leaderboard-mode-tab:hover,
+.leaderboard-mode-tab:focus-visible,
+.leaderboard-mode-tab.is-active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+}
+
+.leaderboard-card-caption {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+}
