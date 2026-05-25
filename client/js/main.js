@@ -2130,7 +2130,8 @@ function syncDesktopTaskRichTextTypingMode(editor) {
 
 function getRichTextToolbarButtonsForEditor(editor) {
     if (!editor?.id) return [];
-    return Array.from(document.querySelectorAll(`.rich-text-toolbar-button[data-rich-text-editor="${editor.id}"]`));
+    return Array.from(document.querySelectorAll('.rich-text-toolbar-button[data-rich-text-editor]'))
+        .filter(button => button.getAttribute('data-rich-text-editor') === editor.id);
 }
 
 function setRichTextToolbarButtonState(button, command, isActive) {
@@ -2236,11 +2237,13 @@ function applyRichTextCommand(editorId, command) {
 
 function buildRichTextToolbarMarkup(editorId, disabled = false) {
     if (disabled) return '';
-    const safeEditorId = String(editorId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const rawEditorId = String(editorId || '');
+    const safeEditorId = escapeHtml(rawEditorId);
+    const editorIdLiteral = serializeInlineJsString(rawEditorId);
     const buttons = getRichTextToolbarCommands().map(command => {
         const label = getRichTextToolbarButtonLabel(command);
         const modifierClass = `rich-text-toolbar-button--${command}`;
-        return `<button class="rich-text-toolbar-button ${modifierClass}" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('${safeEditorId}', '${command}')" aria-label="${label}" aria-pressed="false" title="${label}" data-rich-text-editor="${safeEditorId}" data-rich-text-command="${command}">${getRichTextToolbarButtonInnerMarkup(command)}</button>`;
+        return `<button class="rich-text-toolbar-button ${modifierClass}" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand(${editorIdLiteral}, '${command}')" aria-label="${label}" aria-pressed="false" title="${label}" data-rich-text-editor="${safeEditorId}" data-rich-text-command="${command}">${getRichTextToolbarButtonInnerMarkup(command)}</button>`;
     }).join('');
     return `
         <div class="rich-text-toolbar" role="toolbar" aria-label="Text formatting tools" data-rich-text-editor="${safeEditorId}">
