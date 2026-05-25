@@ -2049,9 +2049,8 @@ function syncDesktopTaskRichTextTypingMode(editor) {
     if (!isDesktopModalTaskRichTextEditor(editor) || !isRichTextEditorControlActive(editor)) return;
     getRichTextToolbarCommands().forEach(command => {
         const queriedActive = queryRichTextCommandStateForEditor(editor, command);
-        if (queriedActive) setStoredRichTextCommandState(editor, command, true);
-        const isActive = queriedActive || getStoredRichTextCommandState(editor, command);
-        setTaskEditToolbarCommandState(editor, command, isActive);
+        setStoredRichTextCommandState(editor, command, queriedActive);
+        setTaskEditToolbarCommandState(editor, command, queriedActive);
     });
 }
 
@@ -2102,7 +2101,7 @@ function syncRichTextToolbarState(editorOrId) {
         const command = button.getAttribute('data-rich-text-command');
         const queriedActive = !!(isEditorActive && command && queryRichTextCommandStateForEditor(editor, command));
         const storedActive = !!(canUseStoredCommandState && command && getStoredRichTextCommandState(editor, command));
-        const isActive = queriedActive || storedActive;
+        const isActive = queriedActive;
         setRichTextToolbarButtonState(button, command, isActive);
     });
 }
