@@ -1423,10 +1423,13 @@ function initializeRichTextInputShortcuts() {
         if (editor) scheduleRichTextToolbarStateSync(editor);
     }, true);
 
-    ['keyup', 'mouseup', 'pointerup', 'input', 'focusin'].forEach(eventName => {
+    ['beforeinput', 'keyup', 'mouseup', 'pointerup', 'input', 'focusin'].forEach(eventName => {
         document.addEventListener(eventName, event => {
             const editor = event.target?.closest?.('.rich-text-editor[contenteditable="true"]');
-            if (editor) scheduleRichTextToolbarStateSync(editor);
+            if (editor) {
+                syncDesktopTaskRichTextTypingMode(editor);
+                scheduleRichTextToolbarStateSync(editor);
+            }
         }, true);
     });
 
@@ -1922,11 +1925,11 @@ function getRichTextToolbarButtonInnerMarkup(command) {
 
 function isSelectionInsideRichTextEditor(editor) {
     if (!editor || typeof window === 'undefined') return false;
+    const activeElement = document.activeElement;
+    if (activeElement === editor || !!editor.contains(activeElement)) return true;
+
     const selection = window.getSelection?.();
-    if (!selection || selection.rangeCount === 0) {
-        const activeElement = document.activeElement;
-        return activeElement === editor || !!editor.contains(activeElement);
-    }
+    if (!selection || selection.rangeCount === 0) return false;
 
     const anchor = selection.anchorNode;
     const focus = selection.focusNode;
@@ -2034,6 +2037,22 @@ function isSelectionCollapsedInsideRichTextEditor(editor) {
 
 function isModalTaskRichTextEditor(editor) {
     return !!(editor?.classList?.contains('modal-task-edit-editor') || editor?.classList?.contains('modal-task-entry-editor'));
+}
+
+function isDesktopModalTaskRichTextEditor(editor) {
+    if (!isModalTaskRichTextEditor(editor)) return false;
+    if (typeof isMobileWebSidebarViewport === 'function') return !isMobileWebSidebarViewport();
+    return true;
+}
+
+function syncDesktopTaskRichTextTypingMode(editor) {
+    if (!isDesktopModalTaskRichTextEditor(editor) || !isRichTextEditorControlActive(editor)) return;
+    getRichTextToolbarCommands().forEach(command => {
+        const queriedActive = queryRichTextCommandStateForEditor(editor, command);
+        if (queriedActive) setStoredRichTextCommandState(editor, command, true);
+        const isActive = queriedActive || getStoredRichTextCommandState(editor, command);
+        setTaskEditToolbarCommandState(editor, command, isActive);
+    });
 }
 
 function getRichTextToolbarButtonsForEditor(editor) {
@@ -11318,6 +11337,8 @@ function autoResizeModalTaskInput(input) {
     if (!input) return;
     input.style.height = 'auto';
     input.style.height = `${Math.max(input.scrollHeight, 44)}px`;
+    syncDesktopTaskRichTextTypingMode(input);
+    scheduleRichTextToolbarStateSync(input);
 }
 
 function handleModalTaskEditKeydown(projectId, taskId, event) {
@@ -11644,7 +11665,10 @@ function adjustModalPasteBox(pasteBox) {
 }
 
 function handleModalPasteInput(projectId, event) {
-    adjustModalPasteBox(event?.target || document.getElementById(`modal-paste-box-${projectId}`));
+    const pasteBox = event?.target || document.getElementById(`modal-paste-box-${projectId}`);
+    adjustModalPasteBox(pasteBox);
+    syncDesktopTaskRichTextTypingMode(pasteBox);
+    scheduleRichTextToolbarStateSync(pasteBox);
 }
 
 function handleModalPasteKeydown(projectId, event) {
