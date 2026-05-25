@@ -9888,3 +9888,81 @@ body[data-theme^="blueprint"] .stitch-project-card .project-card-access {
         box-sizing: border-box !important;
     }
 }
+
+/* ============================================================================
+   ROUND 20 OVERRIDES
+   - vertically center the UI Options light/dark toggle thumb and labels
+   - make leaderboard loading surfaces match the sidebar background
+   - render leaderboard loading copy in the active accent color in every mode
+   ============================================================================ */
+
+body[data-theme^="console"] {
+    --leaderboard-loading-sidebar-bg: var(--surface, var(--panel));
+}
+
+body[data-theme^="blueprint"] {
+    --leaderboard-loading-sidebar-bg: var(--surface, var(--panel));
+}
+
+body[data-theme^="glass"] {
+    --leaderboard-loading-sidebar-bg: var(--panel, var(--surface));
+}
+
+html body[data-theme] .ui-options-mode-toggle-row .color-mode-toggle-track,
+html body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-track,
+html body[data-theme^="glass"] .ui-options-mode-toggle-row .color-mode-toggle-track,
+html body[data-theme^="blueprint"] .ui-options-mode-toggle-row .color-mode-toggle-track {
+    align-items: center !important;
+}
+
+html body[data-theme] .ui-options-mode-toggle-row .color-mode-toggle-option,
+html body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-option,
+html body[data-theme^="glass"] .ui-options-mode-toggle-row .color-mode-toggle-option,
+html body[data-theme^="blueprint"] .ui-options-mode-toggle-row .color-mode-toggle-option {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    line-height: 1 !important;
+}
+
+html body[data-theme] .ui-options-mode-toggle-row .color-mode-toggle-thumb,
+html body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle-thumb,
+html body[data-theme^="glass"] .ui-options-mode-toggle-row .color-mode-toggle-thumb,
+html body[data-theme^="blueprint"] .ui-options-mode-toggle-row .color-mode-toggle-thumb {
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translate3d(0, -50%, 0) !important;
+}
+
+html body[data-theme] .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb,
+html body[data-theme^="console"] .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb,
+html body[data-theme^="glass"] .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb,
+html body[data-theme^="blueprint"] .ui-options-mode-toggle-row .color-mode-toggle.is-dark .color-mode-toggle-thumb {
+    transform: translate3d(4.25rem, -50%, 0) !important;
+}
+
+html body[data-theme] .leaderboard-panel-card:has(.leaderboard-list.is-loading),
+html body[data-theme] .sidebar-rail-leaderboard-card:has(.sidebar-rail-leaderboard-list.is-loading),
+html body[data-theme^="console"] .leaderboard-panel-card:has(.leaderboard-list.is-loading),
+html body[data-theme^="console"] .sidebar-rail-leaderboard-card:has(.sidebar-rail-leaderboard-list.is-loading),
+html body[data-theme^="glass"] .leaderboard-panel-card:has(.leaderboard-list.is-loading),
+html body[data-theme^="glass"] .sidebar-rail-leaderboard-card:has(.sidebar-rail-leaderboard-list.is-loading),
+html body[data-theme^="blueprint"] .leaderboard-panel-card:has(.leaderboard-list.is-loading),
+html body[data-theme^="blueprint"] .sidebar-rail-leaderboard-card:has(.sidebar-rail-leaderboard-list.is-loading) {
+    background: var(--leaderboard-loading-sidebar-bg, var(--surface, var(--panel))) !important;
+}
+
+html body[data-theme] .leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme] .sidebar-rail-leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme^="console"] .leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme^="console"] .sidebar-rail-leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme^="glass"] .leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme^="glass"] .sidebar-rail-leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme^="blueprint"] .leaderboard-list.is-loading .side-panel-empty,
+html body[data-theme^="blueprint"] .sidebar-rail-leaderboard-list.is-loading .side-panel-empty {
+    background: var(--leaderboard-loading-sidebar-bg, var(--surface, var(--panel))) !important;
+    color: var(--accent, currentColor) !important;
+    border-color: color-mix(in srgb, var(--accent, currentColor) 24%, transparent) !important;
+    box-shadow: none !important;
+}
