@@ -3920,7 +3920,7 @@ function queueCompetitiveAchievementNotifications(entries = []) {
         if (!isCurrentUserWinner) return;
 
         const username = getLeaderboardUsername(entry);
-        (Array.isArray(entry?.competitiveAchievements) ? entry.competitiveAchievements : []).forEach(achievement => {
+        getVisibleCompetitiveAchievements(entry?.competitiveAchievements).forEach(achievement => {
             const fallback = getCompetitiveAchievementFallback(achievement.id);
             const key = String(achievement.notificationKey || `${entry.userId || username}:${achievement.id || fallback.name}`);
             if (!key || notifiedKeys.has(key)) return;
@@ -4065,7 +4065,7 @@ function buildLeaderboardProfileModalMarkup(entry) {
     const completion = getLeaderboardCompletionValue(entry);
     const leaderboardScore = getLeaderboardScoreValue(entry);
     const playerLevel = Math.max(1, Number(entry.playerLevel || 1) || 1);
-    const competitiveAchievements = Array.isArray(entry.competitiveAchievements) ? entry.competitiveAchievements : [];
+    const competitiveAchievements = getVisibleCompetitiveAchievements(entry.competitiveAchievements);
     const stats = [
         ['Rank', rank > 0 ? `#${rank}` : '—'],
         ['Level', String(playerLevel)],
@@ -4583,8 +4583,30 @@ function formatNotificationTime(value) {
     return formatCompactDateTime(value);
 }
 
+function getCompetitiveAchievementDateValue(achievement = {}) {
+    return achievement?.achievedAt || achievement?.awardedAt || achievement?.date || achievement?.createdAt || '';
+}
+
+function getCompetitiveAchievementTimestamp(achievement = {}) {
+    const dateValue = getCompetitiveAchievementDateValue(achievement);
+    if (!dateValue) return Date.now();
+    const timestamp = new Date(dateValue).getTime();
+    return Number.isFinite(timestamp) ? timestamp : Date.now();
+}
+
+function isCompetitiveAchievementAwarded(achievement = {}, now = new Date()) {
+    const currentTime = now instanceof Date ? now.getTime() : new Date(now || Date.now()).getTime();
+    return getCompetitiveAchievementTimestamp(achievement) <= (Number.isFinite(currentTime) ? currentTime : Date.now());
+}
+
+function getVisibleCompetitiveAchievements(achievements = []) {
+    if (!Array.isArray(achievements)) return [];
+    const now = new Date();
+    return achievements.filter(achievement => isCompetitiveAchievementAwarded(achievement, now));
+}
+
 function getCompetitiveAchievementDateLabel(achievement = {}) {
-    const dateValue = achievement.achievedAt || achievement.awardedAt || achievement.date || achievement.createdAt || '';
+    const dateValue = getCompetitiveAchievementDateValue(achievement);
     return dateValue ? formatCompactDateTime(dateValue) : '';
 }
 
@@ -4651,22 +4673,19 @@ function buildNotificationItems() {
         { key: `weekly-score:${formatDateKey(weekStart) || weekStart.toISOString()}:${weeklyTasks}`, title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Sunday at 12:00 AM.`, time: now.toISOString() },
         { key: `personal-achievements:${unlockedSet.size}`, title: 'Personal achievements', detail: `${unlockedSet.size} of ${PERSONAL_ACHIEVEMENTS.length} unlocked.`, time: now.toISOString() }
     ];
-    if (Array.isArray(currentEntry.competitiveAchievements) && currentEntry.competitiveAchievements.length) {
-        const latestCompetitiveDate = currentEntry.competitiveAchievements
-            .map(achievement => achievement.achievedAt || achievement.awardedAt || achievement.date || '')
-            .filter(Boolean)
-            .sort((a, b) => new Date(b || 0) - new Date(a || 0))[0] || now.toISOString();
+    const competitiveAchievements = getVisibleCompetitiveAchievements(currentEntry.competitiveAchievements);
+    competitiveAchievements.forEach(achievement => {
+        const fallback = getCompetitiveAchievementFallback(achievement.id);
+        const name = achievement.name || fallback.name;
+        const description = achievement.description || fallback.description || 'Competitive achievement unlocked.';
+        const dateValue = getCompetitiveAchievementDateValue(achievement) || now.toISOString();
         items.push({
-            key: `competitive-achievements:${currentEntry.competitiveAchievements.map(achievement => achievement.notificationKey || achievement.id || achievement.name).join('|')}`,
-            title: 'Competitive achievements',
-            detail: currentEntry.competitiveAchievements.map(achievement => {
-                const name = achievement.name || getCompetitiveAchievementFallback(achievement.id).name;
-                const dateLabel = getCompetitiveAchievementDateLabel(achievement);
-                return dateLabel ? `${name} (${dateLabel})` : name;
-            }).join(', '),
-            time: latestCompetitiveDate
+            key: String(achievement.notificationKey || `competitive:${currentEntry.userId || currentEntry.username || 'user'}:${achievement.id || name}:${dateValue}`),
+            title: 'Competitive achievement',
+            detail: `${name} • ${description}`,
+            time: dateValue
         });
-    }
+    });
     recentCompletedTasks.forEach(record => {
         items.push({
             key: `task:${record.project?.id || ''}:${record.task?.id || ''}:${record.timestamp || ''}`,

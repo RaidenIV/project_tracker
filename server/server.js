@@ -1648,6 +1648,7 @@ function sanitizeStatsProgression(value = {}) {
             currentWeekKey: String(competitiveSource.currentWeekKey || '').slice(0, 20),
             currentWeekRank: Number.isFinite(Number(competitiveSource.currentWeekRank)) ? Math.max(0, Math.round(Number(competitiveSource.currentWeekRank))) : 0,
             previousWeekRank: Number.isFinite(Number(competitiveSource.previousWeekRank)) ? Math.max(0, Math.round(Number(competitiveSource.previousWeekRank))) : 0,
+            rankBeforePreviousWeek: Number.isFinite(Number(competitiveSource.rankBeforePreviousWeek)) ? Math.max(0, Math.round(Number(competitiveSource.rankBeforePreviousWeek))) : 0,
             lastRankOneDayKey: String(competitiveSource.lastRankOneDayKey || '').slice(0, 20),
             rankOneStreak: Number.isFinite(Number(competitiveSource.rankOneStreak)) ? Math.max(0, Math.round(Number(competitiveSource.rankOneStreak))) : 0
         },
@@ -1821,6 +1822,7 @@ async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey,
         const nextCompetitive = { ...competitive };
 
         if (competitive.currentWeekKey !== weekKey) {
+            nextCompetitive.rankBeforePreviousWeek = Number(competitive.previousWeekRank || 0) || 0;
             nextCompetitive.previousWeekRank = Number(competitive.currentWeekRank || 0) || 0;
             nextCompetitive.currentWeekKey = weekKey;
         }
@@ -1837,6 +1839,7 @@ async function updateCompetitiveRankHistory(leaderboard, statsByUserId, weekKey,
         stats.progression = nextProgression;
         row.playerLevel = Math.max(1, Number(nextProgression.lastLevel || row.playerLevel || 1));
         row.previousWeekRank = nextCompetitive.previousWeekRank || 0;
+        row.rankBeforePreviousWeek = nextCompetitive.rankBeforePreviousWeek || 0;
         row.currentWeekRank = nextCompetitive.currentWeekRank || row.rank;
         row.rankOneStreak = nextCompetitive.rankOneStreak || 0;
         updates.push(stats.save().catch(err => console.error('Failed to update competitive rank history:', err)));
@@ -1881,14 +1884,20 @@ async function buildLeaderboardData(currentUserId) {
             dailyCompletedTasks: 0,
             previousDailyCompletedTasks: 0,
             weeklyCompletedTasks: 0,
+            previousWeeklyCompletedTasks: 0,
             monthlyCompletedTasks: 0,
+            previousMonthlyCompletedTasks: 0,
             dailyCompletedProjects: 0,
+            previousDailyCompletedProjects: 0,
             weeklyCompletedProjects: 0,
+            previousWeeklyCompletedProjects: 0,
             monthlyCompletedProjects: 0,
+            previousMonthlyCompletedProjects: 0,
             finalSharedProjectClosures: 0,
             sharedCarryProjects: 0,
             playerLevel: Math.max(1, Number(progression.lastLevel || 1) || 1),
             previousWeekRank: Number(progression.competitive?.previousWeekRank || 0) || 0,
+            rankBeforePreviousWeek: Number(progression.competitive?.rankBeforePreviousWeek || 0) || 0,
             rankOneStreak: Number(progression.competitive?.rankOneStreak || 0) || 0,
             leaderboardScore: 0,
             rank: null,
@@ -1903,12 +1912,18 @@ async function buildLeaderboardData(currentUserId) {
     const previousDayEnd = dayStart;
     const weekStart = startOfLocalWeek(now);
     const weekEnd = addLocalCalendarDays(weekStart, 7);
+    const previousWeekStart = addLocalCalendarDays(weekStart, -7);
+    const previousWeekEnd = weekStart;
     const monthStart = startOfLocalMonth(now);
     const monthEnd = addLocalCalendarMonths(monthStart, 1);
+    const previousMonthStart = addLocalCalendarMonths(monthStart, -1);
+    const previousMonthEnd = monthStart;
     const todayKey = localDayKey(now);
     const previousDayKey = localDayKey(previousDayStart);
     const currentWeekKey = periodKey('week', now);
+    const previousWeekKey = periodKey('week', previousWeekStart);
     const currentMonthKey = periodKey('month', now);
+    const previousMonthKey = periodKey('month', previousMonthStart);
 
     projects.forEach(project => {
         const ownerId = String(project.owner || '');
@@ -1944,8 +1959,11 @@ async function buildLeaderboardData(currentUserId) {
 
             if (completedProject && projectCompletedBy === participantId) {
                 if (timestampInRange(project.completedDate, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
+                if (timestampInRange(project.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedProjects += 1;
                 if (timestampInRange(project.completedDate, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
+                if (timestampInRange(project.completedDate, previousWeekStart, previousWeekEnd)) row.previousWeeklyCompletedProjects += 1;
                 if (timestampInRange(project.completedDate, monthStart, monthEnd)) row.monthlyCompletedProjects += 1;
+                if (timestampInRange(project.completedDate, previousMonthStart, previousMonthEnd)) row.previousMonthlyCompletedProjects += 1;
             }
 
             if (isSharedProject) {
@@ -1969,7 +1987,9 @@ async function buildLeaderboardData(currentUserId) {
                 if (timestampInRange(task.completedDate, dayStart, dayEnd)) row.dailyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, weekStart, weekEnd)) row.weeklyCompletedTasks += 1;
+                if (timestampInRange(task.completedDate, previousWeekStart, previousWeekEnd)) row.previousWeeklyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, monthStart, monthEnd)) row.monthlyCompletedTasks += 1;
+                if (timestampInRange(task.completedDate, previousMonthStart, previousMonthEnd)) row.previousMonthlyCompletedTasks += 1;
             });
         });
     });
@@ -2003,31 +2023,34 @@ async function buildLeaderboardData(currentUserId) {
     const maxFor = (field, filter = () => true) => Math.max(0, ...leaderboard.filter(filter).map(row => Number(row[field] || 0)));
     const maxEfficiency = maxFor('totalCompletionPercentage', row => row.totalProjects >= 3);
     const maxPreviousDailyTasks = maxFor('previousDailyCompletedTasks');
-    const maxDailyProjects = maxFor('dailyCompletedProjects');
-    const maxWeeklyTasks = maxFor('weeklyCompletedTasks');
-    const maxWeeklyProjects = maxFor('weeklyCompletedProjects');
-    const maxMonthlyTasks = maxFor('monthlyCompletedTasks');
-    const maxMonthlyProjects = maxFor('monthlyCompletedProjects');
-    const dailyAwardAt = new Date(dayStart);
-    const dayAwardAt = new Date(dayEnd.getTime() - 1);
-    const weekAwardAt = new Date(weekEnd.getTime() - 1);
-    const monthAwardAt = new Date(monthEnd.getTime() - 1);
+    const maxPreviousDailyProjects = maxFor('previousDailyCompletedProjects');
+    const maxPreviousWeeklyTasks = maxFor('previousWeeklyCompletedTasks');
+    const maxPreviousWeeklyProjects = maxFor('previousWeeklyCompletedProjects');
+    const maxPreviousMonthlyTasks = maxFor('previousMonthlyCompletedTasks');
+    const maxPreviousMonthlyProjects = maxFor('previousMonthlyCompletedProjects');
+    const previousDayAwardAt = new Date(dayStart.getTime() - 1);
+    const previousWeekAwardAt = new Date(weekStart.getTime() - 1);
+    const previousMonthAwardAt = new Date(monthStart.getTime() - 1);
 
     leaderboard = leaderboard.map(row => {
         const achievements = [];
-        const add = (base, key, achievedAt = now) => achievements.push(makeCompetitiveAchievement(base, row.userId, key, achievedAt));
+        const add = (base, key, achievedAt = now) => {
+            const awardDate = achievedAt instanceof Date ? achievedAt : new Date(achievedAt || Date.now());
+            if (Number.isNaN(awardDate.getTime()) || awardDate.getTime() > now.getTime()) return;
+            achievements.push(makeCompetitiveAchievement(base, row.userId, key, awardDate));
+        };
         if (row.totalProjects >= 3 && maxEfficiency > 0 && row.totalCompletionPercentage === maxEfficiency) add(COMPETITIVE_ACHIEVEMENTS.efficiencyLead, `all:${todayKey}`, now);
         if (row.finalSharedProjectClosures >= 5) add(COMPETITIVE_ACHIEVEMENTS.closer, `all:${row.finalSharedProjectClosures}`, now);
         if (row.sharedCarryProjects >= 1) add(COMPETITIVE_ACHIEVEMENTS.teamCarry, `all:${row.sharedCarryProjects}`, now);
-        if (row.rankOneStreak >= 7) add(COMPETITIVE_ACHIEVEMENTS.domination, `streak:${row.rankOneStreak}`, dayAwardAt);
-        if (maxPreviousDailyTasks > 0 && row.previousDailyCompletedTasks === maxPreviousDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${previousDayKey}`, dailyAwardAt);
-        if (maxDailyProjects > 0 && row.dailyCompletedProjects === maxDailyProjects) add(COMPETITIVE_ACHIEVEMENTS.projectHunter, `day:${todayKey}`, dayAwardAt);
-        if (row.rank <= 3) add(COMPETITIVE_ACHIEVEMENTS.triumvirate, currentWeekKey, weekAwardAt);
-        if (row.previousWeekRank > 0 && row.previousWeekRank - row.rank >= 5) add(COMPETITIVE_ACHIEVEMENTS.risingStar, currentWeekKey, weekAwardAt);
-        if (maxWeeklyTasks > 0 && row.weeklyCompletedTasks === maxWeeklyTasks) add(COMPETITIVE_ACHIEVEMENTS.weeklyTaskChampion, currentWeekKey, weekAwardAt);
-        if (maxWeeklyProjects > 0 && row.weeklyCompletedProjects === maxWeeklyProjects) add(COMPETITIVE_ACHIEVEMENTS.weeklyProjectChampion, currentWeekKey, weekAwardAt);
-        if (maxMonthlyTasks > 0 && row.monthlyCompletedTasks === maxMonthlyTasks) add(COMPETITIVE_ACHIEVEMENTS.monthlyTaskChampion, currentMonthKey, monthAwardAt);
-        if (maxMonthlyProjects > 0 && row.monthlyCompletedProjects === maxMonthlyProjects) add(COMPETITIVE_ACHIEVEMENTS.monthlyProjectChampion, currentMonthKey, monthAwardAt);
+        if (row.rankOneStreak >= 8) add(COMPETITIVE_ACHIEVEMENTS.domination, `streak:${row.rankOneStreak - 1}`, previousDayAwardAt);
+        if (maxPreviousDailyTasks > 0 && row.previousDailyCompletedTasks === maxPreviousDailyTasks) add(COMPETITIVE_ACHIEVEMENTS.taskHunter, `day:${previousDayKey}`, previousDayAwardAt);
+        if (maxPreviousDailyProjects > 0 && row.previousDailyCompletedProjects === maxPreviousDailyProjects) add(COMPETITIVE_ACHIEVEMENTS.projectHunter, `day:${previousDayKey}`, previousDayAwardAt);
+        if (row.previousWeekRank > 0 && row.previousWeekRank <= 3) add(COMPETITIVE_ACHIEVEMENTS.triumvirate, previousWeekKey, previousWeekAwardAt);
+        if (row.rankBeforePreviousWeek > 0 && row.previousWeekRank > 0 && row.rankBeforePreviousWeek - row.previousWeekRank >= 5) add(COMPETITIVE_ACHIEVEMENTS.risingStar, previousWeekKey, previousWeekAwardAt);
+        if (maxPreviousWeeklyTasks > 0 && row.previousWeeklyCompletedTasks === maxPreviousWeeklyTasks) add(COMPETITIVE_ACHIEVEMENTS.weeklyTaskChampion, previousWeekKey, previousWeekAwardAt);
+        if (maxPreviousWeeklyProjects > 0 && row.previousWeeklyCompletedProjects === maxPreviousWeeklyProjects) add(COMPETITIVE_ACHIEVEMENTS.weeklyProjectChampion, previousWeekKey, previousWeekAwardAt);
+        if (maxPreviousMonthlyTasks > 0 && row.previousMonthlyCompletedTasks === maxPreviousMonthlyTasks) add(COMPETITIVE_ACHIEVEMENTS.monthlyTaskChampion, previousMonthKey, previousMonthAwardAt);
+        if (maxPreviousMonthlyProjects > 0 && row.previousMonthlyCompletedProjects === maxPreviousMonthlyProjects) add(COMPETITIVE_ACHIEVEMENTS.monthlyProjectChampion, previousMonthKey, previousMonthAwardAt);
         return { ...row, competitiveAchievements: achievements };
     });
 
