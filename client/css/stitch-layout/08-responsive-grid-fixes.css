@@ -9762,3 +9762,129 @@ body[data-theme^="blueprint"] .project-card .project-card-access,
 body[data-theme^="blueprint"] .stitch-project-card .project-card-access {
     column-gap: 0.25em !important;
 }
+
+/* ============================================================================
+   Desktop-only patch: project modal tab flush, neutral task sort, shared indicator,
+   and project-card vertical alignment
+   ============================================================================ */
+@media (min-width: 981px) {
+    html body[data-theme] #projectModal[data-active-tab="tasks"] .modal-top-menu-shell,
+    html body[data-theme^="console"] #projectModal[data-active-tab="tasks"] .modal-top-menu-shell,
+    html body[data-theme^="glass"] #projectModal[data-active-tab="tasks"] .modal-top-menu-shell,
+    html body[data-theme^="blueprint"] #projectModal[data-active-tab="tasks"] .modal-top-menu-shell {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme] #projectModal .modal-tasks-card > .task-category-controls,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme^="console"] #projectModal .modal-tasks-card > .task-category-controls,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme^="glass"] #projectModal .modal-tasks-card > .task-category-controls,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-category-controls,
+    html body[data-theme^="blueprint"] #projectModal .modal-tasks-card > .task-category-controls {
+        top: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-tasks-card,
+    html body[data-theme^="console"] #projectModal .modal-tasks-card,
+    html body[data-theme^="glass"] #projectModal .modal-tasks-card,
+    html body[data-theme^="blueprint"] #projectModal .modal-tasks-card {
+        margin-top: 0 !important;
+    }
+
+    html body[data-theme] #projectModal .modal-menu-item[data-movable-tab-id="members"] .members-count,
+    html body[data-theme^="console"] #projectModal .modal-menu-item[data-movable-tab-id="members"] .members-count,
+    html body[data-theme^="glass"] #projectModal .modal-menu-item[data-movable-tab-id="members"] .members-count,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-item[data-movable-tab-id="members"] .members-count {
+        display: none !important;
+    }
+
+    html body[data-theme] #projectModal .modal-menu-item[data-movable-tab-id="members"]:has(.members-count) .modal-tab-icon,
+    html body[data-theme^="console"] #projectModal .modal-menu-item[data-movable-tab-id="members"]:has(.members-count) .modal-tab-icon,
+    html body[data-theme^="glass"] #projectModal .modal-menu-item[data-movable-tab-id="members"]:has(.members-count) .modal-tab-icon,
+    html body[data-theme^="blueprint"] #projectModal .modal-menu-item[data-movable-tab-id="members"]:has(.members-count) .modal-tab-icon {
+        color: var(--accent, currentColor) !important;
+        stroke: currentColor !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        padding-right: 2.65rem !important;
+        border-color: var(--line, var(--border, rgba(148, 163, 184, 0.28))) !important;
+        color: var(--heading, var(--text, currentColor)) !important;
+        -webkit-text-fill-color: var(--heading, var(--text, currentColor)) !important;
+        accent-color: auto !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 1.22rem center !important;
+        background-size: 0.76rem 0.76rem !important;
+        box-shadow: none !important;
+    }
+
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:hover,
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus,
+    html body[data-theme] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus-visible,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:hover,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus,
+    html body[data-theme^="console"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus-visible,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:hover,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus,
+    html body[data-theme^="glass"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus-visible,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:hover,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus,
+    html body[data-theme^="blueprint"] #projectModal .modal-section[id^="tasks-section-"] .task-sort-select:focus-visible {
+        border-color: var(--accent, currentColor) !important;
+        color: var(--accent, currentColor) !important;
+        -webkit-text-fill-color: var(--accent, currentColor) !important;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-action-row,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-action-row,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-action-row {
+        align-items: center !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-priority-control--card,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-priority-control--card,
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-priority-card-button,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-priority-card-button,
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-card-notes-button,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-card-notes-button,
+    html body[data-theme] .container .viewport .project-card .project-card-action-row .project-due-date-control--card,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-action-row .project-due-date-control--card {
+        align-self: center !important;
+        vertical-align: middle !important;
+        transform: none !important;
+    }
+
+    html body[data-theme] .container .viewport .project-card .project-card-status,
+    html body[data-theme] .container .viewport .stitch-project-card .project-card-status,
+    html body[data-theme^="console"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="glass"] .container .viewport .project-card .project-card-status,
+    html body[data-theme^="blueprint"] .container .viewport .project-card .project-card-status {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: var(--project-card-footer-status-height, 1.82rem) !important;
+        min-height: var(--project-card-footer-status-height, 1.82rem) !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        line-height: 1 !important;
+        box-sizing: border-box !important;
+    }
+}

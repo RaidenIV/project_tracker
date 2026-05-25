@@ -2001,8 +2001,39 @@ function queryRichTextCommandStateForEditor(editor, command) {
         .some(element => element && (element === editor || editor.contains(element)) && elementHasRichTextCommand(element, command, editor));
 }
 
+function getRichTextStoredCommandKey(command) {
+    const safeCommand = String(command || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    return safeCommand ? `richTextStored${safeCommand.charAt(0).toUpperCase()}${safeCommand.slice(1)}` : '';
+}
+
+function getStoredRichTextCommandState(editor, command) {
+    const key = getRichTextStoredCommandKey(command);
+    return !!key && editor?.dataset?.[key] === 'true';
+}
+
+function setStoredRichTextCommandState(editor, command, isActive) {
+    const key = getRichTextStoredCommandKey(command);
+    if (!editor || !key) return;
+    editor.dataset[key] = String(!!isActive);
+}
+
+function clearStoredRichTextCommandStates(editor) {
+    if (!editor?.dataset) return;
+    getRichTextToolbarCommands().forEach(command => {
+        const key = getRichTextStoredCommandKey(command);
+        if (key) delete editor.dataset[key];
+    });
+}
+
+function isSelectionCollapsedInsideRichTextEditor(editor) {
+    if (!editor || typeof window === 'undefined') return false;
+    const selection = window.getSelection?.();
+    if (!selection || selection.rangeCount === 0) return document.activeElement === editor || !!editor.contains(document.activeElement);
+    return selection.isCollapsed && isSelectionInsideRichTextEditor(editor);
+}
+
 function isModalTaskRichTextEditor(editor) {
-    return !!editor?.classList?.contains('modal-task-edit-editor');
+    return !!(editor?.classList?.contains('modal-task-edit-editor') || editor?.classList?.contains('modal-task-entry-editor'));
 }
 
 function getRichTextToolbarButtonsForEditor(editor) {
@@ -2040,11 +2071,19 @@ function syncRichTextToolbarState(editorOrId) {
     if (!editor || !editor.id) return;
 
     const isEditorActive = editor.getAttribute('contenteditable') === 'true' && (isSelectionInsideRichTextEditor(editor) || isRichTextEditorControlActive(editor));
+    const isTaskRichTextEditor = isModalTaskRichTextEditor(editor);
+    const canUseStoredCommandState = isTaskRichTextEditor && isEditorActive && isSelectionCollapsedInsideRichTextEditor(editor);
     const buttons = getRichTextToolbarButtonsForEditor(editor);
+
+    if (!isEditorActive && isTaskRichTextEditor) {
+        clearStoredRichTextCommandStates(editor);
+    }
 
     buttons.forEach(button => {
         const command = button.getAttribute('data-rich-text-command');
-        const isActive = !!(isEditorActive && command && queryRichTextCommandStateForEditor(editor, command));
+        const queriedActive = !!(isEditorActive && command && queryRichTextCommandStateForEditor(editor, command));
+        const storedActive = !!(canUseStoredCommandState && command && getStoredRichTextCommandState(editor, command));
+        const isActive = queriedActive || storedActive;
         setRichTextToolbarButtonState(button, command, isActive);
     });
 }
@@ -2070,7 +2109,7 @@ function applyRichTextCommand(editorId, command) {
     if (!safeCommand) return;
     const isTaskEditor = isModalTaskRichTextEditor(editor);
     const wasTaskCommandActive = isTaskEditor
-        ? (queryRichTextCommandStateForEditor(editor, safeCommand) || getTaskEditToolbarCommandButtonState(editor, safeCommand))
+        ? (queryRichTextCommandStateForEditor(editor, safeCommand) || getStoredRichTextCommandState(editor, safeCommand) || getTaskEditToolbarCommandButtonState(editor, safeCommand))
         : false;
     editor.focus({ preventScroll: true });
     try {
@@ -2079,17 +2118,18 @@ function applyRichTextCommand(editorId, command) {
         // Some browsers no-op or reject styleWithCSS. The formatting command still runs below.
     }
     document.execCommand(safeCommand, false, null);
-    syncRichTextToolbarState(editor);
     if (isTaskEditor) {
-        const nextTaskCommandActive = queryRichTextCommandStateForEditor(editor, safeCommand);
-        setTaskEditToolbarCommandState(editor, safeCommand, nextTaskCommandActive || !wasTaskCommandActive);
+        const nextTaskCommandActive = queryRichTextCommandStateForEditor(editor, safeCommand) || !wasTaskCommandActive;
+        setStoredRichTextCommandState(editor, safeCommand, nextTaskCommandActive);
+        setTaskEditToolbarCommandState(editor, safeCommand, nextTaskCommandActive);
     }
+    syncRichTextToolbarState(editor);
     scheduleRichTextToolbarStateSync(editor);
     window.setTimeout(() => {
-        syncRichTextToolbarState(editor);
         if (isTaskEditor && !queryRichTextCommandStateForEditor(editor, safeCommand)) {
-            setTaskEditToolbarCommandState(editor, safeCommand, !wasTaskCommandActive);
+            setTaskEditToolbarCommandState(editor, safeCommand, getStoredRichTextCommandState(editor, safeCommand));
         }
+        syncRichTextToolbarState(editor);
     }, 0);
 }
 
