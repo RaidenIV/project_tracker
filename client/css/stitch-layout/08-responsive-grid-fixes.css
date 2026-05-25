@@ -5689,7 +5689,7 @@ body[data-theme] .stitch-project-card .project-card-footer {
 .stitch-project-card .project-card-progress-summary,
 body[data-theme] .project-card .project-card-progress-summary,
 body[data-theme] .stitch-project-card .project-card-progress-summary {
-    padding-bottom: 0.6rem !important;
+    padding-bottom: 1.2rem !important;
 }
 
 .project-card .project-card-tasks-remaining,
