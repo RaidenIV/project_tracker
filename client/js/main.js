@@ -1368,6 +1368,16 @@ function isTaskCompleted(task = {}) {
     return parseTaskCompletedValue(task?.completed);
 }
 
+function calculateTaskProgressPercentage(completedTasks, totalTasks) {
+    const total = Math.max(0, Number(totalTasks || 0) || 0);
+    if (total <= 0) return 0;
+
+    const completed = Math.max(0, Math.min(total, Number(completedTasks || 0) || 0));
+    if (completed >= total) return 100;
+
+    return Math.max(0, Math.min(99, Math.round((completed / total) * 100)));
+}
+
 function normalizeTask(task = {}, index = 0) {
     const numericId = Number(task?.id);
     const fallbackId = Date.now() + index + Math.random();
@@ -3154,10 +3164,13 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         }
     });
 
-    row.totalCompletionPercentage = row.totalTasks > 0 ? Math.round((row.completedTasks / row.totalTasks) * 100) : 0;
+    row.totalCompletionPercentage = calculateTaskProgressPercentage(row.completedTasks, row.totalTasks);
     row.projectCompletionPercentage = row.totalProjects > 0 ? Math.round((row.completedProjects / row.totalProjects) * 100) : 0;
-    row.activeProjectCompletionPercentage = row.activeProjects > 0 ? Math.round((row.activeProgressRaw / row.activeProjects) * 100) : 0;
-    row.sharedCompletionPercentage = row.sharedTasks > 0 ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100) : 0;
+    const activeProjectCompletionPercentage = row.activeProjects > 0 ? Math.round((row.activeProgressRaw / row.activeProjects) * 100) : 0;
+    row.activeProjectCompletionPercentage = row.activeProjects > 0 && row.activeProgressRaw < row.activeProjects
+        ? Math.min(99, activeProjectCompletionPercentage)
+        : activeProjectCompletionPercentage;
+    row.sharedCompletionPercentage = calculateTaskProgressPercentage(row.sharedCompletedTasks, row.sharedTasks);
     row.leaderboardMode = normalizeLeaderboardMode(accountState.leaderboardMode);
     row.scoreBreakdown = {
         weeklyCompletedTasks: Math.max(0, Math.round(Number(row.weeklyCompletedTasks || 0) || 0)),
@@ -7389,7 +7402,7 @@ function getProjectProgressPercentageFromTasks(tasks = []) {
     const normalizedTasks = Array.isArray(tasks) ? tasks : [];
     const totalTasks = normalizedTasks.length;
     const completedTasks = normalizedTasks.filter(t => isTaskCompleted(t)).length;
-    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    return calculateTaskProgressPercentage(completedTasks, totalTasks);
 }
 
 function updateProjectProgress(projectId) {
@@ -7741,7 +7754,7 @@ function calculateVisibleCompletionStats() {
 function calculateTotalCompletion() {
     const { totalTasks, completedTasks } = calculateVisibleCompletionStats();
     if (totalTasks === 0) return 0;
-    return Math.round((completedTasks / totalTasks) * 100);
+    return calculateTaskProgressPercentage(completedTasks, totalTasks);
 }
 
 function updateTotalCompletion() {
@@ -10822,7 +10835,7 @@ function getProjectMetadataRows(project) {
     const status = isProjectArchived(project)
         ? 'Archived'
         : (isProjectCompleted(project) ? 'Completed' : 'Active');
-    const progress = tasks.length > 0 ? `${Math.round((completedTasks / tasks.length) * 100)}%` : '0%';
+    const progress = `${calculateTaskProgressPercentage(completedTasks, tasks.length)}%`;
     const ownerLabel = project?.ownerName || (project?.userRole === 'owner' ? 'Me' : 'Unknown');
     const collaboratorLabel = collaborators.length
         ? collaborators.map(member => member.username || member.email || 'Collaborator').join(', ')
@@ -11239,7 +11252,7 @@ function openProjectModal(projectId, options = {}) {
     const completedTasks = tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = tasks.length;
     const remainingTasks = tasks.filter(t => !isTaskCompleted(t)).length;
-    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const percentage = calculateTaskProgressPercentage(completedTasks, totalTasks);
     
     const modal = document.getElementById('projectModal');
     const content = document.getElementById('modalContent');
@@ -12417,7 +12430,7 @@ function renderProjectCard(project) {
     const completedTasksCount = tasks.filter(t => isTaskCompleted(t)).length;
     const totalTasks = tasks.length;
     const remainingTasksCount = tasks.filter(t => !isTaskCompleted(t)).length;
-    const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+    const progressPercentage = calculateTaskProgressPercentage(completedTasksCount, totalTasks);
     const hasOverdueTasks = projectHasOverdueTasks(project);
     const isShared = collaborators.length > 0;
     const isViewer = project.userRole === 'viewer';
@@ -12552,7 +12565,7 @@ function renderSharedProjectsPanel() {
         const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
         const completedTasksCount = tasks.filter(task => isTaskCompleted(task)).length;
         const totalTasks = tasks.length;
-        const progressPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+        const progressPercentage = calculateTaskProgressPercentage(completedTasksCount, totalTasks);
         const accessLabel = project.userRole === 'owner'
             ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`
             : `${project.userRole} access`;

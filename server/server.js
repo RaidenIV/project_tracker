@@ -533,6 +533,16 @@ function isTaskCompleted(task = {}) {
     return parseTaskCompletedValue(task?.completed);
 }
 
+function calculateTaskProgressPercentage(completedTasks, totalTasks) {
+    const total = Math.max(0, Number(totalTasks || 0) || 0);
+    if (total <= 0) return 0;
+
+    const completed = Math.max(0, Math.min(total, Number(completedTasks || 0) || 0));
+    if (completed >= total) return 100;
+
+    return Math.max(0, Math.min(99, Math.round((completed / total) * 100)));
+}
+
 function sanitizeTask(task, index = 0) {
     const fallbackId = Date.now() + index;
     const numericId = Number(task?.id);
@@ -2042,12 +2052,15 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
         const activeProjectCompletionPercentage = row.activeProjects > 0
             ? Math.round((row.activeProgressRaw / row.activeProjects) * 100)
             : 0;
+        const boundedActiveProjectCompletionPercentage = row.activeProjects > 0 && row.activeProgressRaw < row.activeProjects
+            ? Math.min(99, activeProjectCompletionPercentage)
+            : activeProjectCompletionPercentage;
         return {
             ...row,
-            totalCompletionPercentage: row.totalTasks > 0 ? Math.round((row.completedTasks / row.totalTasks) * 100) : 0,
+            totalCompletionPercentage: calculateTaskProgressPercentage(row.completedTasks, row.totalTasks),
             projectCompletionPercentage: row.totalProjects > 0 ? Math.round((row.completedProjects / row.totalProjects) * 100) : 0,
-            activeProjectCompletionPercentage,
-            sharedCompletionPercentage: row.sharedTasks > 0 ? Math.round((row.sharedCompletedTasks / row.sharedTasks) * 100) : 0,
+            activeProjectCompletionPercentage: boundedActiveProjectCompletionPercentage,
+            sharedCompletionPercentage: calculateTaskProgressPercentage(row.sharedCompletedTasks, row.sharedTasks),
             scoreBreakdown: buildLeaderboardScoreBreakdown(row)
         };
     });
