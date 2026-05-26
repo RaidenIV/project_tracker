@@ -4872,7 +4872,6 @@ function ensureNotificationsModal() {
 function renderNotificationsModalContent(modal, options = {}) {
     if (!modal) return;
     const items = buildNotificationItems();
-    if (options.markRead) markNotificationItemsRead(items);
     const readKeys = loadReadNotificationKeys();
     modal.innerHTML = `
         <div class="modal-content notifications-modal-content" role="dialog" aria-modal="true" aria-labelledby="notificationsModalTitle">
@@ -4907,7 +4906,10 @@ function renderNotificationsModalContent(modal, options = {}) {
             </div>
         </div>
     `;
-    if (options.markRead) updateNotificationUnreadIndicator();
+    if (options.markRead) {
+        markNotificationItemsRead(items);
+        updateNotificationUnreadIndicator();
+    }
 }
 
 function openNotificationsModal() {

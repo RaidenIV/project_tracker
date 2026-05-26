@@ -9966,3 +9966,24 @@ html body[data-theme^="blueprint"] .sidebar-rail-leaderboard-list.is-loading .si
     border-color: color-mix(in srgb, var(--accent, currentColor) 24%, transparent) !important;
     box-shadow: none !important;
 }
+
+
+/* ============================================================================
+   Targeted follow-up: unread notification modal highlight
+   - Shows unread notification cards with an orange outline before marking them
+     read, matching the notifications modal's read-state behavior.
+   ============================================================================ */
+.notifications-modal .notification-card.notification-card--unread,
+body[data-theme] .notifications-modal .notification-card.notification-card--unread,
+body[data-theme^="console"] .notifications-modal .notification-card.notification-card--unread,
+body[data-theme^="glass"] .notifications-modal .notification-card.notification-card--unread,
+body[data-theme^="blueprint"] .notifications-modal .notification-card.notification-card--unread {
+    border: 2px solid var(--accent, #ff8a00) !important;
+    outline: 1px solid color-mix(in srgb, var(--accent, #ff8a00) 42%, transparent) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #ff8a00) 20%, transparent), var(--card-shadow, 0 6px 18px rgba(0, 0, 0, 0.14)) !important;
+}
+
+body[data-theme^="blueprint"] .notifications-modal .notification-card.notification-card--unread {
+    border-bottom: 2px solid var(--accent, #ff8a00) !important;
+}
