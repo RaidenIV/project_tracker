@@ -4730,6 +4730,21 @@ function formatNotificationTime(value) {
     return formatCompactDateTime(value);
 }
 
+function getNotificationItemTimestamp(item = {}) {
+    const value = item?.time;
+    if (!value) return 0;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function sortNotificationItemsNewestFirst(items = []) {
+    return [...items]
+        .map((item, index) => ({ item, index, timestamp: getNotificationItemTimestamp(item) }))
+        .sort((a, b) => (b.timestamp - a.timestamp) || (a.index - b.index))
+        .map(entry => entry.item);
+}
+
 function getCompetitiveAchievementDateValue(achievement = {}) {
     return achievement?.achievedAt || achievement?.awardedAt || achievement?.date || achievement?.createdAt || '';
 }
@@ -4853,7 +4868,7 @@ function buildNotificationItems() {
             time: projectTime
         });
     });
-    return items;
+    return sortNotificationItemsNewestFirst(items);
 }
 
 function ensureNotificationsModal() {
