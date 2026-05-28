@@ -9425,3 +9425,90 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 .sidebar-rail-leaderboard-list.is-loading .side-panel-empty {
     color: #111827 !important;
 }
+
+
+/* Targeted patch: personal achievement SVG icon mapping and task-entry caret visibility. */
+.account-achievement-star.is-achievement-first-strike,
+.personal-progression-modal-star.is-achievement-first-strike {
+    -webkit-mask-image: url("../assets/first_strike.svg");
+    mask-image: url("../assets/first_strike.svg");
+}
+
+.account-achievement-star.is-achievement-no-misses,
+.personal-progression-modal-star.is-achievement-no-misses {
+    -webkit-mask-image: url("../assets/no_misses.svg");
+    mask-image: url("../assets/no_misses.svg");
+}
+
+.account-achievement-star.is-achievement-sprinter,
+.personal-progression-modal-star.is-achievement-sprinter {
+    -webkit-mask-image: url("../assets/sprinter.svg");
+    mask-image: url("../assets/sprinter.svg");
+}
+
+.account-achievement-star.is-achievement-rapid-execution,
+.personal-progression-modal-star.is-achievement-rapid-execution {
+    -webkit-mask-image: url("../assets/race.svg");
+    mask-image: url("../assets/race.svg");
+}
+
+.account-achievement-star.is-achievement-unbroken-chain,
+.personal-progression-modal-star.is-achievement-unbroken-chain {
+    -webkit-mask-image: url("../assets/chain.svg");
+    mask-image: url("../assets/chain.svg");
+}
+
+.account-achievement-star.is-achievement-locked-in,
+.personal-progression-modal-star.is-achievement-locked-in {
+    -webkit-mask-image: url("../assets/locked.svg");
+    mask-image: url("../assets/locked.svg");
+}
+
+.account-achievement-star.is-achievement-mission-streak,
+.personal-progression-modal-star.is-achievement-mission-streak {
+    -webkit-mask-image: url("../assets/fire.svg");
+    mask-image: url("../assets/fire.svg");
+}
+
+.account-achievement-star.is-achievement-high-tempo,
+.personal-progression-modal-star.is-achievement-high-tempo {
+    -webkit-mask-image: url("../assets/tempo.svg");
+    mask-image: url("../assets/tempo.svg");
+}
+
+.account-achievement-star.is-achievement-full-send,
+.personal-progression-modal-star.is-achievement-full-send {
+    -webkit-mask-image: url("../assets/full_send.svg");
+    mask-image: url("../assets/full_send.svg");
+}
+
+.account-achievement-star.is-achievement-project-closer,
+.personal-progression-modal-star.is-achievement-project-closer {
+    -webkit-mask-image: url("../assets/finish-flag.svg");
+    mask-image: url("../assets/finish-flag.svg");
+}
+
+.account-achievement-star.is-achievement-daily-operator,
+.personal-progression-modal-star.is-achievement-daily-operator {
+    -webkit-mask-image: url("../assets/24.svg");
+    mask-image: url("../assets/24.svg");
+}
+
+.account-achievement-star.is-achievement-objective-complete,
+.personal-progression-modal-star.is-achievement-objective-complete {
+    -webkit-mask-image: url("../assets/objective.svg");
+    mask-image: url("../assets/objective.svg");
+}
+
+.account-achievement-star.is-achievement-prioritized,
+.personal-progression-modal-star.is-achievement-prioritized {
+    -webkit-mask-image: url("../assets/priority.svg");
+    mask-image: url("../assets/priority.svg");
+}
+
+#projectModal .modal-task-entry-editor.rich-text-editor,
+#projectModal .modal-task-entry-editor.rich-text-editor * {
+    caret-color: var(--heading, currentColor) !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}

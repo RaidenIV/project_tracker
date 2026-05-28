@@ -128,6 +128,37 @@ const PERSONAL_ACHIEVEMENTS = [
     { id: 'elite-output', name: 'Elite Output', description: 'Complete 500 tasks total.', points: 500, condition: metrics => metrics.completedTasks.length >= 500 }
 ];
 
+const PERSONAL_ACHIEVEMENT_ICON_CLASS_BY_ID = {
+    'first-strike': 'is-achievement-first-strike',
+    'objective-complete': 'is-achievement-objective-complete',
+    'daily-operator': 'is-achievement-daily-operator',
+    'project-closer': 'is-achievement-project-closer',
+    'high-tempo': 'is-achievement-high-tempo',
+    'full-send': 'is-achievement-full-send',
+    'mission-streak': 'is-achievement-mission-streak',
+    'locked-in-streak': 'is-achievement-locked-in',
+    'locked-in-total': 'is-achievement-locked-in',
+    'unbroken-chain': 'is-achievement-unbroken-chain',
+    'rapid-execution': 'is-achievement-rapid-execution',
+    'prioritized': 'is-achievement-prioritized',
+    'sprinter': 'is-achievement-sprinter',
+    'no-misses': 'is-achievement-no-misses'
+};
+
+function getPersonalAchievementIconClass(achievement = {}) {
+    return PERSONAL_ACHIEVEMENT_ICON_CLASS_BY_ID[String(achievement?.id || '')] || 'is-personal-star';
+}
+
+function getPersonalProgressionIconClasses() {
+    return [
+        'is-personal-star',
+        'is-competitive-champion',
+        'is-competitive-trophy',
+        'is-level-up',
+        ...new Set(Object.values(PERSONAL_ACHIEVEMENT_ICON_CLASS_BY_ID))
+    ];
+}
+
 const COMPETITIVE_ACHIEVEMENT_FALLBACKS = {
     'efficiency-lead': { name: 'Efficiency Lead', description: 'Have the highest completion percentage among users with 3+ projects.' },
     'closer': { name: 'Closer', description: 'Complete the final task in 5 different shared projects.' },
@@ -485,9 +516,10 @@ function renderAccountProgression() {
             const isLevelAchievement = achievement.id === LEVEL_UP_ACHIEVEMENT_META.id;
             const unlocked = isLevelAchievement ? levelAchievementUnlocked : unlockedSet.has(achievement.id);
             const pointsLabel = isLevelAchievement ? `LEVEL ${Math.max(2, levelProgress.level)}` : `${achievement.points} XP`;
+            const iconClass = isLevelAchievement ? 'is-level-up' : getPersonalAchievementIconClass(achievement);
             return `
                 <div class="account-achievement-card ${unlocked ? 'is-unlocked' : 'is-locked'} ${isLevelAchievement ? 'is-level-up-achievement' : ''}">
-                    <span class="account-achievement-star ${isLevelAchievement ? 'is-level-up' : ''}" aria-hidden="true"></span>
+                    <span class="account-achievement-star ${escapeHtml(iconClass)}" aria-hidden="true"></span>
                     <div class="account-achievement-copy">
                         <div class="account-achievement-name">${escapeHtml(achievement.name)}</div>
                         <div class="account-achievement-description">${escapeHtml(achievement.description)}</div>
@@ -541,7 +573,7 @@ function showNextPersonalProgressionModal() {
     if (titleEl) titleEl.textContent = payload.title || '';
     if (descriptionEl) descriptionEl.textContent = payload.description || '';
     if (iconEl) {
-        iconEl.classList.remove('is-personal-star', 'is-competitive-champion', 'is-competitive-trophy', 'is-level-up');
+        iconEl.classList.remove(...getPersonalProgressionIconClasses());
         iconEl.classList.add(payload.iconClass || 'is-personal-star');
     }
 
@@ -603,7 +635,8 @@ function evaluatePersonalProgression({ showModals = true, persistStatsOnly = fal
             queuePersonalProgressionModal({
                 kicker: 'Achievement Unlocked',
                 title: achievement.name,
-                description: `${achievement.description} +${achievement.points} XP`
+                description: `${achievement.description} +${achievement.points} XP`,
+                iconClass: getPersonalAchievementIconClass(achievement)
             });
         });
         if (levelProgress.level > previousLevel) {
@@ -1953,6 +1986,29 @@ function selectRichTextEditorContents(editor) {
     range.selectNodeContents(editor);
     selection.removeAllRanges();
     selection.addRange(range);
+}
+
+function placeCaretAtEndOfRichTextEditor(editor) {
+    if (!editor || typeof window === 'undefined') return;
+    const selection = window.getSelection?.();
+    const range = document.createRange?.();
+    if (!selection || !range) return;
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+function focusRichTextEditorAtEnd(editor) {
+    if (!editor || editor.getAttribute('contenteditable') !== 'true') return;
+    editor.focus({ preventScroll: true });
+    placeCaretAtEndOfRichTextEditor(editor);
+}
+
+function preserveModalTaskEntryFocus(projectId, event = null) {
+    event?.preventDefault?.();
+    const pasteBox = document.getElementById(`modal-paste-box-${projectId}`);
+    if (pasteBox) focusRichTextEditorAtEnd(pasteBox);
 }
 
 function getRichTextToolbarCommands() {
@@ -11371,6 +11427,9 @@ function openProjectModal(projectId, options = {}) {
                             <div class="modal-paste-actions">
                                 <button 
                                     class="paste-button"
+                                    type="button"
+                                    onpointerdown="preserveModalTaskEntryFocus('${project.id}', event)"
+                                    onmousedown="preserveModalTaskEntryFocus('${project.id}', event)"
                                     onclick="pasteTasksInModal('${project.id}')">
                                     Add Tasks
                                 </button>
@@ -11940,7 +11999,7 @@ function pasteTasksInModal(projectId) {
             modalScroll.scrollTop = previousScrollTop;
         }
         const nextPasteBox = document.getElementById(`modal-paste-box-${projectId}`);
-        if (nextPasteBox) nextPasteBox.focus({ preventScroll: true });
+        if (nextPasteBox) focusRichTextEditorAtEnd(nextPasteBox);
     });
 }
 
@@ -12019,7 +12078,18 @@ function handleModalPasteInput(projectId, event) {
 }
 
 function handleModalPasteKeydown(projectId, event) {
-    if (!event || event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    if (!event || event.key !== 'Enter' || event.isComposing) return;
+    if (event.shiftKey) {
+        window.requestAnimationFrame(() => {
+            const pasteBox = event.target || document.getElementById(`modal-paste-box-${projectId}`);
+            if (pasteBox) {
+                adjustModalPasteBox(pasteBox);
+                syncDesktopTaskRichTextTypingMode(pasteBox);
+                scheduleRichTextToolbarStateSync(pasteBox);
+            }
+        });
+        return;
+    }
     event.preventDefault();
     pasteTasksInModal(projectId);
 }
@@ -13595,6 +13665,7 @@ window.cancelEditProjectTitleOnCard = cancelEditProjectTitleOnCard;
 window.toggleSidebarSection = toggleSidebarSection;
 window.handleModalPasteInput = handleModalPasteInput;
 window.handleModalPasteKeydown = handleModalPasteKeydown;
+window.preserveModalTaskEntryFocus = preserveModalTaskEntryFocus;
 window.openShortcutsModal = openShortcutsModal;
 window.closeShortcutsModal = closeShortcutsModal;
 window.switchToSharedView = switchToSharedView;
