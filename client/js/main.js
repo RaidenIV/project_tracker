@@ -7934,6 +7934,7 @@ function switchToArchivedView() {
 // Project drag-to-reorder (handle-based pointer slide)
 let __projectDrag = null;
 let __suppressNextProjectGridClick = false;
+let __suppressNextProjectGridClickTimer = null;
 let __projectEditMode = false;
 let __projectLongPressTimer = null;
 let __projectPendingPress = null;
@@ -7952,6 +7953,10 @@ function setupProjectDragAndDrop() {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 __suppressNextProjectGridClick = false;
+                if (__suppressNextProjectGridClickTimer) {
+                    clearTimeout(__suppressNextProjectGridClickTimer);
+                    __suppressNextProjectGridClickTimer = null;
+                }
                 return;
             }
             if (__projectEditMode) {
@@ -8028,6 +8033,17 @@ function clearProjectLongPress() {
         __projectPendingPress.active = false;
         __projectPendingPress = null;
     }
+}
+
+function suppressImmediateProjectGridClick() {
+    __suppressNextProjectGridClick = true;
+    if (__suppressNextProjectGridClickTimer) {
+        clearTimeout(__suppressNextProjectGridClickTimer);
+    }
+    __suppressNextProjectGridClickTimer = setTimeout(() => {
+        __suppressNextProjectGridClick = false;
+        __suppressNextProjectGridClickTimer = null;
+    }, 0);
 }
 
 function setProjectEditMode(enabled) {
@@ -8207,7 +8223,7 @@ function onProjectPointerUp(e) {
     }
 
     e.preventDefault();
-    __suppressNextProjectGridClick = true;
+    suppressImmediateProjectGridClick();
 
     const { startIndex, targetIndex } = __projectDrag;
 
