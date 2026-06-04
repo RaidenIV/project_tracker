@@ -9458,6 +9458,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     mask-image: url("../assets/deadline_operator.svg");
 }
 
+.account-achievement-star.is-achievement-priority-locked,
+.personal-progression-modal-star.is-achievement-priority-locked {
+    -webkit-mask-image: url("../assets/priority_locked.svg");
+    mask-image: url("../assets/priority_locked.svg");
+}
+
 .account-achievement-star.is-achievement-tag-operator,
 .personal-progression-modal-star.is-achievement-tag-operator {
     -webkit-mask-image: url("../assets/tag_operator.svg");
@@ -9468,6 +9474,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 .personal-progression-modal-star.is-achievement-intel-operator {
     -webkit-mask-image: url("../assets/intel_operator.svg");
     mask-image: url("../assets/intel_operator.svg");
+}
+
+.account-achievement-star.is-achievement-archiver,
+.personal-progression-modal-star.is-achievement-archiver {
+    -webkit-mask-image: url("../assets/archiver.svg");
+    mask-image: url("../assets/archiver.svg");
 }
 
 .account-achievement-star.is-achievement-no-misses,
@@ -9484,8 +9496,14 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 
 .account-achievement-star.is-achievement-rapid-execution,
 .personal-progression-modal-star.is-achievement-rapid-execution {
-    -webkit-mask-image: url("../assets/race.svg");
-    mask-image: url("../assets/race.svg");
+    -webkit-mask-image: url("../assets/rapid_execution.svg");
+    mask-image: url("../assets/rapid_execution.svg");
+}
+
+.account-achievement-star.is-achievement-deadline-crusher,
+.personal-progression-modal-star.is-achievement-deadline-crusher {
+    -webkit-mask-image: url("../assets/deadline_crusher.svg");
+    mask-image: url("../assets/deadline_crusher.svg");
 }
 
 .account-achievement-star.is-achievement-unbroken-chain,
@@ -9530,6 +9548,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     mask-image: url("../assets/24.svg");
 }
 
+.account-achievement-star.is-achievement-command-output,
+.personal-progression-modal-star.is-achievement-command-output {
+    -webkit-mask-image: url("../assets/command_output.svg");
+    mask-image: url("../assets/command_output.svg");
+}
+
 .account-achievement-star.is-achievement-productivity-spike,
 .personal-progression-modal-star.is-achievement-productivity-spike {
     -webkit-mask-image: url("../assets/productivity_spike.svg");
@@ -9558,6 +9582,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 .personal-progression-modal-star.is-achievement-prioritized {
     -webkit-mask-image: url("../assets/priority.svg");
     mask-image: url("../assets/priority.svg");
+}
+
+.account-achievement-star.is-achievement-encore,
+.personal-progression-modal-star.is-achievement-encore {
+    -webkit-mask-image: url("../assets/encore.svg");
+    mask-image: url("../assets/encore.svg");
 }
 
 #projectModal .modal-task-entry-editor.rich-text-editor,
