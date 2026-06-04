@@ -9434,6 +9434,42 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     mask-image: url("../assets/first_strike.svg");
 }
 
+.account-achievement-star.is-achievement-task-initiated,
+.personal-progression-modal-star.is-achievement-task-initiated {
+    -webkit-mask-image: url("../assets/task_initiated.svg");
+    mask-image: url("../assets/task_initiated.svg");
+}
+
+.account-achievement-star.is-achievement-mission-complete,
+.personal-progression-modal-star.is-achievement-mission-complete {
+    -webkit-mask-image: url("../assets/mission_complete.svg");
+    mask-image: url("../assets/mission_complete.svg");
+}
+
+.account-achievement-star.is-achievement-clean-sweep,
+.personal-progression-modal-star.is-achievement-clean-sweep {
+    -webkit-mask-image: url("../assets/clean_sweep.svg");
+    mask-image: url("../assets/clean_sweep.svg");
+}
+
+.account-achievement-star.is-achievement-deadline-operator,
+.personal-progression-modal-star.is-achievement-deadline-operator {
+    -webkit-mask-image: url("../assets/deadline_operator.svg");
+    mask-image: url("../assets/deadline_operator.svg");
+}
+
+.account-achievement-star.is-achievement-tag-operator,
+.personal-progression-modal-star.is-achievement-tag-operator {
+    -webkit-mask-image: url("../assets/tag_operator.svg");
+    mask-image: url("../assets/tag_operator.svg");
+}
+
+.account-achievement-star.is-achievement-intel-operator,
+.personal-progression-modal-star.is-achievement-intel-operator {
+    -webkit-mask-image: url("../assets/intel_operator.svg");
+    mask-image: url("../assets/intel_operator.svg");
+}
+
 .account-achievement-star.is-achievement-no-misses,
 .personal-progression-modal-star.is-achievement-no-misses {
     -webkit-mask-image: url("../assets/no_misses.svg");
@@ -9494,10 +9530,28 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     mask-image: url("../assets/24.svg");
 }
 
+.account-achievement-star.is-achievement-productivity-spike,
+.personal-progression-modal-star.is-achievement-productivity-spike {
+    -webkit-mask-image: url("../assets/productivity_spike.svg");
+    mask-image: url("../assets/productivity_spike.svg");
+}
+
+.account-achievement-star.is-achievement-zero-overdue,
+.personal-progression-modal-star.is-achievement-zero-overdue {
+    -webkit-mask-image: url("../assets/zero_overdue.svg");
+    mask-image: url("../assets/zero_overdue.svg");
+}
+
+.account-achievement-star.is-achievement-elite-output,
+.personal-progression-modal-star.is-achievement-elite-output {
+    -webkit-mask-image: url("../assets/elite_output.svg");
+    mask-image: url("../assets/elite_output.svg");
+}
+
 .account-achievement-star.is-achievement-objective-complete,
 .personal-progression-modal-star.is-achievement-objective-complete {
-    -webkit-mask-image: url("../assets/objective.svg");
-    mask-image: url("../assets/objective.svg");
+    -webkit-mask-image: url("../assets/objective_complete.svg");
+    mask-image: url("../assets/objective_complete.svg");
 }
 
 .account-achievement-star.is-achievement-prioritized,

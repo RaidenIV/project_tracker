@@ -130,9 +130,16 @@ const PERSONAL_ACHIEVEMENTS = [
 
 const PERSONAL_ACHIEVEMENT_ICON_CLASS_BY_ID = {
     'first-strike': 'is-achievement-first-strike',
+    'task-initiated': 'is-achievement-task-initiated',
     'objective-complete': 'is-achievement-objective-complete',
+    'mission-complete': 'is-achievement-mission-complete',
+    'clean-sweep': 'is-achievement-clean-sweep',
+    'deadline-operator': 'is-achievement-deadline-operator',
+    'tag-operator': 'is-achievement-tag-operator',
+    'intel-operator': 'is-achievement-intel-operator',
     'daily-operator': 'is-achievement-daily-operator',
     'project-closer': 'is-achievement-project-closer',
+    'productivity-spike': 'is-achievement-productivity-spike',
     'high-tempo': 'is-achievement-high-tempo',
     'full-send': 'is-achievement-full-send',
     'mission-streak': 'is-achievement-mission-streak',
@@ -142,7 +149,9 @@ const PERSONAL_ACHIEVEMENT_ICON_CLASS_BY_ID = {
     'rapid-execution': 'is-achievement-rapid-execution',
     'prioritized': 'is-achievement-prioritized',
     'sprinter': 'is-achievement-sprinter',
-    'no-misses': 'is-achievement-no-misses'
+    'zero-overdue': 'is-achievement-zero-overdue',
+    'no-misses': 'is-achievement-no-misses',
+    'elite-output': 'is-achievement-elite-output'
 };
 
 function getPersonalAchievementIconClass(achievement = {}) {
