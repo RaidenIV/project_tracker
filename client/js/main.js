@@ -223,10 +223,14 @@ let personalProgressionModalActive = false;
 function normalizePersonalProgressionStats(stats = {}) {
     const source = stats && typeof stats === 'object' ? stats : {};
     const progressionSource = source.progression && typeof source.progression === 'object' ? source.progression : {};
-    const unlockedAchievementIds = Array.isArray(progressionSource.unlockedAchievementIds)
-        ? progressionSource.unlockedAchievementIds.map(id => String(id || '')).filter(Boolean)
+    const normalizeIdList = value => Array.isArray(value)
+        ? value.map(id => String(id || '')).filter(Boolean)
         : [];
+    const unlockedAchievementIds = normalizeIdList(progressionSource.unlockedAchievementIds);
+    const notifiedAchievementIds = normalizeIdList(progressionSource.notifiedAchievementIds);
+    const notifiedCompetitiveAchievementKeys = normalizeIdList(progressionSource.notifiedCompetitiveAchievementKeys);
     const lastLevel = Math.max(1, Number(progressionSource.lastLevel || 1) || 1);
+    const notifiedLevel = Math.max(1, Number(progressionSource.notifiedLevel || 1) || 1);
     const competitiveSource = progressionSource.competitive && typeof progressionSource.competitive === 'object'
         ? progressionSource.competitive
         : {};
@@ -238,7 +242,10 @@ function normalizePersonalProgressionStats(stats = {}) {
         progression: {
             ...progressionSource,
             unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
+            notifiedAchievementIds: [...new Set(notifiedAchievementIds)],
+            notifiedCompetitiveAchievementKeys: [...new Set(notifiedCompetitiveAchievementKeys)].slice(-400),
             lastLevel,
+            notifiedLevel,
             competitive: competitiveSource,
             initialized: Boolean(progressionSource.initialized)
         }
@@ -629,15 +636,27 @@ function evaluatePersonalProgression({ showModals = true, persistStatsOnly = fal
     const totalPoints = projectPoints + achievementPoints;
     const levelProgress = calculateLevelProgress(totalPoints);
     const previousLevel = Math.max(1, Number(progression.lastLevel || levelProgress.level) || 1);
+    const notifiedAchievementSet = new Set(progression.notifiedAchievementIds || []);
+    const previousNotifiedLevel = Math.max(1, Number(progression.notifiedLevel || 1) || 1);
     const shouldShowModals = showModals && Boolean(progression.initialized);
+    const achievementsToNotify = shouldShowModals
+        ? newlyUnlocked.filter(achievement => !notifiedAchievementSet.has(achievement.id))
+        : [];
+    const shouldNotifyLevelUp = shouldShowModals
+        && levelProgress.level > previousLevel
+        && levelProgress.level > previousNotifiedLevel;
+
+    achievementsToNotify.forEach(achievement => notifiedAchievementSet.add(achievement.id));
 
     const nextProgression = {
         ...progression,
         unlockedAchievementIds: Array.from(unlockedSet),
+        notifiedAchievementIds: Array.from(notifiedAchievementSet),
         achievementPoints,
         projectPoints,
         totalPoints,
         lastLevel: levelProgress.level,
+        notifiedLevel: shouldNotifyLevelUp ? levelProgress.level : previousNotifiedLevel,
         initialized: true
     };
 
@@ -648,7 +667,7 @@ function evaluatePersonalProgression({ showModals = true, persistStatsOnly = fal
     }
 
     if (shouldShowModals) {
-        newlyUnlocked.forEach(achievement => {
+        achievementsToNotify.forEach(achievement => {
             queuePersonalProgressionModal({
                 kicker: 'Achievement Unlocked',
                 title: achievement.name,
@@ -656,7 +675,7 @@ function evaluatePersonalProgression({ showModals = true, persistStatsOnly = fal
                 iconClass: getPersonalAchievementIconClass(achievement)
             });
         });
-        if (levelProgress.level > previousLevel) {
+        if (shouldNotifyLevelUp) {
             queuePersonalProgressionModal({
                 kicker: 'Level Up',
                 title: `Level ${levelProgress.level}`,
@@ -4032,20 +4051,48 @@ function setAccountStatus(message = '', type = '') {
     el.classList.toggle('is-success', type === 'success');
 }
 
+function getProgressionNotificationKeys(field) {
+    const progression = normalizePersonalProgressionStats(state.getStats()).progression || {};
+    const values = Array.isArray(progression[field]) ? progression[field] : [];
+    return new Set(values.map(value => String(value || '')).filter(Boolean));
+}
+
+function saveProgressionNotificationKeys(field, keys) {
+    const stats = normalizePersonalProgressionStats(state.getStats());
+    const progression = stats.progression || {};
+    const normalizedKeys = Array.from(keys || [])
+        .map(value => String(value || ''))
+        .filter(Boolean)
+        .slice(-400);
+    state.setStats({
+        ...stats,
+        progression: {
+            ...progression,
+            [field]: normalizedKeys
+        }
+    });
+    accountState.stats = { ...accountState.stats, ...state.getStats() };
+    saveStatsOnly().catch(err => console.error('Failed to save progression notification history:', err));
+}
+
 function loadNotifiedCompetitiveAchievementKeys() {
+    const notifiedKeys = getProgressionNotificationKeys('notifiedCompetitiveAchievementKeys');
     try {
         const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.COMPETITIVE_NOTIFICATIONS);
         const parsed = raw ? JSON.parse(raw) : [];
-        return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
-    } catch {
-        return new Set();
-    }
+        if (Array.isArray(parsed)) {
+            parsed.map(String).filter(Boolean).forEach(key => notifiedKeys.add(key));
+        }
+    } catch {}
+    return notifiedKeys;
 }
 
 function saveNotifiedCompetitiveAchievementKeys(keys) {
+    const normalizedKeys = Array.from(keys || []).map(String).filter(Boolean).slice(-400);
     try {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.COMPETITIVE_NOTIFICATIONS, JSON.stringify(Array.from(keys).slice(-400)));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.COMPETITIVE_NOTIFICATIONS, JSON.stringify(normalizedKeys));
     } catch {}
+    saveProgressionNotificationKeys('notifiedCompetitiveAchievementKeys', normalizedKeys);
 }
 
 function queueCompetitiveAchievementNotifications(entries = []) {
