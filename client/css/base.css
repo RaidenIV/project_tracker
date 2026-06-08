@@ -9500,6 +9500,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     mask-image: url("../assets/rapid_execution.svg");
 }
 
+.account-achievement-star.is-achievement-sprint-mode,
+.personal-progression-modal-star.is-achievement-sprint-mode {
+    -webkit-mask-image: url("../assets/sprint_mode.svg");
+    mask-image: url("../assets/sprint_mode.svg");
+}
+
 .account-achievement-star.is-achievement-deadline-crusher,
 .personal-progression-modal-star.is-achievement-deadline-crusher {
     -webkit-mask-image: url("../assets/deadline_crusher.svg");
@@ -9566,6 +9572,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
     mask-image: url("../assets/zero_overdue.svg");
 }
 
+.account-achievement-star.is-achievement-high-output,
+.personal-progression-modal-star.is-achievement-high-output {
+    -webkit-mask-image: url("../assets/high_output.svg");
+    mask-image: url("../assets/high_output.svg");
+}
+
 .account-achievement-star.is-achievement-elite-output,
 .personal-progression-modal-star.is-achievement-elite-output {
     -webkit-mask-image: url("../assets/elite_output.svg");
@@ -9582,6 +9594,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 .personal-progression-modal-star.is-achievement-prioritized {
     -webkit-mask-image: url("../assets/priority.svg");
     mask-image: url("../assets/priority.svg");
+}
+
+.account-achievement-star.is-achievement-mission-critical,
+.personal-progression-modal-star.is-achievement-mission-critical {
+    -webkit-mask-image: url("../assets/mission_critical.svg");
+    mask-image: url("../assets/mission_critical.svg");
 }
 
 .account-achievement-star.is-achievement-encore,

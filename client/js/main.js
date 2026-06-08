@@ -150,13 +150,15 @@ const PERSONAL_ACHIEVEMENT_ICON_CLASS_BY_ID = {
     'locked-in-total': 'is-achievement-locked-in',
     'unbroken-chain': 'is-achievement-unbroken-chain',
     'rapid-execution': 'is-achievement-rapid-execution',
-    'sprint-mode': 'is-achievement-rapid-execution',
+    'sprint-mode': 'is-achievement-sprint-mode',
     'deadline-crusher': 'is-achievement-deadline-crusher',
     'prioritized': 'is-achievement-prioritized',
+    'mission-critical': 'is-achievement-mission-critical',
     'encore': 'is-achievement-encore',
     'sprinter': 'is-achievement-sprinter',
     'zero-overdue': 'is-achievement-zero-overdue',
     'no-misses': 'is-achievement-no-misses',
+    'high-output': 'is-achievement-high-output',
     'elite-output': 'is-achievement-elite-output'
 };
 
