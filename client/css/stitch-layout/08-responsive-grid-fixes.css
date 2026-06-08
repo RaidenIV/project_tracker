@@ -9987,3 +9987,23 @@ body[data-theme^="blueprint"] .notifications-modal .notification-card.notificati
 body[data-theme^="blueprint"] .notifications-modal .notification-card.notification-card--unread {
     border-bottom: 2px solid var(--accent, #ff8a00) !important;
 }
+
+/* ============================================================================
+   Targeted fix: sidebar Leaderboard / Settings label accent states
+   Scope: only the section toggle text for hover, focus, and expanded states.
+   ============================================================================ */
+.control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle:hover .sidebar-section-toggle-label,
+.control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle:focus-visible .sidebar-section-toggle-label,
+.control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"].is-expanded > .sidebar-section-toggle .sidebar-section-toggle-label,
+.control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle:hover .sidebar-section-toggle-label,
+.control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle:focus-visible .sidebar-section-toggle-label,
+.control-panel .sidebar-collapsible[data-sidebar-section="settings"].is-expanded > .sidebar-section-toggle .sidebar-section-toggle-label,
+body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle:hover .sidebar-section-toggle-label,
+body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"] > .sidebar-section-toggle:focus-visible .sidebar-section-toggle-label,
+body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="leaderboard"].is-expanded > .sidebar-section-toggle .sidebar-section-toggle-label,
+body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle:hover .sidebar-section-toggle-label,
+body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="settings"] > .sidebar-section-toggle:focus-visible .sidebar-section-toggle-label,
+body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="settings"].is-expanded > .sidebar-section-toggle .sidebar-section-toggle-label {
+    color: var(--accent, currentColor) !important;
+    -webkit-text-fill-color: var(--accent, currentColor) !important;
+}
