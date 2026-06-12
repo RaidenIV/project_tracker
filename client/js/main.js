@@ -3465,11 +3465,6 @@ function syncThemeBranding() {
         topAppLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
     }
 
-    const sidebarBottomLogo = document.getElementById('sidebarBottomLogo');
-    if (sidebarBottomLogo) {
-        sidebarBottomLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
-    }
-
     const collapsedSidebarRailLogo = document.getElementById('collapsedSidebarRailLogo');
     if (collapsedSidebarRailLogo) {
         collapsedSidebarRailLogo.src = meta.mode === 'dark' ? DARK_MODE_LOGO_URL : LIGHT_MODE_LOGO_URL;
