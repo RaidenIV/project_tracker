@@ -229,6 +229,7 @@ function normalizePersonalProgressionStats(stats = {}) {
     const unlockedAchievementIds = normalizeIdList(progressionSource.unlockedAchievementIds);
     const notifiedAchievementIds = normalizeIdList(progressionSource.notifiedAchievementIds);
     const notifiedCompetitiveAchievementKeys = normalizeIdList(progressionSource.notifiedCompetitiveAchievementKeys);
+    const readNotificationKeys = normalizeIdList(progressionSource.readNotificationKeys);
     const lastLevel = Math.max(1, Number(progressionSource.lastLevel || 1) || 1);
     const notifiedLevel = Math.max(1, Number(progressionSource.notifiedLevel || 1) || 1);
     const competitiveSource = progressionSource.competitive && typeof progressionSource.competitive === 'object'
@@ -244,6 +245,7 @@ function normalizePersonalProgressionStats(stats = {}) {
             unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
             notifiedAchievementIds: [...new Set(notifiedAchievementIds)],
             notifiedCompetitiveAchievementKeys: [...new Set(notifiedCompetitiveAchievementKeys)].slice(-400),
+            readNotificationKeys: [...new Set(readNotificationKeys)].slice(-500),
             lastLevel,
             notifiedLevel,
             competitive: competitiveSource,
@@ -4057,13 +4059,13 @@ function getProgressionNotificationKeys(field) {
     return new Set(values.map(value => String(value || '')).filter(Boolean));
 }
 
-function saveProgressionNotificationKeys(field, keys) {
+function saveProgressionNotificationKeys(field, keys, limit = 400) {
     const stats = normalizePersonalProgressionStats(state.getStats());
     const progression = stats.progression || {};
     const normalizedKeys = Array.from(keys || [])
         .map(value => String(value || ''))
         .filter(Boolean)
-        .slice(-400);
+        .slice(-limit);
     state.setStats({
         ...stats,
         progression: {
@@ -4827,19 +4829,27 @@ async function refreshAccountProfile() {
 
 
 function loadReadNotificationKeys() {
+    // Server-synced read state is the source of truth so notifications stay read
+    // across devices; localStorage is merged in as a fast/offline cache and to
+    // migrate any read state recorded before this became server-backed.
+    const readKeys = getProgressionNotificationKeys('readNotificationKeys');
     try {
         const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_READ);
         const parsed = raw ? JSON.parse(raw) : [];
-        return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
-    } catch {
-        return new Set();
-    }
+        if (Array.isArray(parsed)) {
+            parsed.map(String).filter(Boolean).forEach(key => readKeys.add(key));
+        }
+    } catch {}
+    return readKeys;
 }
 
 function saveReadNotificationKeys(keys) {
+    const normalizedKeys = Array.from(keys || []).map(String).filter(Boolean).slice(-500);
     try {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_READ, JSON.stringify(Array.from(keys).slice(-500)));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_READ, JSON.stringify(normalizedKeys));
     } catch {}
+    // Persist to the per-user progression so it round-trips through the server.
+    saveProgressionNotificationKeys('readNotificationKeys', normalizedKeys, 500);
 }
 
 function getNotificationItemKey(item) {
