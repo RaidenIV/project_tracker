@@ -1637,12 +1637,23 @@ app.put('/api/account', authenticateToken, async (req, res) => {
 
 function sanitizeStatsProgression(value = {}) {
     const source = value && typeof value === 'object' ? value : {};
-    const unlockedAchievementIds = Array.isArray(source.unlockedAchievementIds)
-        ? source.unlockedAchievementIds
+    const sanitizeIdList = (value, limit = 100) => Array.isArray(value)
+        ? [...new Set(value
             .map(id => String(id || '').trim().replace(/[^a-z0-9-]/gi, '').slice(0, 80))
-            .filter(Boolean)
-            .slice(0, 100)
+            .filter(Boolean))]
+            .slice(0, limit)
         : [];
+    // Notification keys (read-state + competitive keys) are free-form strings that
+    // legitimately contain colons, spaces and punctuation (e.g. "competitive:<id>:..."
+    // or "<title>:<detail>:<time>"), so they get a more permissive sanitizer than IDs.
+    const sanitizeKeyList = (value, limit = 500) => Array.isArray(value)
+        ? [...new Set(value
+            // strip control characters but otherwise preserve the key shape
+            .map(key => String(key || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 200))
+            .filter(Boolean))]
+            .slice(-limit)
+        : [];
+    const unlockedAchievementIds = sanitizeIdList(source.unlockedAchievementIds, 100);
     const numberField = (field, fallback = 0) => {
         const number = Number(source[field]);
         return Number.isFinite(number) ? Math.max(0, Math.round(number)) : fallback;
@@ -1650,7 +1661,13 @@ function sanitizeStatsProgression(value = {}) {
 
     const competitiveSource = source.competitive && typeof source.competitive === 'object' ? source.competitive : {};
     return {
-        unlockedAchievementIds: [...new Set(unlockedAchievementIds)],
+        unlockedAchievementIds,
+        // Per-user notification state — must survive saves so notifications don't
+        // re-appear as unread on every login / new device.
+        notifiedAchievementIds: sanitizeIdList(source.notifiedAchievementIds, 200),
+        notifiedLevel: Math.max(1, numberField('notifiedLevel', 1)),
+        notifiedCompetitiveAchievementKeys: sanitizeKeyList(source.notifiedCompetitiveAchievementKeys, 400),
+        readNotificationKeys: sanitizeKeyList(source.readNotificationKeys, 500),
         achievementPoints: numberField('achievementPoints'),
         projectPoints: numberField('projectPoints'),
         totalPoints: numberField('totalPoints'),
