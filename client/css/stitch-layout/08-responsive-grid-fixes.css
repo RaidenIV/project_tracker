@@ -1611,9 +1611,13 @@ body[data-theme^="blueprint"] .sidebar-bottom-logo {
     filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.16)) !important;
 }
 
-body.control-panel-is-collapsed .sidebar-bottom-logo-wrap,
-body.control-panel-is-collapsed .sidebar-bottom-logo {
-    display: none !important;
+/* Inline AIGOX logo uses fill="currentColor"; drive its color by color-mode. */
+.sidebar-bottom-logo {
+    color: #000 !important; /* light mode: black */
+}
+
+body[data-color-mode="dark"] .sidebar-bottom-logo {
+    color: #fff !important; /* dark mode: white */
 }
 
 .project-card .progress-bar-container,
