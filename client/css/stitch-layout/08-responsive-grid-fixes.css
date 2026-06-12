@@ -1942,8 +1942,9 @@ body[data-theme^="blueprint"] .project-meatballs[open] .project-meatballs-dropdo
 body[data-theme^="console"] .sidebar-bottom-logo,
 body[data-theme^="glass"] .sidebar-bottom-logo,
 body[data-theme^="blueprint"] .sidebar-bottom-logo {
-    width: clamp(3.28rem, 4.6875vw, 4.84rem) !important;
-    max-width: 45% !important;
+    /* Desktop AIGOX logo, sized +25% (mobile size set in the 980px media query). */
+    width: clamp(4.1rem, 5.859375vw, 6.05rem) !important;
+    max-width: 56.25% !important;
 }
 
 .sidebar-collapsible[data-sidebar-section="workspace"] .sidebar-section-body:not([hidden]),
