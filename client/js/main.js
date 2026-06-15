@@ -6848,10 +6848,11 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     if (!tab) return;
     if (titleInput) tab.title = decodeHtmlEntities(titleInput.value || tab.title || 'Note').trim().replace(/\s+/g, ' ').slice(0, 40) || 'Note';
     if (bodyEditor) tab.body = getRichTextEditorValue(bodyEditor);
-    tab.links = normalizeProjectNoteLinks([
-        ...normalizeProjectNoteLinks(tab.links || []),
-        ...collectProjectNoteLinksFromSurface(activeTab.id, safeSurface)
-    ]);
+
+    // Treat the currently rendered note editor as the source of truth so removed
+    // note/link content does not keep the project notes indicator stuck on.
+    tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, safeSurface));
+
     saveProjectNotesData(projectId, data, { renderSurface: safeSurface });
     requestAnimationFrame(() => {
         const button = document.querySelector(`[data-project-notes-editor="${safeSurface}"] .project-notes-save-button`);
