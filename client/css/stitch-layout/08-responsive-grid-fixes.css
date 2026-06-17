@@ -10086,3 +10086,10 @@ body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="setti
         white-space: nowrap !important;
     }
 }
+
+
+/* Expanded sidebar icons use accent color */
+.sidebar-collapsible.is-expanded .sidebar-section-toggle-icon,
+body[data-theme] .sidebar-collapsible.is-expanded .sidebar-section-toggle-icon {
+    color: var(--accent, currentColor) !important;
+}
