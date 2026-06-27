@@ -1939,7 +1939,7 @@ function escapeHtml(value) {
 
 
 function hasRichTextMarkup(value) {
-    return /<\/?(?:strong|b|em|i|u|br|div|p|a)\b/i.test(String(value ?? ''));
+    return /<\/?[a-z][^>]*>/i.test(String(value ?? ''));
 }
 
 function plainTextToRichTextHtml(value = '') {
@@ -1949,6 +1949,9 @@ function plainTextToRichTextHtml(value = '') {
 function sanitizeRichTextHtml(value = '') {
     const raw = String(value ?? '');
     if (!raw.trim()) return '';
+    // Clipboard HTML often wraps plain text in styled <span> elements. Treat any
+    // actual element markup as HTML so unsupported wrappers are removed while
+    // their text and supported formatting are preserved.
     if (!hasRichTextMarkup(raw)) return plainTextToRichTextHtml(raw);
 
     if (typeof document === 'undefined') {
@@ -5024,7 +5027,9 @@ function ensureNotificationsModal() {
 
 function renderNotificationsModalContent(modal, options = {}) {
     if (!modal) return;
-    const items = buildNotificationItems();
+    // Sort at the rendering boundary as a final guarantee that the first card is
+    // always the newest notification, regardless of how source groups are built.
+    const items = sortNotificationItemsNewestFirst(buildNotificationItems());
     const readKeys = loadReadNotificationKeys();
     modal.innerHTML = `
         <div class="modal-content notifications-modal-content" role="dialog" aria-modal="true" aria-labelledby="notificationsModalTitle">
@@ -5059,6 +5064,9 @@ function renderNotificationsModalContent(modal, options = {}) {
             </div>
         </div>
     `;
+    const scrollContainer = modal.querySelector('.account-modal-scroll');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
+
     if (options.markRead) {
         markNotificationItemsRead(items);
         updateNotificationUnreadIndicator();
