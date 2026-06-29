@@ -94,6 +94,8 @@ const PERSONAL_PROGRESSION_PROJECT_MIN_POINTS = 75;
 const PERSONAL_PROGRESSION_PROJECT_POINT_CAP = 300;
 const PERSONAL_PROGRESSION_BASE_LEVEL_POINTS = 500;
 const PERSONAL_PROGRESSION_LEVEL_STEP_POINTS = 150;
+const PERSONAL_PROGRESSION_TASK_MILESTONE_SIZE = 100;
+const PERSONAL_PROGRESSION_TASK_MILESTONE_POINTS = 500;
 const PERSONAL_ACHIEVEMENTS = [
     { id: 'first-strike', name: 'First Strike', description: 'Create your first project.', points: 50, condition: metrics => metrics.totalProjects >= 1 },
     { id: 'task-initiated', name: 'Task Initiated', description: 'Create your first task.', points: 50, condition: metrics => metrics.totalTasks >= 1 },
@@ -496,13 +498,24 @@ function buildPersonalProgressionMetrics() {
     };
 }
 
+function calculateCompletedTaskMilestonePoints(completedTasks = 0) {
+    const completedTaskCount = Math.max(0, Math.floor(Number(completedTasks) || 0));
+    const completedMilestones = Math.floor(completedTaskCount / PERSONAL_PROGRESSION_TASK_MILESTONE_SIZE);
+    return completedMilestones * PERSONAL_PROGRESSION_TASK_MILESTONE_POINTS;
+}
+
+function calculatePersonalAchievementPoints(unlockedSet, completedTasks = 0) {
+    const oneTimeAchievementPoints = PERSONAL_ACHIEVEMENTS
+        .filter(achievement => unlockedSet.has(achievement.id))
+        .reduce((total, achievement) => total + achievement.points, 0);
+    return oneTimeAchievementPoints + calculateCompletedTaskMilestonePoints(completedTasks);
+}
+
 function getCurrentPersonalLevelProgress() {
     const stats = normalizePersonalProgressionStats(state.getStats());
     const progression = stats.progression;
     const unlockedSet = new Set(progression.unlockedAchievementIds || []);
-    const achievementPoints = PERSONAL_ACHIEVEMENTS
-        .filter(achievement => unlockedSet.has(achievement.id))
-        .reduce((total, achievement) => total + achievement.points, 0);
+    const achievementPoints = calculatePersonalAchievementPoints(unlockedSet, stats.completedTasks);
     const projectPoints = calculateProjectProgressionPoints(state.getProjects());
     const totalPoints = projectPoints + achievementPoints;
     return { ...calculateLevelProgress(totalPoints), totalPoints, unlockedSet };
@@ -632,9 +645,7 @@ function evaluatePersonalProgression({ showModals = true, persistStatsOnly = fal
     });
 
     const projectPoints = calculateProjectProgressionPoints(metrics.projects);
-    const achievementPoints = PERSONAL_ACHIEVEMENTS
-        .filter(achievement => unlockedSet.has(achievement.id))
-        .reduce((total, achievement) => total + achievement.points, 0);
+    const achievementPoints = calculatePersonalAchievementPoints(unlockedSet, stats.completedTasks);
     const totalPoints = projectPoints + achievementPoints;
     const levelProgress = calculateLevelProgress(totalPoints);
     const previousLevel = Math.max(1, Number(progression.lastLevel || levelProgress.level) || 1);
