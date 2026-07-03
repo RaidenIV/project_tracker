@@ -241,6 +241,8 @@ const ANALYTICS_EVENT_NAMES = new Set([
     'search_used',
     'sort_changed',
     'layout_changed',
+    'user_registered',
+    'notification_created',
     'api_request',
     'api_error',
     'client_error'
@@ -257,14 +259,19 @@ const analyticsDeviceSchema = new mongoose.Schema({
 }, { _id: false });
 
 const analyticsEventSchema = new mongoose.Schema({
-    userId:    { type: String, required: true, index: true },
-    event:     { type: String, required: true, index: true },
-    timestamp: { type: Date, default: Date.now, index: true },
-    metadata:  { type: mongoose.Schema.Types.Mixed, default: () => ({}) },
-    device:    { type: analyticsDeviceSchema, default: () => ({}) }
+    userId:      { type: String, required: true, index: true },
+    event:       { type: String, required: true, index: true },
+    timestamp:   { type: Date, default: Date.now, index: true },
+    ingestedAt:  { type: Date, default: Date.now, index: true },
+    source:      { type: String, default: 'live', index: true },
+    backfillKey: { type: String, index: true, sparse: true },
+    metadata:    { type: mongoose.Schema.Types.Mixed, default: () => ({}) },
+    device:      { type: analyticsDeviceSchema, default: () => ({}) }
 });
 analyticsEventSchema.index({ event: 1, timestamp: -1 });
 analyticsEventSchema.index({ userId: 1, timestamp: -1 });
+analyticsEventSchema.index({ source: 1, timestamp: -1 });
+analyticsEventSchema.index({ backfillKey: 1 }, { unique: true, sparse: true });
 const AnalyticsEvent = mongoose.model('AnalyticsEvent', analyticsEventSchema, 'analytics_events');
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
@@ -390,6 +397,8 @@ async function recordAnalyticsEvent(req, event, metadata = {}, device = null) {
             userId,
             event: safeEvent,
             timestamp: new Date(),
+            ingestedAt: new Date(),
+            source: 'live',
             metadata: sanitizeAnalyticsMetadata(metadata),
             device: sanitizeAnalyticsDevice(device || metadata.device || {}, req)
         });
@@ -2551,15 +2560,397 @@ async function getProjectTaskSnapshot() {
     };
 }
 
+
+function getValidDateOrNull(value) {
+    if (!value) return null;
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return new Date(value);
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getMongoDocumentTimestamp(doc = {}) {
+    try {
+        if (doc?._id?.getTimestamp) return doc._id.getTimestamp();
+        const id = String(doc?._id || '');
+        if (/^[a-f0-9]{24}$/i.test(id)) return new mongoose.Types.ObjectId(id).getTimestamp();
+    } catch {}
+    return null;
+}
+
+function pickHistoricalDate(...values) {
+    for (const value of values) {
+        const date = getValidDateOrNull(value);
+        if (date) return date;
+    }
+    return null;
+}
+
+function normalizeHistoricalDate(date, fallback = new Date()) {
+    const safeDate = getValidDateOrNull(date) || getValidDateOrNull(fallback) || new Date();
+    return safeDate;
+}
+
+async function getEarliestHistoricalAnalyticsDate() {
+    const dates = [];
+    const [firstEvent, firstAccount, projects] = await Promise.all([
+        AnalyticsEvent.findOne({}, 'timestamp').sort({ timestamp: 1 }).lean(),
+        Account.findOne({}, 'createdAt').sort({ createdAt: 1 }).lean(),
+        Project.find({}, 'dateCreated completedDate lastModified').lean()
+    ]);
+
+    [firstEvent?.timestamp, firstAccount?.createdAt].forEach(value => {
+        const date = getValidDateOrNull(value);
+        if (date) dates.push(date);
+    });
+    projects.forEach(project => {
+        [project.dateCreated, project.completedDate, project.lastModified, getMongoDocumentTimestamp(project)].forEach(value => {
+            const date = getValidDateOrNull(value);
+            if (date) dates.push(date);
+        });
+    });
+
+    if (!dates.length) return null;
+    return new Date(Math.min(...dates.map(date => date.getTime())));
+}
+
+async function getResolvedAnalyticsRange(query = {}) {
+    const base = getAnalyticsRange(query);
+    if (base.range !== 'all') return base;
+
+    const earliest = await getEarliestHistoricalAnalyticsDate();
+    if (!earliest) return base;
+
+    const start = new Date(earliest);
+    start.setHours(0, 0, 0, 0);
+    const end = base.end;
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000) + 1);
+    return { ...base, days, start, end };
+}
+
+function getAnalyticsLiveSourceMatch() {
+    return { $or: [{ source: { $exists: false } }, { source: { $ne: 'historical_backfill' } }] };
+}
+
+function makeBackfillMetadata(metadata = {}) {
+    return sanitizeAnalyticsMetadata({
+        ...metadata,
+        source: 'historical_backfill',
+        backfilled: true
+    });
+}
+
+function buildBackfillOperation({ event, userId, timestamp, metadata = {}, backfillKey, estimatedTimestamp = false }) {
+    const safeEvent = sanitizeAnalyticsText(event, 80);
+    const safeUserId = String(userId || '').trim();
+    const safeKey = sanitizeAnalyticsText(backfillKey, 220);
+    const safeTimestamp = getValidDateOrNull(timestamp);
+    if (!ANALYTICS_EVENT_NAMES.has(safeEvent) || !safeUserId || !safeKey || !safeTimestamp) return null;
+
+    return {
+        updateOne: {
+            filter: { backfillKey: safeKey },
+            update: {
+                $setOnInsert: {
+                    userId: safeUserId,
+                    event: safeEvent,
+                    timestamp: safeTimestamp,
+                    ingestedAt: new Date(),
+                    source: 'historical_backfill',
+                    backfillKey: safeKey,
+                    metadata: makeBackfillMetadata({
+                        ...metadata,
+                        estimatedTimestamp: !!estimatedTimestamp
+                    }),
+                    device: {
+                        viewportWidth: 0,
+                        viewportHeight: 0,
+                        screenWidth: 0,
+                        screenHeight: 0,
+                        browser: 'Historical',
+                        os: 'Historical',
+                        deviceType: 'historical'
+                    }
+                }
+            },
+            upsert: true
+        }
+    };
+}
+
+function getHistoricalProjectDate(project = {}) {
+    return pickHistoricalDate(project.dateCreated, getMongoDocumentTimestamp(project), project.lastModified, new Date());
+}
+
+function getHistoricalProjectCompletedDate(project = {}) {
+    return pickHistoricalDate(project.completedDate, project.lastModified, project.dateCreated, getMongoDocumentTimestamp(project));
+}
+
+function getHistoricalTaskCompletedDate(task = {}, project = {}) {
+    return pickHistoricalDate(task.completedDate, project.completedDate, project.lastModified, project.dateCreated, getMongoDocumentTimestamp(project));
+}
+
+function getTaskBackfillId(task = {}, index = 0) {
+    const rawId = task.id ?? task._id ?? index;
+    return sanitizeAnalyticsText(rawId, 80) || String(index);
+}
+
+async function buildHistoricalAnalyticsBackfillOperations() {
+    const [accounts, projects] = await Promise.all([
+        Account.find({}, 'createdAt email username role').lean(),
+        Project.find({}, 'title owner collaborators dateCreated lastModified completed completedDate completedBy completedByName archived tasks activities notes projectNotes projectNote notesData noteTabs noteTabsData note calendarNotes description').lean()
+    ]);
+
+    const operations = [];
+    const summary = {
+        users: 0,
+        projectsCreated: 0,
+        projectsCompleted: 0,
+        projectsArchived: 0,
+        tasksCreated: 0,
+        tasksCompleted: 0,
+        notesCreated: 0,
+        membersAdded: 0,
+        totalEligibleEvents: 0,
+        estimatedTimestampEvents: 0
+    };
+
+    const queue = (payload) => {
+        const op = buildBackfillOperation(payload);
+        if (!op) return;
+        operations.push(op);
+        summary.totalEligibleEvents += 1;
+        if (payload.estimatedTimestamp) summary.estimatedTimestampEvents += 1;
+    };
+
+    accounts.forEach(account => {
+        const userId = String(account._id || '');
+        const timestamp = pickHistoricalDate(account.createdAt, getMongoDocumentTimestamp(account));
+        if (!userId || !timestamp) return;
+        summary.users += 1;
+        queue({
+            event: 'user_registered',
+            userId,
+            timestamp,
+            backfillKey: `account:${userId}:registered`,
+            metadata: {
+                accountId: userId,
+                username: account.username || '',
+                role: isAdminAccount(account) ? 'admin' : (account.role || 'user')
+            }
+        });
+    });
+
+    projects.forEach(project => {
+        const projectId = String(project._id || '');
+        const ownerId = String(project.owner || '').trim();
+        if (!projectId || !ownerId) return;
+
+        const projectCreatedAt = normalizeHistoricalDate(getHistoricalProjectDate(project));
+        const projectMeta = {
+            projectId,
+            projectTitle: String(project.title || '').slice(0, 120)
+        };
+
+        summary.projectsCreated += 1;
+        queue({
+            event: 'project_created',
+            userId: ownerId,
+            timestamp: projectCreatedAt,
+            backfillKey: `project:${projectId}:created`,
+            metadata: {
+                ...projectMeta,
+                taskCount: Array.isArray(project.tasks) ? project.tasks.length : 0,
+                collaboratorCount: Array.isArray(project.collaborators) ? project.collaborators.length : 0
+            }
+        });
+
+        if (project.completed) {
+            const completedAt = normalizeHistoricalDate(getHistoricalProjectCompletedDate(project), projectCreatedAt);
+            const estimated = !getValidDateOrNull(project.completedDate);
+            summary.projectsCompleted += 1;
+            queue({
+                event: 'project_completed',
+                userId: String(project.completedBy || ownerId),
+                timestamp: completedAt,
+                backfillKey: `project:${projectId}:completed`,
+                estimatedTimestamp: estimated,
+                metadata: projectMeta
+            });
+        }
+
+        if (project.archived) {
+            summary.projectsArchived += 1;
+            queue({
+                event: 'project_archived',
+                userId: ownerId,
+                timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                backfillKey: `project:${projectId}:archived`,
+                estimatedTimestamp: true,
+                metadata: projectMeta
+            });
+        }
+
+        if (projectNotesHaveContent(getBestProjectNotesValue(project))) {
+            summary.notesCreated += 1;
+            queue({
+                event: 'note_created',
+                userId: ownerId,
+                timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                backfillKey: `project:${projectId}:note`,
+                estimatedTimestamp: true,
+                metadata: {
+                    ...projectMeta,
+                    sourceType: 'project_notes'
+                }
+            });
+        }
+
+        (project.collaborators || []).forEach((collaborator, index) => {
+            if (!collaborator?.userId && !collaborator?.email) return;
+            summary.membersAdded += 1;
+            queue({
+                event: 'member_added',
+                userId: ownerId,
+                timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                backfillKey: `project:${projectId}:member:${sanitizeAnalyticsText(collaborator.userId || collaborator.email, 100)}:${index}`,
+                estimatedTimestamp: true,
+                metadata: {
+                    ...projectMeta,
+                    memberUserId: collaborator.userId || '',
+                    memberEmail: collaborator.email || '',
+                    memberRole: collaborator.role || ''
+                }
+            });
+        });
+
+        (project.tasks || []).forEach((task, index) => {
+            const taskKey = getTaskBackfillId(task, index);
+            const taskMeta = {
+                ...projectMeta,
+                taskId: taskKey,
+                taskTag: task.tag || '',
+                taskCategory: task.category || ''
+            };
+            summary.tasksCreated += 1;
+            queue({
+                event: 'task_created',
+                userId: ownerId,
+                timestamp: projectCreatedAt,
+                backfillKey: `project:${projectId}:task:${taskKey}:created:${index}`,
+                estimatedTimestamp: true,
+                metadata: taskMeta
+            });
+
+            if (task.completed) {
+                const completedAt = normalizeHistoricalDate(getHistoricalTaskCompletedDate(task, project), projectCreatedAt);
+                const estimated = !getValidDateOrNull(task.completedDate);
+                summary.tasksCompleted += 1;
+                queue({
+                    event: 'task_completed',
+                    userId: String(task.completedBy || project.completedBy || ownerId),
+                    timestamp: completedAt,
+                    backfillKey: `project:${projectId}:task:${taskKey}:completed:${index}`,
+                    estimatedTimestamp: estimated,
+                    metadata: taskMeta
+                });
+            }
+
+            if (projectNotesHaveContent(task.note)) {
+                summary.notesCreated += 1;
+                queue({
+                    event: 'note_created',
+                    userId: ownerId,
+                    timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                    backfillKey: `project:${projectId}:task:${taskKey}:note:${index}`,
+                    estimatedTimestamp: true,
+                    metadata: {
+                        ...taskMeta,
+                        sourceType: 'task_note'
+                    }
+                });
+            }
+        });
+
+        (project.activities || []).forEach((activity, index) => {
+            if (activity?.type !== 'project_shared' && activity?.type !== 'pending_invite_accepted') return;
+            const timestamp = pickHistoricalDate(activity.createdAt, project.lastModified, projectCreatedAt);
+            if (!timestamp) return;
+            summary.membersAdded += 1;
+            queue({
+                event: 'member_added',
+                userId: String(activity.actorUserId || ownerId),
+                timestamp,
+                backfillKey: `project:${projectId}:activity:${index}:${activity.type}`,
+                metadata: {
+                    ...projectMeta,
+                    activityType: activity.type,
+                    message: activity.message || ''
+                }
+            });
+        });
+    });
+
+    return { operations, summary };
+}
+
+async function runHistoricalAnalyticsBackfill({ dryRun = false } = {}) {
+    const { operations, summary } = await buildHistoricalAnalyticsBackfillOperations();
+    if (dryRun || !operations.length) {
+        return { ...summary, insertedEvents: 0, existingEvents: 0, dryRun: !!dryRun };
+    }
+
+    let insertedEvents = 0;
+    let existingEvents = 0;
+    const batchSize = 500;
+    for (let i = 0; i < operations.length; i += batchSize) {
+        const batch = operations.slice(i, i + batchSize);
+        const result = await AnalyticsEvent.bulkWrite(batch, { ordered: false });
+        insertedEvents += result.upsertedCount || 0;
+        existingEvents += result.matchedCount || 0;
+    }
+
+    return {
+        ...summary,
+        insertedEvents,
+        existingEvents,
+        dryRun: false,
+        completedAt: new Date().toISOString()
+    };
+}
+
+async function getHistoricalBackfillStatus() {
+    const [summary, byEvent, latest] = await Promise.all([
+        AnalyticsEvent.aggregate([
+            { $match: { source: 'historical_backfill' } },
+            { $group: { _id: null, totalEvents: { $sum: 1 }, estimatedTimestampEvents: { $sum: { $cond: ['$metadata.estimatedTimestamp', 1, 0] } }, firstEventAt: { $min: '$timestamp' }, lastEventAt: { $max: '$timestamp' }, lastIngestedAt: { $max: '$ingestedAt' } } }
+        ]),
+        AnalyticsEvent.aggregate([
+            { $match: { source: 'historical_backfill' } },
+            { $group: { _id: '$event', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]),
+        AnalyticsEvent.findOne({ source: 'historical_backfill' }, 'timestamp ingestedAt').sort({ ingestedAt: -1 }).lean()
+    ]);
+    const totals = summary[0] || {};
+    return {
+        totalEvents: totals.totalEvents || 0,
+        estimatedTimestampEvents: totals.estimatedTimestampEvents || 0,
+        firstEventAt: totals.firstEventAt || null,
+        lastEventAt: totals.lastEventAt || null,
+        lastIngestedAt: totals.lastIngestedAt || latest?.ingestedAt || null,
+        byEvent: byEvent.map(row => ({ event: row._id, count: row.count }))
+    };
+}
+
 async function getAnalyticsOverviewPayload(req) {
-    const { range, start, end } = getAnalyticsRange(req.query);
+    const { range, start, end } = await getResolvedAnalyticsRange(req.query);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 6);
     weekStart.setHours(0, 0, 0, 0);
 
-    const [totalUsers, activeToday, activeThisWeek, snapshot, featureRows, deviceRows, recentErrors] = await Promise.all([
+    const [totalUsers, activeToday, activeThisWeek, snapshot, featureRows, deviceRows, recentErrors, backfill] = await Promise.all([
         Account.countDocuments({}),
         getActiveUserCountSince(today),
         getActiveUserCountSince(weekStart),
@@ -2571,12 +2962,13 @@ async function getAnalyticsOverviewPayload(req) {
             { $limit: 12 }
         ]),
         AnalyticsEvent.aggregate([
-            { $match: { timestamp: { $gte: start, $lte: end } } },
+            { $match: { timestamp: { $gte: start, $lte: end }, ...getAnalyticsLiveSourceMatch() } },
             { $group: { _id: { deviceType: '$device.deviceType', viewportWidth: '$device.viewportWidth', viewportHeight: '$device.viewportHeight', browser: '$device.browser', os: '$device.os' }, count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 20 }
         ]),
-        AnalyticsEvent.find({ event: { $in: ['client_error', 'api_error'] } }).sort({ timestamp: -1 }).limit(8).lean()
+        AnalyticsEvent.find({ event: { $in: ['client_error', 'api_error'] } }).sort({ timestamp: -1 }).limit(8).lean(),
+        getHistoricalBackfillStatus()
     ]);
 
     const [tasksSeries, projectsSeries] = await Promise.all([
@@ -2586,7 +2978,10 @@ async function getAnalyticsOverviewPayload(req) {
 
     return {
         range,
+        rangeStart: start.toISOString(),
+        rangeEnd: end.toISOString(),
         generatedAt: new Date().toISOString(),
+        backfill,
         totals: {
             totalUsers,
             activeToday,
@@ -2606,6 +3001,9 @@ function formatAnalyticsEvent(event = {}) {
         userId: event.userId || '',
         event: event.event || '',
         timestamp: event.timestamp,
+        ingestedAt: event.ingestedAt || null,
+        source: event.source || 'live',
+        backfillKey: event.backfillKey || '',
         metadata: event.metadata || {},
         device: event.device || {}
     };
@@ -2622,7 +3020,7 @@ app.get('/api/admin/analytics/overview', authenticateToken, requireAdminAccount,
 
 app.get('/api/admin/analytics/users', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const activity = await AnalyticsEvent.aggregate([
             { $match: { timestamp: { $gte: start, $lte: end } } },
             { $group: { _id: '$userId', events: { $sum: 1 }, lastActive: { $max: '$timestamp' } } },
@@ -2653,7 +3051,7 @@ app.get('/api/admin/analytics/users', authenticateToken, requireAdminAccount, as
 
 app.get('/api/admin/analytics/projects', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const snapshot = await getProjectTaskSnapshot();
         const series = await buildEventDailySeries({ start, end, events: ['project_created', 'project_completed'], aliases: { project_created: 'created', project_completed: 'completed' } });
         res.json({ snapshot, series });
@@ -2665,7 +3063,7 @@ app.get('/api/admin/analytics/projects', authenticateToken, requireAdminAccount,
 
 app.get('/api/admin/analytics/tasks', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const snapshot = await getProjectTaskSnapshot();
         const series = await buildEventDailySeries({ start, end, events: ['task_created', 'task_completed'], aliases: { task_created: 'created', task_completed: 'completed' } });
         res.json({ snapshot, series });
@@ -2677,7 +3075,7 @@ app.get('/api/admin/analytics/tasks', authenticateToken, requireAdminAccount, as
 
 app.get('/api/admin/analytics/features', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const rows = await AnalyticsEvent.aggregate([
             { $match: { timestamp: { $gte: start, $lte: end }, event: { $nin: ['api_request', 'api_error', 'client_error'] } } },
             { $group: { _id: '$event', count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
@@ -2692,9 +3090,9 @@ app.get('/api/admin/analytics/features', authenticateToken, requireAdminAccount,
 
 app.get('/api/admin/analytics/devices', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const rows = await AnalyticsEvent.aggregate([
-            { $match: { timestamp: { $gte: start, $lte: end } } },
+            { $match: { timestamp: { $gte: start, $lte: end }, ...getAnalyticsLiveSourceMatch() } },
             { $group: { _id: { deviceType: '$device.deviceType', browser: '$device.browser', os: '$device.os', viewportWidth: '$device.viewportWidth', viewportHeight: '$device.viewportHeight' }, count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 100 }
@@ -2708,7 +3106,7 @@ app.get('/api/admin/analytics/devices', authenticateToken, requireAdminAccount, 
 
 app.get('/api/admin/analytics/performance', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const [summary] = await AnalyticsEvent.aggregate([
             { $match: { timestamp: { $gte: start, $lte: end }, event: 'api_request' } },
             { $group: { _id: null, requestCount: { $sum: 1 }, avgResponseTime: { $avg: '$metadata.durationMs' }, failedRequests: { $sum: { $cond: [{ $gte: ['$metadata.status', 400] }, 1, 0] } }, slowRequests: { $sum: { $cond: [{ $gte: ['$metadata.durationMs', 1000] }, 1, 0] } } } }
@@ -2737,12 +3135,33 @@ app.get('/api/admin/analytics/performance', authenticateToken, requireAdminAccou
 
 app.get('/api/admin/analytics/errors', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
-        const { start, end } = getAnalyticsRange(req.query);
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
         const errors = await AnalyticsEvent.find({ timestamp: { $gte: start, $lte: end }, event: { $in: ['client_error', 'api_error'] } }).sort({ timestamp: -1 }).limit(100).lean();
         res.json({ errors: errors.map(formatAnalyticsEvent) });
     } catch (err) {
         console.error('Analytics errors error:', err);
         res.status(500).json({ error: 'Failed to load error analytics', details: err?.message });
+    }
+});
+
+
+app.get('/api/admin/analytics/backfill/status', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        res.json({ backfill: await getHistoricalBackfillStatus() });
+    } catch (err) {
+        console.error('Analytics backfill status error:', err);
+        res.status(500).json({ error: 'Failed to load analytics backfill status', details: err?.message });
+    }
+});
+
+app.post('/api/admin/analytics/backfill', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const dryRun = !!req.body?.dryRun;
+        const result = await runHistoricalAnalyticsBackfill({ dryRun });
+        res.json({ success: true, result, backfill: await getHistoricalBackfillStatus() });
+    } catch (err) {
+        console.error('Analytics backfill error:', err);
+        res.status(500).json({ error: 'Failed to backfill analytics', details: err?.message });
     }
 });
 

@@ -22,7 +22,9 @@ export const API_ENDPOINTS = {
         FEATURES:    '/api/admin/analytics/features',
         DEVICES:     '/api/admin/analytics/devices',
         PERFORMANCE: '/api/admin/analytics/performance',
-        ERRORS:      '/api/admin/analytics/errors'
+        ERRORS:      '/api/admin/analytics/errors',
+        BACKFILL:    '/api/admin/analytics/backfill',
+        BACKFILL_STATUS: '/api/admin/analytics/backfill/status'
     },
     HEALTH:        '/api/health'
 };
