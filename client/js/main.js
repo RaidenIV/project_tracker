@@ -12433,6 +12433,23 @@ function applyProjectGridLayoutPreference() {
     grid.dataset.layoutDensity = layout.density;
     grid.dataset.layoutMaxColumns = maximumColumns || 'auto';
     grid.dataset.layoutEffectiveColumns = effectiveColumns || 'auto';
+
+    const screenWidth = Number(window.screen?.width || 0);
+    const screenHeight = Number(window.screen?.height || 0);
+    const screenScale = Math.max(Number(window.devicePixelRatio) || 1, 1);
+    const screenDimensionCandidates = [
+        [Math.round(screenWidth), Math.round(screenHeight)],
+        [Math.round(screenWidth * screenScale), Math.round(screenHeight * screenScale)]
+    ];
+    const is1920x1200Display = screenDimensionCandidates.some(([width, height]) =>
+        Math.abs(width - 1920) <= 24 && Math.abs(height - 1200) <= 24
+    );
+    if (is1920x1200Display) {
+        grid.dataset.displayResolution = '1920x1200';
+    } else {
+        delete grid.dataset.displayResolution;
+    }
+
     grid.classList.toggle('project-grid--manual-layout', layout.columns !== 'auto' && !!effectiveColumns);
 
     if (effectiveColumns) {
