@@ -10093,3 +10093,31 @@ body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="setti
 body[data-theme] .sidebar-collapsible.is-expanded .sidebar-section-toggle-icon {
     color: var(--accent, currentColor) !important;
 }
+
+/* ============================================================================
+   Targeted update: menu.svg branding, animated sidebar sections, desktop logo
+   ============================================================================ */
+.sidebar-menu-icon,
+body[data-theme] .sidebar-menu-icon {
+    display: inline-block !important;
+    background-color: var(--accent, #ff8a00) !important;
+    -webkit-mask: url("../../assets/menu.svg") center / contain no-repeat !important;
+    mask: url("../../assets/menu.svg") center / contain no-repeat !important;
+}
+
+.sidebar-section-body,
+body[data-theme] .sidebar-section-body {
+    overflow: hidden !important;
+    transform-origin: top center !important;
+}
+
+@media (min-width: 981px) {
+    .sidebar-bottom-logo,
+    body[data-theme^="console"] .sidebar-bottom-logo,
+    body[data-theme^="glass"] .sidebar-bottom-logo,
+    body[data-theme^="blueprint"] .sidebar-bottom-logo {
+        width: clamp(6.15rem, 8.7890625vw, 9.075rem) !important;
+        max-width: 84.375% !important;
+    }
+}
+
