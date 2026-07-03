@@ -116,40 +116,6 @@ async function postRequest(url, body = {}) {
     return data;
 }
 
-const ACCENT_PALETTES = {
-    green: { accent: '#2ecc71', rgb: '46, 204, 113' },
-    blue: { accent: '#3498db', rgb: '52, 152, 219' },
-    yellow: { accent: '#f1c40f', rgb: '241, 196, 15' },
-    red: { accent: '#e74c3c', rgb: '231, 76, 60' },
-    purple: { accent: '#9b59b6', rgb: '155, 89, 182' }
-};
-const ACCENT_STORAGE_KEY = 'taskcomAnalyticsPalette';
-
-function applyChartPalette(paletteId = null) {
-    let stored = paletteId;
-    if (!stored) {
-        try { stored = localStorage.getItem(ACCENT_STORAGE_KEY); } catch { stored = null; }
-    }
-    const id = ACCENT_PALETTES[stored] ? stored : 'blue';
-    const palette = ACCENT_PALETTES[id];
-    for (const target of [document.documentElement, document.body]) {
-        target.style.setProperty('--chart-accent', palette.accent);
-        target.style.setProperty('--chart-accent-rgb', palette.rgb);
-    }
-    try { localStorage.setItem(ACCENT_STORAGE_KEY, id); } catch {}
-    document.querySelectorAll('.palette-swatch').forEach(swatch => {
-        const isActive = swatch.dataset.palette === id;
-        swatch.classList.toggle('is-active', isActive);
-        swatch.setAttribute('aria-pressed', String(isActive));
-    });
-}
-
-function initPaletteControls() {
-    document.querySelectorAll('.palette-swatch').forEach(swatch => {
-        swatch.addEventListener('click', () => applyChartPalette(swatch.dataset.palette));
-    });
-}
-
 function formatNumberIfNumeric(value) {
     if (typeof value === 'number') return formatNumber(value);
     return value ?? '0';
@@ -494,7 +460,7 @@ function renderUsers() {
             <td><strong>${escapeHtml(user.username)}</strong><br><span class="analytics-muted">${escapeHtml(user.email)}</span></td>
             <td>${formatNumber(user.events)}</td>
             <td>${formatDateTime(user.lastActive)}</td>
-            <td><span class="analytics-pill">${escapeHtml(user.role || 'user')}</span></td>
+            <td><span class="analytics-pill${(user.role || 'user') === 'admin' ? ' analytics-pill--admin' : ''}">${escapeHtml(user.role || 'user')}</span></td>
         </tr>
     `));
 }
@@ -601,8 +567,6 @@ async function runBackfill() {
 }
 
 function init() {
-    initPaletteControls();
-    applyChartPalette();
     const range = document.getElementById('analyticsRange');
     const refresh = document.getElementById('analyticsRefreshBtn');
     const backfill = document.getElementById('analyticsBackfillBtn');

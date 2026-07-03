@@ -4,8 +4,8 @@
     --text: #f2f2f4;
     --muted: #a7a7ad;
     --line: #2a2a2f;
-    --accent: #0099ff;
-    --accent-rgb: 0, 153, 255;
+    --accent: #ffffff;
+    --accent-rgb: 255, 255, 255;
     --chart-accent: #3498db;
     --chart-accent-rgb: 52, 152, 219;
     --success: #9fe6b8;
@@ -149,14 +149,6 @@ span,
     color: var(--accent);
 }
 
-.aigox-logo-svg-text {
-    fill: currentColor;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-}
 
 .page-app-title {
     position: fixed;
@@ -489,43 +481,6 @@ label {
     box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 
-.palette-swatches {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 40px;
-    padding: 0 10px;
-    border: 1px solid var(--line);
-    border-radius: var(--control-radius);
-    background: var(--input-bg);
-}
-
-.palette-swatch {
-    width: 22px;
-    height: 22px;
-    min-height: 0;
-    padding: 0;
-    border: 2px solid transparent;
-    border-radius: 999px;
-    background: var(--swatch, var(--accent));
-    cursor: pointer;
-    transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.palette-swatch:hover {
-    background: var(--swatch, var(--accent));
-    border-color: rgba(255, 255, 255, 0.4);
-    transform: scale(1.08);
-}
-
-.palette-swatch.is-active {
-    border-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(var(--chart-accent-rgb), 0.25);
-}
-
-.analytics-toolbar-field--palette {
-    min-width: 0;
-}
 
 button,
 .analytics-button {
@@ -558,13 +513,13 @@ button:active,
 button.primary,
 .analytics-button.primary {
     border: none;
-    background: var(--accent);
+    background: #2ecc71;
     color: #ffffff;
 }
 
 button.primary:hover,
 .analytics-button.primary:hover {
-    background: var(--accent);
+    background: #2ecc71;
     filter: brightness(1.1);
 }
 
@@ -749,7 +704,7 @@ button:disabled,
 }
 
 .analytics-chart-bar-completed {
-    fill: rgba(255, 255, 255, 0.82);
+    fill: #2ecc71;
 }
 
 .analytics-chart-label {
@@ -779,7 +734,7 @@ button:disabled,
 }
 
 .analytics-legend-dot.is-completed {
-    background: rgba(255, 255, 255, 0.86);
+    background: #2ecc71;
 }
 
 /* ---------------------------------------------------------------- */
@@ -964,7 +919,7 @@ button:disabled,
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: var(--chart-accent);
+    background: #2ecc71;
 }
 
 .analytics-table-wrap {
@@ -1021,6 +976,12 @@ button:disabled,
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
+}
+
+.analytics-pill--admin {
+    border-color: rgba(231, 76, 60, 0.38);
+    background: rgba(231, 76, 60, 0.12);
+    color: #e74c3c;
 }
 
 .analytics-empty {
