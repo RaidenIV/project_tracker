@@ -6,6 +6,8 @@
     --line: #2a2a2f;
     --accent: #0099ff;
     --accent-rgb: 0, 153, 255;
+    --chart-accent: #0099ff;
+    --chart-accent-rgb: 0, 153, 255;
     --success: #9fe6b8;
     --warning: #ffd38a;
     --danger: #ff6b6b;
@@ -142,7 +144,7 @@ span,
 
 .aigox-logo-svg {
     display: block;
-    width: 96px;
+    width: auto;
     height: 24px;
     color: var(--accent);
 }
@@ -518,7 +520,7 @@ label {
 
 .palette-swatch.is-active {
     border-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
+    box-shadow: 0 0 0 3px rgba(var(--chart-accent-rgb), 0.25);
 }
 
 .analytics-toolbar-field--palette {
@@ -743,7 +745,7 @@ button:disabled,
 }
 
 .analytics-chart-bar-created {
-    fill: var(--accent);
+    fill: var(--chart-accent);
 }
 
 .analytics-chart-bar-completed {
@@ -772,7 +774,7 @@ button:disabled,
     height: 9px;
     display: inline-block;
     border-radius: 999px;
-    background: var(--accent);
+    background: var(--chart-accent);
     margin-right: 7px;
 }
 
@@ -837,7 +839,7 @@ button:disabled,
 
 .analytics-donut-segment {
     fill: none;
-    stroke: var(--segment-color, var(--accent));
+    stroke: var(--segment-color, var(--chart-accent));
     stroke-width: 18;
     stroke-linecap: butt;
     transition: stroke-dasharray 0.3s ease, stroke-dashoffset 0.3s ease;
@@ -892,7 +894,7 @@ button:disabled,
     width: 10px;
     height: 10px;
     border-radius: 999px;
-    background: var(--segment-color, var(--accent));
+    background: var(--segment-color, var(--chart-accent));
 }
 
 .analytics-donut-legend-name {
@@ -903,7 +905,7 @@ button:disabled,
 }
 
 .analytics-donut-legend-value {
-    color: var(--accent);
+    color: var(--chart-accent);
     font-weight: 800;
 }
 
@@ -962,7 +964,7 @@ button:disabled,
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: var(--accent);
+    background: var(--chart-accent);
 }
 
 .analytics-table-wrap {
@@ -1095,7 +1097,7 @@ button:disabled,
     }
 
     .aigox-logo-svg {
-        width: 78px;
+        width: auto;
         height: 20px;
     }
 
