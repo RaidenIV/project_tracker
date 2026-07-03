@@ -69,8 +69,7 @@ span,
 .analytics-card,
 .analytics-list-row,
 .analytics-table,
-.page-brand-logo,
-.page-app-title {
+.page-brand-logo {
     user-select: none;
     -webkit-user-select: none;
 }
@@ -121,71 +120,19 @@ span,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
     min-height: var(--top-ui-height);
-    padding: 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
-    background: rgba(26, 26, 26, 0.9);
     color: var(--text);
     text-decoration: none;
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.page-brand-logo--aigox {
-    min-width: 132px;
-    gap: 9px;
 }
 
 .aigox-logo-svg {
     display: block;
     width: auto;
-    height: 24px;
+    height: 36px;
     color: var(--accent);
 }
 
 
-.page-app-title {
-    position: fixed;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9500;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    min-height: var(--top-ui-height);
-    padding: 8px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
-    background: rgba(26, 26, 26, 0.9);
-    color: var(--text);
-    text-decoration: none;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.page-app-icon {
-    display: block;
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
-}
-
-.page-app-name {
-    color: var(--text);
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    line-height: 1;
-}
 
 /* ---------------------------------------------------------------- */
 /* Page shell + header with inline toolbar                          */
@@ -219,13 +166,11 @@ span,
     min-width: 0;
 }
 
-.analytics-kicker {
-    margin: 0 0 5px;
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+.page-title-icon {
+    height: 0.82em;
+    width: auto;
+    vertical-align: -0.06em;
+    filter: brightness(0) saturate(100%) invert(48%) sepia(93%) saturate(2767%) hue-rotate(179deg) brightness(103%) contrast(108%);
 }
 
 h1 {
@@ -513,13 +458,13 @@ button:active,
 button.primary,
 .analytics-button.primary {
     border: none;
-    background: #2ecc71;
+    background: #0099ff;
     color: #ffffff;
 }
 
 button.primary:hover,
 .analytics-button.primary:hover {
-    background: #2ecc71;
+    background: #0099ff;
     filter: brightness(1.1);
 }
 
@@ -1050,23 +995,11 @@ button:disabled,
     .page-brand-logo {
         top: 14px;
         right: 14px;
-        padding: 6px 10px;
-    }
-
-    .page-brand-logo--aigox {
-        min-width: 0;
     }
 
     .aigox-logo-svg {
         width: auto;
-        height: 20px;
-    }
-
-    .page-app-title {
-        top: 14px;
-        left: 18px;
-        transform: none;
-        padding: 6px 12px;
+        height: 30px;
     }
 
     .page-wrapper {
