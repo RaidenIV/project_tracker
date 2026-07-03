@@ -117,11 +117,11 @@ async function postRequest(url, body = {}) {
 }
 
 const ACCENT_PALETTES = {
-    azure: { accent: '#0099ff', rgb: '0, 153, 255' },
-    violet: { accent: '#8b5cf6', rgb: '139, 92, 246' },
-    emerald: { accent: '#10b981', rgb: '16, 185, 129' },
-    amber: { accent: '#f5a623', rgb: '245, 166, 35' },
-    rose: { accent: '#f43f5e', rgb: '244, 63, 94' }
+    green: { accent: '#2ecc71', rgb: '46, 204, 113' },
+    blue: { accent: '#3498db', rgb: '52, 152, 219' },
+    yellow: { accent: '#f1c40f', rgb: '241, 196, 15' },
+    red: { accent: '#e74c3c', rgb: '231, 76, 60' },
+    purple: { accent: '#9b59b6', rgb: '155, 89, 182' }
 };
 const ACCENT_STORAGE_KEY = 'taskcomAnalyticsPalette';
 
@@ -130,7 +130,7 @@ function applyChartPalette(paletteId = null) {
     if (!stored) {
         try { stored = localStorage.getItem(ACCENT_STORAGE_KEY); } catch { stored = null; }
     }
-    const id = ACCENT_PALETTES[stored] ? stored : 'azure';
+    const id = ACCENT_PALETTES[stored] ? stored : 'blue';
     const palette = ACCENT_PALETTES[id];
     for (const target of [document.documentElement, document.body]) {
         target.style.setProperty('--chart-accent', palette.accent);
@@ -310,11 +310,10 @@ function renderLineChart(targetId, rows = [], metaId = '') {
 function getSegmentColor(index = 0) {
     const colors = [
         'var(--chart-accent)',
-        'var(--success)',
-        'var(--warning)',
-        'rgba(255, 255, 255, 0.82)',
-        'var(--danger)',
-        'var(--muted)'
+        '#2ecc71',
+        '#f1c40f',
+        '#e74c3c',
+        '#9b59b6'
     ];
     return colors[index % colors.length];
 }
@@ -384,9 +383,9 @@ function renderDonutInsights() {
     const openTasks = Math.max(0, totalTasks - completedTasks - overdueTasks);
 
     renderDonutChart('completionDonut', [
-        { label: 'Completed', value: completedTasks, color: 'var(--success)' },
+        { label: 'Completed', value: completedTasks, color: '#2ecc71' },
         { label: 'Open', value: openTasks, color: 'var(--chart-accent)' },
-        { label: 'Overdue', value: overdueTasks, color: 'var(--warning)' }
+        { label: 'Overdue', value: overdueTasks, color: '#f1c40f' }
     ], {
         value: formatPercent(totals.completionRate),
         label: 'Complete'
@@ -398,8 +397,8 @@ function renderDonutInsights() {
 
     renderDonutChart('projectStatusDonut', [
         { label: 'Active', value: activeProjects, color: 'var(--chart-accent)' },
-        { label: 'Completed', value: completedProjects, color: 'var(--success)' },
-        { label: 'Archived', value: archivedProjects, color: 'rgba(255, 255, 255, 0.82)' }
+        { label: 'Completed', value: completedProjects, color: '#2ecc71' },
+        { label: 'Archived', value: archivedProjects, color: '#9b59b6' }
     ], {
         value: formatNumber(totals.totalProjects),
         label: 'Projects'
