@@ -15,11 +15,10 @@
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="analyticsNavMenu">Menu</button>
         <div class="nav-menu" id="analyticsNavMenu">
             <a href="#summary">Overview</a>
-            <a href="#donutInsightsSection">Donut Insights</a>
+            <a href="#donutInsightsSection">Operational Mix</a>
             <a href="#taskFlowSection">Task Flow</a>
-            <a href="#featureUsageSection">Feature Usage</a>
-            <a href="#performanceSection">Performance</a>
-            <a href="#errorsSection">Errors</a>
+            <a href="#engagementSection">Engagement</a>
+            <a href="#healthSection">System Health</a>
             <a href="/">Back to App</a>
         </div>
     </div>
@@ -32,19 +31,31 @@
     <main class="page-wrapper">
         <header class="analytics-header">
             <div class="analytics-header-card">
-                <div class="analytics-header-logo" aria-label="AIGOX logo">AIGOX</div>
                 <div class="analytics-header-copy">
                     <p class="analytics-kicker">TaskCom Admin Command Center</p>
                     <h1>Analytics Dashboard</h1>
                     <p class="analytics-subtitle">Usage, feature, device, performance, error, and recovered historical telemetry.</p>
+                </div>
+                <div class="analytics-toolbar" aria-label="Analytics controls">
+                    <div class="analytics-toolbar-field">
+                        <label for="analyticsRange">Period</label>
+                        <select id="analyticsRange" class="analytics-select" aria-label="Analytics date range">
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d" selected>Last 30 days</option>
+                            <option value="90d">Last 90 days</option>
+                            <option value="all">All historical</option>
+                        </select>
+                    </div>
+                    <button id="analyticsRefreshBtn" class="analytics-button" type="button">Refresh</button>
+                    <button id="analyticsBackfillBtn" class="analytics-button primary" type="button">Backfill History</button>
                 </div>
             </div>
         </header>
 
         <section id="analyticsStatus" class="analytics-status">Loading analytics…</section>
 
-        <section class="main-container" aria-label="Analytics dashboard">
-            <section id="summary" class="summary-panel dashboard-overview">
+        <div class="main-container" aria-label="Analytics dashboard">
+            <section id="summary" class="summary-panel">
                 <div class="section-title-row section-title-row--centered">
                     <h2 class="summary-title">System Summary</h2>
                     <span class="analytics-pill">Live + Historical</span>
@@ -52,93 +63,53 @@
                 <div id="overviewCards" class="analytics-grid analytics-grid-kpis" aria-label="Overview metrics"></div>
             </section>
 
-            <aside class="preview-panel">
-                <section class="server-load-section analytics-controls-panel" aria-label="Analytics controls">
-                    <h3>Dashboard Controls</h3>
-                    <label for="analyticsRange">Period</label>
-                    <select id="analyticsRange" class="analytics-select" aria-label="Analytics date range">
-                        <option value="7d">Last 7 days</option>
-                        <option value="30d" selected>Last 30 days</option>
-                        <option value="90d">Last 90 days</option>
-                        <option value="all">All historical</option>
-                    </select>
-
-                    <div class="text-preview-actions">
-                        <button id="analyticsRefreshBtn" class="analytics-button" type="button">Refresh</button>
-                        <button id="analyticsBackfillBtn" class="analytics-button primary" type="button">Backfill History</button>
-                    </div>
-                    <span class="load-status">Select a range or recover historical records.</span>
-                </section>
-
-                <section id="backfillSummary" class="server-load-section analytics-backfill-card" aria-label="Historical backfill status"></section>
-
-                <section class="server-load-section">
-                    <div class="section-title-row">
-                        <h3>Most Active Users</h3>
-                        <span id="usersMeta" class="chart-meta"></span>
-                    </div>
-                    <div id="usersTable" class="analytics-table-wrap"></div>
-                </section>
-            </aside>
-
-            <section class="form-panel">
-                <section id="donutInsightsSection" class="charts-section analytics-donut-section">
-                    <div class="section-title-row section-title-row--centered">
-                        <h2 class="charts-title">Operational Mix</h2>
-                        <span class="chart-meta">Donut breakdowns</span>
-                    </div>
-                    <div class="donut-grid">
-                        <article class="donut-card">
-                            <h3 class="chart-subtitle">Task Health</h3>
-                            <div id="completionDonut" class="analytics-donut"></div>
-                        </article>
-                        <article class="donut-card">
-                            <h3 class="chart-subtitle">Project Status</h3>
-                            <div id="projectStatusDonut" class="analytics-donut"></div>
-                        </article>
-                        <article class="donut-card donut-card--wide">
-                            <h3 class="chart-subtitle">Event Mix</h3>
-                            <div id="activityMixDonut" class="analytics-donut"></div>
-                        </article>
-                    </div>
-                </section>
-
-                <section id="taskFlowSection" class="charts-section">
-                    <h2 class="charts-title">Task & Project Flow</h2>
-                    <div class="charts-grid analytics-flow-grid">
-                        <article class="chart-card">
-                            <div class="chart-title-row">
-                                <h3 class="chart-subtitle">Tasks Created vs Completed</h3>
-                                <span id="tasksChartMeta" class="chart-meta"></span>
-                            </div>
-                            <div class="chart-canvas-wrap">
-                                <div id="tasksChart" class="analytics-chart"></div>
-                            </div>
-                        </article>
-
-                        <article class="chart-card">
-                            <div class="chart-title-row">
-                                <h3 class="chart-subtitle">Projects Created vs Completed</h3>
-                                <span id="projectsChartMeta" class="chart-meta"></span>
-                            </div>
-                            <div class="chart-canvas-wrap">
-                                <div id="projectsChart" class="analytics-chart"></div>
-                            </div>
-                        </article>
-                    </div>
-                </section>
-
-                <section id="performanceSection" class="server-load-section">
-                    <div class="section-title-row">
-                        <h3>Performance</h3>
-                        <span id="performanceMeta" class="chart-meta"></span>
-                    </div>
-                    <div id="performanceSummary" class="analytics-grid analytics-grid-mini"></div>
-                    <div id="slowRoutesTable" class="analytics-table-wrap"></div>
-                </section>
+            <section id="donutInsightsSection" class="charts-section analytics-donut-section">
+                <div class="section-title-row section-title-row--centered">
+                    <h2 class="charts-title">Operational Mix</h2>
+                    <span class="chart-meta">Donut breakdowns</span>
+                </div>
+                <div class="donut-grid">
+                    <article class="donut-card">
+                        <h3 class="chart-subtitle">Task Health</h3>
+                        <div id="completionDonut" class="analytics-donut"></div>
+                    </article>
+                    <article class="donut-card">
+                        <h3 class="chart-subtitle">Project Status</h3>
+                        <div id="projectStatusDonut" class="analytics-donut"></div>
+                    </article>
+                    <article class="donut-card donut-card--wide">
+                        <h3 class="chart-subtitle">Event Mix</h3>
+                        <div id="activityMixDonut" class="analytics-donut"></div>
+                    </article>
+                </div>
             </section>
 
-            <aside class="chart-panel">
+            <section id="taskFlowSection" class="charts-section">
+                <h2 class="charts-title">Task &amp; Project Flow</h2>
+                <div class="charts-grid analytics-flow-grid">
+                    <article class="chart-card">
+                        <div class="chart-title-row">
+                            <h3 class="chart-subtitle">Tasks Created vs Completed</h3>
+                            <span id="tasksChartMeta" class="chart-meta"></span>
+                        </div>
+                        <div class="chart-canvas-wrap">
+                            <div id="tasksChart" class="analytics-chart"></div>
+                        </div>
+                    </article>
+
+                    <article class="chart-card">
+                        <div class="chart-title-row">
+                            <h3 class="chart-subtitle">Projects Created vs Completed</h3>
+                            <span id="projectsChartMeta" class="chart-meta"></span>
+                        </div>
+                        <div class="chart-canvas-wrap">
+                            <div id="projectsChart" class="analytics-chart"></div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <div id="engagementSection" class="panel-row panel-row--three" aria-label="Engagement">
                 <section id="featureUsageSection" class="charts-section">
                     <div class="section-title-row">
                         <h2 class="charts-title">Feature Usage</h2>
@@ -155,15 +126,38 @@
                     <div id="devicesList" class="analytics-list"></div>
                 </section>
 
-                <section id="errorsSection" class="server-load-section">
+                <section class="server-load-section">
                     <div class="section-title-row">
-                        <h3>Recent Errors</h3>
-                        <span id="errorsMeta" class="chart-meta"></span>
+                        <h3>Most Active Users</h3>
+                        <span id="usersMeta" class="chart-meta"></span>
                     </div>
-                    <div id="errorsTable" class="analytics-table-wrap"></div>
+                    <div id="usersTable" class="analytics-table-wrap"></div>
                 </section>
-            </aside>
-        </section>
+            </div>
+
+            <div id="healthSection" class="panel-stack" aria-label="System health">
+                <section id="backfillSummary" class="server-load-section analytics-backfill-card" aria-label="Historical backfill status"></section>
+
+                <div class="panel-row panel-row--two">
+                    <section id="performanceSection" class="server-load-section">
+                        <div class="section-title-row">
+                            <h3>Performance</h3>
+                            <span id="performanceMeta" class="chart-meta"></span>
+                        </div>
+                        <div id="performanceSummary" class="analytics-grid analytics-grid-mini"></div>
+                        <div id="slowRoutesTable" class="analytics-table-wrap"></div>
+                    </section>
+
+                    <section id="errorsSection" class="server-load-section">
+                        <div class="section-title-row">
+                            <h3>Recent Errors</h3>
+                            <span id="errorsMeta" class="chart-meta"></span>
+                        </div>
+                        <div id="errorsTable" class="analytics-table-wrap"></div>
+                    </section>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script type="module" src="/js/admin-analytics.js"></script>
