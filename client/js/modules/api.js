@@ -4,6 +4,7 @@
 
 import { API_ENDPOINTS } from './config.js';
 import { clearAppCookies, clearOversizedAuthStorage, getToken, logout, redirectToSessionReset } from './auth.js';
+import { trackApiRequest } from './analytics.js';
 
 // ─── Internals ────────────────────────────────────────────────────────────────
 
@@ -27,9 +28,16 @@ async function request(method, url, body) {
     };
     if (body !== undefined) opts.body = JSON.stringify(body);
 
+    const startTime = performance.now();
     let res;
-    try { res = await fetch(url, opts); }
-    catch (err) { throw new Error(`Network error: ${err.message}`); }
+    try {
+        res = await fetch(url, opts);
+    } catch (err) {
+        trackApiRequest({ method, url, status: 0, durationMs: performance.now() - startTime, ok: false, error: err.message });
+        throw new Error(`Network error: ${err.message}`);
+    }
+
+    trackApiRequest({ method, url, status: res.status, durationMs: performance.now() - startTime, ok: res.ok });
 
     if (res.status === 401) { logout(); return null; }
 

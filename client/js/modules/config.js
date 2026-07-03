@@ -13,6 +13,19 @@ export const API_ENDPOINTS = {
     AUTH_REGISTER: '/api/auth/register',
     AUTH_LOGIN:    '/api/auth/login',
     AUTH_ME:       '/api/auth/me',
+    ANALYTICS_EVENTS: '/api/analytics/events',
+    ADMIN_ANALYTICS: {
+        OVERVIEW:    '/api/admin/analytics/overview',
+        USERS:       '/api/admin/analytics/users',
+        PROJECTS:    '/api/admin/analytics/projects',
+        TASKS:       '/api/admin/analytics/tasks',
+        FEATURES:    '/api/admin/analytics/features',
+        DEVICES:     '/api/admin/analytics/devices',
+        PERFORMANCE: '/api/admin/analytics/performance',
+        ERRORS:      '/api/admin/analytics/errors',
+        BACKFILL:    '/api/admin/analytics/backfill',
+        BACKFILL_STATUS: '/api/admin/analytics/backfill/status'
+    },
     HEALTH:        '/api/health'
 };
 

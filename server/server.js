@@ -136,6 +136,7 @@ const accountSchema = new mongoose.Schema({
     username:     { type: String, required: true, trim: true },
     profilePic:   { type: String, default: '' },
     uiPreferences:{ type: mongoose.Schema.Types.Mixed, default: () => ({}) },
+    role:         { type: String, enum: ['user', 'admin'], default: 'user', index: true },
     passwordHash: { type: String, required: true },
     createdAt:    { type: Date, default: Date.now }
 });
@@ -221,6 +222,58 @@ const statsSchema = new mongoose.Schema({
 });
 const Stats = mongoose.model('Stats', statsSchema);
 
+const ANALYTICS_EVENT_NAMES = new Set([
+    'session_started',
+    'project_created',
+    'project_completed',
+    'project_archived',
+    'task_created',
+    'task_completed',
+    'task_deleted',
+    'task_reordered',
+    'task_pasted',
+    'note_created',
+    'member_added',
+    'calendar_task_dragged',
+    'notification_opened',
+    'achievement_unlocked',
+    'settings_changed',
+    'search_used',
+    'sort_changed',
+    'layout_changed',
+    'user_registered',
+    'notification_created',
+    'api_request',
+    'api_error',
+    'client_error'
+]);
+
+const analyticsDeviceSchema = new mongoose.Schema({
+    viewportWidth: Number,
+    viewportHeight: Number,
+    screenWidth: Number,
+    screenHeight: Number,
+    browser: String,
+    os: String,
+    deviceType: String
+}, { _id: false });
+
+const analyticsEventSchema = new mongoose.Schema({
+    userId:      { type: String, required: true, index: true },
+    event:       { type: String, required: true, index: true },
+    timestamp:   { type: Date, default: Date.now, index: true },
+    ingestedAt:  { type: Date, default: Date.now, index: true },
+    source:      { type: String, default: 'live', index: true },
+    backfillKey: { type: String, index: true, sparse: true },
+    metadata:    { type: mongoose.Schema.Types.Mixed, default: () => ({}) },
+    device:      { type: analyticsDeviceSchema, default: () => ({}) }
+});
+analyticsEventSchema.index({ event: 1, timestamp: -1 });
+analyticsEventSchema.index({ userId: 1, timestamp: -1 });
+analyticsEventSchema.index({ source: 1, timestamp: -1 });
+analyticsEventSchema.index({ backfillKey: 1 }, { unique: true, sparse: true });
+const AnalyticsEvent = mongoose.model('AnalyticsEvent', analyticsEventSchema, 'analytics_events');
+
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 
 function authenticateToken(req, res, next) {
@@ -235,6 +288,178 @@ function authenticateToken(req, res, next) {
     } catch {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
+}
+
+function getConfiguredAdminEmails() {
+    return String(process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || '')
+        .split(',')
+        .map(email => email.trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function isAdminAccount(accountOrUser = {}) {
+    if (!accountOrUser) return false;
+    if (String(accountOrUser.role || '').toLowerCase() === 'admin') return true;
+    const email = String(accountOrUser.email || '').trim().toLowerCase();
+    return !!email && getConfiguredAdminEmails().includes(email);
+}
+
+async function requireAdminAccount(req, res, next) {
+    try {
+        const account = await Account.findById(req.user.id, 'email username role');
+        if (!account) return res.status(404).json({ error: 'Account not found' });
+        if (!isAdminAccount(account)) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+        req.account = account;
+        next();
+    } catch (err) {
+        console.error('Admin auth error:', err);
+        res.status(500).json({ error: 'Failed to verify admin access', details: err?.message });
+    }
+}
+
+function sanitizeAnalyticsNumber(value, fallback = 0) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
+}
+
+function sanitizeAnalyticsText(value, maxLength = 120) {
+    return String(value ?? '').trim().slice(0, maxLength);
+}
+
+function sanitizeAnalyticsDevice(device = {}, req = null) {
+    const userAgent = req?.get?.('user-agent') || '';
+    return {
+        viewportWidth: sanitizeAnalyticsNumber(device.viewportWidth),
+        viewportHeight: sanitizeAnalyticsNumber(device.viewportHeight),
+        screenWidth: sanitizeAnalyticsNumber(device.screenWidth),
+        screenHeight: sanitizeAnalyticsNumber(device.screenHeight),
+        browser: sanitizeAnalyticsText(device.browser || parseBrowserFromUserAgent(userAgent), 60),
+        os: sanitizeAnalyticsText(device.os || parseOsFromUserAgent(userAgent), 60),
+        deviceType: sanitizeAnalyticsText(device.deviceType || inferDeviceTypeFromUserAgent(userAgent), 32)
+    };
+}
+
+function parseBrowserFromUserAgent(userAgent = '') {
+    const ua = String(userAgent || '');
+    if (/Edg\//.test(ua)) return 'Edge';
+    if (/Chrome\//.test(ua) && !/Chromium\//.test(ua)) return 'Chrome';
+    if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'Safari';
+    if (/Firefox\//.test(ua)) return 'Firefox';
+    return 'Unknown';
+}
+
+function parseOsFromUserAgent(userAgent = '') {
+    const ua = String(userAgent || '');
+    if (/Windows NT/.test(ua)) return 'Windows';
+    if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+    if (/Android/.test(ua)) return 'Android';
+    if (/Mac OS X/.test(ua)) return 'macOS';
+    if (/Linux/.test(ua)) return 'Linux';
+    return 'Unknown';
+}
+
+function inferDeviceTypeFromUserAgent(userAgent = '') {
+    const ua = String(userAgent || '');
+    if (/Mobi|Android|iPhone|iPod/.test(ua)) return 'mobile';
+    if (/iPad|Tablet/.test(ua)) return 'tablet';
+    return 'desktop';
+}
+
+function sanitizeAnalyticsMetadata(metadata = {}) {
+    const source = metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {};
+    const output = {};
+    Object.entries(source).slice(0, 40).forEach(([key, value]) => {
+        const safeKey = sanitizeAnalyticsText(key, 64);
+        if (!safeKey) return;
+        if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+            output[safeKey] = typeof value === 'string' ? value.slice(0, 500) : value;
+        } else if (Array.isArray(value)) {
+            output[safeKey] = value.slice(0, 25).map(item => {
+                if (item === null || ['string', 'number', 'boolean'].includes(typeof item)) return item;
+                return sanitizeAnalyticsText(JSON.stringify(item), 300);
+            });
+        } else if (typeof value === 'object') {
+            output[safeKey] = sanitizeAnalyticsText(JSON.stringify(value), 1000);
+        }
+    });
+    return output;
+}
+
+async function recordAnalyticsEvent(req, event, metadata = {}, device = null) {
+    try {
+        const safeEvent = sanitizeAnalyticsText(event, 80);
+        if (!ANALYTICS_EVENT_NAMES.has(safeEvent)) return null;
+        const userId = String(req?.user?.id || metadata.userId || '').trim();
+        if (!userId) return null;
+        return await AnalyticsEvent.create({
+            userId,
+            event: safeEvent,
+            timestamp: new Date(),
+            ingestedAt: new Date(),
+            source: 'live',
+            metadata: sanitizeAnalyticsMetadata(metadata),
+            device: sanitizeAnalyticsDevice(device || metadata.device || {}, req)
+        });
+    } catch (err) {
+        console.warn('Analytics event write failed:', err?.message || err);
+        return null;
+    }
+}
+
+function countCompletedTasks(tasks = []) {
+    return Array.isArray(tasks) ? tasks.filter(task => !!task?.completed).length : 0;
+}
+
+function getTaskOrderSignature(tasks = []) {
+    return Array.isArray(tasks) ? tasks.map(task => String(task?.id ?? '')).join('|') : '';
+}
+
+function deriveProjectAnalyticsEvents(previousProject = {}, changedFields = {}) {
+    const events = [];
+    const metadataBase = {
+        projectId: String(previousProject?._id || previousProject?.id || ''),
+        projectTitle: String(previousProject?.title || '').slice(0, 120)
+    };
+
+    if (Object.prototype.hasOwnProperty.call(changedFields, 'completed') && !previousProject.completed && changedFields.completed) {
+        events.push(['project_completed', metadataBase]);
+    }
+    if (Object.prototype.hasOwnProperty.call(changedFields, 'archived') && !previousProject.archived && changedFields.archived) {
+        events.push(['project_archived', metadataBase]);
+    }
+
+    if (Array.isArray(changedFields.tasks)) {
+        const oldTasks = Array.isArray(previousProject.tasks) ? previousProject.tasks : [];
+        const newTasks = changedFields.tasks;
+        const oldById = new Map(oldTasks.map(task => [String(task?.id ?? ''), task]));
+        const newById = new Map(newTasks.map(task => [String(task?.id ?? ''), task]));
+        const added = newTasks.filter(task => !oldById.has(String(task?.id ?? '')));
+        const deleted = oldTasks.filter(task => !newById.has(String(task?.id ?? '')));
+        const completed = newTasks.filter(task => {
+            const oldTask = oldById.get(String(task?.id ?? ''));
+            return oldTask && !oldTask.completed && task?.completed;
+        });
+        if (added.length) events.push(['task_created', { ...metadataBase, count: added.length }]);
+        if (added.length > 1) events.push(['task_pasted', { ...metadataBase, count: added.length, source: 'bulk_update' }]);
+        if (deleted.length) events.push(['task_deleted', { ...metadataBase, count: deleted.length }]);
+        if (completed.length) events.push(['task_completed', { ...metadataBase, count: completed.length }]);
+        if (!added.length && !deleted.length && getTaskOrderSignature(oldTasks) !== getTaskOrderSignature(newTasks)) {
+            events.push(['task_reordered', metadataBase]);
+        }
+        const noteCreated = newTasks.some(task => {
+            const oldTask = oldById.get(String(task?.id ?? ''));
+            return oldTask && !projectNotesHaveContent(oldTask.note) && projectNotesHaveContent(task?.note);
+        });
+        if (noteCreated) events.push(['note_created', { ...metadataBase, source: 'task_note' }]);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(changedFields, 'notes') && !projectNotesHaveContent(previousProject.notes) && projectNotesHaveContent(changedFields.notes)) {
+        events.push(['note_created', { ...metadataBase, source: 'project_notes' }]);
+    }
+
+    return events;
 }
 
 // Middleware factory: resolve a project + enforce minimum role
@@ -1112,7 +1337,8 @@ function createAuthToken(account) {
         {
             id: account._id.toString(),
             email: account.email,
-            username: account.username
+            username: account.username,
+            role: isAdminAccount(account) ? 'admin' : 'user'
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
@@ -1141,6 +1367,7 @@ function formatAuthUser(account) {
         email: account.email,
         username: account.username,
         profilePic: account.profilePic || '',
+        role: isAdminAccount(account) ? 'admin' : 'user',
         uiPreferences: sanitizeUiPreferences(account.uiPreferences || {}),
         createdAt: account.createdAt
     };
@@ -1159,7 +1386,10 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(409).json({ error: 'An account with that email already exists' });
 
         const passwordHash = await bcrypt.hash(password, 12);
-        const account = await new Account({ email, username, passwordHash }).save();
+        const existingAccountCount = await Account.estimatedDocumentCount();
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+        const role = existingAccountCount === 0 || getConfiguredAdminEmails().includes(normalizedEmail) ? 'admin' : 'user';
+        const account = await new Account({ email, username, passwordHash, role }).save();
         const newUserId = account._id.toString();
 
         // Claim any legacy 'default' projects (one-time migration for first user)
@@ -1193,13 +1423,14 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
-    const account = await Account.findById(req.user.id, 'email username profilePic uiPreferences createdAt');
+    const account = await Account.findById(req.user.id, 'email username profilePic role uiPreferences createdAt');
     if (!account) return res.status(404).json({ error: 'Account not found' });
     res.json({ user: {
         id: account._id.toString(),
         email: account.email,
         username: account.username,
         profilePic: account.profilePic || '',
+        role: isAdminAccount(account) ? 'admin' : 'user',
         uiPreferences: sanitizeUiPreferences(account.uiPreferences || {}),
         createdAt: account.createdAt
     }});
@@ -1262,6 +1493,10 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
         pObj.ownerName = req.user.username;
         pObj.ownerEmail = req.user.email;
         await emitProjectUpsert(project, req.user);
+        await recordAnalyticsEvent(req, 'project_created', { projectId: project._id.toString(), projectTitle: project.title, taskCount: project.tasks.length });
+        if (project.tasks.length) {
+            await recordAnalyticsEvent(req, 'task_created', { projectId: project._id.toString(), projectTitle: project.title, count: project.tasks.length });
+        }
         res.status(201).json(pObj);
     } catch (err) {
         console.error('Error creating project:', err);
@@ -1322,6 +1557,8 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
             if (summary) appendProjectActivity(req.project, req.user, summary.type, summary.message);
             await req.project.save();
             await emitProjectUpsert(req.project, req.user);
+            const analyticsEvents = deriveProjectAnalyticsEvents(currentProject, changedFields);
+            await Promise.all(analyticsEvents.map(([eventName, metadata]) => recordAnalyticsEvent(req, eventName, metadata)));
         }
         const updated = req.project;
 
@@ -1367,6 +1604,7 @@ app.patch('/api/projects/priorities', authenticateToken, async (req, res) => {
         if (changedProjects.length) {
             await Promise.all(changedProjects.map(project => project.save()));
             await Promise.all(changedProjects.map(project => emitProjectUpsert(project, req.user)));
+            await recordAnalyticsEvent(req, 'task_reordered', { source: 'project_card_reorder', count: changedProjects.length });
         }
 
         res.json({ success: true, updated: changedProjects.length });
@@ -1458,6 +1696,7 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
             appendProjectActivity(project, req.user, 'pending_invite_sent', `sent an account creation invite to ${normalizedEmail} as ${role}`);
             await project.save();
             await emitProjectUpsert(project, req.user);
+            await recordAnalyticsEvent(req, 'member_added', { projectId: project._id.toString(), projectTitle: project.title, inviteType: 'pending', role });
 
             const ownerMap = await buildAccountMap([project.owner]);
             const enriched = await enrichProject(project, req.user.id, ownerMap);
@@ -1482,6 +1721,7 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
         appendProjectActivity(project, req.user, 'project_shared', `shared “${project.title}” with ${invitee.username} as ${role}`);
         await project.save();
         await emitProjectUpsert(project, req.user);
+        await recordAnalyticsEvent(req, 'member_added', { projectId: project._id.toString(), projectTitle: project.title, inviteType: 'existing_account', role });
 
         const ownerMap = await buildAccountMap([project.owner]);
         const enriched = await enrichProject(project, req.user.id, ownerMap);
@@ -1546,7 +1786,7 @@ app.delete('/api/projects/:id/collaborators/:userId', authenticateToken, require
 app.get('/api/account', authenticateToken, async (req, res) => {
     try {
         const [account, stats, ownedProjects, sharedProjects, activeProjects, leaderboardPayload] = await Promise.all([
-            Account.findById(req.user.id, 'email username profilePic uiPreferences createdAt'),
+            Account.findById(req.user.id, 'email username profilePic role uiPreferences createdAt'),
             getOrCreateStats(req.user.id),
             Project.countDocuments({ owner: req.user.id }),
             Project.countDocuments({ 'collaborators.userId': req.user.id, archived: false }),
@@ -1566,6 +1806,7 @@ app.get('/api/account', authenticateToken, async (req, res) => {
                 email: account.email,
                 username: account.username,
                 profilePic: account.profilePic || '',
+                role: isAdminAccount(account) ? 'admin' : 'user',
                 uiPreferences: sanitizeUiPreferences(account.uiPreferences || {}),
                 createdAt: account.createdAt
             },
@@ -1610,7 +1851,7 @@ app.put('/api/account', authenticateToken, async (req, res) => {
             updates.uiPreferences = sanitizeUiPreferences(req.body.uiPreferences);
         }
 
-        const account = await Account.findByIdAndUpdate(req.user.id, updates, { new: true, runValidators: true, select: 'email username profilePic uiPreferences createdAt' });
+        const account = await Account.findByIdAndUpdate(req.user.id, updates, { new: true, runValidators: true, select: 'email username profilePic role uiPreferences createdAt' });
         if (!account) return res.status(404).json({ error: 'Account not found' });
 
         if (updates.username) {
@@ -2214,6 +2455,716 @@ app.put('/api/stats', authenticateToken, async (req, res) => {
     }
 });
 
+
+// ─── Analytics Routes ───────────────────────────────────────────────────────
+
+app.post('/api/analytics/events', authenticateToken, async (req, res) => {
+    const event = sanitizeAnalyticsText(req.body?.event, 80);
+    if (!ANALYTICS_EVENT_NAMES.has(event)) {
+        return res.status(400).json({ error: 'Unsupported analytics event' });
+    }
+    await recordAnalyticsEvent(req, event, req.body?.metadata || {}, req.body?.device || {});
+    res.status(202).json({ success: true });
+});
+
+function getAnalyticsRange(query = {}) {
+    const range = String(query.range || '30d').toLowerCase();
+    const days = range === '7d' ? 7 : range === '90d' ? 90 : range === 'all' ? 3650 : 30;
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - days + 1);
+    start.setHours(0, 0, 0, 0);
+    return { range, days, start, end };
+}
+
+function getDateKey(dateValue = new Date()) {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+    return date.toISOString().slice(0, 10);
+}
+
+function buildEmptyDailySeries(start, end, keys = []) {
+    const cursor = new Date(start);
+    cursor.setHours(0, 0, 0, 0);
+    const stop = new Date(end);
+    stop.setHours(0, 0, 0, 0);
+    const rows = [];
+    while (cursor <= stop) {
+        const row = { date: getDateKey(cursor) };
+        keys.forEach(key => { row[key] = 0; });
+        rows.push(row);
+        cursor.setDate(cursor.getDate() + 1);
+    }
+    return rows;
+}
+
+async function buildEventDailySeries({ start, end, events = [], aliases = {} }) {
+    const match = { timestamp: { $gte: start, $lte: end } };
+    if (events.length) match.event = { $in: events };
+    const rows = await AnalyticsEvent.aggregate([
+        { $match: match },
+        { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }, event: '$event' }, count: { $sum: 1 } } },
+        { $sort: { '_id.date': 1 } }
+    ]);
+    const keys = [...new Set(events.map(event => aliases[event] || event))];
+    const series = buildEmptyDailySeries(start, end, keys);
+    const byDate = new Map(series.map(row => [row.date, row]));
+    rows.forEach(row => {
+        const key = aliases[row._id.event] || row._id.event;
+        const target = byDate.get(row._id.date);
+        if (target && key) target[key] = row.count || 0;
+    });
+    return series;
+}
+
+async function getActiveUserCountSince(start) {
+    const rows = await AnalyticsEvent.distinct('userId', { timestamp: { $gte: start } });
+    return rows.length;
+}
+
+async function getProjectTaskSnapshot() {
+    const projects = await Project.find({}, 'completed archived tasks dateCreated lastModified collaborators owner').lean();
+    const todayKey = getDateKey(new Date());
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let overdueTasks = 0;
+    let activeProjects = 0;
+    let completedProjects = 0;
+    let archivedProjects = 0;
+    let sharedProjects = 0;
+
+    projects.forEach(project => {
+        if (project.archived) archivedProjects += 1;
+        else if (project.completed) completedProjects += 1;
+        else activeProjects += 1;
+        if (Array.isArray(project.collaborators) && project.collaborators.length) sharedProjects += 1;
+        (project.tasks || []).forEach(task => {
+            totalTasks += 1;
+            if (task.completed) completedTasks += 1;
+            const dueDate = String(task.dueDate || '').slice(0, 10);
+            if (!task.completed && dueDate && dueDate < todayKey) overdueTasks += 1;
+        });
+    });
+
+    return {
+        totalProjects: projects.length,
+        activeProjects,
+        completedProjects,
+        archivedProjects,
+        sharedProjects,
+        totalTasks,
+        completedTasks,
+        overdueTasks,
+        completionRate: totalTasks ? Math.round((completedTasks / totalTasks) * 1000) / 10 : 0,
+        avgTasksPerProject: projects.length ? Math.round((totalTasks / projects.length) * 10) / 10 : 0
+    };
+}
+
+
+function getValidDateOrNull(value) {
+    if (!value) return null;
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return new Date(value);
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getMongoDocumentTimestamp(doc = {}) {
+    try {
+        if (doc?._id?.getTimestamp) return doc._id.getTimestamp();
+        const id = String(doc?._id || '');
+        if (/^[a-f0-9]{24}$/i.test(id)) return new mongoose.Types.ObjectId(id).getTimestamp();
+    } catch {}
+    return null;
+}
+
+function pickHistoricalDate(...values) {
+    for (const value of values) {
+        const date = getValidDateOrNull(value);
+        if (date) return date;
+    }
+    return null;
+}
+
+function normalizeHistoricalDate(date, fallback = new Date()) {
+    const safeDate = getValidDateOrNull(date) || getValidDateOrNull(fallback) || new Date();
+    return safeDate;
+}
+
+async function getEarliestHistoricalAnalyticsDate() {
+    const dates = [];
+    const [firstEvent, firstAccount, projects] = await Promise.all([
+        AnalyticsEvent.findOne({}, 'timestamp').sort({ timestamp: 1 }).lean(),
+        Account.findOne({}, 'createdAt').sort({ createdAt: 1 }).lean(),
+        Project.find({}, 'dateCreated completedDate lastModified').lean()
+    ]);
+
+    [firstEvent?.timestamp, firstAccount?.createdAt].forEach(value => {
+        const date = getValidDateOrNull(value);
+        if (date) dates.push(date);
+    });
+    projects.forEach(project => {
+        [project.dateCreated, project.completedDate, project.lastModified, getMongoDocumentTimestamp(project)].forEach(value => {
+            const date = getValidDateOrNull(value);
+            if (date) dates.push(date);
+        });
+    });
+
+    if (!dates.length) return null;
+    return new Date(Math.min(...dates.map(date => date.getTime())));
+}
+
+async function getResolvedAnalyticsRange(query = {}) {
+    const base = getAnalyticsRange(query);
+    if (base.range !== 'all') return base;
+
+    const earliest = await getEarliestHistoricalAnalyticsDate();
+    if (!earliest) return base;
+
+    const start = new Date(earliest);
+    start.setHours(0, 0, 0, 0);
+    const end = base.end;
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000) + 1);
+    return { ...base, days, start, end };
+}
+
+function getAnalyticsLiveSourceMatch() {
+    return { $or: [{ source: { $exists: false } }, { source: { $ne: 'historical_backfill' } }] };
+}
+
+function makeBackfillMetadata(metadata = {}) {
+    return sanitizeAnalyticsMetadata({
+        ...metadata,
+        source: 'historical_backfill',
+        backfilled: true
+    });
+}
+
+function buildBackfillOperation({ event, userId, timestamp, metadata = {}, backfillKey, estimatedTimestamp = false }) {
+    const safeEvent = sanitizeAnalyticsText(event, 80);
+    const safeUserId = String(userId || '').trim();
+    const safeKey = sanitizeAnalyticsText(backfillKey, 220);
+    const safeTimestamp = getValidDateOrNull(timestamp);
+    if (!ANALYTICS_EVENT_NAMES.has(safeEvent) || !safeUserId || !safeKey || !safeTimestamp) return null;
+
+    return {
+        updateOne: {
+            filter: { backfillKey: safeKey },
+            update: {
+                $setOnInsert: {
+                    userId: safeUserId,
+                    event: safeEvent,
+                    timestamp: safeTimestamp,
+                    ingestedAt: new Date(),
+                    source: 'historical_backfill',
+                    backfillKey: safeKey,
+                    metadata: makeBackfillMetadata({
+                        ...metadata,
+                        estimatedTimestamp: !!estimatedTimestamp
+                    }),
+                    device: {
+                        viewportWidth: 0,
+                        viewportHeight: 0,
+                        screenWidth: 0,
+                        screenHeight: 0,
+                        browser: 'Historical',
+                        os: 'Historical',
+                        deviceType: 'historical'
+                    }
+                }
+            },
+            upsert: true
+        }
+    };
+}
+
+function getHistoricalProjectDate(project = {}) {
+    return pickHistoricalDate(project.dateCreated, getMongoDocumentTimestamp(project), project.lastModified, new Date());
+}
+
+function getHistoricalProjectCompletedDate(project = {}) {
+    return pickHistoricalDate(project.completedDate, project.lastModified, project.dateCreated, getMongoDocumentTimestamp(project));
+}
+
+function getHistoricalTaskCompletedDate(task = {}, project = {}) {
+    return pickHistoricalDate(task.completedDate, project.completedDate, project.lastModified, project.dateCreated, getMongoDocumentTimestamp(project));
+}
+
+function getTaskBackfillId(task = {}, index = 0) {
+    const rawId = task.id ?? task._id ?? index;
+    return sanitizeAnalyticsText(rawId, 80) || String(index);
+}
+
+async function buildHistoricalAnalyticsBackfillOperations() {
+    const [accounts, projects] = await Promise.all([
+        Account.find({}, 'createdAt email username role').lean(),
+        Project.find({}, 'title owner collaborators dateCreated lastModified completed completedDate completedBy completedByName archived tasks activities notes projectNotes projectNote notesData noteTabs noteTabsData note calendarNotes description').lean()
+    ]);
+
+    const operations = [];
+    const summary = {
+        users: 0,
+        projectsCreated: 0,
+        projectsCompleted: 0,
+        projectsArchived: 0,
+        tasksCreated: 0,
+        tasksCompleted: 0,
+        notesCreated: 0,
+        membersAdded: 0,
+        totalEligibleEvents: 0,
+        estimatedTimestampEvents: 0
+    };
+
+    const queue = (payload) => {
+        const op = buildBackfillOperation(payload);
+        if (!op) return;
+        operations.push(op);
+        summary.totalEligibleEvents += 1;
+        if (payload.estimatedTimestamp) summary.estimatedTimestampEvents += 1;
+    };
+
+    accounts.forEach(account => {
+        const userId = String(account._id || '');
+        const timestamp = pickHistoricalDate(account.createdAt, getMongoDocumentTimestamp(account));
+        if (!userId || !timestamp) return;
+        summary.users += 1;
+        queue({
+            event: 'user_registered',
+            userId,
+            timestamp,
+            backfillKey: `account:${userId}:registered`,
+            metadata: {
+                accountId: userId,
+                username: account.username || '',
+                role: isAdminAccount(account) ? 'admin' : (account.role || 'user')
+            }
+        });
+    });
+
+    projects.forEach(project => {
+        const projectId = String(project._id || '');
+        const ownerId = String(project.owner || '').trim();
+        if (!projectId || !ownerId) return;
+
+        const projectCreatedAt = normalizeHistoricalDate(getHistoricalProjectDate(project));
+        const projectMeta = {
+            projectId,
+            projectTitle: String(project.title || '').slice(0, 120)
+        };
+
+        summary.projectsCreated += 1;
+        queue({
+            event: 'project_created',
+            userId: ownerId,
+            timestamp: projectCreatedAt,
+            backfillKey: `project:${projectId}:created`,
+            metadata: {
+                ...projectMeta,
+                taskCount: Array.isArray(project.tasks) ? project.tasks.length : 0,
+                collaboratorCount: Array.isArray(project.collaborators) ? project.collaborators.length : 0
+            }
+        });
+
+        if (project.completed) {
+            const completedAt = normalizeHistoricalDate(getHistoricalProjectCompletedDate(project), projectCreatedAt);
+            const estimated = !getValidDateOrNull(project.completedDate);
+            summary.projectsCompleted += 1;
+            queue({
+                event: 'project_completed',
+                userId: String(project.completedBy || ownerId),
+                timestamp: completedAt,
+                backfillKey: `project:${projectId}:completed`,
+                estimatedTimestamp: estimated,
+                metadata: projectMeta
+            });
+        }
+
+        if (project.archived) {
+            summary.projectsArchived += 1;
+            queue({
+                event: 'project_archived',
+                userId: ownerId,
+                timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                backfillKey: `project:${projectId}:archived`,
+                estimatedTimestamp: true,
+                metadata: projectMeta
+            });
+        }
+
+        if (projectNotesHaveContent(getBestProjectNotesValue(project))) {
+            summary.notesCreated += 1;
+            queue({
+                event: 'note_created',
+                userId: ownerId,
+                timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                backfillKey: `project:${projectId}:note`,
+                estimatedTimestamp: true,
+                metadata: {
+                    ...projectMeta,
+                    sourceType: 'project_notes'
+                }
+            });
+        }
+
+        (project.collaborators || []).forEach((collaborator, index) => {
+            if (!collaborator?.userId && !collaborator?.email) return;
+            summary.membersAdded += 1;
+            queue({
+                event: 'member_added',
+                userId: ownerId,
+                timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                backfillKey: `project:${projectId}:member:${sanitizeAnalyticsText(collaborator.userId || collaborator.email, 100)}:${index}`,
+                estimatedTimestamp: true,
+                metadata: {
+                    ...projectMeta,
+                    memberUserId: collaborator.userId || '',
+                    memberEmail: collaborator.email || '',
+                    memberRole: collaborator.role || ''
+                }
+            });
+        });
+
+        (project.tasks || []).forEach((task, index) => {
+            const taskKey = getTaskBackfillId(task, index);
+            const taskMeta = {
+                ...projectMeta,
+                taskId: taskKey,
+                taskTag: task.tag || '',
+                taskCategory: task.category || ''
+            };
+            summary.tasksCreated += 1;
+            queue({
+                event: 'task_created',
+                userId: ownerId,
+                timestamp: projectCreatedAt,
+                backfillKey: `project:${projectId}:task:${taskKey}:created:${index}`,
+                estimatedTimestamp: true,
+                metadata: taskMeta
+            });
+
+            if (task.completed) {
+                const completedAt = normalizeHistoricalDate(getHistoricalTaskCompletedDate(task, project), projectCreatedAt);
+                const estimated = !getValidDateOrNull(task.completedDate);
+                summary.tasksCompleted += 1;
+                queue({
+                    event: 'task_completed',
+                    userId: String(task.completedBy || project.completedBy || ownerId),
+                    timestamp: completedAt,
+                    backfillKey: `project:${projectId}:task:${taskKey}:completed:${index}`,
+                    estimatedTimestamp: estimated,
+                    metadata: taskMeta
+                });
+            }
+
+            if (projectNotesHaveContent(task.note)) {
+                summary.notesCreated += 1;
+                queue({
+                    event: 'note_created',
+                    userId: ownerId,
+                    timestamp: normalizeHistoricalDate(project.lastModified, projectCreatedAt),
+                    backfillKey: `project:${projectId}:task:${taskKey}:note:${index}`,
+                    estimatedTimestamp: true,
+                    metadata: {
+                        ...taskMeta,
+                        sourceType: 'task_note'
+                    }
+                });
+            }
+        });
+
+        (project.activities || []).forEach((activity, index) => {
+            if (activity?.type !== 'project_shared' && activity?.type !== 'pending_invite_accepted') return;
+            const timestamp = pickHistoricalDate(activity.createdAt, project.lastModified, projectCreatedAt);
+            if (!timestamp) return;
+            summary.membersAdded += 1;
+            queue({
+                event: 'member_added',
+                userId: String(activity.actorUserId || ownerId),
+                timestamp,
+                backfillKey: `project:${projectId}:activity:${index}:${activity.type}`,
+                metadata: {
+                    ...projectMeta,
+                    activityType: activity.type,
+                    message: activity.message || ''
+                }
+            });
+        });
+    });
+
+    return { operations, summary };
+}
+
+async function runHistoricalAnalyticsBackfill({ dryRun = false } = {}) {
+    const { operations, summary } = await buildHistoricalAnalyticsBackfillOperations();
+    if (dryRun || !operations.length) {
+        return { ...summary, insertedEvents: 0, existingEvents: 0, dryRun: !!dryRun };
+    }
+
+    let insertedEvents = 0;
+    let existingEvents = 0;
+    const batchSize = 500;
+    for (let i = 0; i < operations.length; i += batchSize) {
+        const batch = operations.slice(i, i + batchSize);
+        const result = await AnalyticsEvent.bulkWrite(batch, { ordered: false });
+        insertedEvents += result.upsertedCount || 0;
+        existingEvents += result.matchedCount || 0;
+    }
+
+    return {
+        ...summary,
+        insertedEvents,
+        existingEvents,
+        dryRun: false,
+        completedAt: new Date().toISOString()
+    };
+}
+
+async function getHistoricalBackfillStatus() {
+    const [summary, byEvent, latest] = await Promise.all([
+        AnalyticsEvent.aggregate([
+            { $match: { source: 'historical_backfill' } },
+            { $group: { _id: null, totalEvents: { $sum: 1 }, estimatedTimestampEvents: { $sum: { $cond: ['$metadata.estimatedTimestamp', 1, 0] } }, firstEventAt: { $min: '$timestamp' }, lastEventAt: { $max: '$timestamp' }, lastIngestedAt: { $max: '$ingestedAt' } } }
+        ]),
+        AnalyticsEvent.aggregate([
+            { $match: { source: 'historical_backfill' } },
+            { $group: { _id: '$event', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]),
+        AnalyticsEvent.findOne({ source: 'historical_backfill' }, 'timestamp ingestedAt').sort({ ingestedAt: -1 }).lean()
+    ]);
+    const totals = summary[0] || {};
+    return {
+        totalEvents: totals.totalEvents || 0,
+        estimatedTimestampEvents: totals.estimatedTimestampEvents || 0,
+        firstEventAt: totals.firstEventAt || null,
+        lastEventAt: totals.lastEventAt || null,
+        lastIngestedAt: totals.lastIngestedAt || latest?.ingestedAt || null,
+        byEvent: byEvent.map(row => ({ event: row._id, count: row.count }))
+    };
+}
+
+async function getAnalyticsOverviewPayload(req) {
+    const { range, start, end } = await getResolvedAnalyticsRange(req.query);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - 6);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const [totalUsers, activeToday, activeThisWeek, snapshot, featureRows, deviceRows, recentErrors, backfill] = await Promise.all([
+        Account.countDocuments({}),
+        getActiveUserCountSince(today),
+        getActiveUserCountSince(weekStart),
+        getProjectTaskSnapshot(),
+        AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end }, event: { $nin: ['api_request', 'api_error', 'client_error'] } } },
+            { $group: { _id: '$event', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 12 }
+        ]),
+        AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end }, ...getAnalyticsLiveSourceMatch() } },
+            { $group: { _id: { deviceType: '$device.deviceType', viewportWidth: '$device.viewportWidth', viewportHeight: '$device.viewportHeight', browser: '$device.browser', os: '$device.os' }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 20 }
+        ]),
+        AnalyticsEvent.find({ event: { $in: ['client_error', 'api_error'] } }).sort({ timestamp: -1 }).limit(8).lean(),
+        getHistoricalBackfillStatus()
+    ]);
+
+    const [tasksSeries, projectsSeries] = await Promise.all([
+        buildEventDailySeries({ start, end, events: ['task_created', 'task_completed'], aliases: { task_created: 'created', task_completed: 'completed' } }),
+        buildEventDailySeries({ start, end, events: ['project_created', 'project_completed'], aliases: { project_created: 'created', project_completed: 'completed' } })
+    ]);
+
+    return {
+        range,
+        rangeStart: start.toISOString(),
+        rangeEnd: end.toISOString(),
+        generatedAt: new Date().toISOString(),
+        backfill,
+        totals: {
+            totalUsers,
+            activeToday,
+            activeThisWeek,
+            ...snapshot
+        },
+        featureUsage: featureRows.map(row => ({ event: row._id, count: row.count })),
+        devices: deviceRows.map(row => ({ ...row._id, count: row.count })),
+        recentErrors: recentErrors.map(formatAnalyticsEvent),
+        charts: { tasksSeries, projectsSeries }
+    };
+}
+
+function formatAnalyticsEvent(event = {}) {
+    return {
+        id: String(event._id || ''),
+        userId: event.userId || '',
+        event: event.event || '',
+        timestamp: event.timestamp,
+        ingestedAt: event.ingestedAt || null,
+        source: event.source || 'live',
+        backfillKey: event.backfillKey || '',
+        metadata: event.metadata || {},
+        device: event.device || {}
+    };
+}
+
+app.get('/api/admin/analytics/overview', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        res.json(await getAnalyticsOverviewPayload(req));
+    } catch (err) {
+        console.error('Analytics overview error:', err);
+        res.status(500).json({ error: 'Failed to load analytics overview', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/users', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const activity = await AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end } } },
+            { $group: { _id: '$userId', events: { $sum: 1 }, lastActive: { $max: '$timestamp' } } },
+            { $sort: { events: -1 } },
+            { $limit: 25 }
+        ]);
+        const users = await Account.find({ _id: { $in: activity.map(row => row._id).filter(Boolean) } }, 'email username role createdAt').lean();
+        const userMap = new Map(users.map(user => [String(user._id), user]));
+        res.json({
+            users: activity.map(row => {
+                const account = userMap.get(String(row._id)) || {};
+                return {
+                    userId: String(row._id || ''),
+                    username: account.username || 'Unknown user',
+                    email: account.email || '',
+                    role: isAdminAccount(account) ? 'admin' : (account.role || 'user'),
+                    events: row.events || 0,
+                    lastActive: row.lastActive || null,
+                    createdAt: account.createdAt || null
+                };
+            })
+        });
+    } catch (err) {
+        console.error('Analytics users error:', err);
+        res.status(500).json({ error: 'Failed to load user analytics', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/projects', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const snapshot = await getProjectTaskSnapshot();
+        const series = await buildEventDailySeries({ start, end, events: ['project_created', 'project_completed'], aliases: { project_created: 'created', project_completed: 'completed' } });
+        res.json({ snapshot, series });
+    } catch (err) {
+        console.error('Analytics projects error:', err);
+        res.status(500).json({ error: 'Failed to load project analytics', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/tasks', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const snapshot = await getProjectTaskSnapshot();
+        const series = await buildEventDailySeries({ start, end, events: ['task_created', 'task_completed'], aliases: { task_created: 'created', task_completed: 'completed' } });
+        res.json({ snapshot, series });
+    } catch (err) {
+        console.error('Analytics tasks error:', err);
+        res.status(500).json({ error: 'Failed to load task analytics', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/features', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const rows = await AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end }, event: { $nin: ['api_request', 'api_error', 'client_error'] } } },
+            { $group: { _id: '$event', count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $sort: { count: -1 } }
+        ]);
+        res.json({ features: rows.map(row => ({ event: row._id, count: row.count, uniqueUsers: row.uniqueUsers.length })) });
+    } catch (err) {
+        console.error('Analytics features error:', err);
+        res.status(500).json({ error: 'Failed to load feature analytics', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/devices', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const rows = await AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end }, ...getAnalyticsLiveSourceMatch() } },
+            { $group: { _id: { deviceType: '$device.deviceType', browser: '$device.browser', os: '$device.os', viewportWidth: '$device.viewportWidth', viewportHeight: '$device.viewportHeight' }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 100 }
+        ]);
+        res.json({ devices: rows.map(row => ({ ...row._id, count: row.count })) });
+    } catch (err) {
+        console.error('Analytics devices error:', err);
+        res.status(500).json({ error: 'Failed to load device analytics', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/performance', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const [summary] = await AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end }, event: 'api_request' } },
+            { $group: { _id: null, requestCount: { $sum: 1 }, avgResponseTime: { $avg: '$metadata.durationMs' }, failedRequests: { $sum: { $cond: [{ $gte: ['$metadata.status', 400] }, 1, 0] } }, slowRequests: { $sum: { $cond: [{ $gte: ['$metadata.durationMs', 1000] }, 1, 0] } } } }
+        ]);
+        const slowRoutes = await AnalyticsEvent.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end }, event: 'api_request' } },
+            { $group: { _id: '$metadata.url', count: { $sum: 1 }, avgResponseTime: { $avg: '$metadata.durationMs' }, maxResponseTime: { $max: '$metadata.durationMs' }, failures: { $sum: { $cond: [{ $gte: ['$metadata.status', 400] }, 1, 0] } } } },
+            { $sort: { avgResponseTime: -1 } },
+            { $limit: 12 }
+        ]);
+        res.json({
+            summary: {
+                requestCount: summary?.requestCount || 0,
+                avgResponseTime: Math.round(summary?.avgResponseTime || 0),
+                failedRequests: summary?.failedRequests || 0,
+                slowRequests: summary?.slowRequests || 0,
+                errorRate: summary?.requestCount ? Math.round(((summary.failedRequests || 0) / summary.requestCount) * 1000) / 10 : 0
+            },
+            slowRoutes: slowRoutes.map(row => ({ route: row._id || 'unknown', count: row.count, avgResponseTime: Math.round(row.avgResponseTime || 0), maxResponseTime: Math.round(row.maxResponseTime || 0), failures: row.failures || 0 }))
+        });
+    } catch (err) {
+        console.error('Analytics performance error:', err);
+        res.status(500).json({ error: 'Failed to load performance analytics', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/errors', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { start, end } = await getResolvedAnalyticsRange(req.query);
+        const errors = await AnalyticsEvent.find({ timestamp: { $gte: start, $lte: end }, event: { $in: ['client_error', 'api_error'] } }).sort({ timestamp: -1 }).limit(100).lean();
+        res.json({ errors: errors.map(formatAnalyticsEvent) });
+    } catch (err) {
+        console.error('Analytics errors error:', err);
+        res.status(500).json({ error: 'Failed to load error analytics', details: err?.message });
+    }
+});
+
+
+app.get('/api/admin/analytics/backfill/status', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        res.json({ backfill: await getHistoricalBackfillStatus() });
+    } catch (err) {
+        console.error('Analytics backfill status error:', err);
+        res.status(500).json({ error: 'Failed to load analytics backfill status', details: err?.message });
+    }
+});
+
+app.post('/api/admin/analytics/backfill', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const dryRun = !!req.body?.dryRun;
+        const result = await runHistoricalAnalyticsBackfill({ dryRun });
+        res.json({ success: true, result, backfill: await getHistoricalBackfillStatus() });
+    } catch (err) {
+        console.error('Analytics backfill error:', err);
+        res.status(500).json({ error: 'Failed to backfill analytics', details: err?.message });
+    }
+});
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 
 app.get('/api/health', (req, res) => {
@@ -2222,6 +3173,12 @@ app.get('/api/health', (req, res) => {
         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString()
     });
+});
+
+// ─── Admin Frontend Routes ───────────────────────────────────────────────────
+
+app.get('/admin/analytics', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'client', 'admin-analytics.html'));
 });
 
 // ─── Frontend Fallback ────────────────────────────────────────────────────────
