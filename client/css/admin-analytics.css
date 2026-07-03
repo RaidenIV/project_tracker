@@ -128,7 +128,7 @@ span,
 .aigox-logo-svg {
     display: block;
     width: auto;
-    height: 36px;
+    height: 45px;
     color: var(--accent);
 }
 
@@ -170,7 +170,7 @@ span,
     height: 0.82em;
     width: auto;
     vertical-align: -0.06em;
-    filter: brightness(0) saturate(100%) invert(48%) sepia(93%) saturate(2767%) hue-rotate(179deg) brightness(103%) contrast(108%);
+    filter: none;
 }
 
 h1 {
@@ -805,7 +805,7 @@ button:disabled,
 }
 
 .analytics-donut-legend-value {
-    color: var(--chart-accent);
+    color: var(--text);
     font-weight: 800;
 }
 
@@ -999,7 +999,7 @@ button:disabled,
 
     .aigox-logo-svg {
         width: auto;
-        height: 30px;
+        height: 38px;
     }
 
     .page-wrapper {

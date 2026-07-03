@@ -174,11 +174,10 @@ function renderCards() {
         ['Avg Response', formatDuration(perf.avgResponseTime), `${formatNumber(perf.requestCount)} tracked requests`]
     ];
 
-    document.getElementById('overviewCards').innerHTML = cards.map(([label, value, note], index) => `
+    document.getElementById('overviewCards').innerHTML = cards.map(([label, value, note]) => `
         <article class="analytics-card">
             <div class="analytics-card-top">
                 <div class="analytics-card-label">${escapeHtml(label)}</div>
-                <div class="analytics-card-index">${String(index + 1).padStart(2, '0')}</div>
             </div>
             <div class="analytics-card-value">${escapeHtml(formatNumberIfNumeric(value))}</div>
             <div class="analytics-card-note">${escapeHtml(note)}</div>
@@ -431,11 +430,10 @@ function renderPerformance() {
         ['Failures', summary.failedRequests || 0, 'HTTP/network failures'],
         ['Slow Requests', summary.slowRequests || 0, 'Requests over 1000 ms']
     ];
-    document.getElementById('performanceSummary').innerHTML = cards.map(([label, value, note], index) => `
+    document.getElementById('performanceSummary').innerHTML = cards.map(([label, value, note]) => `
         <article class="analytics-card">
             <div class="analytics-card-top">
                 <div class="analytics-card-label">${escapeHtml(label)}</div>
-                <div class="analytics-card-index">P${index + 1}</div>
             </div>
             <div class="analytics-card-value">${escapeHtml(formatNumberIfNumeric(value))}</div>
             <div class="analytics-card-note">${escapeHtml(note)}</div>
