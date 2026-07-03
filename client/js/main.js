@@ -12698,7 +12698,9 @@ function renderProjectCard(project) {
     const statusLabel = isProjectArchived(project)
         ? '<span class="project-card-status project-card-status--archived">ARCHIVED</span>'
         : (isProjectCompleted(project)
-            ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
+            ? (state.getView() === VIEWS.COMPLETED
+                ? ''
+                : '<span class="project-card-status project-card-status--completed">COMPLETED</span>')
             : (isViewer || isEditor
                 ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
                 : '<span class="project-card-status">ACTIVE</span>'));
