@@ -278,6 +278,118 @@ function renderLineChart(targetId, rows = [], metaId = '') {
     `;
 }
 
+
+function getSegmentColor(index = 0) {
+    const colors = [
+        'var(--accent)',
+        'var(--success)',
+        'var(--warning)',
+        'rgba(255, 255, 255, 0.82)',
+        'var(--danger)',
+        'var(--muted)'
+    ];
+    return colors[index % colors.length];
+}
+
+function renderDonutChart(targetId, segments = [], { value = '', label = 'Total' } = {}) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const cleanSegments = segments
+        .map((segment, index) => ({
+            ...segment,
+            label: segment.label || `Segment ${index + 1}`,
+            value: Math.max(0, Number(segment.value) || 0),
+            color: segment.color || getSegmentColor(index)
+        }))
+        .filter(segment => segment.value > 0);
+
+    const total = cleanSegments.reduce((sum, segment) => sum + segment.value, 0);
+    if (!total) {
+        target.innerHTML = '<div class="analytics-empty">No composition data yet.</div>';
+        return;
+    }
+
+    const radius = 70;
+    const circumference = 2 * Math.PI * radius;
+    let offset = 0;
+    const circles = cleanSegments.map(segment => {
+        const dash = (segment.value / total) * circumference;
+        const circle = `<circle class="analytics-donut-segment" cx="88" cy="88" r="${radius}" style="--segment-color:${segment.color};stroke-dasharray:${dash} ${circumference - dash};stroke-dashoffset:${-offset};"></circle>`;
+        offset += dash;
+        return circle;
+    }).join('');
+
+    const legend = cleanSegments.map(segment => {
+        const pct = total ? Math.round((segment.value / total) * 100) : 0;
+        return `
+            <div class="analytics-donut-legend-row">
+                <span class="analytics-donut-legend-dot" style="--segment-color:${segment.color}"></span>
+                <span class="analytics-donut-legend-name">${escapeHtml(segment.label)}</span>
+                <span class="analytics-donut-legend-value">${formatNumber(segment.value)} · ${pct}%</span>
+            </div>
+        `;
+    }).join('');
+
+    target.innerHTML = `
+        <div class="analytics-donut-shell">
+            <div class="analytics-donut-figure">
+                <svg viewBox="0 0 176 176" role="img" aria-label="${escapeHtml(label)} donut chart">
+                    <circle class="analytics-donut-bg" cx="88" cy="88" r="${radius}"></circle>
+                    ${circles}
+                </svg>
+                <div class="analytics-donut-center">
+                    <div class="analytics-donut-value">${escapeHtml(value || formatNumber(total))}</div>
+                    <div class="analytics-donut-label">${escapeHtml(label)}</div>
+                </div>
+            </div>
+            <div class="analytics-donut-legend">${legend}</div>
+        </div>
+    `;
+}
+
+function renderDonutInsights() {
+    const totals = state.overview?.totals || state.tasks?.snapshot || state.projects?.snapshot || {};
+    const totalTasks = Math.max(0, Number(totals.totalTasks) || 0);
+    const completedTasks = Math.max(0, Number(totals.completedTasks) || 0);
+    const overdueTasks = Math.max(0, Number(totals.overdueTasks) || 0);
+    const openTasks = Math.max(0, totalTasks - completedTasks - overdueTasks);
+
+    renderDonutChart('completionDonut', [
+        { label: 'Completed', value: completedTasks, color: 'var(--success)' },
+        { label: 'Open', value: openTasks, color: 'var(--accent)' },
+        { label: 'Overdue', value: overdueTasks, color: 'var(--warning)' }
+    ], {
+        value: formatPercent(totals.completionRate),
+        label: 'Complete'
+    });
+
+    const activeProjects = Math.max(0, Number(totals.activeProjects) || 0);
+    const completedProjects = Math.max(0, Number(totals.completedProjects) || 0);
+    const archivedProjects = Math.max(0, Number(totals.archivedProjects) || 0);
+
+    renderDonutChart('projectStatusDonut', [
+        { label: 'Active', value: activeProjects, color: 'var(--accent)' },
+        { label: 'Completed', value: completedProjects, color: 'var(--success)' },
+        { label: 'Archived', value: archivedProjects, color: 'rgba(255, 255, 255, 0.82)' }
+    ], {
+        value: formatNumber(totals.totalProjects),
+        label: 'Projects'
+    });
+
+    const features = state.features?.features || state.overview?.featureUsage || [];
+    const topFeatures = features.slice(0, 4).map(row => ({
+        label: humanizeEvent(row.event),
+        value: Number(row.count) || 0
+    }));
+    const other = features.slice(4).reduce((sum, row) => sum + (Number(row.count) || 0), 0);
+    const activitySegments = other > 0 ? [...topFeatures, { label: 'Other', value: other }] : topFeatures;
+    renderDonutChart('activityMixDonut', activitySegments, {
+        value: formatNumber(activitySegments.reduce((sum, row) => sum + (Number(row.value) || 0), 0)),
+        label: 'Events'
+    });
+}
+
 function renderList(targetId, rows = [], labelFn, valueFn, subtitleFn = null) {
     const target = document.getElementById(targetId);
     if (!target) return;
@@ -382,6 +494,7 @@ function renderAll() {
     renderCards();
     renderLineChart('tasksChart', state.overview?.charts?.tasksSeries || state.tasks?.series || [], 'tasksChartMeta');
     renderLineChart('projectsChart', state.overview?.charts?.projectsSeries || state.projects?.series || [], 'projectsChartMeta');
+    renderDonutInsights();
 
     const features = state.features?.features || state.overview?.featureUsage || [];
     document.getElementById('featureUsageMeta').textContent = `${formatNumber(features.length)} event types`;

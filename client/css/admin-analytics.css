@@ -887,3 +887,334 @@ button:disabled,
         width: 100%;
     }
 }
+
+/* Dashboard layout refinement: AIGOX brand, full-width overview, and donut analytics. */
+.page-brand-logo--aigox {
+    min-width: 168px;
+    gap: 9px;
+}
+
+.aigox-logo-text,
+.analytics-header-logo {
+    color: var(--accent);
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.aigox-logo-text {
+    font-size: 22px;
+}
+
+.page-brand-caption {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.09em;
+}
+
+.analytics-header {
+    margin-bottom: var(--card-gap);
+}
+
+.analytics-header-card {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.32fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: center;
+    min-height: 132px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--panel-radius);
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    text-align: left;
+}
+
+.analytics-header-logo {
+    display: grid;
+    place-items: center;
+    min-height: 88px;
+    border: 1px solid rgba(0, 153, 255, 0.32);
+    border-radius: 14px;
+    background: var(--input-bg);
+    font-size: clamp(30px, 4vw, 58px);
+}
+
+.analytics-header-copy {
+    min-width: 0;
+}
+
+.analytics-header-card h1,
+.analytics-header-card .analytics-kicker,
+.analytics-header-card .analytics-subtitle {
+    text-align: left;
+}
+
+.analytics-header-card .analytics-subtitle {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.main-container {
+    grid-template-columns: minmax(300px, 0.85fr) minmax(560px, 1.45fr) minmax(330px, 0.95fr);
+}
+
+.dashboard-overview {
+    grid-column: 1 / -1;
+}
+
+.section-title-row--centered {
+    align-items: center;
+}
+
+.analytics-grid-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.dashboard-overview .analytics-card {
+    min-height: 96px;
+}
+
+.dashboard-overview .analytics-card-value {
+    font-size: clamp(26px, 2vw, 38px);
+}
+
+.analytics-donut-section {
+    padding-bottom: 20px;
+}
+
+.donut-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.donut-card {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--control-radius);
+    background: var(--input-bg);
+}
+
+.donut-card--wide {
+    grid-column: 1 / -1;
+}
+
+.analytics-donut {
+    min-height: 230px;
+}
+
+.analytics-donut-shell {
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    min-height: 214px;
+}
+
+.analytics-donut-figure {
+    position: relative;
+    width: 176px;
+    height: 176px;
+    display: grid;
+    place-items: center;
+}
+
+.analytics-donut-figure svg {
+    width: 176px;
+    height: 176px;
+    display: block;
+    transform: rotate(-90deg);
+}
+
+.analytics-donut-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.07);
+    stroke-width: 18;
+}
+
+.analytics-donut-segment {
+    fill: none;
+    stroke: var(--segment-color, var(--accent));
+    stroke-width: 18;
+    stroke-linecap: butt;
+    transition: stroke-dasharray 0.3s ease, stroke-dashoffset 0.3s ease;
+}
+
+.analytics-donut-center {
+    position: absolute;
+    inset: 30px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    text-align: center;
+}
+
+.analytics-donut-value {
+    color: var(--text);
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 0.95;
+}
+
+.analytics-donut-label {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.analytics-donut-legend {
+    display: grid;
+    gap: 8px;
+    align-content: center;
+    min-width: 0;
+}
+
+.analytics-donut-legend-row {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.analytics-donut-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--segment-color, var(--accent));
+}
+
+.analytics-donut-legend-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text);
+}
+
+.analytics-donut-legend-value {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.analytics-flow-grid {
+    gap: 20px;
+}
+
+.preview-panel .analytics-table th:nth-child(4),
+.preview-panel .analytics-table td:nth-child(4) {
+    display: none;
+}
+
+@media (max-width: 1720px) {
+    .analytics-grid-kpis {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1600px) {
+    .main-container {
+        grid-template-columns: minmax(270px, 0.9fr) minmax(460px, 1.25fr) minmax(285px, 0.9fr);
+    }
+
+    .analytics-grid-kpis {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .analytics-grid-mini {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .analytics-donut-shell {
+        grid-template-columns: 150px minmax(0, 1fr);
+    }
+
+    .analytics-donut-figure,
+    .analytics-donut-figure svg {
+        width: 150px;
+        height: 150px;
+    }
+
+    .analytics-donut-center {
+        inset: 25px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-container {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-overview {
+        grid-column: auto;
+    }
+
+    .analytics-grid-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .analytics-header-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .analytics-header-card h1,
+    .analytics-header-card .analytics-kicker,
+    .analytics-header-card .analytics-subtitle {
+        text-align: center;
+    }
+
+    .analytics-header-card .analytics-subtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 900px) {
+    .page-brand-logo--aigox {
+        min-width: 0;
+    }
+
+    .page-brand-caption {
+        display: none;
+    }
+
+    .aigox-logo-text {
+        font-size: 18px;
+    }
+
+    .donut-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .donut-card--wide {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 720px) {
+    .analytics-grid-kpis,
+    .analytics-grid-mini {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-donut-shell {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+    }
+
+    .analytics-donut-legend {
+        width: 100%;
+    }
+}
