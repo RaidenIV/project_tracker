@@ -116,10 +116,38 @@ async function postRequest(url, body = {}) {
     return data;
 }
 
-function applyAnalyticsAccent() {
-    const accent = '#0099ff';
-    document.documentElement.style.setProperty('--accent', accent);
-    document.body.style.setProperty('--accent', accent);
+const ACCENT_PALETTES = {
+    azure: { accent: '#0099ff', rgb: '0, 153, 255' },
+    violet: { accent: '#8b5cf6', rgb: '139, 92, 246' },
+    emerald: { accent: '#10b981', rgb: '16, 185, 129' },
+    amber: { accent: '#f5a623', rgb: '245, 166, 35' },
+    rose: { accent: '#f43f5e', rgb: '244, 63, 94' }
+};
+const ACCENT_STORAGE_KEY = 'taskcomAnalyticsPalette';
+
+function applyAnalyticsAccent(paletteId = null) {
+    let stored = paletteId;
+    if (!stored) {
+        try { stored = localStorage.getItem(ACCENT_STORAGE_KEY); } catch { stored = null; }
+    }
+    const id = ACCENT_PALETTES[stored] ? stored : 'azure';
+    const palette = ACCENT_PALETTES[id];
+    for (const target of [document.documentElement, document.body]) {
+        target.style.setProperty('--accent', palette.accent);
+        target.style.setProperty('--accent-rgb', palette.rgb);
+    }
+    try { localStorage.setItem(ACCENT_STORAGE_KEY, id); } catch {}
+    document.querySelectorAll('.palette-swatch').forEach(swatch => {
+        const isActive = swatch.dataset.palette === id;
+        swatch.classList.toggle('is-active', isActive);
+        swatch.setAttribute('aria-pressed', String(isActive));
+    });
+}
+
+function initPaletteControls() {
+    document.querySelectorAll('.palette-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => applyAnalyticsAccent(swatch.dataset.palette));
+    });
 }
 
 function formatNumberIfNumeric(value) {
@@ -573,27 +601,9 @@ async function runBackfill() {
     }
 }
 
-function initNavigation() {
-    const dropdown = document.getElementById('navDropdown');
-    const toggle = dropdown?.querySelector('.nav-toggle');
-    if (!dropdown || !toggle) return;
-
-    toggle.addEventListener('click', () => {
-        const isActive = dropdown.classList.toggle('active');
-        toggle.setAttribute('aria-expanded', String(isActive));
-    });
-
-    document.addEventListener('click', event => {
-        if (!dropdown.contains(event.target)) {
-            dropdown.classList.remove('active');
-            toggle.setAttribute('aria-expanded', 'false');
-        }
-    });
-}
-
 function init() {
+    initPaletteControls();
     applyAnalyticsAccent();
-    initNavigation();
     const range = document.getElementById('analyticsRange');
     const refresh = document.getElementById('analyticsRefreshBtn');
     const backfill = document.getElementById('analyticsBackfillBtn');
