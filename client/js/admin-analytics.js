@@ -116,21 +116,10 @@ async function postRequest(url, body = {}) {
     return data;
 }
 
-function applyAccentFromStorage() {
-    try {
-        const accent = localStorage.getItem('tracker_accent_color_v1') || '#ff8a00';
-        const hex = String(accent).replace('#', '');
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        if (![r, g, b].every(Number.isFinite)) return;
-        document.documentElement.style.setProperty('--accent', accent);
-        document.documentElement.style.setProperty('--accent-color', accent);
-        document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
-        document.body.style.setProperty('--accent', accent);
-        document.body.style.setProperty('--accent-color', accent);
-        document.body.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
-    } catch {}
+function applyAnalyticsAccent() {
+    const accent = '#0099ff';
+    document.documentElement.style.setProperty('--accent', accent);
+    document.body.style.setProperty('--accent', accent);
 }
 
 function formatNumberIfNumeric(value) {
@@ -471,8 +460,27 @@ async function runBackfill() {
     }
 }
 
+function initNavigation() {
+    const dropdown = document.getElementById('navDropdown');
+    const toggle = dropdown?.querySelector('.nav-toggle');
+    if (!dropdown || !toggle) return;
+
+    toggle.addEventListener('click', () => {
+        const isActive = dropdown.classList.toggle('active');
+        toggle.setAttribute('aria-expanded', String(isActive));
+    });
+
+    document.addEventListener('click', event => {
+        if (!dropdown.contains(event.target)) {
+            dropdown.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
 function init() {
-    applyAccentFromStorage();
+    applyAnalyticsAccent();
+    initNavigation();
     const range = document.getElementById('analyticsRange');
     const refresh = document.getElementById('analyticsRefreshBtn');
     const backfill = document.getElementById('analyticsBackfillBtn');

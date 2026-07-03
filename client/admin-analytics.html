@@ -6,154 +6,135 @@
     <title>TaskCom Analytics</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" id="appFavicon" type="image/svg+xml" href="/assets/menu.svg">
-    <link rel="stylesheet" href="/css/base.css?v=20260525-level-leaderboard-invite">
-    <link rel="stylesheet" href="/css/themes/theme-console.css">
     <link rel="stylesheet" href="/css/admin-analytics.css">
 </head>
-<body data-theme="console-dark" class="analytics-body">
-    <div class="analytics-app-shell">
-        <aside class="analytics-sidebar" aria-label="Analytics navigation">
-            <a class="analytics-sidebar-brand" href="/admin/analytics" aria-label="TaskCom Analytics home">
-                <span class="analytics-brand-mark" aria-hidden="true"></span>
-                <span>TaskCom</span>
-            </a>
-            <nav class="analytics-sidebar-nav">
-                <a class="analytics-nav-item is-active" href="#overviewCards"><span aria-hidden="true">▣</span><span>Overview</span></a>
-                <a class="analytics-nav-item" href="#tasksChart"><span aria-hidden="true">▥</span><span>Cases</span></a>
-                <a class="analytics-nav-item" href="#featureUsageList"><span aria-hidden="true">◉</span><span>Events</span></a>
-                <a class="analytics-nav-item" href="#errorsTable"><span aria-hidden="true">⚠</span><span>Diagnostics</span></a>
-            </nav>
-            <a class="analytics-sidebar-return" href="/">Back to App</a>
-        </aside>
-
-        <main class="analytics-main">
-            <header class="analytics-topbar" aria-label="Analytics command bar">
-                <div>
-                    <div class="analytics-kicker">Admin Command Center</div>
-                    <h1>Analytics Dashboard</h1>
-                </div>
-                <div class="analytics-user-chip">Admin View</div>
-            </header>
-
-            <section id="analyticsStatus" class="analytics-status">Loading analytics…</section>
-
-            <div class="analytics-content-grid">
-                <div class="analytics-dashboard-column">
-                    <section class="analytics-page-intro" aria-label="Dashboard overview">
-                        <div>
-                            <h2>Operational telemetry</h2>
-                            <p>Usage, task flow, feature adoption, device mix, performance, and recovered historical activity.</p>
-                        </div>
-                        <div class="analytics-page-intro-stat">
-                            <span>Mode</span>
-                            <strong>Live + Backfill</strong>
-                        </div>
-                    </section>
-
-                    <section class="analytics-grid analytics-grid-kpis" id="overviewCards" aria-label="Overview metrics"></section>
-
-                    <section class="analytics-panel-grid analytics-panel-grid-featured">
-                        <article class="analytics-panel analytics-panel-large">
-                            <div class="analytics-panel-header">
-                                <div>
-                                    <span class="analytics-panel-eyebrow">Task Velocity</span>
-                                    <h2>Tasks Created vs Completed</h2>
-                                </div>
-                                <span id="tasksChartMeta"></span>
-                            </div>
-                            <div id="tasksChart" class="analytics-chart"></div>
-                        </article>
-                        <article class="analytics-panel analytics-panel-large">
-                            <div class="analytics-panel-header">
-                                <div>
-                                    <span class="analytics-panel-eyebrow">Project Flow</span>
-                                    <h2>Projects Created vs Completed</h2>
-                                </div>
-                                <span id="projectsChartMeta"></span>
-                            </div>
-                            <div id="projectsChart" class="analytics-chart"></div>
-                        </article>
-                    </section>
-
-                    <section class="analytics-panel-grid">
-                        <article class="analytics-panel">
-                            <div class="analytics-panel-header">
-                                <div>
-                                    <span class="analytics-panel-eyebrow">Engagement</span>
-                                    <h2>Feature Usage</h2>
-                                </div>
-                                <span id="featureUsageMeta"></span>
-                            </div>
-                            <div id="featureUsageList" class="analytics-list"></div>
-                        </article>
-                        <article class="analytics-panel">
-                            <div class="analytics-panel-header">
-                                <div>
-                                    <span class="analytics-panel-eyebrow">Environment</span>
-                                    <h2>Device / Viewport Breakdown</h2>
-                                </div>
-                                <span id="devicesMeta"></span>
-                            </div>
-                            <div id="devicesList" class="analytics-list"></div>
-                        </article>
-                    </section>
-
-                    <section class="analytics-panel-grid">
-                        <article class="analytics-panel">
-                            <div class="analytics-panel-header">
-                                <div>
-                                    <span class="analytics-panel-eyebrow">Reliability</span>
-                                    <h2>Performance</h2>
-                                </div>
-                                <span id="performanceMeta"></span>
-                            </div>
-                            <div id="performanceSummary" class="analytics-grid analytics-grid-mini"></div>
-                            <div id="slowRoutesTable" class="analytics-table-wrap"></div>
-                        </article>
-                        <article class="analytics-panel">
-                            <div class="analytics-panel-header">
-                                <div>
-                                    <span class="analytics-panel-eyebrow">Users</span>
-                                    <h2>Most Active Users</h2>
-                                </div>
-                                <span id="usersMeta"></span>
-                            </div>
-                            <div id="usersTable" class="analytics-table-wrap"></div>
-                        </article>
-                    </section>
-
-                    <section class="analytics-panel analytics-panel-full">
-                        <div class="analytics-panel-header">
-                            <div>
-                                <span class="analytics-panel-eyebrow">Diagnostics</span>
-                                <h2>Recent Errors</h2>
-                            </div>
-                            <span id="errorsMeta"></span>
-                        </div>
-                        <div id="errorsTable" class="analytics-table-wrap"></div>
-                    </section>
-                </div>
-
-                <aside class="analytics-filter-rail" aria-label="Analytics filters and recovery controls">
-                    <div class="analytics-filter-title">Filter</div>
-                    <label class="analytics-field">
-                        <span>Period</span>
-                        <select id="analyticsRange" class="analytics-select" aria-label="Analytics date range">
-                            <option value="7d">Last 7 days</option>
-                            <option value="30d" selected>Last 30 days</option>
-                            <option value="90d">Last 90 days</option>
-                            <option value="all">All historical</option>
-                        </select>
-                    </label>
-                    <button id="analyticsRefreshBtn" class="analytics-button" type="button">Refresh</button>
-                    <button id="analyticsBackfillBtn" class="analytics-button analytics-button-primary" type="button">Backfill History</button>
-                    <div id="backfillSummary" class="analytics-backfill-card" aria-label="Historical backfill status"></div>
-                </aside>
-            </div>
-        </main>
+<body class="analytics-body">
+    <div class="nav-dropdown" id="navDropdown">
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="analyticsNavMenu">Menu</button>
+        <div class="nav-menu" id="analyticsNavMenu">
+            <a href="#summary">Overview</a>
+            <a href="#taskFlowSection">Task Flow</a>
+            <a href="#featureUsageSection">Feature Usage</a>
+            <a href="#performanceSection">Performance</a>
+            <a href="#errorsSection">Errors</a>
+            <a href="/">Back to App</a>
+        </div>
     </div>
+
+    <a class="page-brand-logo" href="/" aria-label="Back to TaskCom">
+        <img src="/assets/menu.svg" alt="TaskCom icon">
+        <span>TaskCom</span>
+    </a>
+
+    <main class="page-wrapper">
+        <header class="analytics-header">
+            <p class="analytics-kicker">Admin Command Center</p>
+            <h1>Analytics Dashboard</h1>
+            <p class="analytics-subtitle">Usage, feature, device, performance, error, and recovered historical telemetry.</p>
+        </header>
+
+        <section id="analyticsStatus" class="analytics-status">Loading analytics…</section>
+
+        <section class="main-container" aria-label="Analytics dashboard">
+            <aside class="preview-panel">
+                <section id="summary" class="summary-panel">
+                    <h2 class="summary-title">System Summary</h2>
+                    <div id="overviewCards" class="analytics-grid analytics-grid-kpis" aria-label="Overview metrics"></div>
+                </section>
+
+                <section class="server-load-section analytics-controls-panel" aria-label="Analytics controls">
+                    <h3>Dashboard Controls</h3>
+                    <label for="analyticsRange">Period</label>
+                    <select id="analyticsRange" class="analytics-select" aria-label="Analytics date range">
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d" selected>Last 30 days</option>
+                        <option value="90d">Last 90 days</option>
+                        <option value="all">All historical</option>
+                    </select>
+
+                    <div class="text-preview-actions">
+                        <button id="analyticsRefreshBtn" class="analytics-button" type="button">Refresh</button>
+                        <button id="analyticsBackfillBtn" class="analytics-button primary" type="button">Backfill History</button>
+                    </div>
+                    <span class="load-status">Select a range or recover historical records.</span>
+                </section>
+
+                <section id="backfillSummary" class="server-load-section analytics-backfill-card" aria-label="Historical backfill status"></section>
+            </aside>
+
+            <section class="form-panel">
+                <section id="taskFlowSection" class="charts-section">
+                    <h2 class="charts-title">Task & Project Flow</h2>
+                    <div class="charts-grid">
+                        <article class="chart-card">
+                            <div class="chart-title-row">
+                                <h3 class="chart-subtitle">Tasks Created vs Completed</h3>
+                                <span id="tasksChartMeta" class="chart-meta"></span>
+                            </div>
+                            <div class="chart-canvas-wrap">
+                                <div id="tasksChart" class="analytics-chart"></div>
+                            </div>
+                        </article>
+
+                        <article class="chart-card">
+                            <div class="chart-title-row">
+                                <h3 class="chart-subtitle">Projects Created vs Completed</h3>
+                                <span id="projectsChartMeta" class="chart-meta"></span>
+                            </div>
+                            <div class="chart-canvas-wrap">
+                                <div id="projectsChart" class="analytics-chart"></div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="performanceSection" class="server-load-section">
+                    <div class="section-title-row">
+                        <h3>Performance</h3>
+                        <span id="performanceMeta" class="chart-meta"></span>
+                    </div>
+                    <div id="performanceSummary" class="analytics-grid analytics-grid-mini"></div>
+                    <div id="slowRoutesTable" class="analytics-table-wrap"></div>
+                </section>
+            </section>
+
+            <aside class="chart-panel">
+                <section id="featureUsageSection" class="charts-section">
+                    <div class="section-title-row">
+                        <h2 class="charts-title">Feature Usage</h2>
+                        <span id="featureUsageMeta" class="chart-meta"></span>
+                    </div>
+                    <div id="featureUsageList" class="analytics-list"></div>
+                </section>
+
+                <section class="charts-section">
+                    <div class="section-title-row">
+                        <h2 class="charts-title">Device / Viewport</h2>
+                        <span id="devicesMeta" class="chart-meta"></span>
+                    </div>
+                    <div id="devicesList" class="analytics-list"></div>
+                </section>
+
+                <section class="server-load-section">
+                    <div class="section-title-row">
+                        <h3>Most Active Users</h3>
+                        <span id="usersMeta" class="chart-meta"></span>
+                    </div>
+                    <div id="usersTable" class="analytics-table-wrap"></div>
+                </section>
+
+                <section id="errorsSection" class="server-load-section">
+                    <div class="section-title-row">
+                        <h3>Recent Errors</h3>
+                        <span id="errorsMeta" class="chart-meta"></span>
+                    </div>
+                    <div id="errorsTable" class="analytics-table-wrap"></div>
+                </section>
+            </aside>
+        </section>
+    </main>
 
     <script type="module" src="/js/admin-analytics.js"></script>
 </body>
