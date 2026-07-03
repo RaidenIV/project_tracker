@@ -125,7 +125,7 @@ const ACCENT_PALETTES = {
 };
 const ACCENT_STORAGE_KEY = 'taskcomAnalyticsPalette';
 
-function applyAnalyticsAccent(paletteId = null) {
+function applyChartPalette(paletteId = null) {
     let stored = paletteId;
     if (!stored) {
         try { stored = localStorage.getItem(ACCENT_STORAGE_KEY); } catch { stored = null; }
@@ -133,8 +133,8 @@ function applyAnalyticsAccent(paletteId = null) {
     const id = ACCENT_PALETTES[stored] ? stored : 'azure';
     const palette = ACCENT_PALETTES[id];
     for (const target of [document.documentElement, document.body]) {
-        target.style.setProperty('--accent', palette.accent);
-        target.style.setProperty('--accent-rgb', palette.rgb);
+        target.style.setProperty('--chart-accent', palette.accent);
+        target.style.setProperty('--chart-accent-rgb', palette.rgb);
     }
     try { localStorage.setItem(ACCENT_STORAGE_KEY, id); } catch {}
     document.querySelectorAll('.palette-swatch').forEach(swatch => {
@@ -146,7 +146,7 @@ function applyAnalyticsAccent(paletteId = null) {
 
 function initPaletteControls() {
     document.querySelectorAll('.palette-swatch').forEach(swatch => {
-        swatch.addEventListener('click', () => applyAnalyticsAccent(swatch.dataset.palette));
+        swatch.addEventListener('click', () => applyChartPalette(swatch.dataset.palette));
     });
 }
 
@@ -309,7 +309,7 @@ function renderLineChart(targetId, rows = [], metaId = '') {
 
 function getSegmentColor(index = 0) {
     const colors = [
-        'var(--accent)',
+        'var(--chart-accent)',
         'var(--success)',
         'var(--warning)',
         'rgba(255, 255, 255, 0.82)',
@@ -385,7 +385,7 @@ function renderDonutInsights() {
 
     renderDonutChart('completionDonut', [
         { label: 'Completed', value: completedTasks, color: 'var(--success)' },
-        { label: 'Open', value: openTasks, color: 'var(--accent)' },
+        { label: 'Open', value: openTasks, color: 'var(--chart-accent)' },
         { label: 'Overdue', value: overdueTasks, color: 'var(--warning)' }
     ], {
         value: formatPercent(totals.completionRate),
@@ -397,7 +397,7 @@ function renderDonutInsights() {
     const archivedProjects = Math.max(0, Number(totals.archivedProjects) || 0);
 
     renderDonutChart('projectStatusDonut', [
-        { label: 'Active', value: activeProjects, color: 'var(--accent)' },
+        { label: 'Active', value: activeProjects, color: 'var(--chart-accent)' },
         { label: 'Completed', value: completedProjects, color: 'var(--success)' },
         { label: 'Archived', value: archivedProjects, color: 'rgba(255, 255, 255, 0.82)' }
     ], {
@@ -603,7 +603,7 @@ async function runBackfill() {
 
 function init() {
     initPaletteControls();
-    applyAnalyticsAccent();
+    applyChartPalette();
     const range = document.getElementById('analyticsRange');
     const refresh = document.getElementById('analyticsRefreshBtn');
     const backfill = document.getElementById('analyticsBackfillBtn');
