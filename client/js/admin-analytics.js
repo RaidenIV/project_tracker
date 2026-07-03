@@ -203,21 +203,32 @@ function renderCards() {
     `).join('');
 }
 
-function buildLinePath(points) {
-    return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-}
+function compactSeries(rows = [], maxBars = 18) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    if (safeRows.length <= maxBars) return safeRows.map(row => ({ ...row, label: String(row.date || '').slice(5) || '—' }));
 
-function buildAreaPath(points, baselineY) {
-    if (!points.length) return '';
-    return `M ${points[0].x} ${baselineY} L ${points.map(point => `${point.x} ${point.y}`).join(' L ')} L ${points[points.length - 1].x} ${baselineY} Z`;
+    const bucketSize = Math.ceil(safeRows.length / maxBars);
+    const buckets = [];
+    for (let index = 0; index < safeRows.length; index += bucketSize) {
+        const chunk = safeRows.slice(index, index + bucketSize);
+        const first = chunk[0]?.date || '';
+        const last = chunk[chunk.length - 1]?.date || first;
+        buckets.push({
+            date: first,
+            label: first === last ? first.slice(5) : `${first.slice(5)}–${last.slice(5)}`,
+            created: chunk.reduce((sum, row) => sum + (Number(row.created) || 0), 0),
+            completed: chunk.reduce((sum, row) => sum + (Number(row.completed) || 0), 0)
+        });
+    }
+    return buckets;
 }
 
 function renderLineChart(targetId, rows = [], metaId = '') {
     const target = document.getElementById(targetId);
     if (!target) return;
-    const safeRows = Array.isArray(rows) ? rows : [];
-    const totalActivity = safeRows.reduce((sum, row) => sum + (Number(row.created) || 0) + (Number(row.completed) || 0), 0);
-    if (!safeRows.length || totalActivity === 0) {
+    const sourceRows = Array.isArray(rows) ? rows : [];
+    const totalActivity = sourceRows.reduce((sum, row) => sum + (Number(row.created) || 0) + (Number(row.completed) || 0), 0);
+    if (!sourceRows.length || totalActivity === 0) {
         target.innerHTML = '<div class="analytics-empty">No activity in this range yet. Run historical backfill or select a wider date range.</div>';
         if (metaId) {
             const meta = document.getElementById(metaId);
@@ -226,47 +237,50 @@ function renderLineChart(targetId, rows = [], metaId = '') {
         return;
     }
 
+    const safeRows = compactSeries(sourceRows, 18);
     const width = 820;
-    const height = 290;
-    const pad = { left: 46, right: 22, top: 22, bottom: 40 };
+    const height = 238;
+    const pad = { left: 42, right: 18, top: 18, bottom: 48 };
     const maxValue = Math.max(1, ...safeRows.flatMap(row => [Number(row.created) || 0, Number(row.completed) || 0]));
     const plotWidth = width - pad.left - pad.right;
     const plotHeight = height - pad.top - pad.bottom;
     const baselineY = height - pad.bottom;
-    const xFor = index => pad.left + (safeRows.length === 1 ? plotWidth / 2 : (index / (safeRows.length - 1)) * plotWidth);
-    const yFor = value => pad.top + plotHeight - ((Number(value) || 0) / maxValue) * plotHeight;
-    const createdPoints = safeRows.map((row, index) => ({ x: xFor(index), y: yFor(row.created) }));
-    const completedPoints = safeRows.map((row, index) => ({ x: xFor(index), y: yFor(row.completed) }));
-    const firstDate = safeRows[0]?.date || '';
-    const lastDate = safeRows[safeRows.length - 1]?.date || '';
+    const groupWidth = plotWidth / safeRows.length;
+    const barWidth = Math.max(6, Math.min(18, groupWidth * 0.3));
+    const firstDate = sourceRows[0]?.date || '';
+    const lastDate = sourceRows[sourceRows.length - 1]?.date || '';
 
     if (metaId) {
         const meta = document.getElementById(metaId);
         if (meta) meta.textContent = `${firstDate} → ${lastDate}`;
     }
 
+    const yFor = value => pad.top + plotHeight - ((Number(value) || 0) / maxValue) * plotHeight;
     const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
         const y = pad.top + plotHeight - ratio * plotHeight;
         const label = Math.round(maxValue * ratio);
         return `<line class="analytics-chart-grid" x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}"></line><text class="analytics-chart-label" x="10" y="${y + 4}">${label}</text>`;
     }).join('');
 
-    const dateLabels = safeRows.length > 1 ? [
-        { text: firstDate.slice(5), x: pad.left },
-        { text: lastDate.slice(5), x: width - pad.right - 38 }
-    ] : [{ text: firstDate.slice(5), x: pad.left }];
+    const bars = safeRows.map((row, index) => {
+        const groupX = pad.left + index * groupWidth + groupWidth / 2;
+        const createdY = yFor(row.created);
+        const completedY = yFor(row.completed);
+        const createdHeight = Math.max(1, baselineY - createdY);
+        const completedHeight = Math.max(1, baselineY - completedY);
+        const showLabel = safeRows.length <= 10 || index === 0 || index === safeRows.length - 1 || index % Math.ceil(safeRows.length / 6) === 0;
+        return `
+            <rect class="analytics-chart-bar-created" x="${groupX - barWidth - 2}" y="${createdY}" width="${barWidth}" height="${createdHeight}" rx="2"></rect>
+            <rect class="analytics-chart-bar-completed" x="${groupX + 2}" y="${completedY}" width="${barWidth}" height="${completedHeight}" rx="2"></rect>
+            ${showLabel ? `<text class="analytics-chart-label" x="${groupX - groupWidth / 2 + 2}" y="${height - 14}">${escapeHtml(row.label || '')}</text>` : ''}
+        `;
+    }).join('');
 
     target.innerHTML = `
-        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Analytics trend chart">
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Analytics grouped bar chart">
             ${gridLines}
             <line class="analytics-chart-axis" x1="${pad.left}" y1="${baselineY}" x2="${width - pad.right}" y2="${baselineY}"></line>
-            <path class="analytics-chart-area-created" d="${buildAreaPath(createdPoints, baselineY)}"></path>
-            <path class="analytics-chart-area-completed" d="${buildAreaPath(completedPoints, baselineY)}"></path>
-            <path class="analytics-chart-created" d="${buildLinePath(createdPoints)}"></path>
-            <path class="analytics-chart-completed" d="${buildLinePath(completedPoints)}"></path>
-            ${createdPoints.map(point => `<circle class="analytics-chart-point-created" cx="${point.x}" cy="${point.y}" r="3.5"></circle>`).join('')}
-            ${completedPoints.map(point => `<circle class="analytics-chart-point-completed" cx="${point.x}" cy="${point.y}" r="3.5"></circle>`).join('')}
-            ${dateLabels.map(label => `<text class="analytics-chart-label" x="${label.x}" y="${height - 13}">${escapeHtml(label.text)}</text>`).join('')}
+            ${bars}
         </svg>
         <div class="analytics-legend">
             <span><span class="analytics-legend-dot"></span>Created</span>
