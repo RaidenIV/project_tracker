@@ -10093,3 +10093,120 @@ body[data-theme] .control-panel .sidebar-collapsible[data-sidebar-section="setti
 body[data-theme] .sidebar-collapsible.is-expanded .sidebar-section-toggle-icon {
     color: var(--accent, currentColor) !important;
 }
+
+/* ============================================================================
+   Targeted update: menu.svg branding, animated sidebar sections, desktop logo
+   ============================================================================ */
+.sidebar-menu-icon,
+body[data-theme] .sidebar-menu-icon {
+    display: inline-block !important;
+    background-color: var(--accent, #ff8a00) !important;
+    -webkit-mask: url("../../assets/menu.svg") center / contain no-repeat !important;
+    mask: url("../../assets/menu.svg") center / contain no-repeat !important;
+}
+
+.sidebar-section-body,
+body[data-theme] .sidebar-section-body {
+    overflow: hidden !important;
+    transform-origin: top center !important;
+}
+
+@media (min-width: 981px) {
+    .sidebar-bottom-logo,
+    body[data-theme^="console"] .sidebar-bottom-logo,
+    body[data-theme^="glass"] .sidebar-bottom-logo,
+    body[data-theme^="blueprint"] .sidebar-bottom-logo {
+        width: clamp(6.15rem, 8.7890625vw, 9.075rem) !important;
+        max-width: 84.375% !important;
+    }
+}
+
+/* ============================================================================
+   1920x1200 display only: four-column project-card containment
+   Keeps every card section inside its grid track when the manual layout is set
+   to four columns, including long due-date labels and the owner/status footer.
+   ============================================================================ */
+@media (min-width: 981px) {
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] > .project-card.stitch-project-card,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] > .stitch-project-card.project-card {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] > .project-card.stitch-project-card > *,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] > .stitch-project-card.project-card > * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        gap: 0.48rem !important;
+        overflow: hidden !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row .project-priority-control--card,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row .project-priority-card-button,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row .project-card-notes-button,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row .project-due-date-control--card:not(.has-due-date) {
+        flex: 0 0 2.1rem !important;
+        width: 2.1rem !important;
+        min-width: 2.1rem !important;
+        max-width: 2.1rem !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row .project-due-date-control--card.has-due-date {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding-inline: 0.5rem !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-action-row .project-due-date-control--card.has-due-date .project-due-date-value {
+        display: block !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-footer {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        grid-template-columns: minmax(0, 1fr) max-content !important;
+        column-gap: 0.65rem !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-footer-left,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-access,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-meta,
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-status {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    html body[data-theme] .container .viewport .project-grid[data-display-resolution="1920x1200"][data-layout-effective-columns="4"] .project-card-access {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
+

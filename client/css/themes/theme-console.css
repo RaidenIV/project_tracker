@@ -505,7 +505,7 @@ body[data-theme^="console"] .side-panel-section h3 {
 body[data-theme^="console"] .total-percentage {
     color: var(--accent);
     font-weight: 700;
-    text-shadow: 0 0 20px var(--accent-glow);
+    text-shadow: none;
 }
 
 body[data-theme^="console"] .total-percentage-label {
@@ -1711,7 +1711,11 @@ body[data-theme^="console"] .control-panel .sidebar-header-theme-toggle .sidebar
     white-space: nowrap !important;
 }
 
-body[data-theme^="console"] .sidebar-total-completion-section .total-percentage,
+body[data-theme^="console"] .sidebar-total-completion-section .total-percentage {
+    color: var(--accent) !important;
+    text-shadow: none !important;
+}
+
 body[data-theme^="console"] .sidebar-total-completion-section .sidebar-completion-stat strong {
     color: var(--accent) !important;
     text-shadow: 0 0 18px var(--accent-glow) !important;

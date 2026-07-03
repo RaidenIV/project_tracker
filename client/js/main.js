@@ -1780,14 +1780,11 @@ const DARK_MODE_LOGO_URL = 'https://images.squarespace-cdn.com/content/v1/681ea1
 
 const THEME_OPTIONS = {
     'console-dark': { label: 'Console Dark', family: 'console', mode: 'dark' },
-    'console-light': { label: 'Console Light', family: 'console', mode: 'light' },
-    'blueprint-dark': { label: 'Neumorphism Dark', family: 'blueprint', mode: 'dark' },
-    'blueprint-light': { label: 'Neumorphism Light', family: 'blueprint', mode: 'light' }
+    'console-light': { label: 'Console Light', family: 'console', mode: 'light' }
 };
 
 const THEME_FAMILY_OPTIONS = {
-    console: { label: 'Console', themePrefix: 'console' },
-    blueprint: { label: 'Neumorphism', themePrefix: 'blueprint' }
+    console: { label: 'Console', themePrefix: 'console' }
 };
 
 const DEFAULT_ACCENT_COLOR = '#ff8a00';
@@ -1831,12 +1828,12 @@ const LEGACY_THEME_MAP = {
     'glass-dark': 'console-dark',
     'nebula-light': 'console-light',
     'nebula-dark': 'console-dark',
-    blueprint: 'blueprint-dark',
-    duplex: 'blueprint-dark',
-    'blueprint-light': 'blueprint-light',
-    'blueprint-dark': 'blueprint-dark',
-    'duplex-light': 'blueprint-light',
-    'duplex-dark': 'blueprint-dark'
+    blueprint: 'console-dark',
+    duplex: 'console-dark',
+    'blueprint-light': 'console-light',
+    'blueprint-dark': 'console-dark',
+    'duplex-light': 'console-light',
+    'duplex-dark': 'console-dark'
 };
 
 const accountState = {
@@ -1864,7 +1861,7 @@ const uiState = {
     activeProjectTag: PROJECT_TAG_ALL_FILTER,
     savedViews: [],
     activeSavedViewId: '',
-    theme: 'blueprint-dark',
+    theme: 'console-dark',
     projectCardTaskPreview: true,
     saveStatus: 'idle',
     saveMessage: 'All changes saved',
@@ -3289,19 +3286,12 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
     return row;
 }
 
-function getMobileSafeThemeName(themeName) {
-    const meta = THEME_OPTIONS[themeName];
-    if (!meta || meta.family !== 'blueprint') return themeName;
-    if (typeof isMobileWebSidebarViewport !== 'function' || !isMobileWebSidebarViewport()) return themeName;
-    return meta.mode === 'light' ? 'console-light' : 'console-dark';
-}
-
 function normalizeThemeName(themeName) {
     const normalized = String(themeName || '').trim();
     const resolvedTheme = THEME_OPTIONS[normalized]
         ? normalized
-        : (LEGACY_THEME_MAP[normalized] || 'blueprint-dark');
-    return getMobileSafeThemeName(resolvedTheme);
+        : (LEGACY_THEME_MAP[normalized] || 'console-dark');
+    return THEME_OPTIONS[resolvedTheme] ? resolvedTheme : 'console-dark';
 }
 
 function getCurrentColorMode() {
@@ -3334,6 +3324,30 @@ function hexToRgb(hex) {
         g: (numeric >> 8) & 255,
         b: numeric & 255
     };
+}
+
+let menuFaviconSvgPromise = null;
+
+function updateAccentFavicon(accent) {
+    const favicon = document.getElementById('appFavicon');
+    if (!favicon) return;
+
+    if (!menuFaviconSvgPromise) {
+        menuFaviconSvgPromise = fetch('assets/menu.svg', { cache: 'force-cache' })
+            .then(response => {
+                if (!response.ok) throw new Error(`Unable to load menu favicon (${response.status})`);
+                return response.text();
+            });
+    }
+
+    menuFaviconSvgPromise
+        .then(svg => {
+            const coloredSvg = svg.replace(/fill="[^"]+"/g, `fill="${accent}"`);
+            favicon.href = `data:image/svg+xml,${encodeURIComponent(coloredSvg)}`;
+        })
+        .catch(() => {
+            favicon.href = 'assets/menu.svg';
+        });
 }
 
 function applyAccentColor(color, persist = true) {
@@ -3375,6 +3389,7 @@ function applyAccentColor(color, persist = true) {
             console.warn('Failed to save accent color preference:', err);
         }
     }
+    updateAccentFavicon(accent);
     renderAccentColorOptions();
 }
 
@@ -3534,10 +3549,10 @@ function persistProjectSortPreference(sortMode) {
 
 function loadThemePreference() {
     try {
-        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'blueprint-dark');
+        uiState.theme = normalizeThemeName(localStorage.getItem(LOCAL_STORAGE_KEYS.THEME) || 'console-dark');
     } catch (err) {
         console.warn('Failed to load UI preference:', err);
-        uiState.theme = 'blueprint-dark';
+        uiState.theme = 'console-dark';
     }
     applyTheme(uiState.theme, false);
 }
@@ -3603,7 +3618,7 @@ function applyTheme(themeName, persist = true) {
     const status = document.getElementById('uiOptionsStatus');
     if (status) {
         const meta = getThemeMeta(uiState.theme);
-        status.textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+        status.textContent = `Current mode: ${getColorModeLabel(meta.mode)}`;
     }
     renderThemeOptions();
 }
@@ -3661,7 +3676,7 @@ function openUiOptionsModal() {
     renderThemeOptions();
     renderAccentColorOptions();
     const meta = getThemeMeta(uiState.theme);
-    document.getElementById('uiOptionsStatus').textContent = `Current theme: ${getThemeFamilyLabel(meta.family)} • ${getColorModeLabel(meta.mode)}`;
+    document.getElementById('uiOptionsStatus').textContent = `Current mode: ${getColorModeLabel(meta.mode)}`;
     syncColorModeToggle();
     syncProjectCardTaskPreviewToggle();
     document.getElementById('uiOptionsModal')?.classList.add('active');
@@ -4602,17 +4617,58 @@ function closeSidebarSettingsModal() {
     modal.classList.remove('active');
 }
 
-function setSidebarSectionExpanded(sectionKey, expanded) {
+function setSidebarSectionExpanded(sectionKey, expanded, animate = true) {
     const normalizedKey = String(sectionKey || '');
     if (!normalizedKey) return;
-    uiState.sidebarSections[normalizedKey] = !!expanded;
+    const isExpanded = !!expanded;
+    uiState.sidebarSections[normalizedKey] = isExpanded;
     const section = document.querySelector(`[data-sidebar-section="${normalizedKey}"]`);
     if (!section) return;
-    section.classList.toggle('is-expanded', !!expanded);
+
     const body = section.querySelector('.sidebar-section-body');
-    if (body) body.hidden = !expanded;
     const toggle = section.querySelector('.sidebar-section-toggle');
-    if (toggle) toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    section.classList.toggle('is-expanded', isExpanded);
+    if (toggle) toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    if (!body) return;
+
+    body.__sidebarSectionAnimation?.cancel();
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (!animate || reducedMotion || typeof body.animate !== 'function') {
+        body.hidden = !isExpanded;
+        body.style.removeProperty('height');
+        body.style.removeProperty('opacity');
+        body.style.removeProperty('transform');
+        return;
+    }
+
+    body.hidden = false;
+    const startHeight = isExpanded ? 0 : body.getBoundingClientRect().height;
+    const endHeight = isExpanded ? body.scrollHeight : 0;
+    const animation = body.animate([
+        {
+            height: `${startHeight}px`,
+            opacity: isExpanded ? 0 : 1,
+            transform: isExpanded ? 'translateY(-6px)' : 'translateY(0)'
+        },
+        {
+            height: `${endHeight}px`,
+            opacity: isExpanded ? 1 : 0,
+            transform: isExpanded ? 'translateY(0)' : 'translateY(-6px)'
+        }
+    ], {
+        duration: 240,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+    });
+
+    body.__sidebarSectionAnimation = animation;
+    animation.onfinish = () => {
+        if (body.__sidebarSectionAnimation !== animation) return;
+        body.hidden = !isExpanded;
+        body.__sidebarSectionAnimation = null;
+    };
+    animation.oncancel = () => {
+        if (body.__sidebarSectionAnimation === animation) body.__sidebarSectionAnimation = null;
+    };
 }
 
 function toggleSidebarSection(sectionKey) {
@@ -4729,7 +4785,7 @@ function initializeSidebarSections() {
         settings: false
     };
     Object.entries(defaultExpandedSections).forEach(([sectionKey, expanded]) => {
-        setSidebarSectionExpanded(sectionKey, expanded);
+        setSidebarSectionExpanded(sectionKey, expanded, false);
     });
 }
 
@@ -12210,7 +12266,7 @@ function getCommandPaletteActions() {
             document.getElementById('panelEdgeToggle')?.click();
         } },
         { id: 'open-account', title: 'Open account settings', copy: 'Edit your profile and stats.', run: () => openAccountSettingsModal() },
-        { id: 'open-ui', title: 'Open UI options', copy: 'Change the current theme.', run: () => openUiOptionsModal() },
+        { id: 'open-ui', title: 'Open UI options', copy: 'Change display mode, accent color, and card settings.', run: () => openUiOptionsModal() },
         ...currentVisible.slice(0, 10).map(project => ({
             id: `open-${project.id}`,
             title: `Open ${project.title}`,
@@ -12377,6 +12433,23 @@ function applyProjectGridLayoutPreference() {
     grid.dataset.layoutDensity = layout.density;
     grid.dataset.layoutMaxColumns = maximumColumns || 'auto';
     grid.dataset.layoutEffectiveColumns = effectiveColumns || 'auto';
+
+    const screenWidth = Number(window.screen?.width || 0);
+    const screenHeight = Number(window.screen?.height || 0);
+    const screenScale = Math.max(Number(window.devicePixelRatio) || 1, 1);
+    const screenDimensionCandidates = [
+        [Math.round(screenWidth), Math.round(screenHeight)],
+        [Math.round(screenWidth * screenScale), Math.round(screenHeight * screenScale)]
+    ];
+    const is1920x1200Display = screenDimensionCandidates.some(([width, height]) =>
+        Math.abs(width - 1920) <= 24 && Math.abs(height - 1200) <= 24
+    );
+    if (is1920x1200Display) {
+        grid.dataset.displayResolution = '1920x1200';
+    } else {
+        delete grid.dataset.displayResolution;
+    }
+
     grid.classList.toggle('project-grid--manual-layout', layout.columns !== 'auto' && !!effectiveColumns);
 
     if (effectiveColumns) {
@@ -12625,7 +12698,9 @@ function renderProjectCard(project) {
     const statusLabel = isProjectArchived(project)
         ? '<span class="project-card-status project-card-status--archived">ARCHIVED</span>'
         : (isProjectCompleted(project)
-            ? '<span class="project-card-status project-card-status--completed">COMPLETED</span>'
+            ? (state.getView() === VIEWS.COMPLETED
+                ? ''
+                : '<span class="project-card-status project-card-status--completed">COMPLETED</span>')
             : (isViewer || isEditor
                 ? `<span class="project-card-status">${escapeHtml(project.userRole.toUpperCase())}</span>`
                 : '<span class="project-card-status">ACTIVE</span>'));
@@ -13306,7 +13381,7 @@ function initializeEventHandlers() {
     document.getElementById('newProjectDescriptionInput')?.addEventListener('input', () => showNewProjectDescriptionWarning(false));
     ['newProjectTitleInput', 'newProjectDescriptionInput'].forEach(inputId => {
         document.getElementById(inputId)?.addEventListener('keydown', event => {
-            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
                 event.preventDefault();
                 addProject();
             }
@@ -13433,9 +13508,6 @@ function initializeEventHandlers() {
         uiState.activeSavedViewId = '';
         setProjectCardSortMode(e.target.value || 'recent');
         window.requestAnimationFrame(() => e.target.blur());
-    });
-    document.querySelectorAll('[data-theme-family-option]').forEach(button => {
-        button.addEventListener('click', () => applyThemeFamily(button.getAttribute('data-theme-family-option')));
     });
     const toggleColorMode = () => {
         const meta = getThemeMeta(uiState.theme);
