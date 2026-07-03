@@ -206,7 +206,7 @@ export function getCurrentUser() {
     if (!token) return null;
     try {
         const payload = decodeJwtPayload(token);
-        return { id: payload.id, email: payload.email, username: payload.username };
+        return { id: payload.id, email: payload.email, username: payload.username, role: payload.role || 'user' };
     } catch {
         clearToken();
         return null;

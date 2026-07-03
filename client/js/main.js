@@ -5,6 +5,7 @@ import { state } from './modules/state.js';
 import * as api from './modules/api.js';
 import * as auth from './modules/auth.js';
 import { connectRealtime } from './modules/realtime.js';
+import { installClientErrorTracking, trackEvent, trackSessionStarted } from './modules/analytics.js';
 
 const {
     loadDataFromServer,
@@ -42,6 +43,8 @@ const getCurrentUser = auth.getCurrentUser;
 const login = auth.login;
 const register = auth.register;
 const logout = auth.logout;
+
+installClientErrorTracking();
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -679,6 +682,13 @@ function evaluatePersonalProgression({ showModals = true, persistStatsOnly = fal
         accountState.stats = { ...accountState.stats, ...state.getStats() };
     }
 
+    achievementsToNotify.forEach(achievement => {
+        trackEvent('achievement_unlocked', { achievementId: achievement.id, achievementName: achievement.name, points: achievement.points });
+    });
+    if (shouldNotifyLevelUp) {
+        trackEvent('achievement_unlocked', { achievementId: 'level-up', achievementName: `Level ${levelProgress.level}`, level: levelProgress.level });
+    }
+
     if (shouldShowModals) {
         achievementsToNotify.forEach(achievement => {
             queuePersonalProgressionModal({
@@ -1246,6 +1256,7 @@ function scheduleProjectCalendarTask(projectId, taskId, dateKey, options = {}) {
     }
 
     rememberRecentLocalTaskSnapshot(project, updatedTasks);
+    trackEvent('calendar_task_dragged', { projectId, taskId: draggedTaskId, dueDate: safeDateKey });
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
     renderModalTaskList(projectId);
@@ -1853,6 +1864,8 @@ const accountState = {
     currentLeaderboardEntry: null,
     pendingProfilePic: null
 };
+
+let searchAnalyticsTrackedForCurrentQuery = false;
 
 const uiState = {
     projectSearch: '',
@@ -3078,8 +3091,10 @@ function setProjectTaskSortPreference(projectId, sortMode) {
     const key = String(projectId || '');
     if (!key) return;
     const preferences = loadProjectTaskSortPreferences();
-    preferences[key] = ['tag-priority', 'due-date', 'ascending', 'descending'].includes(sortMode) ? sortMode : DEFAULT_TASK_SORT_MODE;
+    const normalizedSortMode = ['tag-priority', 'due-date', 'ascending', 'descending'].includes(sortMode) ? sortMode : DEFAULT_TASK_SORT_MODE;
+    preferences[key] = normalizedSortMode;
     saveProjectTaskSortPreferences(preferences);
+    trackEvent('sort_changed', { scope: 'project_tasks', projectId, sortMode: normalizedSortMode });
 }
 
 
@@ -3391,6 +3406,7 @@ function applyAccentColor(color, persist = true) {
     }
     updateAccentFavicon(accent);
     renderAccentColorOptions();
+    if (persist) trackEvent('settings_changed', { setting: 'accent_color', value: accent });
 }
 
 function ensureAccentColorAllowedForCurrentMode(persist = true) {
@@ -3590,6 +3606,7 @@ function applyProjectCardTaskPreviewPreference(persist = true, shouldRender = tr
 function setProjectCardTaskPreviewEnabled(enabled) {
     uiState.projectCardTaskPreview = enabled !== false;
     applyProjectCardTaskPreviewPreference(true, true);
+    trackEvent('settings_changed', { setting: 'project_card_task_preview', enabled: uiState.projectCardTaskPreview });
 }
 
 function loadProjectCardTaskPreviewPreference() {
@@ -3621,6 +3638,7 @@ function applyTheme(themeName, persist = true) {
         status.textContent = `Current mode: ${getColorModeLabel(meta.mode)}`;
     }
     renderThemeOptions();
+    if (persist) trackEvent('settings_changed', { setting: 'theme', value: uiState.theme });
 }
 
 function applyThemeFamily(themeFamily, persist = true, preferredMode = null) {
@@ -3973,6 +3991,21 @@ function setAvatarUI(imageEl, fallbackEl, profilePic, name) {
     fallbackEl.setAttribute('aria-label', hasImage ? '' : `${name || 'User'} default profile icon`);
 }
 
+function isCurrentUserAdmin() {
+    const role = String(accountState.user?.role || getCurrentUser?.()?.role || '').toLowerCase();
+    return role === 'admin';
+}
+
+function syncAdminControls() {
+    const visible = isCurrentUserAdmin();
+    document.getElementById('sidebarAnalyticsDashboardBtn')?.classList.toggle('hidden', !visible);
+    document.getElementById('menuAnalyticsDashboardBtn')?.classList.toggle('hidden', !visible);
+}
+
+function openAdminAnalyticsDashboard() {
+    window.location.href = '/admin/analytics';
+}
+
 function syncCollapsedAvatarUI(profilePic, name) {
     setAvatarUI(
         document.getElementById('collapsedPanelAvatarImg'),
@@ -4042,6 +4075,7 @@ function applyAccountUI(user) {
 
     ensureProjectLayoutControls();
     applyProjectGridLayoutPreference();
+    syncAdminControls();
 }
 
 function syncAccountStatsToModal() {
@@ -4584,6 +4618,7 @@ function openSidebarSettingsModal() {
             <div class="sidebar-rail-modal-body sidebar-rail-settings-actions">
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="account">Account Settings</button>
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="ui">UI Options</button>
+                ${isCurrentUserAdmin() ? '<button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="analytics">Analytics Dashboard</button>' : ''}
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="shortcuts">Keyboard Shortcuts</button>
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="guide">How To Guide</button>
                 <button class="sidebar-rail-settings-action sidebar-rail-settings-action--danger" type="button" data-rail-settings-action="signout">Sign Out</button>
@@ -4596,6 +4631,10 @@ function openSidebarSettingsModal() {
     });
     modal.querySelector('[data-rail-settings-action="ui"]')?.addEventListener('click', () => {
         openSidebarSettingsChildModal('uiOptionsModal', openUiOptionsModal, closeUiOptionsModal);
+    });
+    modal.querySelector('[data-rail-settings-action="analytics"]')?.addEventListener('click', () => {
+        closeSidebarSettingsModal();
+        openAdminAnalyticsDashboard();
     });
     modal.querySelector('[data-rail-settings-action="shortcuts"]')?.addEventListener('click', () => {
         openSidebarSettingsChildModal('shortcutsModal', openShortcutsModal, closeShortcutsModal);
@@ -6404,6 +6443,7 @@ function addProjectNoteTab(projectId, surface = 'quick', event) {
     }, nextNumber - 1);
     data.tabs.push(nextTab);
     data.activeTabId = nextTab.id;
+    trackEvent('note_created', { projectId, source: 'project_note_tab' });
     uiState.editingProjectNoteTab = { projectId, tabId: nextTab.id, surface };
     saveProjectNotesData(projectId, data, { renderSurface: surface });
     requestAnimationFrame(() => {
@@ -6928,6 +6968,9 @@ function saveActiveProjectNoteFromSurface(projectId, surface = 'modal') {
     // note/link content does not keep the project notes indicator stuck on.
     tab.links = normalizeProjectNoteLinks(collectProjectNoteLinksFromSurface(activeTab.id, safeSurface));
 
+    if (getRichTextPlainText(tab.body || '').trim() || tab.links.length) {
+        trackEvent('note_created', { projectId, source: 'project_note_save' });
+    }
     saveProjectNotesData(projectId, data, { renderSurface: safeSurface });
     requestAnimationFrame(() => {
         const button = document.querySelector(`[data-project-notes-editor="${safeSurface}"] .project-notes-save-button`);
@@ -7790,6 +7833,7 @@ function reorderTasks(projectId, oldIndex, newIndex, renderedTaskIds = []) {
     const pageScrollY = window.scrollY;
     const modalState = captureProjectModalState(projectId);
 
+    trackEvent('task_reordered', { projectId, source: 'modal_task_reorder', count: displayOrder.length });
     state.updateProject(projectId, projectUpdate({ tasks }));
     saveData();
 
@@ -8001,7 +8045,10 @@ function switchProjectCategory(categoryValue) {
 function setProjectCardSortMode(sortMode, persist = true) {
     uiState.sortMode = normalizeProjectSortMode(sortMode);
     syncProjectSortSelect();
-    if (persist) persistProjectSortPreference(uiState.sortMode);
+    if (persist) {
+        persistProjectSortPreference(uiState.sortMode);
+        trackEvent('sort_changed', { scope: 'project_cards', sortMode: uiState.sortMode });
+    }
     render();
 }
 
@@ -8584,6 +8631,7 @@ function applyProjectCalendarManualTaskOrder(projectId, orderedVisibleTaskIds = 
     const pageScrollY = window.scrollY;
     const modalState = captureProjectModalState(projectId);
 
+    trackEvent('task_reordered', { projectId, source: 'calendar_manual_order', count: uniqueOrderedIds.length });
     state.updateProject(projectId, projectUpdate({ tasks }));
     saveData();
     renderModalTaskList(projectId);
@@ -10487,6 +10535,9 @@ function updateTaskNote(projectId, taskId, noteValue) {
         };
     });
 
+    if (getRichTextPlainText(noteValue || '').trim()) {
+        trackEvent('note_created', { projectId, taskId, source: 'task_note' });
+    }
     rememberRecentLocalTaskSnapshot(project, updatedTasks);
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
     saveData();
@@ -12112,6 +12163,8 @@ function pasteTasks() {
     const nextCategories = getProjectTaskCategories(project);
     
     const updatedTasks = sortTasks([...newTasks, ...project.tasks]);
+    trackEvent('task_pasted', { projectId, count: newTasks.length, source: 'global_paste_box' });
+    trackEvent('task_created', { projectId, count: newTasks.length, source: 'global_paste_box' });
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
     
     pasteBox.value = '';
@@ -12146,6 +12199,8 @@ function pasteTasksInModal(projectId) {
     const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
 
     const updatedTasks = sortTasks([...newTasks, ...project.tasks]);
+    trackEvent('task_pasted', { projectId, count: newTasks.length, source: 'modal_paste_box' });
+    trackEvent('task_created', { projectId, count: newTasks.length, source: 'modal_paste_box' });
     state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
 
     clearTaskEntryElement(pasteBox);
@@ -12584,6 +12639,7 @@ function setProjectGridLayoutOption(key, value, event) {
     }
     applyProjectGridLayoutPreference();
     saveProjectGridLayoutPreference(normalizedLayout);
+    trackEvent('layout_changed', { setting: key, value: normalizedLayout[key], columns: normalizedLayout.columns, density: normalizedLayout.density });
 }
 
 function openHowToGuideModal() {
@@ -13416,6 +13472,7 @@ function initializeEventHandlers() {
 
     document.getElementById('sidebarAccountSettingsBtn')?.addEventListener('click', openAccountSettingsModal);
     document.getElementById('sidebarUiOptionsBtn')?.addEventListener('click', openUiOptionsModal);
+    document.getElementById('sidebarAnalyticsDashboardBtn')?.addEventListener('click', openAdminAnalyticsDashboard);
     document.getElementById('sidebarShortcutsBtn')?.addEventListener('click', openShortcutsModal);
     document.getElementById('sidebarHowToGuideBtn')?.addEventListener('click', openHowToGuideModal);
     document.getElementById('sidebarSignOutBtn')?.addEventListener('click', logout);
@@ -13489,6 +13546,12 @@ function initializeEventHandlers() {
     document.getElementById('projectSearchInput')?.addEventListener('input', (e) => {
         uiState.projectSearch = e.target.value || '';
         uiState.activeSavedViewId = '';
+        const hasQuery = !!uiState.projectSearch.trim();
+        if (hasQuery && !searchAnalyticsTrackedForCurrentQuery) {
+            trackEvent('search_used', { scope: 'projects', queryLength: uiState.projectSearch.trim().length });
+            searchAnalyticsTrackedForCurrentQuery = true;
+        }
+        if (!hasQuery) searchAnalyticsTrackedForCurrentQuery = false;
         render();
     });
     document.getElementById('projectCategorySelect')?.addEventListener('change', (e) => {
@@ -13642,6 +13705,7 @@ async function inviteCollaborator(projectId) {
     try {
         const updated = await shareProjectOnServer(project._id, email, role);
         if (updated) {
+            trackEvent('member_added', { projectId, role, invitePending: !!updated.pendingInvitationEmailSent });
             state.updateProject(projectId, projectUpdate({
                 collaborators: updated.collaborators || [],
                 lastModified: updated.lastModified || new Date().toISOString(),
@@ -13864,6 +13928,7 @@ window.restoreArchivedProject = restoreArchivedProject;
 window.archiveProject = archiveProject;
 window.closeUiOptionsModal = closeUiOptionsModal;
 window.openUiOptionsModal = openUiOptionsModal;
+window.openAdminAnalyticsDashboard = openAdminAnalyticsDashboard;
 window.applyAccentColor = applyAccentColor;
 
 // ============================================================================
@@ -14014,6 +14079,7 @@ function initAuthScreen() {
 
 function onAuthSuccess(user) {
     state.setCurrentUser(user);
+    trackSessionStarted(user || getCurrentUser?.() || {});
 
     const overlay = document.getElementById('authOverlay');
     if (overlay) overlay.classList.add('hidden');

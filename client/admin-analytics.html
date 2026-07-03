@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TaskCom Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" id="appFavicon" type="image/svg+xml" href="/assets/menu.svg">
+    <link rel="stylesheet" href="/css/base.css?v=20260525-level-leaderboard-invite">
+    <link rel="stylesheet" href="/css/themes/theme-console.css">
+    <link rel="stylesheet" href="/css/stitch-layout.css">
+    <link rel="stylesheet" href="/css/admin-analytics.css">
+</head>
+<body data-theme="console-dark" class="analytics-body">
+    <div class="bg-gradient"></div>
+    <main class="analytics-shell">
+        <header class="analytics-header">
+            <div>
+                <div class="analytics-kicker">Admin</div>
+                <h1>Analytics Dashboard</h1>
+                <p>Usage, feature, device, performance, and error telemetry for TaskCom.</p>
+            </div>
+            <div class="analytics-actions">
+                <select id="analyticsRange" class="analytics-select" aria-label="Analytics date range">
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d" selected>Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                    <option value="all">All available</option>
+                </select>
+                <button id="analyticsRefreshBtn" class="analytics-button" type="button">Refresh</button>
+                <a class="analytics-button analytics-button-secondary" href="/">Back to App</a>
+            </div>
+        </header>
+
+        <section id="analyticsStatus" class="analytics-status">Loading analytics…</section>
+
+        <section class="analytics-grid analytics-grid-kpis" id="overviewCards" aria-label="Overview metrics"></section>
+
+        <section class="analytics-panel-grid">
+            <article class="analytics-panel analytics-panel-large">
+                <div class="analytics-panel-header">
+                    <h2>Tasks Created vs Completed</h2>
+                    <span id="tasksChartMeta"></span>
+                </div>
+                <div id="tasksChart" class="analytics-chart"></div>
+            </article>
+            <article class="analytics-panel analytics-panel-large">
+                <div class="analytics-panel-header">
+                    <h2>Projects Created vs Completed</h2>
+                    <span id="projectsChartMeta"></span>
+                </div>
+                <div id="projectsChart" class="analytics-chart"></div>
+            </article>
+        </section>
+
+        <section class="analytics-panel-grid">
+            <article class="analytics-panel">
+                <div class="analytics-panel-header">
+                    <h2>Feature Usage</h2>
+                    <span id="featureUsageMeta"></span>
+                </div>
+                <div id="featureUsageList" class="analytics-list"></div>
+            </article>
+            <article class="analytics-panel">
+                <div class="analytics-panel-header">
+                    <h2>Device / Viewport Breakdown</h2>
+                    <span id="devicesMeta"></span>
+                </div>
+                <div id="devicesList" class="analytics-list"></div>
+            </article>
+        </section>
+
+        <section class="analytics-panel-grid">
+            <article class="analytics-panel">
+                <div class="analytics-panel-header">
+                    <h2>Performance</h2>
+                    <span id="performanceMeta"></span>
+                </div>
+                <div id="performanceSummary" class="analytics-grid analytics-grid-mini"></div>
+                <div id="slowRoutesTable" class="analytics-table-wrap"></div>
+            </article>
+            <article class="analytics-panel">
+                <div class="analytics-panel-header">
+                    <h2>Most Active Users</h2>
+                    <span id="usersMeta"></span>
+                </div>
+                <div id="usersTable" class="analytics-table-wrap"></div>
+            </article>
+        </section>
+
+        <section class="analytics-panel">
+            <div class="analytics-panel-header">
+                <h2>Recent Errors</h2>
+                <span id="errorsMeta"></span>
+            </div>
+            <div id="errorsTable" class="analytics-table-wrap"></div>
+        </section>
+    </main>
+
+    <script type="module" src="/js/admin-analytics.js"></script>
+</body>
+</html>
