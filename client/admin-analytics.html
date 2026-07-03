@@ -11,21 +11,16 @@
     <link rel="stylesheet" href="/css/admin-analytics.css">
 </head>
 <body class="analytics-body">
-    <div class="nav-dropdown" id="navDropdown">
-        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="analyticsNavMenu">Menu</button>
-        <div class="nav-menu" id="analyticsNavMenu">
-            <a href="#summary">Overview</a>
-            <a href="#donutInsightsSection">Operational Mix</a>
-            <a href="#taskFlowSection">Task Flow</a>
-            <a href="#engagementSection">Engagement</a>
-            <a href="#healthSection">System Health</a>
-            <a href="/">Back to App</a>
-        </div>
-    </div>
+    <a class="page-app-title" href="/" aria-label="Back to TaskCom">
+        <img class="page-app-icon" src="/assets/menu.svg" alt="">
+        <span class="page-app-name">TaskCom</span>
+    </a>
 
-    <a class="page-brand-logo page-brand-logo--aigox" href="/" aria-label="Back to TaskCom">
-        <span class="aigox-logo-text" aria-hidden="true">AIGOX</span>
-        <span class="page-brand-caption">Analytics</span>
+    <a class="page-brand-logo page-brand-logo--aigox" href="/" aria-label="AIGOX">
+        <!-- Placeholder wordmark: replace this <svg> with the real AIGOX logo SVG markup -->
+        <svg class="aigox-logo-svg" viewBox="0 0 96 24" role="img" aria-hidden="true" focusable="false">
+            <text x="0" y="19" class="aigox-logo-svg-text">AIGOX</text>
+        </svg>
     </a>
 
     <main class="page-wrapper">
@@ -37,6 +32,16 @@
                     <p class="analytics-subtitle">Usage, feature, device, performance, error, and recovered historical telemetry.</p>
                 </div>
                 <div class="analytics-toolbar" aria-label="Analytics controls">
+                    <div class="analytics-toolbar-field analytics-toolbar-field--palette">
+                        <label id="paletteLabel">Palette</label>
+                        <div id="paletteSwatches" class="palette-swatches" role="group" aria-labelledby="paletteLabel">
+                            <button class="palette-swatch" type="button" data-palette="azure" style="--swatch: #0099ff" aria-label="Azure accent" title="Azure"></button>
+                            <button class="palette-swatch" type="button" data-palette="violet" style="--swatch: #8b5cf6" aria-label="Violet accent" title="Violet"></button>
+                            <button class="palette-swatch" type="button" data-palette="emerald" style="--swatch: #10b981" aria-label="Emerald accent" title="Emerald"></button>
+                            <button class="palette-swatch" type="button" data-palette="amber" style="--swatch: #f5a623" aria-label="Amber accent" title="Amber"></button>
+                            <button class="palette-swatch" type="button" data-palette="rose" style="--swatch: #f43f5e" aria-label="Rose accent" title="Rose"></button>
+                        </div>
+                    </div>
                     <div class="analytics-toolbar-field">
                         <label for="analyticsRange">Period</label>
                         <select id="analyticsRange" class="analytics-select" aria-label="Analytics date range">
