@@ -645,11 +645,11 @@ button:disabled,
 }
 
 .analytics-chart-bar-created {
-    fill: var(--chart-accent);
+    fill: #e74c3c;
 }
 
 .analytics-chart-bar-completed {
-    fill: #2ecc71;
+    fill: #4c3ce7;
 }
 
 .analytics-chart-label {
@@ -674,12 +674,12 @@ button:disabled,
     height: 9px;
     display: inline-block;
     border-radius: 999px;
-    background: var(--chart-accent);
+    background: #e74c3c;
     margin-right: 7px;
 }
 
 .analytics-legend-dot.is-completed {
-    background: #2ecc71;
+    background: #4c3ce7;
 }
 
 /* ---------------------------------------------------------------- */
