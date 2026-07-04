@@ -3009,6 +3009,122 @@ function formatAnalyticsEvent(event = {}) {
     };
 }
 
+function serializeAnalyticsMetadata(metadata = {}) {
+    try {
+        return JSON.stringify(metadata || {});
+    } catch {
+        return '{}';
+    }
+}
+
+function csvEscape(value = '') {
+    if (value === null || value === undefined) return '';
+    const text = value instanceof Date ? value.toISOString() : String(value);
+    if (/[",\r\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+    return text;
+}
+
+function analyticsExportFilename(range = '30d', extension = 'csv') {
+    const safeRange = String(range || '30d').replace(/[^a-z0-9_-]/gi, '-').slice(0, 24) || 'range';
+    const stamp = new Date().toISOString().slice(0, 10);
+    return `taskcom-analytics-events-${safeRange}-${stamp}.${extension}`;
+}
+
+async function getAnalyticsEventsForExport(req) {
+    const { range, start, end } = await getResolvedAnalyticsRange(req.query);
+    const events = await AnalyticsEvent.find({ timestamp: { $gte: start, $lte: end } })
+        .sort({ timestamp: 1, _id: 1 })
+        .lean();
+    const userIds = [...new Set(events.map(event => String(event.userId || '')).filter(Boolean))];
+    const users = await Account.find({ _id: { $in: userIds.filter(id => /^[a-f0-9]{24}$/i.test(id)) } }, 'email username role').lean();
+    const userMap = new Map(users.map(user => [String(user._id), user]));
+    return { range, start, end, events, userMap };
+}
+
+function formatAnalyticsExportRow(event = {}, userMap = new Map()) {
+    const metadata = event.metadata || {};
+    const device = event.device || {};
+    const user = userMap.get(String(event.userId || '')) || {};
+    return {
+        id: String(event._id || ''),
+        timestamp: event.timestamp ? new Date(event.timestamp).toISOString() : '',
+        ingestedAt: event.ingestedAt ? new Date(event.ingestedAt).toISOString() : '',
+        event: event.event || '',
+        userId: event.userId || '',
+        username: user.username || '',
+        userEmail: user.email || '',
+        userRole: isAdminAccount(user) ? 'admin' : (user.role || ''),
+        source: event.source || 'live',
+        backfilled: event.source === 'historical_backfill' || metadata.backfilled === true ? 'true' : 'false',
+        backfillKey: event.backfillKey || '',
+        projectId: metadata.projectId || '',
+        projectTitle: metadata.projectTitle || '',
+        taskId: metadata.taskId || '',
+        priority: metadata.priority || '',
+        route: metadata.url || metadata.route || '',
+        method: metadata.method || '',
+        status: metadata.status ?? '',
+        durationMs: metadata.durationMs ?? '',
+        errorMessage: metadata.message || metadata.error || '',
+        deviceType: device.deviceType || '',
+        browser: device.browser || '',
+        os: device.os || '',
+        viewportWidth: device.viewportWidth ?? '',
+        viewportHeight: device.viewportHeight ?? '',
+        screenWidth: device.screenWidth ?? '',
+        screenHeight: device.screenHeight ?? '',
+        metadata: serializeAnalyticsMetadata(metadata)
+    };
+}
+
+function buildAnalyticsEventsCsv(events = [], userMap = new Map()) {
+    const headers = [
+        'id', 'timestamp', 'ingestedAt', 'event', 'userId', 'username', 'userEmail', 'userRole',
+        'source', 'backfilled', 'backfillKey', 'projectId', 'projectTitle', 'taskId', 'priority',
+        'route', 'method', 'status', 'durationMs', 'errorMessage', 'deviceType', 'browser', 'os',
+        'viewportWidth', 'viewportHeight', 'screenWidth', 'screenHeight', 'metadata'
+    ];
+    const lines = [headers.join(',')];
+    events.forEach(event => {
+        const row = formatAnalyticsExportRow(event, userMap);
+        lines.push(headers.map(header => csvEscape(row[header])).join(','));
+    });
+    return lines.join('\n');
+}
+
+app.get('/api/admin/analytics/export/events.csv', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { range, events, userMap } = await getAnalyticsEventsForExport(req);
+        const csv = buildAnalyticsEventsCsv(events, userMap);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${analyticsExportFilename(range, 'csv')}"`);
+        res.send(csv);
+    } catch (err) {
+        console.error('Analytics CSV export error:', err);
+        res.status(500).json({ error: 'Failed to export analytics CSV', details: err?.message });
+    }
+});
+
+app.get('/api/admin/analytics/export/events.json', authenticateToken, requireAdminAccount, async (req, res) => {
+    try {
+        const { range, start, end, events } = await getAnalyticsEventsForExport(req);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${analyticsExportFilename(range, 'json')}"`);
+        res.json({
+            exportedAt: new Date().toISOString(),
+            range,
+            rangeStart: start.toISOString(),
+            rangeEnd: end.toISOString(),
+            collection: 'analytics_events',
+            count: events.length,
+            events: events.map(formatAnalyticsEvent)
+        });
+    } catch (err) {
+        console.error('Analytics JSON export error:', err);
+        res.status(500).json({ error: 'Failed to export analytics JSON', details: err?.message });
+    }
+});
+
 app.get('/api/admin/analytics/overview', authenticateToken, requireAdminAccount, async (req, res) => {
     try {
         res.json(await getAnalyticsOverviewPayload(req));

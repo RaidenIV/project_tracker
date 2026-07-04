@@ -23,6 +23,8 @@ export const API_ENDPOINTS = {
         DEVICES:     '/api/admin/analytics/devices',
         PERFORMANCE: '/api/admin/analytics/performance',
         ERRORS:      '/api/admin/analytics/errors',
+        EXPORT_CSV:  '/api/admin/analytics/export/events.csv',
+        EXPORT_JSON: '/api/admin/analytics/export/events.json',
         BACKFILL:    '/api/admin/analytics/backfill',
         BACKFILL_STATUS: '/api/admin/analytics/backfill/status'
     },

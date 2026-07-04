@@ -116,6 +116,70 @@ async function postRequest(url, body = {}) {
     return data;
 }
 
+function getFilenameFromDisposition(disposition = '', fallback = 'taskcom-analytics-export') {
+    const match = String(disposition || '').match(/filename="?([^";]+)"?/i);
+    return match?.[1] || fallback;
+}
+
+async function downloadAnalyticsExport(format = 'csv') {
+    const isJson = format === 'json';
+    const url = isJson ? endpoints.EXPORT_JSON : endpoints.EXPORT_CSV;
+    const button = document.getElementById(isJson ? 'analyticsExportJsonBtn' : 'analyticsExportCsvBtn');
+    const originalText = button?.textContent || (isJson ? 'Export JSON' : 'Export CSV');
+
+    if (!url || button?.disabled) return;
+    if (button) {
+        button.disabled = true;
+        button.textContent = isJson ? 'Exporting JSON…' : 'Exporting CSV…';
+    }
+    setStatus(`Preparing ${isJson ? 'JSON' : 'CSV'} export for the selected range…`);
+
+    try {
+        const res = await fetch(withRange(url), {
+            method: 'GET',
+            headers: getAuthHeaders(),
+            credentials: 'omit',
+            cache: 'no-store'
+        });
+
+        if (res.status === 401) {
+            logout();
+            return;
+        }
+        if (res.status === 403) {
+            throw new Error('Admin access required. Sign in with an admin account or set ADMIN_EMAILS for your admin email.');
+        }
+        if (!res.ok) {
+            let data = {};
+            try { data = await res.json(); } catch {}
+            throw new Error(data.error || `Export failed with HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = getFilenameFromDisposition(
+            res.headers.get('content-disposition'),
+            `taskcom-analytics-events-${state.range}.${isJson ? 'json' : 'csv'}`
+        );
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(objectUrl);
+        setStatus(`${isJson ? 'JSON' : 'CSV'} export downloaded.`);
+        setTimeout(() => setStatus(''), 3200);
+    } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Analytics export failed.', true);
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
+}
+
 function formatNumberIfNumeric(value) {
     if (typeof value === 'number') return formatNumber(value);
     return value ?? '0';
@@ -567,6 +631,8 @@ async function runBackfill() {
 function init() {
     const range = document.getElementById('analyticsRange');
     const refresh = document.getElementById('analyticsRefreshBtn');
+    const exportCsv = document.getElementById('analyticsExportCsvBtn');
+    const exportJson = document.getElementById('analyticsExportJsonBtn');
     const backfill = document.getElementById('analyticsBackfillBtn');
     if (range) {
         range.value = state.range;
@@ -576,6 +642,8 @@ function init() {
         });
     }
     refresh?.addEventListener('click', () => loadAnalytics());
+    exportCsv?.addEventListener('click', () => downloadAnalyticsExport('csv'));
+    exportJson?.addEventListener('click', () => downloadAnalyticsExport('json'));
     backfill?.addEventListener('click', runBackfill);
     loadAnalytics();
 }
