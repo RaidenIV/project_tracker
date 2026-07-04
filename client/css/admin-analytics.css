@@ -539,6 +539,129 @@ button:disabled,
 }
 
 /* ---------------------------------------------------------------- */
+/* Analytical insights                                               */
+/* ---------------------------------------------------------------- */
+
+.analytics-insights-section {
+    padding-bottom: 20px;
+}
+
+.analytics-insight-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.analytics-insight-card {
+    min-height: 132px;
+    padding: 13px;
+    border: 1px solid var(--line);
+    border-radius: var(--control-radius);
+    background: var(--input-bg);
+    text-align: left;
+}
+
+.analytics-insight-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.analytics-insight-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+
+.analytics-insight-status {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.analytics-insight-value {
+    margin-top: 15px;
+    color: var(--text);
+    font-size: clamp(28px, 2vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+}
+
+.analytics-insight-note {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.analytics-insight-card--good .analytics-insight-status {
+    background: rgba(159, 230, 184, 0.12);
+    color: var(--success);
+}
+
+.analytics-insight-card--warn .analytics-insight-status {
+    background: rgba(255, 211, 138, 0.12);
+    color: var(--warning);
+}
+
+.analytics-insight-card--bad .analytics-insight-status {
+    background: rgba(255, 107, 107, 0.13);
+    color: var(--danger);
+}
+
+.analytics-recommendation {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+    align-items: baseline;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--control-radius);
+    background: var(--input-bg);
+    text-align: left;
+}
+
+.analytics-recommendation:empty {
+    display: none;
+}
+
+.analytics-recommendation-label {
+    grid-row: span 2;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.analytics-recommendation strong {
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.analytics-recommendation span {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- */
 /* Historical recovery (backfill) — horizontal strip                 */
 /* ---------------------------------------------------------------- */
 
@@ -645,11 +768,11 @@ button:disabled,
 }
 
 .analytics-chart-bar-created {
-    fill: var(--chart-accent);
+    fill: #e74c3c;
 }
 
 .analytics-chart-bar-completed {
-    fill: #2ecc71;
+    fill: #3498db;
 }
 
 .analytics-chart-label {
@@ -674,12 +797,12 @@ button:disabled,
     height: 9px;
     display: inline-block;
     border-radius: 999px;
-    background: var(--chart-accent);
+    background: #e74c3c;
     margin-right: 7px;
 }
 
 .analytics-legend-dot.is-completed {
-    background: #2ecc71;
+    background: #3498db;
 }
 
 /* ---------------------------------------------------------------- */
@@ -864,7 +987,7 @@ button:disabled,
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: #2ecc71;
+    background: #ffffff;
 }
 
 .analytics-table-wrap {
@@ -944,7 +1067,8 @@ button:disabled,
 /* ---------------------------------------------------------------- */
 
 @media (max-width: 1720px) {
-    .analytics-grid-kpis {
+    .analytics-grid-kpis,
+    .analytics-insight-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
@@ -976,7 +1100,8 @@ button:disabled,
         justify-content: flex-start;
     }
 
-    .analytics-grid-kpis {
+    .analytics-grid-kpis,
+    .analytics-insight-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -1034,7 +1159,12 @@ button:disabled,
 
     .analytics-grid-kpis,
     .analytics-grid-mini,
+    .analytics-insight-grid,
     .analytics-backfill-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-recommendation {
         grid-template-columns: 1fr;
     }
 

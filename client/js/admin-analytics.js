@@ -27,6 +27,11 @@ function formatDuration(ms) {
     return `${formatNumber(Math.round(Number(ms) || 0))} ms`;
 }
 
+function formatSignedNumber(value) {
+    const number = Number(value) || 0;
+    return `${number > 0 ? '+' : ''}${formatNumber(number)}`;
+}
+
 function formatDate(value) {
     if (!value) return '—';
     const date = new Date(value);
@@ -544,9 +549,123 @@ function renderErrors() {
     }));
 }
 
+function sumSeries(rows = [], key = '') {
+    return (Array.isArray(rows) ? rows : []).reduce((sum, row) => sum + (Number(row?.[key]) || 0), 0);
+}
+
+function getInsightTone({ value = 0, goodAtOrAbove = null, warnAtOrAbove = null, badAtOrAbove = null, lowerIsBetter = false } = {}) {
+    const number = Number(value) || 0;
+    if (lowerIsBetter) {
+        if (badAtOrAbove !== null && number >= badAtOrAbove) return 'bad';
+        if (warnAtOrAbove !== null && number >= warnAtOrAbove) return 'warn';
+        return 'good';
+    }
+    if (goodAtOrAbove !== null && number >= goodAtOrAbove) return 'good';
+    if (warnAtOrAbove !== null && number >= warnAtOrAbove) return 'warn';
+    return 'bad';
+}
+
+function renderAnalyticalInsights() {
+    const target = document.getElementById('analyticsInsights');
+    const recommendationTarget = document.getElementById('analyticsRecommendation');
+    const meta = document.getElementById('analyticsInsightsMeta');
+    if (!target) return;
+
+    const totals = state.overview?.totals || {};
+    const performance = state.performance?.summary || {};
+    const taskSeries = state.overview?.charts?.tasksSeries || state.tasks?.series || [];
+    const projectSeries = state.overview?.charts?.projectsSeries || state.projects?.series || [];
+
+    const taskCreated = sumSeries(taskSeries, 'created');
+    const taskCompleted = sumSeries(taskSeries, 'completed');
+    const projectCreated = sumSeries(projectSeries, 'created');
+    const projectCompleted = sumSeries(projectSeries, 'completed');
+    const backlogDelta = taskCreated - taskCompleted;
+    const taskThroughput = taskCreated ? (taskCompleted / taskCreated) * 100 : 0;
+    const projectDelivery = projectCreated ? (projectCompleted / projectCreated) * 100 : 0;
+    const weeklyActivation = totals.totalUsers ? ((Number(totals.activeThisWeek) || 0) / totals.totalUsers) * 100 : 0;
+    const openTasks = Math.max(0, (Number(totals.totalTasks) || 0) - (Number(totals.completedTasks) || 0));
+    const overduePressure = openTasks ? ((Number(totals.overdueTasks) || 0) / openTasks) * 100 : 0;
+    const apiReliability = performance.requestCount ? ((performance.requestCount - (Number(performance.failedRequests) || 0)) / performance.requestCount) * 100 : 100;
+
+    const insights = [
+        {
+            label: 'Backlog Delta',
+            value: formatSignedNumber(backlogDelta),
+            note: `${formatNumber(taskCreated)} created · ${formatNumber(taskCompleted)} completed`,
+            status: backlogDelta > 0 ? 'Building' : backlogDelta < 0 ? 'Shrinking' : 'Balanced',
+            tone: backlogDelta > 0 ? 'warn' : 'good'
+        },
+        {
+            label: 'Task Throughput',
+            value: formatPercent(taskThroughput),
+            note: 'Completed tasks divided by created tasks in range',
+            status: taskCreated ? 'Range ratio' : 'No range data',
+            tone: taskCreated ? getInsightTone({ value: taskThroughput, goodAtOrAbove: 85, warnAtOrAbove: 60 }) : 'neutral'
+        },
+        {
+            label: 'Project Delivery',
+            value: formatPercent(projectDelivery),
+            note: `${formatNumber(projectCompleted)} completed · ${formatNumber(projectCreated)} created`,
+            status: projectCreated ? 'Delivery ratio' : 'No range data',
+            tone: projectCreated ? getInsightTone({ value: projectDelivery, goodAtOrAbove: 70, warnAtOrAbove: 35 }) : 'neutral'
+        },
+        {
+            label: 'Weekly Activation',
+            value: formatPercent(weeklyActivation),
+            note: `${formatNumber(totals.activeThisWeek)} of ${formatNumber(totals.totalUsers)} users active`,
+            status: 'User adoption',
+            tone: getInsightTone({ value: weeklyActivation, goodAtOrAbove: 35, warnAtOrAbove: 15 })
+        },
+        {
+            label: 'Overdue Pressure',
+            value: formatPercent(overduePressure),
+            note: `${formatNumber(totals.overdueTasks)} overdue across ${formatNumber(openTasks)} open tasks`,
+            status: 'Execution risk',
+            tone: getInsightTone({ value: overduePressure, lowerIsBetter: true, warnAtOrAbove: 8, badAtOrAbove: 18 })
+        },
+        {
+            label: 'API Reliability',
+            value: formatPercent(apiReliability),
+            note: `${formatNumber(performance.failedRequests)} failures from ${formatNumber(performance.requestCount)} requests`,
+            status: 'System quality',
+            tone: getInsightTone({ value: apiReliability, goodAtOrAbove: 99, warnAtOrAbove: 95 })
+        }
+    ];
+
+    if (meta) meta.textContent = `${state.range === 'all' ? 'All Historical' : state.range} Scorecard`;
+    target.innerHTML = insights.map(insight => `
+        <article class="analytics-insight-card analytics-insight-card--${escapeHtml(insight.tone)}">
+            <div class="analytics-insight-top">
+                <div class="analytics-insight-label">${escapeHtml(insight.label)}</div>
+            </div>
+            <div class="analytics-insight-value">${escapeHtml(insight.value)}</div>
+            <div class="analytics-insight-note">${escapeHtml(insight.note)}</div>
+        </article>
+    `).join('');
+
+    if (recommendationTarget) {
+        const focus = overduePressure >= 18
+            ? ['Reduce overdue pressure', 'Prioritize overdue task cleanup before adding more project volume.']
+            : backlogDelta > 0
+                ? ['Watch backlog growth', 'More tasks were created than completed in the selected range.']
+                : weeklyActivation < 15
+                    ? ['Improve activation', 'Most registered users are not active in the current weekly window.']
+                    : apiReliability < 95
+                        ? ['Investigate reliability', 'API failures are high enough to affect confidence in usage data.']
+                        : ['Maintain current trajectory', 'Task flow, activation, overdue pressure, and API reliability are within healthy ranges.'];
+        recommendationTarget.innerHTML = `
+            <div class="analytics-recommendation-label">Recommended Focus</div>
+            <strong>${escapeHtml(focus[0])}</strong>
+            <span>${escapeHtml(focus[1])}</span>
+        `;
+    }
+}
+
 function renderAll() {
     renderBackfillSummary();
     renderCards();
+    renderAnalyticalInsights();
     renderLineChart('tasksChart', state.overview?.charts?.tasksSeries || state.tasks?.series || [], 'tasksChartMeta');
     renderLineChart('projectsChart', state.overview?.charts?.projectsSeries || state.projects?.series || [], 'projectsChartMeta');
     renderDonutInsights();
