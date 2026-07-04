@@ -633,12 +633,11 @@ function renderAnalyticalInsights() {
         }
     ];
 
-    if (meta) meta.textContent = `${state.range === 'all' ? 'All historical' : state.range} scorecard`;
+    if (meta) meta.textContent = `${state.range === 'all' ? 'All Historical' : state.range} Scorecard`;
     target.innerHTML = insights.map(insight => `
         <article class="analytics-insight-card analytics-insight-card--${escapeHtml(insight.tone)}">
             <div class="analytics-insight-top">
                 <div class="analytics-insight-label">${escapeHtml(insight.label)}</div>
-                <span class="analytics-insight-status">${escapeHtml(insight.status)}</span>
             </div>
             <div class="analytics-insight-value">${escapeHtml(insight.value)}</div>
             <div class="analytics-insight-note">${escapeHtml(insight.note)}</div>

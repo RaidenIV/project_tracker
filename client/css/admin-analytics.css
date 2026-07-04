@@ -772,7 +772,7 @@ button:disabled,
 }
 
 .analytics-chart-bar-completed {
-    fill: #4c3ce7;
+    fill: #3498db;
 }
 
 .analytics-chart-label {
@@ -802,7 +802,7 @@ button:disabled,
 }
 
 .analytics-legend-dot.is-completed {
-    background: #4c3ce7;
+    background: #3498db;
 }
 
 /* ---------------------------------------------------------------- */
@@ -987,7 +987,7 @@ button:disabled,
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: #2ecc71;
+    background: #ffffff;
 }
 
 .analytics-table-wrap {
