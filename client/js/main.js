@@ -13680,6 +13680,33 @@ Features:
 // SHARING FUNCTIONS
 // ============================================================================
 
+function renderInviteStatusMessage(target, message, manualInviteUrl = '') {
+    if (!target) return;
+    target.textContent = '';
+
+    const messageText = document.createElement('span');
+    messageText.textContent = String(message || '');
+    target.appendChild(messageText);
+
+    if (manualInviteUrl) {
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'invite-copy-link-btn';
+        copyButton.textContent = 'Copy Invite Link';
+        copyButton.addEventListener('click', async () => {
+            try {
+                await writeClipboardText(manualInviteUrl);
+                showCopyButtonFeedback(copyButton);
+            } catch (err) {
+                console.error('Failed to copy invite link:', err);
+                copyButton.textContent = 'Copy Failed';
+                setTimeout(() => { copyButton.textContent = 'Copy Invite Link'; }, 1500);
+            }
+        });
+        target.appendChild(copyButton);
+    }
+}
+
 async function inviteCollaborator(projectId) {
     const emailEl = document.getElementById(`invite-email-${projectId}`);
     const roleEl  = document.getElementById(`invite-role-${projectId}`);
@@ -13705,7 +13732,7 @@ async function inviteCollaborator(projectId) {
     try {
         const updated = await shareProjectOnServer(project._id, email, role);
         if (updated) {
-            trackEvent('member_added', { projectId, role, invitePending: !!updated.pendingInvitationEmailSent });
+            trackEvent('member_added', { projectId, role, invitePending: !!(updated.pendingInvitationCreated || updated.pendingInvitationEmailSent) });
             state.updateProject(projectId, projectUpdate({
                 collaborators: updated.collaborators || [],
                 lastModified: updated.lastModified || new Date().toISOString(),
@@ -13713,6 +13740,7 @@ async function inviteCollaborator(projectId) {
             }, { skipTouch: true }));
             emailEl.value = '';
             const pendingMessage = updated.pendingInvitationMessage || '';
+            const manualInviteUrl = updated.pendingInvitationManualInviteUrl || '';
             openProjectModal(projectId);
             // Re-open on Members tab
             setTimeout(() => {
@@ -13720,7 +13748,7 @@ async function inviteCollaborator(projectId) {
                 if (pendingMessage) {
                     const freshErrEl = document.getElementById(`invite-error-${projectId}`);
                     if (freshErrEl) {
-                        freshErrEl.textContent = pendingMessage;
+                        renderInviteStatusMessage(freshErrEl, pendingMessage, manualInviteUrl);
                         freshErrEl.classList.remove('hidden');
                         freshErrEl.classList.add('is-success');
                     }

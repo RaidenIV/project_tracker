@@ -622,10 +622,14 @@ function getMailTransporter() {
     return cachedMailTransporter;
 }
 
+function buildAccountCreationInviteUrl({ email, token, req }) {
+    const appUrl = getPublicAppUrl(req);
+    return `${appUrl}/?invite=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+}
+
 async function sendAccountCreationInviteEmail({ email, project, role, token, inviter, req }) {
     const transporter = getMailTransporter();
-    const appUrl = getPublicAppUrl(req);
-    const inviteUrl = `${appUrl}/?invite=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+    const inviteUrl = buildAccountCreationInviteUrl({ email, token, req });
     const projectTitle = project?.title || 'a project';
     const inviterName = inviter?.username || inviter?.email || 'A project owner';
     const roleLabel = role === 'viewer' ? 'viewer' : 'editor';
@@ -1644,14 +1648,6 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
         const invitee = await Account.findOne({ email: normalizedEmail });
 
         if (!invitee) {
-            const configError = getInvitationEmailConfigError();
-            if (configError) {
-                return res.status(503).json({
-                    error: 'No account found with that email, and the account creation email could not be sent.',
-                    details: configError
-                });
-            }
-
             const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
             let pendingInvite = await PendingInvitation.findOne({
                 projectId: project._id.toString(),
@@ -1675,33 +1671,60 @@ app.post('/api/projects/:id/share', authenticateToken, requireRole('owner'), asy
             }
             await pendingInvite.save();
 
-            try {
-                await sendAccountCreationInviteEmail({
-                    email: normalizedEmail,
-                    project,
-                    role,
-                    token: pendingInvite.token,
-                    inviter: req.user,
-                    req
-                });
-            } catch (mailErr) {
-                console.error('Failed to send account creation invite:', mailErr);
-                return res.status(502).json({
-                    error: 'No account found with that email, and the account creation email could not be sent.',
-                    details: mailErr?.message
-                });
+            const inviteUrl = buildAccountCreationInviteUrl({
+                email: normalizedEmail,
+                token: pendingInvite.token,
+                req
+            });
+            const configError = getInvitationEmailConfigError();
+            let emailSent = false;
+            let emailDeliveryIssue = configError;
+
+            if (!configError) {
+                try {
+                    await sendAccountCreationInviteEmail({
+                        email: normalizedEmail,
+                        project,
+                        role,
+                        token: pendingInvite.token,
+                        inviter: req.user,
+                        req
+                    });
+                    emailSent = true;
+                    emailDeliveryIssue = '';
+                } catch (mailErr) {
+                    emailDeliveryIssue = mailErr?.message || 'Email delivery failed';
+                    console.error('Failed to send account creation invite:', mailErr);
+                }
             }
 
             project.lastModified = new Date();
-            appendProjectActivity(project, req.user, 'pending_invite_sent', `sent an account creation invite to ${normalizedEmail} as ${role}`);
+            appendProjectActivity(
+                project,
+                req.user,
+                'pending_invite_sent',
+                emailSent
+                    ? `sent an account creation invite to ${normalizedEmail} as ${role}`
+                    : `created a pending invitation for ${normalizedEmail} as ${role}`
+            );
             await project.save();
             await emitProjectUpsert(project, req.user);
-            await recordAnalyticsEvent(req, 'member_added', { projectId: project._id.toString(), projectTitle: project.title, inviteType: 'pending', role });
+            await recordAnalyticsEvent(req, 'member_added', {
+                projectId: project._id.toString(),
+                projectTitle: project.title,
+                inviteType: emailSent ? 'pending_email' : 'pending_manual',
+                role
+            });
 
             const ownerMap = await buildAccountMap([project.owner]);
             const enriched = await enrichProject(project, req.user.id, ownerMap);
-            enriched.pendingInvitationEmailSent = true;
-            enriched.pendingInvitationMessage = `No account exists for ${normalizedEmail}, so an account creation email was sent.`;
+            enriched.pendingInvitationCreated = true;
+            enriched.pendingInvitationEmailSent = emailSent;
+            enriched.pendingInvitationManualInviteUrl = emailSent ? '' : inviteUrl;
+            enriched.pendingInvitationEmailIssue = emailDeliveryIssue || '';
+            enriched.pendingInvitationMessage = emailSent
+                ? `No account exists for ${normalizedEmail}, so an account creation email was sent.`
+                : `No account exists for ${normalizedEmail}. A pending invite was created. Ask them to create an account with this email address to accept the invite.`;
             return res.json(enriched);
         }
 
