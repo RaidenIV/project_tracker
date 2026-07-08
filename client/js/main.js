@@ -4618,7 +4618,6 @@ function openSidebarSettingsModal() {
             <div class="sidebar-rail-modal-body sidebar-rail-settings-actions">
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="account">Account Settings</button>
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="ui">UI Options</button>
-                ${isCurrentUserAdmin() ? '<button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="analytics">Analytics Dashboard</button>' : ''}
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="shortcuts">Keyboard Shortcuts</button>
                 <button class="sidebar-rail-settings-action" type="button" data-rail-settings-action="guide">How To Guide</button>
                 <button class="sidebar-rail-settings-action sidebar-rail-settings-action--danger" type="button" data-rail-settings-action="signout">Sign Out</button>
@@ -4631,10 +4630,6 @@ function openSidebarSettingsModal() {
     });
     modal.querySelector('[data-rail-settings-action="ui"]')?.addEventListener('click', () => {
         openSidebarSettingsChildModal('uiOptionsModal', openUiOptionsModal, closeUiOptionsModal);
-    });
-    modal.querySelector('[data-rail-settings-action="analytics"]')?.addEventListener('click', () => {
-        closeSidebarSettingsModal();
-        openAdminAnalyticsDashboard();
     });
     modal.querySelector('[data-rail-settings-action="shortcuts"]')?.addEventListener('click', () => {
         openSidebarSettingsChildModal('shortcutsModal', openShortcutsModal, closeShortcutsModal);
