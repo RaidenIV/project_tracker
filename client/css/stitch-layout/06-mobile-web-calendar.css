@@ -5321,9 +5321,15 @@ body[data-theme] .task-assignee-check {
 
 #projectModal .task-action-menu-popover,
 body[data-theme] #projectModal .task-action-menu-popover {
-    max-height: min(72vh, 34rem) !important;
+    max-height: min(var(--task-action-menu-available-height, 72vh), 34rem) !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
+}
+
+#projectModal .task-action-menu-popover.opens-upward,
+body[data-theme] #projectModal .task-action-menu-popover.opens-upward {
+    top: auto !important;
+    bottom: calc(100% + 0.45rem) !important;
 }
 
 /* ============================================================================

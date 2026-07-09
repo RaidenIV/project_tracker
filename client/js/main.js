@@ -1736,6 +1736,16 @@ function handleTaskFloatingMenuDocumentClick(event) {
     closeOpenTaskMenus();
 }
 
+if (typeof window !== 'undefined' && !window.__taskActionMenuViewportPositionBound) {
+    window.addEventListener('resize', () => {
+        const actionMenu = uiState.openTaskActionMenu;
+        if (actionMenu?.projectId && actionMenu?.taskId !== undefined) {
+            scheduleTaskActionMenuPosition(actionMenu.projectId, actionMenu.taskId);
+        }
+    }, { passive: true });
+    window.__taskActionMenuViewportPositionBound = true;
+}
+
 function sortTasks(tasks) {
     // Preserve natural creation/manual order: first task stays first; new tasks append below it.
     return (Array.isArray(tasks) ? tasks : []).map((task, index) => normalizeTask(task, index));
@@ -10601,7 +10611,10 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
                 </button>
-                <div class="task-action-menu-control ${actionMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+                <div class="task-action-menu-control ${actionMenuOpen ? 'is-open' : ''}"
+                     data-task-action-menu-project="${escapeHtml(projectId)}"
+                     data-task-action-menu-task="${normalizedTask.id}"
+                     onclick="event.stopPropagation();">
                     <button class="task-action-menu-button"
                             type="button"
                             aria-label="Task actions"
@@ -10933,6 +10946,44 @@ function setProjectTaskCategoryFilter(projectId, categoryValue) {
     renderModalTaskList(projectId);
 }
 
+function positionOpenTaskActionMenu(projectId, taskId) {
+    const controls = document.querySelectorAll('#projectModal .task-action-menu-control.is-open');
+    const control = Array.from(controls).find(candidate => (
+        candidate.dataset.taskActionMenuProject === String(projectId)
+        && Number(candidate.dataset.taskActionMenuTask) === Number(taskId)
+    ));
+    const popover = control?.querySelector('.task-action-menu-popover');
+    if (!control || !popover) return;
+
+    popover.classList.remove('opens-upward');
+    popover.style.removeProperty('--task-action-menu-available-height');
+
+    const viewportPadding = 12;
+    const menuGap = 8;
+    const viewportBottom = window.innerHeight - viewportPadding;
+    const modalSurface = control.closest('.modal-content');
+    const modalRect = modalSurface?.getBoundingClientRect?.();
+    const boundaryTop = modalRect
+        ? Math.max(viewportPadding, modalRect.top + viewportPadding)
+        : viewportPadding;
+    const boundaryBottom = modalRect
+        ? Math.min(viewportBottom, modalRect.bottom - viewportPadding)
+        : viewportBottom;
+    const controlRect = control.getBoundingClientRect();
+    const availableAbove = Math.max(0, controlRect.top - boundaryTop - menuGap);
+    const availableBelow = Math.max(0, boundaryBottom - controlRect.bottom - menuGap);
+    const desiredHeight = Math.min(popover.scrollHeight || popover.offsetHeight || 0, 544);
+    const opensUpward = availableBelow < desiredHeight && availableAbove > availableBelow;
+    const availableHeight = Math.max(80, Math.floor(opensUpward ? availableAbove : availableBelow));
+
+    popover.classList.toggle('opens-upward', opensUpward);
+    popover.style.setProperty('--task-action-menu-available-height', `${availableHeight}px`);
+}
+
+function scheduleTaskActionMenuPosition(projectId, taskId) {
+    requestAnimationFrame(() => positionOpenTaskActionMenu(projectId, taskId));
+}
+
 function toggleTaskActionMenu(projectId, taskId, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -10942,6 +10993,7 @@ function toggleTaskActionMenu(projectId, taskId, event) {
     uiState.openTaskCategoryMenu = null;
     uiState.openTaskActionMenu = isOpen ? null : { projectId, taskId };
     renderModalTaskList(projectId);
+    if (!isOpen) scheduleTaskActionMenuPosition(projectId, taskId);
 }
 
 function closeTaskActionMenu(projectId = null, rerender = true) {
