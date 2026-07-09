@@ -4970,3 +4970,376 @@ body[data-theme^="blueprint"] .modal-tab-note-icon {
         display: none !important;
     }
 }
+
+/* ============================================================================
+   Task action kebab on every viewport + shared-project task assignee modal
+   Date: 2026-07-09
+   Scope: project modal task rows only
+   ============================================================================ */
+@media (min-width: 981px) {
+    #projectModal .task-item,
+    body[data-theme] #projectModal .task-item {
+        position: relative !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-item:has(.task-action-menu-control.is-open),
+    body[data-theme] #projectModal .task-item:has(.task-action-menu-control.is-open) {
+        z-index: 9400 !important;
+    }
+
+    #projectModal .task-meta-controls,
+    body[data-theme] #projectModal .task-meta-controls {
+        position: relative !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-meta-controls > .task-copy-button,
+    #projectModal .task-meta-controls > .task-due-date-control,
+    #projectModal .task-meta-controls > .task-note-button,
+    #projectModal .task-meta-controls > .task-priority-control,
+    #projectModal .task-meta-controls > .delete-button,
+    body[data-theme] #projectModal .task-meta-controls > .task-copy-button,
+    body[data-theme] #projectModal .task-meta-controls > .task-due-date-control,
+    body[data-theme] #projectModal .task-meta-controls > .task-note-button,
+    body[data-theme] #projectModal .task-meta-controls > .task-priority-control,
+    body[data-theme] #projectModal .task-meta-controls > .delete-button {
+        display: none !important;
+    }
+
+    #projectModal .task-action-menu-control,
+    body[data-theme] #projectModal .task-action-menu-control {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.25rem !important;
+        min-width: 2.25rem !important;
+        height: 2.25rem !important;
+        overflow: visible !important;
+        z-index: 9410 !important;
+    }
+
+    #projectModal .task-action-menu-button,
+    body[data-theme] #projectModal .task-action-menu-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        padding: 0 !important;
+        border: 1px solid var(--line, rgba(148, 163, 184, 0.25)) !important;
+        border-radius: 0.7rem !important;
+        background: transparent !important;
+        color: var(--muted, #9ca3af) !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+    }
+
+    #projectModal .task-action-menu-button:hover,
+    #projectModal .task-action-menu-button:focus-visible,
+    #projectModal .task-action-menu-control.is-open .task-action-menu-button,
+    body[data-theme] #projectModal .task-action-menu-button:hover,
+    body[data-theme] #projectModal .task-action-menu-button:focus-visible,
+    body[data-theme] #projectModal .task-action-menu-control.is-open .task-action-menu-button {
+        border-color: var(--accent, #ff8a00) !important;
+        color: var(--accent, #ff8a00) !important;
+        outline: none !important;
+    }
+
+    #projectModal .task-action-menu-button .icon,
+    body[data-theme] #projectModal .task-action-menu-button .icon {
+        width: 1.08rem !important;
+        height: 1.08rem !important;
+    }
+
+    #projectModal .task-action-menu-popover,
+    body[data-theme] #projectModal .task-action-menu-popover {
+        position: absolute !important;
+        top: calc(100% + 0.45rem) !important;
+        right: 0 !important;
+        z-index: 9420 !important;
+        display: grid !important;
+        width: 18rem !important;
+        min-width: 18rem !important;
+        gap: 0.2rem !important;
+        padding: 0.45rem !important;
+        border: 1px solid var(--line, rgba(148, 163, 184, 0.26)) !important;
+        border-radius: 0.9rem !important;
+        background: var(--panel, #0c0d14) !important;
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.42) !important;
+        overflow: visible !important;
+    }
+
+    #projectModal .task-action-menu-option,
+    #projectModal .task-action-priority-option,
+    body[data-theme] #projectModal .task-action-menu-option,
+    body[data-theme] #projectModal .task-action-priority-option {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.62rem !important;
+        width: 100% !important;
+        min-height: 2.35rem !important;
+        padding: 0.52rem 0.68rem !important;
+        border: 0 !important;
+        border-radius: 0.66rem !important;
+        background: transparent !important;
+        color: var(--heading, #f8fafc) !important;
+        font: inherit !important;
+        font-size: 0.8rem !important;
+        font-weight: 800 !important;
+        line-height: 1.15 !important;
+        text-align: left !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectModal .task-action-menu-option:hover,
+    #projectModal .task-action-menu-option:focus-visible,
+    #projectModal .task-action-priority-option:hover,
+    #projectModal .task-action-priority-option:focus-visible,
+    #projectModal .task-action-priority-option.is-active,
+    body[data-theme] #projectModal .task-action-menu-option:hover,
+    body[data-theme] #projectModal .task-action-menu-option:focus-visible,
+    body[data-theme] #projectModal .task-action-priority-option:hover,
+    body[data-theme] #projectModal .task-action-priority-option:focus-visible,
+    body[data-theme] #projectModal .task-action-priority-option.is-active {
+        background: color-mix(in srgb, var(--accent, #ff8a00) 16%, transparent) !important;
+        color: var(--accent, #ff8a00) !important;
+        outline: none !important;
+    }
+
+    #projectModal .task-action-menu-option--danger:hover,
+    #projectModal .task-action-menu-option--danger:focus-visible,
+    body[data-theme] #projectModal .task-action-menu-option--danger:hover,
+    body[data-theme] #projectModal .task-action-menu-option--danger:focus-visible {
+        color: #ff5f67 !important;
+        background: rgba(255, 95, 103, 0.12) !important;
+    }
+
+    #projectModal .task-action-menu-option .icon,
+    #projectModal .task-action-menu-option svg,
+    #projectModal .task-action-priority-option .task-tag-flag,
+    body[data-theme] #projectModal .task-action-menu-option .icon,
+    body[data-theme] #projectModal .task-action-menu-option svg,
+    body[data-theme] #projectModal .task-action-priority-option .task-tag-flag {
+        flex: 0 0 1rem !important;
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+
+    #projectModal .task-action-menu-option--date,
+    body[data-theme] #projectModal .task-action-menu-option--date {
+        cursor: pointer !important;
+        overflow: hidden !important;
+    }
+
+    #projectModal .task-action-menu-date-input,
+    body[data-theme] #projectModal .task-action-menu-date-input {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        cursor: pointer !important;
+    }
+
+    #projectModal .task-action-menu-label,
+    body[data-theme] #projectModal .task-action-menu-label {
+        margin: 0.35rem 0.55rem 0.1rem !important;
+        color: var(--muted, #9ca3af) !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+    }
+
+    #projectModal .task-action-priority-grid,
+    body[data-theme] #projectModal .task-action-priority-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.15rem !important;
+    }
+}
+
+.task-assignee-modal-overlay,
+body[data-theme] .task-assignee-modal-overlay {
+    z-index: 12000 !important;
+}
+
+.task-assignee-modal-content,
+body[data-theme] .task-assignee-modal-content {
+    width: min(92vw, 31rem) !important;
+    max-width: 31rem !important;
+    max-height: min(82vh, 42rem) !important;
+    padding: 1.15rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.26)) !important;
+    border-radius: 1rem !important;
+    background: var(--panel, #0c0d14) !important;
+    color: var(--heading, #f8fafc) !important;
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden !important;
+}
+
+.task-assignee-modal-header,
+body[data-theme] .task-assignee-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.task-assignee-modal-title,
+body[data-theme] .task-assignee-modal-title {
+    margin: 0 !important;
+    color: var(--heading, #f8fafc) !important;
+    font-size: 1.05rem !important;
+    font-weight: 900 !important;
+}
+
+.task-assignee-modal-subtitle,
+body[data-theme] .task-assignee-modal-subtitle {
+    margin: 0.3rem 0 0 !important;
+    color: var(--muted, #9ca3af) !important;
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+}
+
+.task-assignee-list,
+body[data-theme] .task-assignee-list {
+    display: grid !important;
+    gap: 0.5rem !important;
+    max-height: min(62vh, 31rem) !important;
+    overflow-y: auto !important;
+    padding-right: 0.15rem !important;
+}
+
+.task-assignee-option,
+body[data-theme] .task-assignee-option {
+    display: grid !important;
+    grid-template-columns: 2.35rem minmax(0, 1fr) auto auto !important;
+    align-items: center !important;
+    gap: 0.72rem !important;
+    width: 100% !important;
+    min-height: 3.75rem !important;
+    padding: 0.62rem 0.72rem !important;
+    border: 1px solid var(--line, rgba(148, 163, 184, 0.22)) !important;
+    border-radius: 0.8rem !important;
+    background: var(--surface, rgba(15, 23, 42, 0.72)) !important;
+    color: var(--heading, #f8fafc) !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+.task-assignee-option:hover,
+.task-assignee-option:focus-visible,
+.task-assignee-option.is-selected,
+body[data-theme] .task-assignee-option:hover,
+body[data-theme] .task-assignee-option:focus-visible,
+body[data-theme] .task-assignee-option.is-selected {
+    border-color: var(--accent, #ff8a00) !important;
+    background: color-mix(in srgb, var(--accent, #ff8a00) 10%, var(--surface, transparent)) !important;
+    outline: none !important;
+}
+
+.task-assignee-avatar,
+body[data-theme] .task-assignee-avatar {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--accent, #ff8a00) 18%, transparent) !important;
+    color: var(--accent, #ff8a00) !important;
+    font-size: 0.82rem !important;
+    font-weight: 900 !important;
+}
+
+.task-assignee-avatar svg,
+body[data-theme] .task-assignee-avatar svg {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+}
+
+.task-assignee-person,
+body[data-theme] .task-assignee-person {
+    display: grid !important;
+    gap: 0.14rem !important;
+    min-width: 0 !important;
+}
+
+.task-assignee-name,
+body[data-theme] .task-assignee-name {
+    overflow: hidden !important;
+    color: var(--heading, #f8fafc) !important;
+    font-size: 0.86rem !important;
+    font-weight: 850 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.task-assignee-email,
+body[data-theme] .task-assignee-email {
+    overflow: hidden !important;
+    color: var(--muted, #9ca3af) !important;
+    font-size: 0.72rem !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.task-assignee-role,
+body[data-theme] .task-assignee-role {
+    color: var(--muted, #9ca3af) !important;
+    font-size: 0.66rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.task-assignee-check,
+body[data-theme] .task-assignee-check {
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+    color: var(--accent, #ff8a00) !important;
+}
+
+@media (max-width: 560px) {
+    .task-assignee-option,
+    body[data-theme] .task-assignee-option {
+        grid-template-columns: 2.35rem minmax(0, 1fr) auto !important;
+    }
+
+    .task-assignee-role,
+    body[data-theme] .task-assignee-role {
+        display: none !important;
+    }
+}
+
+#projectModal .task-action-menu-popover,
+body[data-theme] #projectModal .task-action-menu-popover {
+    max-height: min(72vh, 34rem) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* ============================================================================
+   Assigned task highlight
+   Date: 2026-07-09
+   Scope: assigned task rows in the project modal only
+   ============================================================================ */
+#projectModal .task-item.task-item--assigned,
+body[data-theme] #projectModal .task-item.task-item--assigned {
+    border-color: color-mix(in srgb, var(--accent, #ff8a00) 62%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    background: color-mix(in srgb, var(--accent, #ff8a00) 10%, var(--surface, #111827)) !important;
+}
+
+#projectModal .task-item.task-item--assigned:hover,
+body[data-theme] #projectModal .task-item.task-item--assigned:hover {
+    border-color: var(--accent, #ff8a00) !important;
+    background: color-mix(in srgb, var(--accent, #ff8a00) 14%, var(--surface, #111827)) !important;
+}
+

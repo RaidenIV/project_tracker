@@ -1487,6 +1487,10 @@ function normalizeTask(task = {}, index = 0) {
         completedBy: task?.completedBy ? String(task.completedBy) : '',
         completedByName: task?.completedByName ? decodeHtmlEntities(task.completedByName) : '',
         dueDate: normalizeTaskDueDate(task?.dueDate || task?.due_date || task?.deadline || ''),
+        assigneeUserId: task?.assigneeUserId ? String(task.assigneeUserId) : (task?.assignedToUserId ? String(task.assignedToUserId) : ''),
+        assigneeName: task?.assigneeName ? decodeHtmlEntities(task.assigneeName) : (task?.assignedToName ? decodeHtmlEntities(task.assignedToName) : ''),
+        assigneeEmail: task?.assigneeEmail ? String(task.assigneeEmail) : (task?.assignedToEmail ? String(task.assignedToEmail) : ''),
+        assigneeAssignedAt: task?.assigneeAssignedAt ? String(task.assigneeAssignedAt) : (task?.assignedAt ? String(task.assignedAt) : ''),
         tag,
         category
     };
@@ -5050,6 +5054,35 @@ function refreshNotificationsModalIfOpen() {
     renderNotificationsModalContent(modal, { markRead: true });
 }
 
+function getAssignedTaskNotificationItems() {
+    const currentUserId = getCurrentUserIdentity().id;
+    if (!currentUserId) return [];
+
+    const items = [];
+    state.getProjects()
+        .map(normalizeProject)
+        .filter(Boolean)
+        .forEach(project => {
+            const projectId = String(project.id || project._id || '');
+            (Array.isArray(project.tasks) ? project.tasks : []).forEach((task, index) => {
+                const normalizedTask = normalizeTask(task, index);
+                if (String(normalizedTask.assigneeUserId || '') !== currentUserId) return;
+
+                const assignedAt = String(normalizedTask.assigneeAssignedAt || '').trim();
+                const fallbackTime = project.lastModified || project.dateCreated || '';
+                const taskLabel = getTaskPlainText(normalizedTask.text, 'Untitled task').trim() || 'Untitled task';
+                items.push({
+                    key: `task-assigned:${projectId}:${normalizedTask.id}:${currentUserId}:${assignedAt || 'legacy'}`,
+                    title: 'Task assigned to you',
+                    detail: `${taskLabel}${project.title ? ` • ${project.title}` : ''}`,
+                    time: assignedAt || fallbackTime
+                });
+            });
+        });
+
+    return items;
+}
+
 function buildNotificationItems() {
     const metrics = buildPersonalProgressionMetrics();
     const now = new Date();
@@ -5078,7 +5111,8 @@ function buildNotificationItems() {
     const items = [
         { key: `daily-tasks:${formatDateKey(dayStart) || dayStart.toISOString()}:${dailyTasks}`, title: 'Tasks completed today', detail: `${dailyTasks} task${dailyTasks === 1 ? '' : 's'} completed since midnight.`, time: now.toISOString() },
         { key: `weekly-score:${formatDateKey(weekStart) || weekStart.toISOString()}:${weeklyTasks}`, title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Sunday at 12:00 AM.`, time: now.toISOString() },
-        { key: `personal-achievements:${displayedPersonalAchievementCount}`, title: 'Personal achievements', detail: `${displayedPersonalAchievementCount} of ${displayedPersonalAchievementTotal} unlocked.`, time: now.toISOString() }
+        { key: `personal-achievements:${displayedPersonalAchievementCount}`, title: 'Personal achievements', detail: `${displayedPersonalAchievementCount} of ${displayedPersonalAchievementTotal} unlocked.`, time: now.toISOString() },
+        ...getAssignedTaskNotificationItems()
     ];
     const competitiveAchievements = getVisibleCompetitiveAchievements(currentEntry.competitiveAchievements);
     competitiveAchievements.forEach(achievement => {
@@ -7272,6 +7306,7 @@ function completeTasksByPriority(projectId, tagValue, event) {
     event?.stopPropagation?.();
     const normalizedTag = normalizePriorityTagValue(tagValue);
     uiState.openTaskPriorityMenu = null;
+    uiState.openTaskActionMenu = null;
     completeTaskBatch(projectId, (task) => task.tag === normalizedTag);
 }
 
@@ -10247,11 +10282,203 @@ function renderProjectDueDateControlMarkup(project, surface = 'card') {
     `;
 }
 
+function isProjectSharedForTaskAssignees(project = {}) {
+    return Array.isArray(project?.collaborators) && project.collaborators.length > 0;
+}
+
+function getProjectTaskAssigneeMembers(project = {}) {
+    const members = [];
+    const seenUserIds = new Set();
+    const addMember = (member = {}) => {
+        const userId = String(member.userId || member.id || '').trim();
+        if (!userId || seenUserIds.has(userId)) return;
+        seenUserIds.add(userId);
+        members.push({
+            userId,
+            username: String(member.username || member.name || member.email || 'Project member').trim(),
+            email: String(member.email || '').trim(),
+            role: String(member.role || 'editor').trim().toLowerCase()
+        });
+    };
+
+    addMember({
+        userId: project?.owner || project?.ownerId,
+        username: project?.ownerName || 'Owner',
+        email: project?.ownerEmail || '',
+        role: 'owner'
+    });
+
+    (Array.isArray(project?.collaborators) ? project.collaborators : []).forEach(collaborator => {
+        addMember({
+            userId: collaborator?.userId,
+            username: collaborator?.username,
+            email: collaborator?.email,
+            role: collaborator?.role || 'editor'
+        });
+    });
+
+    return members;
+}
+
+function getTaskAssigneeMember(project = {}, task = {}) {
+    const assigneeUserId = String(task?.assigneeUserId || '').trim();
+    if (!assigneeUserId) return null;
+    return getProjectTaskAssigneeMembers(project).find(member => member.userId === assigneeUserId) || {
+        userId: assigneeUserId,
+        username: String(task?.assigneeName || task?.assigneeEmail || 'Assigned user').trim(),
+        email: String(task?.assigneeEmail || '').trim(),
+        role: 'member'
+    };
+}
+
+function ensureTaskAssigneeModal() {
+    let modal = document.getElementById('taskAssigneeModal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="modal-overlay task-assignee-modal-overlay" id="taskAssigneeModal" aria-hidden="true">
+            <div class="modal-content task-assignee-modal-content" role="dialog" aria-modal="true" aria-labelledby="taskAssigneeModalTitle">
+                <div class="task-assignee-modal-header">
+                    <div>
+                        <h3 class="task-assignee-modal-title" id="taskAssigneeModalTitle">Task Assignee</h3>
+                        <p class="task-assignee-modal-subtitle" id="taskAssigneeModalSubtitle">Select a member of this shared project.</p>
+                    </div>
+                    <button class="modal-close" type="button" onclick="closeTaskAssigneeModal()" aria-label="Close task assignee modal">
+                        <svg class="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="task-assignee-list" id="taskAssigneeList"></div>
+            </div>
+        </div>
+    `);
+
+    modal = document.getElementById('taskAssigneeModal');
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeTaskAssigneeModal();
+    });
+    return modal;
+}
+
+function renderTaskAssigneeModal(projectId, taskId) {
+    const project = state.findProject(projectId);
+    const list = document.getElementById('taskAssigneeList');
+    if (!project || !list) return;
+
+    const task = (Array.isArray(project.tasks) ? project.tasks : [])
+        .map((item, index) => normalizeTask(item, index))
+        .find(item => item.id === Number(taskId));
+    if (!task) return;
+
+    const members = getProjectTaskAssigneeMembers(project);
+    const selectedUserId = String(task.assigneeUserId || '');
+    const memberRows = members.map(member => {
+        const isSelected = member.userId === selectedUserId;
+        const initial = (member.username || member.email || 'M').charAt(0).toUpperCase();
+        const roleLabel = member.role === 'owner' ? 'Owner' : (member.role === 'viewer' ? 'Viewer' : 'Editor');
+        return `
+            <button class="task-assignee-option ${isSelected ? 'is-selected' : ''}"
+                    type="button"
+                    aria-pressed="${isSelected ? 'true' : 'false'}"
+                    onclick="assignTaskToProjectMember('${projectId}', ${task.id}, '${member.userId}')">
+                <span class="task-assignee-avatar" aria-hidden="true">${escapeHtml(initial)}</span>
+                <span class="task-assignee-person">
+                    <span class="task-assignee-name">${escapeHtml(member.username || member.email || 'Project member')}</span>
+                    ${member.email ? `<span class="task-assignee-email">${escapeHtml(member.email)}</span>` : ''}
+                </span>
+                <span class="task-assignee-role">${escapeHtml(roleLabel)}</span>
+                ${isSelected ? `<svg class="task-assignee-check" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"></path></svg>` : ''}
+            </button>
+        `;
+    }).join('');
+
+    list.innerHTML = `
+        <button class="task-assignee-option task-assignee-option--unassigned ${selectedUserId ? '' : 'is-selected'}"
+                type="button"
+                aria-pressed="${selectedUserId ? 'false' : 'true'}"
+                onclick="assignTaskToProjectMember('${projectId}', ${task.id}, '')">
+            <span class="task-assignee-avatar task-assignee-avatar--unassigned" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l14 14M16.5 10.5A4.5 4.5 0 009.44 6.8M7.5 13.5A4.5 4.5 0 0014.56 17.2M4 21a8 8 0 0111.06-7.4M20 21a8 8 0 00-2.13-5.44"></path></svg>
+            </span>
+            <span class="task-assignee-person">
+                <span class="task-assignee-name">Unassigned</span>
+                <span class="task-assignee-email">Remove the current task assignee</span>
+            </span>
+            ${selectedUserId ? '' : `<svg class="task-assignee-check" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"></path></svg>`}
+        </button>
+        ${memberRows}
+    `;
+}
+
+function openTaskAssigneeModal(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const project = state.findProject(projectId);
+    if (!project || !isProjectSharedForTaskAssignees(project)) return;
+
+    closeTaskActionMenu(projectId, false);
+    const modal = ensureTaskAssigneeModal();
+    modal.dataset.projectId = projectId;
+    modal.dataset.taskId = String(taskId);
+    renderTaskAssigneeModal(projectId, taskId);
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => modal.querySelector('.task-assignee-option.is-selected, .task-assignee-option')?.focus({ preventScroll: true }));
+}
+
+function closeTaskAssigneeModal() {
+    const modal = document.getElementById('taskAssigneeModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    delete modal.dataset.projectId;
+    delete modal.dataset.taskId;
+}
+
+function assignTaskToProjectMember(projectId, taskId, assigneeUserId) {
+    if (!state.canEdit(projectId)) return;
+    const project = state.findProject(projectId);
+    if (!project || !isProjectSharedForTaskAssignees(project)) return;
+
+    const members = getProjectTaskAssigneeMembers(project);
+    const selectedMember = assigneeUserId ? members.find(member => member.userId === String(assigneeUserId)) : null;
+    if (assigneeUserId && !selectedMember) return;
+
+    const assignmentTimestamp = new Date().toISOString();
+    const updatedTasks = (Array.isArray(project.tasks) ? project.tasks : []).map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (normalizedTask.id !== Number(taskId)) return normalizedTask;
+
+        const nextAssigneeUserId = selectedMember?.userId || '';
+        const assignmentChanged = String(normalizedTask.assigneeUserId || '') !== String(nextAssigneeUserId);
+        return {
+            ...normalizedTask,
+            assigneeUserId: nextAssigneeUserId,
+            assigneeName: selectedMember?.username || '',
+            assigneeEmail: selectedMember?.email || '',
+            assigneeAssignedAt: nextAssigneeUserId
+                ? (assignmentChanged ? assignmentTimestamp : (normalizedTask.assigneeAssignedAt || assignmentTimestamp))
+                : ''
+        };
+    });
+
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    closeTaskAssigneeModal();
+    renderModalTaskList(projectId);
+    render();
+}
+
 function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMode = DEFAULT_TASK_SORT_MODE) {
     const normalizedTask = normalizeTask(task);
     const project = state.findProject(projectId);
     const priorityMenuOpen = isTaskPriorityMenuOpen(projectId, normalizedTask.id);
     const actionMenuOpen = isTaskActionMenuOpen(projectId, normalizedTask.id);
+    const isSharedProject = isProjectSharedForTaskAssignees(project);
+    const taskAssignee = getTaskAssigneeMember(project, normalizedTask);
     const hasTaskNote = getRichTextPlainText(normalizedTask.note).length > 0;
     const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
     const taskOverdue = isTaskOverdue(normalizedTask);
@@ -10262,7 +10489,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
     const canManualReorder = sortMode === DEFAULT_TASK_SORT_MODE;
 
     return `
-        <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
+        <div class="task-item ${taskAssignee ? 'task-item--assigned' : ''} ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
              data-task-item
              data-task-id="${normalizedTask.id}"
              onclick="handleTaskClick('${projectId}', ${normalizedTask.id}, event)">
@@ -10388,11 +10615,11 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         <div class="task-action-menu-popover" role="menu" aria-label="Task actions" onclick="event.stopPropagation();">
                             <button class="task-action-menu-option" type="button" role="menuitem" onclick="copyTaskToClipboard('${projectId}', ${normalizedTask.id}, event); closeTaskActionMenu('${projectId}')">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>Copy Text</span>
+                                <span>Copy Task</span>
                             </button>
                             <label class="task-action-menu-option task-action-menu-option--date" role="menuitem" title="${escapeHtml(dueDateLabel)}">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2.5"></rect><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path></svg>
-                                <span>${dueDate ? `Due ${escapeHtml(visibleTaskDueDate)}` : 'Due Date'}</span>
+                                <span>${dueDate ? `Edit Due Date (${escapeHtml(visibleTaskDueDate)})` : 'Add Due Date'}</span>
                                 <input class="task-action-menu-date-input"
                                        type="date"
                                        value="${escapeHtml(dueDate)}"
@@ -10403,9 +10630,9 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                             </label>
                             <button class="task-action-menu-option" type="button" role="menuitem" onclick="closeTaskActionMenu('${projectId}', false); openTaskNoteModal('${projectId}', ${normalizedTask.id}, event); renderModalTaskList('${projectId}')">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path></svg>
-                                <span>${hasTaskNote ? 'Edit Notes' : 'Add Notes'}</span>
+                                <span>${hasTaskNote ? 'Edit Task Note' : 'Add Task Note'}</span>
                             </button>
-                            <div class="task-action-menu-label">Priority</div>
+                            <div class="task-action-menu-label">Task Priority</div>
                             <div class="task-action-priority-grid" role="group" aria-label="Set task priority">
                                 ${TASK_TAG_OPTIONS.map(option => `
                                     <button class="task-action-priority-option ${normalizedTask.tag === option.value ? 'is-active' : ''}" type="button" onclick="selectTaskPriority('${projectId}', ${normalizedTask.id}, '${option.value}')" title="${escapeHtml(option.label)}">
@@ -10414,9 +10641,23 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                                     </button>
                                 `).join('')}
                             </div>
+                            <div class="task-priority-menu-divider" aria-hidden="true"></div>
+                            <button class="task-action-menu-option task-priority-option--bulk"
+                                    type="button"
+                                    ${priorityBulkCount > 0 ? '' : 'disabled'}
+                                    onclick="completeTasksByPriority('${projectId}', '${normalizedTask.tag}', event)">
+                                <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                                <span>Mark all ${escapeHtml(priorityBulkLabel)} complete${priorityBulkCount > 0 ? ` (${priorityBulkCount})` : ''}</span>
+                            </button>
+                            ${isSharedProject ? `
+                                <button class="task-action-menu-option" type="button" role="menuitem" onclick="openTaskAssigneeModal('${projectId}', ${normalizedTask.id}, event)">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"></path></svg>
+                                    <span>${taskAssignee ? `Task Assignee: ${escapeHtml(taskAssignee.username)}` : 'Add Task Assignee'}</span>
+                                </button>
+                            ` : ''}
                             <button class="task-action-menu-option task-action-menu-option--danger" type="button" role="menuitem" onclick="closeTaskActionMenu('${projectId}', false); deleteTaskFromModal('${projectId}', ${normalizedTask.id})">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                <span>Delete</span>
+                                <span>Delete Task</span>
                             </button>
                         </div>
                     ` : ''}
@@ -13893,6 +14134,9 @@ window.toggleSelectAllVisibleTasks = toggleSelectAllVisibleTasks;
 window.openTaskDueDatePicker = openTaskDueDatePicker;
 window.openTaskNoteModal = openTaskNoteModal;
 window.closeTaskNoteModal = closeTaskNoteModal;
+window.openTaskAssigneeModal = openTaskAssigneeModal;
+window.closeTaskAssigneeModal = closeTaskAssigneeModal;
+window.assignTaskToProjectMember = assignTaskToProjectMember;
 window.saveTaskNoteFromModal = saveTaskNoteFromModal;
 window.updateTaskNote = updateTaskNote;
 window.toggleTaskCategoryMenu = toggleTaskCategoryMenu;
