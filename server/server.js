@@ -155,7 +155,8 @@ const taskSchema = new mongoose.Schema({
     note:          { type: String, default: '' },
     assigneeUserId:{ type: String, default: '' },
     assigneeName:  { type: String, default: '' },
-    assigneeEmail: { type: String, default: '' }
+    assigneeEmail: { type: String, default: '' },
+    assigneeAssignedAt: { type: String, default: '' }
 });
 
 const collaboratorSchema = new mongoose.Schema({
@@ -749,6 +750,13 @@ function sanitizeDateKey(value) {
     return `${year}-${month}-${day}`;
 }
 
+function sanitizeDateTime(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
+}
+
 function parseTaskCompletedValue(value) {
     if (value === true || value === 1) return true;
     if (value === false || value === 0 || value === null || value === undefined) return false;
@@ -798,7 +806,8 @@ function sanitizeTask(task, index = 0) {
         note: typeof task?.note === 'string' ? task.note.trim() : (typeof task?.notes === 'string' ? task.notes.trim() : ''),
         assigneeUserId: task?.assigneeUserId ? String(task.assigneeUserId).trim().slice(0, 80) : '',
         assigneeName: task?.assigneeName ? String(task.assigneeName).trim().replace(/\s+/g, ' ').slice(0, 80) : '',
-        assigneeEmail: task?.assigneeEmail ? String(task.assigneeEmail).trim().toLowerCase().slice(0, 254) : ''
+        assigneeEmail: task?.assigneeEmail ? String(task.assigneeEmail).trim().toLowerCase().slice(0, 254) : '',
+        assigneeAssignedAt: sanitizeDateTime(task?.assigneeAssignedAt || task?.assignedAt || '')
     };
 }
 
@@ -1537,7 +1546,7 @@ app.put('/api/projects/:id', authenticateToken, requireRole('editor'), async (re
             ].filter(Boolean));
             incoming.tasks = incoming.tasks.map(task => {
                 if (!task.assigneeUserId || validAssigneeUserIds.has(String(task.assigneeUserId))) return task;
-                return { ...task, assigneeUserId: '', assigneeName: '', assigneeEmail: '' };
+                return { ...task, assigneeUserId: '', assigneeName: '', assigneeEmail: '', assigneeAssignedAt: '' };
             });
         }
         const rawCurrentProject = await Project.collection.findOne({ _id: req.project._id });

@@ -1490,6 +1490,7 @@ function normalizeTask(task = {}, index = 0) {
         assigneeUserId: task?.assigneeUserId ? String(task.assigneeUserId) : (task?.assignedToUserId ? String(task.assignedToUserId) : ''),
         assigneeName: task?.assigneeName ? decodeHtmlEntities(task.assigneeName) : (task?.assignedToName ? decodeHtmlEntities(task.assignedToName) : ''),
         assigneeEmail: task?.assigneeEmail ? String(task.assigneeEmail) : (task?.assignedToEmail ? String(task.assignedToEmail) : ''),
+        assigneeAssignedAt: task?.assigneeAssignedAt ? String(task.assigneeAssignedAt) : (task?.assignedAt ? String(task.assignedAt) : ''),
         tag,
         category
     };
@@ -5053,6 +5054,35 @@ function refreshNotificationsModalIfOpen() {
     renderNotificationsModalContent(modal, { markRead: true });
 }
 
+function getAssignedTaskNotificationItems() {
+    const currentUserId = getCurrentUserIdentity().id;
+    if (!currentUserId) return [];
+
+    const items = [];
+    state.getProjects()
+        .map(normalizeProject)
+        .filter(Boolean)
+        .forEach(project => {
+            const projectId = String(project.id || project._id || '');
+            (Array.isArray(project.tasks) ? project.tasks : []).forEach((task, index) => {
+                const normalizedTask = normalizeTask(task, index);
+                if (String(normalizedTask.assigneeUserId || '') !== currentUserId) return;
+
+                const assignedAt = String(normalizedTask.assigneeAssignedAt || '').trim();
+                const fallbackTime = project.lastModified || project.dateCreated || '';
+                const taskLabel = getTaskPlainText(normalizedTask.text, 'Untitled task').trim() || 'Untitled task';
+                items.push({
+                    key: `task-assigned:${projectId}:${normalizedTask.id}:${currentUserId}:${assignedAt || 'legacy'}`,
+                    title: 'Task assigned to you',
+                    detail: `${taskLabel}${project.title ? ` • ${project.title}` : ''}`,
+                    time: assignedAt || fallbackTime
+                });
+            });
+        });
+
+    return items;
+}
+
 function buildNotificationItems() {
     const metrics = buildPersonalProgressionMetrics();
     const now = new Date();
@@ -5081,7 +5111,8 @@ function buildNotificationItems() {
     const items = [
         { key: `daily-tasks:${formatDateKey(dayStart) || dayStart.toISOString()}:${dailyTasks}`, title: 'Tasks completed today', detail: `${dailyTasks} task${dailyTasks === 1 ? '' : 's'} completed since midnight.`, time: now.toISOString() },
         { key: `weekly-score:${formatDateKey(weekStart) || weekStart.toISOString()}:${weeklyTasks}`, title: 'Leaderboard score', detail: `${weeklyTasks} task${weeklyTasks === 1 ? '' : 's'} completed since Sunday at 12:00 AM.`, time: now.toISOString() },
-        { key: `personal-achievements:${displayedPersonalAchievementCount}`, title: 'Personal achievements', detail: `${displayedPersonalAchievementCount} of ${displayedPersonalAchievementTotal} unlocked.`, time: now.toISOString() }
+        { key: `personal-achievements:${displayedPersonalAchievementCount}`, title: 'Personal achievements', detail: `${displayedPersonalAchievementCount} of ${displayedPersonalAchievementTotal} unlocked.`, time: now.toISOString() },
+        ...getAssignedTaskNotificationItems()
     ];
     const competitiveAchievements = getVisibleCompetitiveAchievements(currentEntry.competitiveAchievements);
     competitiveAchievements.forEach(achievement => {
@@ -10416,14 +10447,21 @@ function assignTaskToProjectMember(projectId, taskId, assigneeUserId) {
     const selectedMember = assigneeUserId ? members.find(member => member.userId === String(assigneeUserId)) : null;
     if (assigneeUserId && !selectedMember) return;
 
+    const assignmentTimestamp = new Date().toISOString();
     const updatedTasks = (Array.isArray(project.tasks) ? project.tasks : []).map((task, index) => {
         const normalizedTask = normalizeTask(task, index);
         if (normalizedTask.id !== Number(taskId)) return normalizedTask;
+
+        const nextAssigneeUserId = selectedMember?.userId || '';
+        const assignmentChanged = String(normalizedTask.assigneeUserId || '') !== String(nextAssigneeUserId);
         return {
             ...normalizedTask,
-            assigneeUserId: selectedMember?.userId || '',
+            assigneeUserId: nextAssigneeUserId,
             assigneeName: selectedMember?.username || '',
-            assigneeEmail: selectedMember?.email || ''
+            assigneeEmail: selectedMember?.email || '',
+            assigneeAssignedAt: nextAssigneeUserId
+                ? (assignmentChanged ? assignmentTimestamp : (normalizedTask.assigneeAssignedAt || assignmentTimestamp))
+                : ''
         };
     });
 
@@ -10451,7 +10489,7 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
     const canManualReorder = sortMode === DEFAULT_TASK_SORT_MODE;
 
     return `
-        <div class="task-item ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
+        <div class="task-item ${taskAssignee ? 'task-item--assigned' : ''} ${selectedTasks.has(normalizedTask.id) ? 'selected' : ''}"
              data-task-item
              data-task-id="${normalizedTask.id}"
              onclick="handleTaskClick('${projectId}', ${normalizedTask.id}, event)">

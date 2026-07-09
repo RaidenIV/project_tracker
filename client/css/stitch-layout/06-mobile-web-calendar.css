@@ -5325,3 +5325,21 @@ body[data-theme] #projectModal .task-action-menu-popover {
     overflow-x: hidden !important;
     overflow-y: auto !important;
 }
+
+/* ============================================================================
+   Assigned task highlight
+   Date: 2026-07-09
+   Scope: assigned task rows in the project modal only
+   ============================================================================ */
+#projectModal .task-item.task-item--assigned,
+body[data-theme] #projectModal .task-item.task-item--assigned {
+    border-color: color-mix(in srgb, var(--accent, #ff8a00) 62%, var(--line, rgba(148, 163, 184, 0.28))) !important;
+    background: color-mix(in srgb, var(--accent, #ff8a00) 10%, var(--surface, #111827)) !important;
+}
+
+#projectModal .task-item.task-item--assigned:hover,
+body[data-theme] #projectModal .task-item.task-item--assigned:hover {
+    border-color: var(--accent, #ff8a00) !important;
+    background: color-mix(in srgb, var(--accent, #ff8a00) 14%, var(--surface, #111827)) !important;
+}
+
