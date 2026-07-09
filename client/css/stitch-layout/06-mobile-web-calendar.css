@@ -5349,3 +5349,21 @@ body[data-theme] #projectModal .task-item.task-item--assigned:hover {
     background: color-mix(in srgb, var(--accent, #ff8a00) 14%, var(--surface, #111827)) !important;
 }
 
+
+/* ============================================================================
+   Task action menu top-layer portal
+   Date: 2026-07-09
+   Scope: open individual-task kebab menu only
+   ============================================================================ */
+#projectModal > .task-action-menu-popover.task-action-menu-popover--portal,
+#projectModal > .task-action-menu-popover.task-action-menu-popover--portal.opens-upward,
+body[data-theme] #projectModal > .task-action-menu-popover.task-action-menu-popover--portal,
+body[data-theme] #projectModal > .task-action-menu-popover.task-action-menu-popover--portal.opens-upward {
+    position: fixed !important;
+    top: var(--task-action-menu-top, 0px) !important;
+    left: var(--task-action-menu-left, 0px) !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: 2147483000 !important;
+    isolation: isolate !important;
+}

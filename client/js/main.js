@@ -1701,6 +1701,7 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
     uiState.openTaskActionMenu = null;
     uiState.openProjectPriorityMenu = null;
     uiState.openTaskCategoryMenu = null;
+    removeTaskActionMenuPortals();
 
     if (!rerender) return;
 
@@ -1737,12 +1738,14 @@ function handleTaskFloatingMenuDocumentClick(event) {
 }
 
 if (typeof window !== 'undefined' && !window.__taskActionMenuViewportPositionBound) {
-    window.addEventListener('resize', () => {
+    const repositionOpenTaskActionMenu = () => {
         const actionMenu = uiState.openTaskActionMenu;
         if (actionMenu?.projectId && actionMenu?.taskId !== undefined) {
             scheduleTaskActionMenuPosition(actionMenu.projectId, actionMenu.taskId);
         }
-    }, { passive: true });
+    };
+    window.addEventListener('resize', repositionOpenTaskActionMenu, { passive: true });
+    document.addEventListener('scroll', repositionOpenTaskActionMenu, { passive: true, capture: true });
     window.__taskActionMenuViewportPositionBound = true;
 }
 
@@ -10625,7 +10628,12 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         </svg>
                     </button>
                     ${actionMenuOpen ? `
-                        <div class="task-action-menu-popover" role="menu" aria-label="Task actions" onclick="event.stopPropagation();">
+                        <div class="task-action-menu-popover"
+                             data-task-action-menu-project="${escapeHtml(projectId)}"
+                             data-task-action-menu-task="${normalizedTask.id}"
+                             role="menu"
+                             aria-label="Task actions"
+                             onclick="event.stopPropagation();">
                             <button class="task-action-menu-option" type="button" role="menuitem" onclick="copyTaskToClipboard('${projectId}', ${normalizedTask.id}, event); closeTaskActionMenu('${projectId}')">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>Copy Task</span>
@@ -10917,6 +10925,7 @@ function renderModalTaskList(projectId) {
 
     taskList.dataset.sortMode = sortMode;
     taskList.dataset.activeCategory = activeCategory;
+    removeTaskActionMenuPortals();
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks, sortMode)).join('');
     renderCompletedTaskDisplayControls(projectId, completedDisplayState, hideCompleted);
     renderTaskSelectAllControl(projectId, displayTasks);
@@ -10924,6 +10933,10 @@ function renderModalTaskList(projectId) {
     renderTaskCategoryControls(projectId);
     updateProjectProgress(projectId);
 
+    const openActionMenu = uiState.openTaskActionMenu;
+    if (openActionMenu?.projectId === projectId && openActionMenu?.taskId !== undefined) {
+        scheduleTaskActionMenuPosition(openActionMenu.projectId, openActionMenu.taskId);
+    }
     setTimeout(() => setupTaskDragAndDrop(projectId), 100);
 }
 
@@ -10946,20 +10959,41 @@ function setProjectTaskCategoryFilter(projectId, categoryValue) {
     renderModalTaskList(projectId);
 }
 
+function removeTaskActionMenuPortals() {
+    document.querySelectorAll('#projectModal > .task-action-menu-popover--portal').forEach(popover => popover.remove());
+}
+
+function findTaskActionMenuPortal(projectId, taskId) {
+    return Array.from(document.querySelectorAll('#projectModal > .task-action-menu-popover--portal')).find(popover => (
+        popover.dataset.taskActionMenuProject === String(projectId)
+        && Number(popover.dataset.taskActionMenuTask) === Number(taskId)
+    )) || null;
+}
+
 function positionOpenTaskActionMenu(projectId, taskId) {
     const controls = document.querySelectorAll('#projectModal .task-action-menu-control.is-open');
     const control = Array.from(controls).find(candidate => (
         candidate.dataset.taskActionMenuProject === String(projectId)
         && Number(candidate.dataset.taskActionMenuTask) === Number(taskId)
     ));
-    const popover = control?.querySelector('.task-action-menu-popover');
-    if (!control || !popover) return;
+    const projectModal = document.getElementById('projectModal');
+    let popover = findTaskActionMenuPortal(projectId, taskId) || control?.querySelector('.task-action-menu-popover');
+    if (!control || !popover || !projectModal) return;
+
+    if (popover.parentElement !== projectModal) {
+        removeTaskActionMenuPortals();
+        popover.classList.add('task-action-menu-popover--portal');
+        projectModal.appendChild(popover);
+    }
 
     popover.classList.remove('opens-upward');
     popover.style.removeProperty('--task-action-menu-available-height');
+    popover.style.removeProperty('--task-action-menu-top');
+    popover.style.removeProperty('--task-action-menu-left');
 
     const viewportPadding = 12;
     const menuGap = 8;
+    const viewportWidth = window.innerWidth;
     const viewportBottom = window.innerHeight - viewportPadding;
     const modalSurface = control.closest('.modal-content');
     const modalRect = modalSurface?.getBoundingClientRect?.();
@@ -10972,12 +11006,26 @@ function positionOpenTaskActionMenu(projectId, taskId) {
     const controlRect = control.getBoundingClientRect();
     const availableAbove = Math.max(0, controlRect.top - boundaryTop - menuGap);
     const availableBelow = Math.max(0, boundaryBottom - controlRect.bottom - menuGap);
-    const desiredHeight = Math.min(popover.scrollHeight || popover.offsetHeight || 0, 544);
-    const opensUpward = availableBelow < desiredHeight && availableAbove > availableBelow;
+    const naturalHeight = Math.min(popover.scrollHeight || popover.offsetHeight || 0, 544);
+    const opensUpward = availableBelow < naturalHeight && availableAbove > availableBelow;
     const availableHeight = Math.max(80, Math.floor(opensUpward ? availableAbove : availableBelow));
 
     popover.classList.toggle('opens-upward', opensUpward);
     popover.style.setProperty('--task-action-menu-available-height', `${availableHeight}px`);
+
+    const menuRect = popover.getBoundingClientRect();
+    const menuWidth = menuRect.width || 288;
+    const menuHeight = menuRect.height || Math.min(naturalHeight, availableHeight);
+    const maxLeft = Math.max(viewportPadding, viewportWidth - menuWidth - viewportPadding);
+    const left = Math.min(Math.max(viewportPadding, controlRect.right - menuWidth), maxLeft);
+    const requestedTop = opensUpward
+        ? controlRect.top - menuGap - menuHeight
+        : controlRect.bottom + menuGap;
+    const maxTop = Math.max(boundaryTop, boundaryBottom - menuHeight);
+    const top = Math.min(Math.max(boundaryTop, requestedTop), maxTop);
+
+    popover.style.setProperty('--task-action-menu-left', `${Math.round(left)}px`);
+    popover.style.setProperty('--task-action-menu-top', `${Math.round(top)}px`);
 }
 
 function scheduleTaskActionMenuPosition(projectId, taskId) {
@@ -10999,6 +11047,7 @@ function toggleTaskActionMenu(projectId, taskId, event) {
 function closeTaskActionMenu(projectId = null, rerender = true) {
     const actionMenu = uiState.openTaskActionMenu;
     uiState.openTaskActionMenu = null;
+    removeTaskActionMenuPortals();
     if (!rerender) return;
     const nextProjectId = projectId || actionMenu?.projectId;
     if (nextProjectId) renderModalTaskList(nextProjectId);
@@ -12128,6 +12177,8 @@ function toggleHideCompleted() {
 
 function closeProjectModal() {
     const modal = document.getElementById('projectModal');
+    removeTaskActionMenuPortals();
+    uiState.openTaskActionMenu = null;
     modal.classList.remove('active');
     document.body.classList.remove('project-modal-open');
     clearOpenProjectModalState();
