@@ -10651,9 +10651,9 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         <span>${dueDate ? escapeHtml(visibleTaskDueDate) : 'No due date'}</span>
                     </span>
                     <span class="task-glance-detail task-glance-detail--priority task-glance-detail--priority-${normalizedTask.tag}"
-                          title="Priority: ${escapeHtml(priorityBulkLabel)}">
+                          title="Priority: ${escapeHtml(priorityBulkLabel)}"
+                          aria-label="Priority: ${escapeHtml(priorityBulkLabel)}">
                         <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
-                        <span>${escapeHtml(priorityBulkLabel)}</span>
                     </span>
                 </div>
                 ${state.canEdit(projectId) ? `<div class="task-edit-rich-toolbar" id="modal-task-toolbar-${normalizedTask.id}">${buildRichTextToolbarMarkup(`modal-task-input-${normalizedTask.id}`)}</div>` : ''}
