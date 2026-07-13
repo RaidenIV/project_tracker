@@ -2177,7 +2177,7 @@ function getLeaderboardModeScore(row = {}, mode = 'weekly') {
         case 'monthly':
             return Math.max(0, Math.round(Number(row.monthlyCompletedTasks || 0) || 0));
         case 'all':
-            return Math.max(0, Math.round(Number(row.completedTasks || 0) || 0));
+            return Math.max(0, Math.round(Number(row.allTimeCompletedTasks ?? row.completedTasks ?? 0) || 0));
         case 'weekly':
         default:
             return Math.max(0, Math.round(Number(row.weeklyCompletedTasks || 0) || 0));
@@ -2188,12 +2188,15 @@ function buildLeaderboardScoreBreakdown(row = {}) {
     return {
         weeklyCompletedTasks: Math.max(0, Math.round(Number(row.weeklyCompletedTasks || 0) || 0)),
         monthlyCompletedTasks: Math.max(0, Math.round(Number(row.monthlyCompletedTasks || 0) || 0)),
-        allTimeCompletedTasks: Math.max(0, Math.round(Number(row.completedTasks || 0) || 0))
+        allTimeCompletedTasks: Math.max(0, Math.round(Number(row.allTimeCompletedTasks ?? row.completedTasks ?? 0) || 0))
     };
 }
 
 function rankLeaderboardRows(rows = [], mode = 'weekly') {
     const leaderboardMode = normalizeLeaderboardMode(mode);
+    const modeProjectField = leaderboardMode === 'monthly'
+        ? 'monthlyCompletedProjects'
+        : (leaderboardMode === 'all' ? 'allTimeCompletedProjects' : 'weeklyCompletedProjects');
     return rows.map(row => ({
         ...row,
         leaderboardMode,
@@ -2201,10 +2204,10 @@ function rankLeaderboardRows(rows = [], mode = 'weekly') {
         scoreBreakdown: buildLeaderboardScoreBreakdown(row)
     })).sort((a, b) => {
         return (b.leaderboardScore - a.leaderboardScore)
-            || (b.completedTasks - a.completedTasks)
-            || (b.completedProjects - a.completedProjects)
-            || (b.sharedCompletedTasks - a.sharedCompletedTasks)
-            || (a.remainingTasks - b.remainingTasks)
+            || (Number(b[modeProjectField] || 0) - Number(a[modeProjectField] || 0))
+            || (Number(b.allTimeCompletedTasks || 0) - Number(a.allTimeCompletedTasks || 0))
+            || (Number(b.allTimeCompletedProjects || 0) - Number(a.allTimeCompletedProjects || 0))
+            || (Number(b.totalCompletionPercentage || 0) - Number(a.totalCompletionPercentage || 0))
             || String(a.username || '').localeCompare(String(b.username || ''));
     }).map((row, index) => ({ ...row, rank: index + 1 }));
 }
@@ -2213,7 +2216,7 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
     const leaderboardMode = normalizeLeaderboardMode(mode);
     const [accounts, projects, statsRecords] = await Promise.all([
         Account.find({}, 'username profilePic').lean(),
-        Project.find({ archived: false }, 'owner completed completedDate completedBy completedByName tasks collaborators').lean(),
+        Project.find({ archived: { $ne: true } }, 'owner completed completedDate completedBy completedByName tasks collaborators').lean(),
         Stats.find({}).lean()
     ]);
 
@@ -2232,6 +2235,8 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
             activeProjects: 0,
             completedProjects: 0,
             completedTasks: 0,
+            allTimeCompletedProjects: 0,
+            allTimeCompletedTasks: 0,
             remainingTasks: 0,
             totalTasks: 0,
             sharedProjects: 0,
@@ -2320,6 +2325,7 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
             }
 
             if (completedProject && projectCompletedBy === participantId) {
+                row.allTimeCompletedProjects += 1;
                 if (timestampInRange(project.completedDate, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
                 if (timestampInRange(project.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedProjects += 1;
                 if (timestampInRange(project.completedDate, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
@@ -2346,6 +2352,7 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
             creditedUserIds.forEach(userId => {
                 const row = rows.get(userId);
                 if (!row) return;
+                row.allTimeCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, dayStart, dayEnd)) row.dailyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedTasks += 1;
                 if (timestampInRange(task.completedDate, weekStart, weekEnd)) row.weeklyCompletedTasks += 1;
@@ -2433,6 +2440,8 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
         activeProjects: row.activeProjects,
         completedProjects: row.completedProjects,
         completedTasks: row.completedTasks,
+        allTimeCompletedProjects: row.allTimeCompletedProjects,
+        allTimeCompletedTasks: row.allTimeCompletedTasks,
         remainingTasks: row.remainingTasks,
         totalTasks: row.totalTasks,
         sharedProjects: row.sharedProjects,
