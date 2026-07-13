@@ -10641,21 +10641,27 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                       data-task-text="${normalizedTask.id}"
                       id="modal-task-text-${normalizedTask.id}"
                       onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${getTaskDisplayHtml(normalizedTask.text, 'New task')}</span>
-                <div class="task-glance-meta" aria-label="Task due date and priority">
-                    <span class="task-glance-detail task-glance-detail--due ${dueDate ? 'has-value' : 'is-empty'} ${taskOverdue ? 'is-overdue' : ''}"
-                          title="${escapeHtml(dueDateLabel)}">
-                        <svg class="task-glance-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
-                        </svg>
-                        <span>${dueDate ? escapeHtml(visibleTaskDueDate) : 'No due date'}</span>
-                    </span>
-                    <span class="task-glance-detail task-glance-detail--priority task-glance-detail--priority-${normalizedTask.tag}"
-                          title="Priority: ${escapeHtml(priorityBulkLabel)}"
-                          aria-label="Priority: ${escapeHtml(priorityBulkLabel)}">
-                        <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
-                    </span>
-                </div>
+                ${(dueDate || normalizedTask.tag !== 'none') ? `
+                    <div class="task-glance-meta" aria-label="Task due date and priority">
+                        ${dueDate ? `
+                            <span class="task-glance-detail task-glance-detail--due has-value ${taskOverdue ? 'is-overdue' : ''}"
+                                  title="${escapeHtml(dueDateLabel)}">
+                                <svg class="task-glance-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
+                                </svg>
+                                <span>${escapeHtml(visibleTaskDueDate)}</span>
+                            </span>
+                        ` : ''}
+                        ${normalizedTask.tag !== 'none' ? `
+                            <span class="task-glance-detail task-glance-detail--priority task-glance-detail--priority-${normalizedTask.tag}"
+                                  title="Priority: ${escapeHtml(priorityBulkLabel)}"
+                                  aria-label="Priority: ${escapeHtml(priorityBulkLabel)}">
+                                <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                            </span>
+                        ` : ''}
+                    </div>
+                ` : ''}
                 ${state.canEdit(projectId) ? `<div class="task-edit-rich-toolbar" id="modal-task-toolbar-${normalizedTask.id}">${buildRichTextToolbarMarkup(`modal-task-input-${normalizedTask.id}`)}</div>` : ''}
                 <div class="task-input task-input--textarea modal-task-edit-editor rich-text-editor"
                      id="modal-task-input-${normalizedTask.id}"
