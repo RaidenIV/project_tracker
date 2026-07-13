@@ -213,7 +213,7 @@ const LEVEL_UP_ACHIEVEMENT_META = {
 const LEADERBOARD_MODE_OPTIONS = {
     weekly: { label: 'Weekly', scoreLabel: 'Weekly Score', caption: 'Tasks completed this week', meta: 'this week', scoreField: 'weeklyCompletedTasks' },
     monthly: { label: 'Monthly', scoreLabel: 'Monthly Score', caption: 'Tasks completed this month', meta: 'this month', scoreField: 'monthlyCompletedTasks' },
-    all: { label: 'All Time', scoreLabel: 'All-Time Score', caption: 'Tasks completed all time', meta: 'all time', scoreField: 'completedTasks' }
+    all: { label: 'All Time', scoreLabel: 'All-Time Score', caption: 'Tasks completed all time', meta: 'all time', scoreField: 'allTimeCompletedTasks' }
 };
 
 function getCompetitiveAchievementIconClass(id) {
@@ -1701,6 +1701,7 @@ function closeOpenTaskMenus({ rerender = true } = {}) {
     uiState.openTaskActionMenu = null;
     uiState.openProjectPriorityMenu = null;
     uiState.openTaskCategoryMenu = null;
+    removeTaskActionMenuPortals();
 
     if (!rerender) return;
 
@@ -1734,6 +1735,18 @@ function handleTaskFloatingMenuDocumentClick(event) {
     ) return;
     if (!uiState.openTaskPriorityMenu && !uiState.openTaskActionMenu && !uiState.openProjectPriorityMenu && !uiState.openTaskCategoryMenu) return;
     closeOpenTaskMenus();
+}
+
+if (typeof window !== 'undefined' && !window.__taskActionMenuViewportPositionBound) {
+    const repositionOpenTaskActionMenu = () => {
+        const actionMenu = uiState.openTaskActionMenu;
+        if (actionMenu?.projectId && actionMenu?.taskId !== undefined) {
+            scheduleTaskActionMenuPosition(actionMenu.projectId, actionMenu.taskId);
+        }
+    };
+    window.addEventListener('resize', repositionOpenTaskActionMenu, { passive: true });
+    document.addEventListener('scroll', repositionOpenTaskActionMenu, { passive: true, capture: true });
+    window.__taskActionMenuViewportPositionBound = true;
 }
 
 function sortTasks(tasks) {
@@ -2054,6 +2067,46 @@ function selectRichTextEditorContents(editor) {
     selection.addRange(range);
 }
 
+function rememberRichTextEditorSelection(editor) {
+    if (!editor || typeof window === 'undefined') return false;
+    const selection = window.getSelection?.();
+    if (!selection || selection.rangeCount === 0) return false;
+    const range = selection.getRangeAt(0);
+    const commonElement = getRichTextSelectionNodeElement(range.commonAncestorContainer);
+    if (!commonElement || (commonElement !== editor && !editor.contains(commonElement))) return false;
+    editor.__savedRichTextRange = range.cloneRange();
+    return true;
+}
+
+function restoreRichTextEditorSelection(editor) {
+    if (!editor || typeof window === 'undefined') return false;
+    const savedRange = editor.__savedRichTextRange;
+    if (!savedRange) return false;
+
+    const startElement = getRichTextSelectionNodeElement(savedRange.startContainer);
+    const endElement = getRichTextSelectionNodeElement(savedRange.endContainer);
+    const selectionStillValid = startElement && endElement
+        && (startElement === editor || editor.contains(startElement))
+        && (endElement === editor || editor.contains(endElement));
+    if (!selectionStillValid) {
+        delete editor.__savedRichTextRange;
+        return false;
+    }
+
+    const selection = window.getSelection?.();
+    if (!selection) return false;
+    selection.removeAllRanges();
+    selection.addRange(savedRange.cloneRange());
+    return true;
+}
+
+function preserveRichTextSelectionForToolbar(editorId, event) {
+    const editor = document.getElementById(editorId);
+    if (!editor) return;
+    rememberRichTextEditorSelection(editor);
+    if (event?.type === 'mousedown') event.preventDefault?.();
+}
+
 function placeCaretAtEndOfRichTextEditor(editor) {
     if (!editor || typeof window === 'undefined') return;
     const selection = window.getSelection?.();
@@ -2130,16 +2183,13 @@ function elementHasRichTextCommand(element, command, stopAt = null) {
         const tagName = current.tagName?.toLowerCase?.() || '';
         const style = current.getAttribute?.('style') || '';
         if (command === 'bold') {
-            const fontWeight = window.getComputedStyle ? window.getComputedStyle(current).fontWeight : '';
-            if (tagName === 'strong' || tagName === 'b' || /font-weight\s*:\s*(bold|[6-9]00)/i.test(style) || Number.parseInt(fontWeight, 10) >= 600) return true;
+            if (tagName === 'strong' || tagName === 'b' || /font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) return true;
         }
         if (command === 'italic') {
-            const fontStyle = window.getComputedStyle ? window.getComputedStyle(current).fontStyle : '';
-            if (tagName === 'em' || tagName === 'i' || /font-style\s*:\s*italic/i.test(style) || fontStyle === 'italic') return true;
+            if (tagName === 'em' || tagName === 'i' || /font-style\s*:\s*italic/i.test(style)) return true;
         }
         if (command === 'underline') {
-            const textDecoration = window.getComputedStyle ? window.getComputedStyle(current).textDecorationLine : '';
-            if (tagName === 'u' || /text-decoration(?:-line)?\s*:[^;]*underline/i.test(style) || String(textDecoration).includes('underline')) return true;
+            if (tagName === 'u' || /text-decoration(?:-line)?\s*:[^;]*underline/i.test(style)) return true;
         }
         current = current.parentElement;
     }
@@ -2245,6 +2295,10 @@ function isDesktopModalTaskRichTextEditor(editor) {
 function getDesktopTaskRichTextCommandState(editor, command) {
     if (!isDesktopModalTaskRichTextEditor(editor) || !command) return null;
 
+    if (isSelectionInsideRichTextEditor(editor)) {
+        return !!queryRichTextCommandStateForEditor(editor, command);
+    }
+
     const explicitActive = getExplicitRichTextCommandState(editor, command);
     if (explicitActive !== null) return explicitActive;
 
@@ -2264,8 +2318,11 @@ function handleDesktopTaskRichTextBeforeInput(editor, event) {
     if (!isDesktopModalTaskRichTextEditor(editor) || !isRichTextEditorControlActive(editor)) return;
     const command = getRichTextBeforeInputCommand(event);
     if (!command) return;
-    const currentActive = !!getDesktopTaskRichTextCommandState(editor, command);
-    setDesktopTaskRichTextCommandState(editor, command, !currentActive);
+    window.requestAnimationFrame(() => {
+        const isActive = !!queryRichTextCommandStateForEditor(editor, command);
+        setDesktopTaskRichTextCommandState(editor, command, isActive);
+        syncRichTextToolbarState(editor);
+    });
 }
 
 function syncDesktopTaskRichTextTypingMode(editor) {
@@ -2273,12 +2330,16 @@ function syncDesktopTaskRichTextTypingMode(editor) {
     getRichTextToolbarCommands().forEach(command => {
         const explicitActive = getExplicitRichTextCommandState(editor, command);
         const queriedActive = queryRichTextCommandStateForEditor(editor, command);
-        const isActive = explicitActive !== null
-            ? explicitActive
-            : !!(queriedActive || getStoredRichTextCommandState(editor, command) || getTaskEditToolbarCommandButtonState(editor, command));
+        const selectionInsideEditor = isSelectionInsideRichTextEditor(editor);
+        const isActive = selectionInsideEditor
+            ? !!queriedActive
+            : (explicitActive !== null
+                ? explicitActive
+                : !!(getStoredRichTextCommandState(editor, command) || getTaskEditToolbarCommandButtonState(editor, command)));
 
-        if (explicitActive === null && queriedActive) {
-            setStoredRichTextCommandState(editor, command, true);
+        if (selectionInsideEditor) {
+            setExplicitRichTextCommandState(editor, command, isActive);
+            setStoredRichTextCommandState(editor, command, isActive);
         }
 
         setTaskEditToolbarCommandState(editor, command, isActive);
@@ -2341,9 +2402,16 @@ function syncRichTextToolbarState(editorOrId) {
         const taskButtonActive = isEditorActive && isDesktopModalTaskRichTextEditor(editor) && command
             ? getTaskEditToolbarCommandButtonState(editor, command)
             : false;
-        const isActive = explicitActive !== null
-            ? explicitActive
-            : !!(queriedActive || storedActive || taskButtonActive);
+        const selectionInsideEditor = isEditorActive && isSelectionInsideRichTextEditor(editor);
+        const isActive = selectionInsideEditor
+            ? queriedActive
+            : (explicitActive !== null
+                ? explicitActive
+                : !!(storedActive || taskButtonActive));
+        if (selectionInsideEditor && isDesktopModalTaskRichTextEditor(editor) && command) {
+            setExplicitRichTextCommandState(editor, command, isActive);
+            setStoredRichTextCommandState(editor, command, isActive);
+        }
         setRichTextToolbarButtonState(button, command, isActive);
     });
 }
@@ -2368,18 +2436,24 @@ function applyRichTextCommand(editorId, command) {
     const safeCommand = { bold: 'bold', italic: 'italic', underline: 'underline' }[command];
     if (!safeCommand) return;
     const isTaskEditor = isDesktopModalTaskRichTextEditor(editor);
-    const wasTaskCommandActive = isTaskEditor
-        ? !!getDesktopTaskRichTextCommandState(editor, safeCommand)
-        : false;
+    restoreRichTextEditorSelection(editor);
     editor.focus({ preventScroll: true });
+    restoreRichTextEditorSelection(editor);
+    const wasTaskCommandActive = isTaskEditor
+        ? !!queryRichTextCommandStateForEditor(editor, safeCommand)
+        : false;
     try {
         document.execCommand('styleWithCSS', false, false);
     } catch {
         // Some browsers no-op or reject styleWithCSS. The formatting command still runs below.
     }
     document.execCommand(safeCommand, false, null);
+    rememberRichTextEditorSelection(editor);
     if (isTaskEditor) {
-        const nextTaskCommandActive = !wasTaskCommandActive;
+        const queriedTaskCommandActive = !!queryRichTextCommandStateForEditor(editor, safeCommand);
+        const nextTaskCommandActive = queriedTaskCommandActive === wasTaskCommandActive
+            ? !wasTaskCommandActive
+            : queriedTaskCommandActive;
         setDesktopTaskRichTextCommandState(editor, safeCommand, nextTaskCommandActive);
     }
     syncRichTextToolbarState(editor);
@@ -2400,7 +2474,7 @@ function buildRichTextToolbarMarkup(editorId, disabled = false) {
     const buttons = getRichTextToolbarCommands().map(command => {
         const label = getRichTextToolbarButtonLabel(command);
         const modifierClass = `rich-text-toolbar-button--${command}`;
-        return `<button class="rich-text-toolbar-button ${modifierClass}" type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand(${editorIdLiteral}, '${command}')" aria-label="${label}" aria-pressed="false" title="${label}" data-rich-text-editor="${safeEditorId}" data-rich-text-command="${command}">${getRichTextToolbarButtonInnerMarkup(command)}</button>`;
+        return `<button class="rich-text-toolbar-button ${modifierClass}" type="button" onpointerdown="preserveRichTextSelectionForToolbar(${editorIdLiteral}, event)" onmousedown="preserveRichTextSelectionForToolbar(${editorIdLiteral}, event)" onclick="applyRichTextCommand(${editorIdLiteral}, '${command}')" aria-label="${label}" aria-pressed="false" title="${label}" data-rich-text-editor="${safeEditorId}" data-rich-text-command="${command}">${getRichTextToolbarButtonInnerMarkup(command)}</button>`;
     }).join('');
     return `
         <div class="rich-text-toolbar" role="toolbar" aria-label="Text formatting tools" data-rich-text-editor="${safeEditorId}">
@@ -3216,6 +3290,8 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         activeProjects: 0,
         completedProjects: 0,
         completedTasks: 0,
+        allTimeCompletedProjects: 0,
+        allTimeCompletedTasks: 0,
         remainingTasks: 0,
         totalTasks: 0,
         sharedProjects: 0,
@@ -3254,13 +3330,22 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
         const completedProject = isProjectCompleted(project);
         const completedTaskCount = tasks.filter(task => isTaskCompleted(task)).length;
-        const creditedCompletedTasks = tasks.filter(task => isTaskCompleted(task) && (!task.completedBy || task.completedBy === userId));
+        const isCurrentUserProjectOwner = project.userRole === 'owner';
+        const creditedCompletedTasks = tasks.filter(task => (
+            isTaskCompleted(task)
+            && (task.completedBy === userId || (!task.completedBy && isCurrentUserProjectOwner))
+        ));
+        row.allTimeCompletedTasks += creditedCompletedTasks.length;
         const completedRecords = creditedCompletedTasks.map(task => ({ timestamp: getCompletionTimestamp(task.completedDate) }));
         row.dailyCompletedTasks += countLocalCompletedRecords(completedRecords, dayStart, dayEnd);
         row.weeklyCompletedTasks += countLocalCompletedRecords(completedRecords, weekStart, weekEnd);
         row.monthlyCompletedTasks += countLocalCompletedRecords(completedRecords, monthStart, monthEnd);
         const projectCompletedTimestamp = getCompletionTimestamp(project.completedDate);
-        const projectCreditedToUser = completedProject && (!project.completedBy || project.completedBy === userId);
+        const projectCreditedToUser = completedProject && (
+            project.completedBy === userId
+            || (!project.completedBy && isCurrentUserProjectOwner)
+        );
+        if (projectCreditedToUser) row.allTimeCompletedProjects += 1;
         if (projectCreditedToUser && isTimestampWithinRange(projectCompletedTimestamp, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
         if (projectCreditedToUser && isTimestampWithinRange(projectCompletedTimestamp, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
         if (projectCreditedToUser && isTimestampWithinRange(projectCompletedTimestamp, monthStart, monthEnd)) row.monthlyCompletedProjects += 1;
@@ -3299,7 +3384,7 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
     row.scoreBreakdown = {
         weeklyCompletedTasks: Math.max(0, Math.round(Number(row.weeklyCompletedTasks || 0) || 0)),
         monthlyCompletedTasks: Math.max(0, Math.round(Number(row.monthlyCompletedTasks || 0) || 0)),
-        allTimeCompletedTasks: Math.max(0, Math.round(Number(row.completedTasks || 0) || 0))
+        allTimeCompletedTasks: Math.max(0, Math.round(Number(row.allTimeCompletedTasks || 0) || 0))
     };
     row.leaderboardScore = calculateLocalLeaderboardScore(row, row.leaderboardMode);
     return row;
@@ -4301,15 +4386,20 @@ function renderLeaderboardPanel() {
     if (currentEntry && currentUserId) entriesByUserId.set(currentUserId, currentEntry);
 
     const rankedByScore = Array.from(entriesByUserId.values()).sort((a, b) => {
+        const aRank = Number(a?.rank || 0);
+        const bRank = Number(b?.rank || 0);
+        const aHasServerRank = Number.isFinite(aRank) && aRank > 0;
+        const bHasServerRank = Number.isFinite(bRank) && bRank > 0;
+        if (aHasServerRank && bHasServerRank && aRank !== bRank) return aRank - bRank;
+        if (aHasServerRank !== bHasServerRank) return aHasServerRank ? -1 : 1;
+
         return (getLeaderboardScoreValue(b) - getLeaderboardScoreValue(a))
-            || (toLeaderboardNumber(b?.completedTasks) - toLeaderboardNumber(a?.completedTasks))
-            || (toLeaderboardNumber(b?.completedProjects) - toLeaderboardNumber(a?.completedProjects))
-            || (toLeaderboardNumber(b?.sharedCompletedTasks) - toLeaderboardNumber(a?.sharedCompletedTasks))
-            || (toLeaderboardNumber(a?.remainingTasks) - toLeaderboardNumber(b?.remainingTasks))
+            || (toLeaderboardNumber(b?.allTimeCompletedTasks ?? b?.completedTasks) - toLeaderboardNumber(a?.allTimeCompletedTasks ?? a?.completedTasks))
+            || (toLeaderboardNumber(b?.allTimeCompletedProjects ?? b?.completedProjects) - toLeaderboardNumber(a?.allTimeCompletedProjects ?? a?.completedProjects))
             || getLeaderboardUsername(a).localeCompare(getLeaderboardUsername(b));
     }).map((entry, index) => ({
         ...entry,
-        rank: entry.rank || index + 1
+        rank: Number(entry?.rank || 0) > 0 ? Number(entry.rank) : index + 1
     }));
 
     const visibleEntries = rankedByScore.slice(0, 5);
@@ -4327,8 +4417,8 @@ function renderLeaderboardPanel() {
         const username = getLeaderboardDisplayName(entry, isCurrent);
         const completionPercentage = getLeaderboardCompletionValue(entry);
         const leaderboardScore = getLeaderboardScoreValue(entry);
-        const completedProjects = Number(entry.completedProjects || 0);
-        const completedTasks = Number(entry.completedTasks || 0);
+        const completedProjects = Number(entry.allTimeCompletedProjects ?? entry.completedProjects ?? 0);
+        const completedTasks = Number(entry.allTimeCompletedTasks ?? entry.completedTasks ?? 0);
         const rank = String(entry.rank || '—').padStart(2, '0');
         const meta = `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'} ${modeConfig.meta} • ${completionPercentage}% complete • ${completedProjects} project${completedProjects === 1 ? '' : 's'} • ${completedTasks} total tasks`;
         const rankClass = rank === '01' ? ' leaderboard-rank--top' : '';
@@ -4411,9 +4501,9 @@ function buildLeaderboardProfileModalMarkup(entry) {
         ['Level', String(playerLevel)],
         [leaderboardModeConfig.scoreLabel, `${leaderboardScore} task${leaderboardScore === 1 ? '' : 's'}`],
         ['Total Completion', `${completion}%`],
-        ['Completed Tasks', Number(entry.completedTasks || 0)],
+        ['Completed Tasks', Number(entry.allTimeCompletedTasks ?? entry.completedTasks ?? 0)],
         ['Remaining Tasks', Number(entry.remainingTasks || 0)],
-        ['Completed Projects', Number(entry.completedProjects || 0)],
+        ['Completed Projects', Number(entry.allTimeCompletedProjects ?? entry.completedProjects ?? 0)],
         ['Active Projects', Number(entry.activeProjects || 0)],
         ['Shared Projects', Number(entry.sharedProjects || 0)],
         ['Shared Tasks', Number(entry.sharedTasks || 0)],
@@ -7810,6 +7900,36 @@ function openTaskDueDatePicker(projectId, taskId, event) {
     }
 }
 
+function findTaskActionMenuDueDateInput(projectId, taskId) {
+    return Array.from(document.querySelectorAll('#projectModal .task-action-menu-date-input')).find(input => (
+        input.dataset.taskActionMenuProject === String(projectId)
+        && Number(input.dataset.taskActionMenuTask) === Number(taskId)
+    )) || null;
+}
+
+function openTaskActionMenuDueDatePicker(projectId, taskId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    const dueInput = findTaskActionMenuDueDateInput(projectId, taskId);
+    if (!dueInput || dueInput.disabled) return;
+
+    try {
+        dueInput.focus({ preventScroll: true });
+        if (typeof dueInput.showPicker === 'function') {
+            dueInput.showPicker();
+        } else {
+            dueInput.click();
+        }
+    } catch (error) {
+        try {
+            dueInput.click();
+        } catch {
+            dueInput.focus({ preventScroll: true });
+        }
+    }
+}
+
 function addTaskToProject(projectId) {
     if (!state.canEdit(projectId)) return;
     const project = state.findProject(projectId);
@@ -10521,6 +10641,21 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                       data-task-text="${normalizedTask.id}"
                       id="modal-task-text-${normalizedTask.id}"
                       onclick="event.stopPropagation(); editModalTask(${normalizedTask.id})">${getTaskDisplayHtml(normalizedTask.text, 'New task')}</span>
+                <div class="task-glance-meta" aria-label="Task due date and priority">
+                    <span class="task-glance-detail task-glance-detail--due ${dueDate ? 'has-value' : 'is-empty'} ${taskOverdue ? 'is-overdue' : ''}"
+                          title="${escapeHtml(dueDateLabel)}">
+                        <svg class="task-glance-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
+                        </svg>
+                        <span>${dueDate ? escapeHtml(visibleTaskDueDate) : 'No due date'}</span>
+                    </span>
+                    <span class="task-glance-detail task-glance-detail--priority task-glance-detail--priority-${normalizedTask.tag}"
+                          title="Priority: ${escapeHtml(priorityBulkLabel)}">
+                        <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                        <span>${escapeHtml(priorityBulkLabel)}</span>
+                    </span>
+                </div>
                 ${state.canEdit(projectId) ? `<div class="task-edit-rich-toolbar" id="modal-task-toolbar-${normalizedTask.id}">${buildRichTextToolbarMarkup(`modal-task-input-${normalizedTask.id}`)}</div>` : ''}
                 <div class="task-input task-input--textarea modal-task-edit-editor rich-text-editor"
                      id="modal-task-input-${normalizedTask.id}"
@@ -10601,7 +10736,10 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
                 </button>
-                <div class="task-action-menu-control ${actionMenuOpen ? 'is-open' : ''}" onclick="event.stopPropagation();">
+                <div class="task-action-menu-control ${actionMenuOpen ? 'is-open' : ''}"
+                     data-task-action-menu-project="${escapeHtml(projectId)}"
+                     data-task-action-menu-task="${normalizedTask.id}"
+                     onclick="event.stopPropagation();">
                     <button class="task-action-menu-button"
                             type="button"
                             aria-label="Task actions"
@@ -10612,22 +10750,35 @@ function renderModalTaskItem(projectId, task, selectedTasks = new Set(), sortMod
                         </svg>
                     </button>
                     ${actionMenuOpen ? `
-                        <div class="task-action-menu-popover" role="menu" aria-label="Task actions" onclick="event.stopPropagation();">
+                        <div class="task-action-menu-popover"
+                             data-task-action-menu-project="${escapeHtml(projectId)}"
+                             data-task-action-menu-task="${normalizedTask.id}"
+                             role="menu"
+                             aria-label="Task actions"
+                             onclick="event.stopPropagation();">
                             <button class="task-action-menu-option" type="button" role="menuitem" onclick="copyTaskToClipboard('${projectId}', ${normalizedTask.id}, event); closeTaskActionMenu('${projectId}')">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>Copy Task</span>
                             </button>
-                            <label class="task-action-menu-option task-action-menu-option--date" role="menuitem" title="${escapeHtml(dueDateLabel)}">
-                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2.5"></rect><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path></svg>
-                                <span>${dueDate ? `Edit Due Date (${escapeHtml(visibleTaskDueDate)})` : 'Add Due Date'}</span>
+                            <div class="task-action-menu-date-control">
+                                <button class="task-action-menu-option task-action-menu-option--date"
+                                        type="button"
+                                        role="menuitem"
+                                        title="${escapeHtml(dueDateLabel)}"
+                                        onclick="openTaskActionMenuDueDatePicker('${projectId}', ${normalizedTask.id}, event)">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2.5"></rect><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                                    <span>${dueDate ? `Edit Due Date (${escapeHtml(visibleTaskDueDate)})` : 'Add Due Date'}</span>
+                                </button>
                                 <input class="task-action-menu-date-input"
                                        type="date"
                                        value="${escapeHtml(dueDate)}"
+                                       data-task-action-menu-project="${escapeHtml(projectId)}"
+                                       data-task-action-menu-task="${normalizedTask.id}"
+                                       tabindex="-1"
                                        aria-label="Task due date${dueDate ? `: ${escapeHtml(visibleTaskDueDate)}` : ''}"
                                        onchange="updateTaskDueDate('${projectId}', ${normalizedTask.id}, this.value); closeTaskActionMenu('${projectId}')"
-                                       onclick="event.stopPropagation();"
-                                       onpointerdown="event.stopPropagation();">
-                            </label>
+                                       onclick="event.stopPropagation();">
+                            </div>
                             <button class="task-action-menu-option" type="button" role="menuitem" onclick="closeTaskActionMenu('${projectId}', false); openTaskNoteModal('${projectId}', ${normalizedTask.id}, event); renderModalTaskList('${projectId}')">
                                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h8M8 15h4"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12a2 2 0 012 2v11.5a2 2 0 01-2 2H9l-5 3V5a2 2 0 012-2z"></path></svg>
                                 <span>${hasTaskNote ? 'Edit Task Note' : 'Add Task Note'}</span>
@@ -10904,6 +11055,7 @@ function renderModalTaskList(projectId) {
 
     taskList.dataset.sortMode = sortMode;
     taskList.dataset.activeCategory = activeCategory;
+    removeTaskActionMenuPortals();
     taskList.innerHTML = displayTasks.map(task => renderModalTaskItem(projectId, task, selectedTasks, sortMode)).join('');
     renderCompletedTaskDisplayControls(projectId, completedDisplayState, hideCompleted);
     renderTaskSelectAllControl(projectId, displayTasks);
@@ -10911,6 +11063,10 @@ function renderModalTaskList(projectId) {
     renderTaskCategoryControls(projectId);
     updateProjectProgress(projectId);
 
+    const openActionMenu = uiState.openTaskActionMenu;
+    if (openActionMenu?.projectId === projectId && openActionMenu?.taskId !== undefined) {
+        scheduleTaskActionMenuPosition(openActionMenu.projectId, openActionMenu.taskId);
+    }
     setTimeout(() => setupTaskDragAndDrop(projectId), 100);
 }
 
@@ -10933,6 +11089,79 @@ function setProjectTaskCategoryFilter(projectId, categoryValue) {
     renderModalTaskList(projectId);
 }
 
+function removeTaskActionMenuPortals() {
+    document.querySelectorAll('#projectModal > .task-action-menu-popover--portal').forEach(popover => popover.remove());
+}
+
+function findTaskActionMenuPortal(projectId, taskId) {
+    return Array.from(document.querySelectorAll('#projectModal > .task-action-menu-popover--portal')).find(popover => (
+        popover.dataset.taskActionMenuProject === String(projectId)
+        && Number(popover.dataset.taskActionMenuTask) === Number(taskId)
+    )) || null;
+}
+
+function positionOpenTaskActionMenu(projectId, taskId) {
+    const controls = document.querySelectorAll('#projectModal .task-action-menu-control.is-open');
+    const control = Array.from(controls).find(candidate => (
+        candidate.dataset.taskActionMenuProject === String(projectId)
+        && Number(candidate.dataset.taskActionMenuTask) === Number(taskId)
+    ));
+    const projectModal = document.getElementById('projectModal');
+    let popover = findTaskActionMenuPortal(projectId, taskId) || control?.querySelector('.task-action-menu-popover');
+    if (!control || !popover || !projectModal) return;
+
+    if (popover.parentElement !== projectModal) {
+        removeTaskActionMenuPortals();
+        popover.classList.add('task-action-menu-popover--portal');
+        projectModal.appendChild(popover);
+    }
+
+    popover.classList.remove('opens-upward');
+    popover.style.removeProperty('--task-action-menu-available-height');
+    popover.style.removeProperty('--task-action-menu-top');
+    popover.style.removeProperty('--task-action-menu-left');
+
+    const viewportPadding = 12;
+    const menuGap = 8;
+    const viewportWidth = window.innerWidth;
+    const viewportBottom = window.innerHeight - viewportPadding;
+    const modalSurface = control.closest('.modal-content');
+    const modalRect = modalSurface?.getBoundingClientRect?.();
+    const boundaryTop = modalRect
+        ? Math.max(viewportPadding, modalRect.top + viewportPadding)
+        : viewportPadding;
+    const boundaryBottom = modalRect
+        ? Math.min(viewportBottom, modalRect.bottom - viewportPadding)
+        : viewportBottom;
+    const controlRect = control.getBoundingClientRect();
+    const availableAbove = Math.max(0, controlRect.top - boundaryTop - menuGap);
+    const availableBelow = Math.max(0, boundaryBottom - controlRect.bottom - menuGap);
+    const naturalHeight = Math.min(popover.scrollHeight || popover.offsetHeight || 0, 544);
+    const opensUpward = availableBelow < naturalHeight && availableAbove > availableBelow;
+    const availableHeight = Math.max(80, Math.floor(opensUpward ? availableAbove : availableBelow));
+
+    popover.classList.toggle('opens-upward', opensUpward);
+    popover.style.setProperty('--task-action-menu-available-height', `${availableHeight}px`);
+
+    const menuRect = popover.getBoundingClientRect();
+    const menuWidth = menuRect.width || 288;
+    const menuHeight = menuRect.height || Math.min(naturalHeight, availableHeight);
+    const maxLeft = Math.max(viewportPadding, viewportWidth - menuWidth - viewportPadding);
+    const left = Math.min(Math.max(viewportPadding, controlRect.right - menuWidth), maxLeft);
+    const requestedTop = opensUpward
+        ? controlRect.top - menuGap - menuHeight
+        : controlRect.bottom + menuGap;
+    const maxTop = Math.max(boundaryTop, boundaryBottom - menuHeight);
+    const top = Math.min(Math.max(boundaryTop, requestedTop), maxTop);
+
+    popover.style.setProperty('--task-action-menu-left', `${Math.round(left)}px`);
+    popover.style.setProperty('--task-action-menu-top', `${Math.round(top)}px`);
+}
+
+function scheduleTaskActionMenuPosition(projectId, taskId) {
+    requestAnimationFrame(() => positionOpenTaskActionMenu(projectId, taskId));
+}
+
 function toggleTaskActionMenu(projectId, taskId, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -10942,11 +11171,13 @@ function toggleTaskActionMenu(projectId, taskId, event) {
     uiState.openTaskCategoryMenu = null;
     uiState.openTaskActionMenu = isOpen ? null : { projectId, taskId };
     renderModalTaskList(projectId);
+    if (!isOpen) scheduleTaskActionMenuPosition(projectId, taskId);
 }
 
 function closeTaskActionMenu(projectId = null, rerender = true) {
     const actionMenu = uiState.openTaskActionMenu;
     uiState.openTaskActionMenu = null;
+    removeTaskActionMenuPortals();
     if (!rerender) return;
     const nextProjectId = projectId || actionMenu?.projectId;
     if (nextProjectId) renderModalTaskList(nextProjectId);
@@ -12076,6 +12307,8 @@ function toggleHideCompleted() {
 
 function closeProjectModal() {
     const modal = document.getElementById('projectModal');
+    removeTaskActionMenuPortals();
+    uiState.openTaskActionMenu = null;
     modal.classList.remove('active');
     document.body.classList.remove('project-modal-open');
     clearOpenProjectModalState();
@@ -14059,6 +14292,7 @@ window.handleModalTaskEditKeydown = handleModalTaskEditKeydown;
 window.autoResizeModalTaskInput = autoResizeModalTaskInput;
 window.addTaskToModal = addTaskToModal;
 window.updateTaskDueDate = updateTaskDueDate;
+window.openTaskActionMenuDueDatePicker = openTaskActionMenuDueDatePicker;
 window.updateProjectDueDate = updateProjectDueDate;
 window.deleteTaskFromModal = deleteTaskFromModal;
 window.completeProjectFromModal = completeProjectFromModal;
@@ -14097,6 +14331,7 @@ window.updateProjectNoteTitle = updateProjectNoteTitle;
 window.updateProjectNoteBody = updateProjectNoteBody;
 window.getRichTextEditorValue = getRichTextEditorValue;
 window.applyRichTextCommand = applyRichTextCommand;
+window.preserveRichTextSelectionForToolbar = preserveRichTextSelectionForToolbar;
 window.handleProjectNoteBodyInput = handleProjectNoteBodyInput;
 window.addProjectNoteLink = addProjectNoteLink;
 window.closeProjectNoteLinkModal = closeProjectNoteLinkModal;

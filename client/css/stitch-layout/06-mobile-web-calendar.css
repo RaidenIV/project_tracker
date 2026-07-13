@@ -5321,9 +5321,15 @@ body[data-theme] .task-assignee-check {
 
 #projectModal .task-action-menu-popover,
 body[data-theme] #projectModal .task-action-menu-popover {
-    max-height: min(72vh, 34rem) !important;
+    max-height: min(var(--task-action-menu-available-height, 72vh), 34rem) !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
+}
+
+#projectModal .task-action-menu-popover.opens-upward,
+body[data-theme] #projectModal .task-action-menu-popover.opens-upward {
+    top: auto !important;
+    bottom: calc(100% + 0.45rem) !important;
 }
 
 /* ============================================================================
@@ -5343,3 +5349,138 @@ body[data-theme] #projectModal .task-item.task-item--assigned:hover {
     background: color-mix(in srgb, var(--accent, #ff8a00) 14%, var(--surface, #111827)) !important;
 }
 
+
+/* ============================================================================
+   Task action menu top-layer portal
+   Date: 2026-07-09
+   Scope: open individual-task kebab menu only
+   ============================================================================ */
+#projectModal > .task-action-menu-popover.task-action-menu-popover--portal,
+#projectModal > .task-action-menu-popover.task-action-menu-popover--portal.opens-upward,
+body[data-theme] #projectModal > .task-action-menu-popover.task-action-menu-popover--portal,
+body[data-theme] #projectModal > .task-action-menu-popover.task-action-menu-popover--portal.opens-upward {
+    position: fixed !important;
+    top: var(--task-action-menu-top, 0px) !important;
+    left: var(--task-action-menu-left, 0px) !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: 2147483000 !important;
+    isolation: isolate !important;
+}
+
+/* ============================================================================
+   Task menu due-date trigger and at-a-glance metadata
+   Date: 2026-07-13
+   Scope: individual tasks inside the project modal only
+   ============================================================================ */
+#projectModal .task-action-menu-date-control,
+body[data-theme] #projectModal .task-action-menu-date-control {
+    position: relative !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+#projectModal .task-action-menu-date-control > .task-action-menu-option--date,
+body[data-theme] #projectModal .task-action-menu-date-control > .task-action-menu-option--date {
+    width: 100% !important;
+}
+
+#projectModal .task-action-menu-date-control > .task-action-menu-date-input,
+body[data-theme] #projectModal .task-action-menu-date-control > .task-action-menu-date-input {
+    position: absolute !important;
+    inset: auto !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    clip-path: inset(50%) !important;
+    cursor: default !important;
+}
+
+#projectModal .task-glance-meta,
+body[data-theme] #projectModal .task-glance-meta {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.32rem 0.45rem !important;
+    min-width: 0 !important;
+    margin-top: 0.34rem !important;
+}
+
+#projectModal .task-glance-detail,
+body[data-theme] #projectModal .task-glance-detail {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.28rem !important;
+    min-width: 0 !important;
+    min-height: 1.35rem !important;
+    padding: 0.16rem 0.42rem !important;
+    border: 1px solid color-mix(in srgb, var(--line, rgba(148, 163, 184, 0.28)) 82%, transparent) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--surface-2, #171820) 88%, transparent) !important;
+    color: var(--muted, #9ca3af) !important;
+    font-size: 0.66rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+#projectModal .task-glance-detail--due.has-value,
+body[data-theme] #projectModal .task-glance-detail--due.has-value {
+    color: var(--heading, #f8fafc) !important;
+}
+
+#projectModal .task-glance-detail--due.is-overdue,
+body[data-theme] #projectModal .task-glance-detail--due.is-overdue {
+    border-color: color-mix(in srgb, #ef4444 52%, transparent) !important;
+    background: color-mix(in srgb, #ef4444 12%, var(--surface-2, #171820)) !important;
+    color: #ff6b72 !important;
+}
+
+#projectModal .task-glance-icon,
+body[data-theme] #projectModal .task-glance-icon {
+    flex: 0 0 0.76rem !important;
+    width: 0.76rem !important;
+    height: 0.76rem !important;
+    stroke-width: 2 !important;
+}
+
+#projectModal .task-glance-detail .task-tag-flag,
+body[data-theme] #projectModal .task-glance-detail .task-tag-flag {
+    flex: 0 0 0.72rem !important;
+    width: 0.72rem !important;
+    height: 0.72rem !important;
+}
+
+#projectModal .task-item.is-editing .task-glance-meta,
+body[data-theme] #projectModal .task-item.is-editing .task-glance-meta {
+    display: none !important;
+}
+
+#projectModal .task-text strong,
+#projectModal .rich-text-editor strong,
+body[data-theme] #projectModal .task-text strong,
+body[data-theme] #projectModal .rich-text-editor strong {
+    font-weight: 800 !important;
+}
+
+@media (max-width: 560px) {
+    #projectModal .task-glance-meta,
+    body[data-theme] #projectModal .task-glance-meta {
+        gap: 0.28rem 0.38rem !important;
+        margin-top: 0.3rem !important;
+    }
+
+    #projectModal .task-glance-detail,
+    body[data-theme] #projectModal .task-glance-detail {
+        min-height: 1.26rem !important;
+        padding: 0.14rem 0.36rem !important;
+        font-size: 0.62rem !important;
+    }
+}
