@@ -1985,7 +1985,10 @@ function plainTextToRichTextHtml(value = '') {
 }
 
 function sanitizeRichTextHtml(value = '') {
-    const raw = String(value ?? '');
+    // Zero-width caret markers are used only while editing to create a stable
+    // boundary between formatted and unformatted typing modes. Never persist
+    // those invisible editor-only characters with the task text.
+    const raw = String(value ?? '').replace(/\u200B/g, '');
     if (!raw.trim()) return '';
     // Clipboard HTML often wraps plain text in styled <span> elements. Treat any
     // actual element markup as HTML so unsupported wrappers are removed while
@@ -2045,6 +2048,7 @@ function getRichTextPlainText(value = '') {
     const container = document.createElement('div');
     container.innerHTML = hasRichTextMarkup(raw) ? sanitizeRichTextHtml(raw) : plainTextToRichTextHtml(raw);
     return (container.innerText || container.textContent || '')
+        .replace(/\u200B/g, '')
         .replace(/\u00a0/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
@@ -2104,7 +2108,10 @@ function preserveRichTextSelectionForToolbar(editorId, event) {
     const editor = document.getElementById(editorId);
     if (!editor) return;
     rememberRichTextEditorSelection(editor);
-    if (event?.type === 'mousedown') event.preventDefault?.();
+    // Keep toolbar pointer interactions from moving focus out of the
+    // contenteditable. Losing focus can trigger the task blur/save cycle,
+    // replace the editor DOM, and invalidate the caret before the command runs.
+    event?.preventDefault?.();
 }
 
 function placeCaretAtEndOfRichTextEditor(editor) {
@@ -2194,6 +2201,115 @@ function elementHasRichTextCommand(element, command, stopAt = null) {
         current = current.parentElement;
     }
     return false;
+}
+
+
+function getRichTextFormattingAncestor(node, command, editor) {
+    let current = getRichTextSelectionNodeElement(node);
+    while (current && current !== editor) {
+        const tagName = current.tagName?.toLowerCase?.() || '';
+        const style = current.getAttribute?.('style') || '';
+        if (command === 'italic' && (tagName === 'em' || tagName === 'i' || /font-style\s*:\s*italic/i.test(style))) {
+            return current;
+        }
+        current = current.parentElement;
+    }
+    return null;
+}
+
+function setRichTextSelectionRange(range) {
+    if (!range || typeof window === 'undefined') return false;
+    const selection = window.getSelection?.();
+    if (!selection) return false;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return true;
+}
+
+function richTextNodeHasVisibleContent(node) {
+    if (!node) return false;
+    const text = String(node.textContent || '').replace(/\u200B/g, '');
+    return !!text || !!node.querySelector?.('br');
+}
+
+function enableCollapsedTaskItalicMode(editor, range) {
+    if (!editor || !range || !range.collapsed) return false;
+
+    // Reuse an existing editor-only boundary marker when the user toggles the
+    // mode repeatedly without typing, rather than accumulating invisible nodes.
+    if (range.startContainer?.nodeType === Node.TEXT_NODE
+        && /^\u200B+$/.test(range.startContainer.nodeValue || '')) {
+        const oldMarker = range.startContainer;
+        const cleanRange = document.createRange();
+        cleanRange.setStartBefore(oldMarker);
+        cleanRange.collapse(true);
+        oldMarker.remove();
+        range = cleanRange;
+    }
+
+    const wrapper = document.createElement('em');
+    const marker = document.createTextNode('\u200B');
+    wrapper.appendChild(marker);
+    range.insertNode(wrapper);
+
+    const caretRange = document.createRange();
+    caretRange.setStart(marker, marker.nodeValue?.length || 1);
+    caretRange.collapse(true);
+    setRichTextSelectionRange(caretRange);
+    editor.__savedRichTextRange = caretRange.cloneRange();
+    return true;
+}
+
+function disableCollapsedTaskItalicMode(editor, range, italicAncestor) {
+    if (!editor || !range || !range.collapsed || !italicAncestor?.parentNode) return false;
+
+    const parent = italicAncestor.parentNode;
+    const trailingRange = document.createRange();
+    trailingRange.setStart(range.startContainer, range.startOffset);
+    trailingRange.setEnd(italicAncestor, italicAncestor.childNodes.length);
+    const trailingContent = trailingRange.extractContents();
+
+    const marker = document.createTextNode('\u200B');
+    const trailingItalic = italicAncestor.cloneNode(false);
+    trailingItalic.appendChild(trailingContent);
+
+    parent.insertBefore(marker, italicAncestor.nextSibling);
+    if (richTextNodeHasVisibleContent(trailingItalic)) {
+        parent.insertBefore(trailingItalic, marker.nextSibling);
+    }
+    if (!richTextNodeHasVisibleContent(italicAncestor)) {
+        italicAncestor.remove();
+    }
+
+    const caretRange = document.createRange();
+    caretRange.setStart(marker, marker.nodeValue?.length || 1);
+    caretRange.collapse(true);
+    setRichTextSelectionRange(caretRange);
+    editor.__savedRichTextRange = caretRange.cloneRange();
+    return true;
+}
+
+function toggleCollapsedTaskItalic(editor) {
+    if (!isModalTaskRichTextEditor(editor) || typeof window === 'undefined') return null;
+    const selection = window.getSelection?.();
+    if (!selection || selection.rangeCount === 0 || !selection.isCollapsed || !isSelectionInsideRichTextEditor(editor)) return null;
+
+    const range = selection.getRangeAt(0);
+    const rangeElement = getRichTextSelectionNodeElement(range.commonAncestorContainer);
+    if (!rangeElement || (rangeElement !== editor && !editor.contains(rangeElement))) return null;
+
+    const italicAncestor = getRichTextFormattingAncestor(range.startContainer, 'italic', editor);
+    const currentlyItalic = !!italicAncestor;
+    const changed = currentlyItalic
+        ? disableCollapsedTaskItalicMode(editor, range, italicAncestor)
+        : enableCollapsedTaskItalicMode(editor, range);
+
+    if (!changed) return null;
+    const nextActive = !currentlyItalic;
+    setExplicitRichTextCommandState(editor, 'italic', nextActive);
+    setStoredRichTextCommandState(editor, 'italic', nextActive);
+    setTaskEditToolbarCommandState(editor, 'italic', nextActive);
+    return nextActive;
 }
 
 function isRichTextToolbarButtonForEditor(element, editor) {
@@ -2439,6 +2555,21 @@ function applyRichTextCommand(editorId, command) {
     restoreRichTextEditorSelection(editor);
     editor.focus({ preventScroll: true });
     restoreRichTextEditorSelection(editor);
+
+    // Browsers are inconsistent when toggling italics at a collapsed caret,
+    // especially at the end of an <em> node. Create an explicit DOM boundary
+    // for task editors so mixed regular/italic text keeps the caret in place
+    // and the next characters always use the requested typing mode.
+    const collapsedTaskItalicState = safeCommand === 'italic'
+        ? toggleCollapsedTaskItalic(editor)
+        : null;
+    if (collapsedTaskItalicState !== null) {
+        rememberRichTextEditorSelection(editor);
+        setTaskEditToolbarCommandState(editor, safeCommand, collapsedTaskItalicState);
+        scheduleRichTextToolbarStateSync(editor);
+        return;
+    }
+
     const wasTaskCommandActive = isTaskEditor
         ? !!queryRichTextCommandStateForEditor(editor, safeCommand)
         : false;
