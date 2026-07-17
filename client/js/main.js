@@ -8979,6 +8979,10 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     let calendarDragLayer = null;
     let calendarDragOffsetX = 0;
     let calendarDragOffsetY = 0;
+    let calendarDragFrame = 0;
+    let pendingCalendarDragPoint = null;
+    let cachedCalendarDropTargets = [];
+    let activeCalendarDropTarget = null;
 
     function getPoint(e) {
         const touch = e.touches?.[0] || e.changedTouches?.[0];
@@ -9025,20 +9029,37 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         return !!target.closest?.('button, input, textarea, select, a, .task-checkbox, .project-calendar-task-priority-control, .project-calendar-task-priority-select');
     }
 
+    function cacheCalendarDropTargets() {
+        cachedCalendarDropTargets = Array.from(calendarSection.querySelectorAll('.project-calendar-day[data-calendar-date]'))
+            .map(element => ({ element, rect: element.getBoundingClientRect() }))
+            .filter(entry => entry.rect.width > 0 && entry.rect.height > 0);
+    }
+
     function getCalendarDropDayAtPoint(x, y) {
-        const hits = typeof document.elementsFromPoint === 'function'
-            ? document.elementsFromPoint(x, y)
-            : [document.elementFromPoint(x, y)].filter(Boolean);
-        return hits
-            ?.map(element => element?.closest?.('.project-calendar-day[data-calendar-date]'))
-            ?.find(Boolean) || null;
+        if (cachedCalendarDropTargets.length) {
+            const cachedTarget = cachedCalendarDropTargets.find(({ rect }) => (
+                x >= rect.left &&
+                x <= rect.right &&
+                y >= rect.top &&
+                y <= rect.bottom
+            ));
+            if (cachedTarget?.element?.isConnected) return cachedTarget.element;
+        }
+
+        const hit = document.elementFromPoint?.(x, y);
+        return hit?.closest?.('.project-calendar-day[data-calendar-date]') || null;
+    }
+
+    function setCalendarDropTarget(dropDay) {
+        if (dropDay === activeCalendarDropTarget) return dropDay;
+        activeCalendarDropTarget?.classList?.remove('is-drop-target');
+        activeCalendarDropTarget = dropDay || null;
+        activeCalendarDropTarget?.classList?.add('is-drop-target');
+        return activeCalendarDropTarget;
     }
 
     function markDropDayAtPoint(x, y) {
-        clearProjectCalendarDropTargets();
-        const dropDay = getCalendarDropDayAtPoint(x, y);
-        dropDay?.classList?.add('is-drop-target');
-        return dropDay;
+        return setCalendarDropTarget(getCalendarDropDayAtPoint(x, y));
     }
 
     function getOrCreateCalendarDragLayer() {
@@ -9130,6 +9151,40 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         markDropDayAtPoint(x, y);
     }
 
+    function applyCalendarDragMove(point) {
+        if (!draggingItem || !point) return;
+
+        if (dragMode === 'reorder') {
+            const afterElement = getAfterElement(point.y);
+            if (!afterElement) taskList.appendChild(draggingItem);
+            else taskList.insertBefore(draggingItem, afterElement);
+        }
+
+        updateCalendarDraggedTaskPosition(point.x, point.y);
+        moved = true;
+    }
+
+    function requestCalendarDragFrame(point) {
+        pendingCalendarDragPoint = point;
+        if (calendarDragFrame) return;
+        calendarDragFrame = window.requestAnimationFrame(() => {
+            calendarDragFrame = 0;
+            const nextPoint = pendingCalendarDragPoint;
+            pendingCalendarDragPoint = null;
+            applyCalendarDragMove(nextPoint);
+        });
+    }
+
+    function flushCalendarDragFrame() {
+        if (calendarDragFrame) {
+            window.cancelAnimationFrame(calendarDragFrame);
+            calendarDragFrame = 0;
+        }
+        const nextPoint = pendingCalendarDragPoint;
+        pendingCalendarDragPoint = null;
+        applyCalendarDragMove(nextPoint);
+    }
+
     function clearCalendarDragClasses() {
         taskList.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling');
         if (draggingItem) {
@@ -9141,6 +9196,14 @@ function setupProjectCalendarTaskDockDrag(projectId) {
             item.classList.remove('is-calendar-task-scheduling-source');
             item.style.opacity = '';
         });
+        activeCalendarDropTarget?.classList?.remove('is-drop-target');
+        activeCalendarDropTarget = null;
+        cachedCalendarDropTargets = [];
+        pendingCalendarDragPoint = null;
+        if (calendarDragFrame) {
+            window.cancelAnimationFrame(calendarDragFrame);
+            calendarDragFrame = 0;
+        }
         removeCalendarDragGhost();
     }
 
@@ -9164,6 +9227,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         dragScrollContainer = getCalendarScrollContainer();
         dragStartScrollTop = getCalendarScrollTop(dragScrollContainer);
         moved = false;
+        cacheCalendarDropTargets();
         item.classList.add(dragMode === 'reorder' ? 'is-calendar-task-reordering' : 'is-calendar-task-scheduling');
         calendarDragGhost = createCalendarDragGhost(item, point);
         updateCalendarDraggedTaskPosition(point.x, point.y);
@@ -9181,22 +9245,14 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     function onMove(e) {
         if (!draggingItem) return;
         e.preventDefault();
-        const point = getPoint(e);
-
-        if (dragMode === 'reorder') {
-            const afterElement = getAfterElement(point.y);
-            if (!afterElement) taskList.appendChild(draggingItem);
-            else taskList.insertBefore(draggingItem, afterElement);
-        }
-
-        updateCalendarDraggedTaskPosition(point.x, point.y);
-        moved = true;
+        requestCalendarDragFrame(getPoint(e));
     }
 
     function onEnd(e) {
         if (!draggingItem) return;
         const activeDraggingItem = draggingItem;
         const activeDragMode = dragMode;
+        flushCalendarDragFrame();
         const nextOrder = getTaskIds();
         const point = getPoint(e || {});
         const dropDay = getCalendarDropDayAtPoint(point.x, point.y);
@@ -9223,6 +9279,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         }
 
         clearProjectCalendarDropTargets();
+        activeCalendarDropTarget = null;
         if (activeDragMode === 'reorder' && moved && originalOrder.join('|') !== nextOrder.join('|')) {
             applyProjectCalendarManualTaskOrder(projectId, nextOrder);
         }
@@ -9240,6 +9297,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         document.removeEventListener('touchcancel', onEnd);
         clearCalendarDragClasses();
         clearProjectCalendarDropTargets();
+        activeCalendarDropTarget = null;
         removeCalendarDragGhost();
         draggingItem = null;
         dragMode = null;

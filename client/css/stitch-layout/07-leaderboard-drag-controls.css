@@ -2357,3 +2357,32 @@ body[data-theme$="-light"] .project-calendar-drag-layer .task-item.project-calen
     color: var(--text, #111827) !important;
     -webkit-text-fill-color: var(--text, #111827) !important;
 }
+
+/* ============================================================================
+   Targeted fix: faster mobile calendar task dragging
+   ============================================================================ */
+@media (max-width: 768px) {
+    .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-draggable-task {
+        touch-action: none !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    body.is-calendar-task-dragging,
+    body.is-calendar-task-dragging * {
+        touch-action: none !important;
+    }
+
+    .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+    body[data-theme^="console"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+    body[data-theme^="blueprint"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+    body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost {
+        contain: layout style paint !important;
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+    }
+}
