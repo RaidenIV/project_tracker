@@ -889,10 +889,17 @@ function getProjectCalendarTaskPriorityClass(task = {}) {
     return `project-calendar-task-priority--${normalizePriorityTagValue(task?.tag)}`;
 }
 
+function isProjectCalendarDateInPast(dateKey) {
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    return !!safeDateKey && safeDateKey < getTodayDateKey();
+}
+
 function getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks = [], note = '', projectDueDate = '' }) {
     const classes = ['project-calendar-day'];
-    if (dateKey === selectedDate) classes.push('is-selected');
+    const isPast = isProjectCalendarDateInPast(dateKey);
+    if (dateKey === selectedDate && !isPast) classes.push('is-selected');
     if (dateKey === todayKey) classes.push('is-today');
+    if (isPast) classes.push('is-past', 'is-disabled');
     if (tasks.length) {
         classes.push('has-tasks');
         classes.push(getProjectCalendarDayPriorityClass(tasks));
@@ -942,18 +949,16 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
                 if (tasks.length) ariaParts.push(`${taskLabel}, highest priority ${getPriorityTagLabel(priorityTag)}`);
                 if (note) ariaParts.push('has note');
                 if (projectDueDate === dateKey) ariaParts.push('project due date');
+                const isPast = isProjectCalendarDateInPast(dateKey);
+                const interactionAttrs = isPast ? `disabled aria-disabled="true"` : `onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)" ondragover="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)" ondragenter="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)" ondragleave="handleProjectCalendarDayDragLeave(event)" ondrop="handleProjectCalendarTaskDrop(${projectIdLiteral}, '${dateKey}', event)"`;
                 return `
                     <button class="${getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks, note, projectDueDate })}"
                             type="button"
                             role="gridcell"
                             data-calendar-date="${dateKey}"
-                            aria-pressed="${dateKey === selectedDate ? 'true' : 'false'}"
+                            aria-pressed="${dateKey === selectedDate && !isPast ? 'true' : 'false'}"
                             aria-label="${escapeHtml(ariaParts.join(', '))}"
-                            onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)"
-                            ondragover="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)"
-                            ondragenter="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)"
-                            ondragleave="handleProjectCalendarDayDragLeave(event)"
-                            ondrop="handleProjectCalendarTaskDrop(${projectIdLiteral}, '${dateKey}', event)">
+                            ${interactionAttrs}>
                         <span class="project-calendar-day-number">${dayNumber}</span>
                         <span class="project-calendar-day-markers" aria-hidden="true">
                             ${projectDueDate === dateKey ? '<span class="project-calendar-marker project-calendar-marker--project"></span>' : ''}
@@ -965,6 +970,215 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
             }).join('')}
         </div>
     `;
+}
+
+function getProjectCalendarDayModalState(projectId) {
+    const modalState = uiState.projectCalendarDayModal;
+    if (!modalState || String(modalState.projectId) !== String(projectId ?? '')) return null;
+    const safeDateKey = normalizeTaskDueDate(modalState.dateKey);
+    if (!isValidDateKey(safeDateKey) || isProjectCalendarDateInPast(safeDateKey)) return null;
+    return {
+        projectId: String(projectId ?? ''),
+        dateKey: safeDateKey,
+        view: ['options', 'create', 'assign', 'clear'].includes(modalState.view) ? modalState.view : 'options'
+    };
+}
+
+function setProjectCalendarDayModalState(projectId, dateKey, view = 'options') {
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey) || isProjectCalendarDateInPast(safeDateKey)) {
+        uiState.projectCalendarDayModal = null;
+        return false;
+    }
+    uiState.projectCalendarDayModal = {
+        projectId: String(projectId ?? ''),
+        dateKey: safeDateKey,
+        view: ['options', 'create', 'assign', 'clear'].includes(view) ? view : 'options'
+    };
+    return true;
+}
+
+function buildProjectCalendarDayModalHeader(projectId, dateKey, title, view = 'options') {
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const dateKeyLiteral = serializeInlineJsString(dateKey);
+    const showBack = view !== 'options';
+    return `
+        <div class="project-calendar-day-modal-header">
+            ${showBack ? `
+                <button class="project-calendar-day-modal-back" type="button" onclick="switchProjectCalendarDayModalView(${projectIdLiteral}, ${dateKeyLiteral}, 'options', event)" aria-label="Back to calendar day options">←</button>
+            ` : '<span class="project-calendar-day-modal-back-spacer" aria-hidden="true"></span>'}
+            <div class="project-calendar-day-modal-title-wrap">
+                <div class="project-calendar-selected-label">${escapeHtml(formatTaskDueDateForViewport(dateKey))}</div>
+                <h4 class="project-calendar-day-modal-title">${escapeHtml(title)}</h4>
+            </div>
+            <button class="project-calendar-day-modal-close" type="button" onclick="closeProjectCalendarDayModal(${projectIdLiteral}, event)" aria-label="Close calendar day modal">×</button>
+        </div>
+    `;
+}
+
+function buildProjectCalendarDayOptionsMarkup(project, modalState) {
+    const projectId = String(project?.id || '');
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const dateKeyLiteral = serializeInlineJsString(modalState.dateKey);
+    const canEditCalendar = state.canEdit(projectId);
+    const actionDisabled = canEditCalendar ? '' : 'disabled aria-disabled="true"';
+
+    return `
+        ${buildProjectCalendarDayModalHeader(projectId, modalState.dateKey, 'Day Options', 'options')}
+        ${canEditCalendar ? '' : '<p class="project-calendar-day-modal-readonly">You have read-only access to this project.</p>'}
+        <div class="project-calendar-day-option-list">
+            <button class="project-calendar-day-option-button" type="button" ${actionDisabled} onclick="switchProjectCalendarDayModalView(${projectIdLiteral}, ${dateKeyLiteral}, 'create', event)">
+                <span>Create New Task</span>
+                <span aria-hidden="true">+</span>
+            </button>
+            <button class="project-calendar-day-option-button" type="button" ${actionDisabled} onclick="switchProjectCalendarDayModalView(${projectIdLiteral}, ${dateKeyLiteral}, 'assign', event)">
+                <span>Assign Task</span>
+                <span aria-hidden="true">→</span>
+            </button>
+            <button class="project-calendar-day-option-button project-calendar-day-option-button--danger" type="button" ${actionDisabled} onclick="switchProjectCalendarDayModalView(${projectIdLiteral}, ${dateKeyLiteral}, 'clear', event)">
+                <span>Clear Tasks</span>
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+    `;
+}
+
+function buildProjectCalendarCreateTaskModalMarkup(project, modalState) {
+    const projectId = String(project?.id || '');
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const dateKeyLiteral = serializeInlineJsString(modalState.dateKey);
+    const editorId = `project-calendar-create-editor-${projectId}`;
+
+    return `
+        ${buildProjectCalendarDayModalHeader(projectId, modalState.dateKey, 'Create New Task', 'create')}
+        <div class="project-calendar-day-create-form">
+            ${buildRichTextToolbarMarkup(editorId)}
+            <div class="paste-box modal-task-entry-editor rich-text-editor project-calendar-day-create-editor"
+                 id="${escapeHtml(editorId)}"
+                 role="textbox"
+                 aria-multiline="true"
+                 data-placeholder="Enter task here"
+                 contenteditable="true"></div>
+            <button class="project-calendar-day-primary-button" type="button" onclick="createProjectCalendarTaskFromDayModal(${projectIdLiteral}, ${dateKeyLiteral}, event)">Create Task</button>
+        </div>
+    `;
+}
+
+function buildProjectCalendarTaskChecklist(projectId, tasks, inputName, emptyMessage) {
+    if (!tasks.length) return `<div class="project-calendar-empty">${escapeHtml(emptyMessage)}</div>`;
+    return `
+        <div class="project-calendar-day-task-checklist" role="list">
+            ${tasks.map(task => {
+                const normalizedTask = normalizeTask(task);
+                return `
+                    <label class="project-calendar-day-task-check" role="listitem">
+                        <input type="checkbox" name="${escapeHtml(inputName)}" value="${escapeHtml(String(normalizedTask.id))}">
+                        <span class="project-calendar-day-task-check-body">
+                            <span class="project-calendar-day-task-check-title">${getTaskDisplayHtml(normalizedTask.text || '', 'Untitled task')}</span>
+                            ${(normalizeTaskDueDate(normalizedTask.dueDate) || normalizedTask.tag !== 'none') ? `
+                                <span class="project-calendar-day-task-check-meta">
+                                    ${normalizeTaskDueDate(normalizedTask.dueDate) ? `<span>${escapeHtml(formatTaskDueDateForViewport(normalizeTaskDueDate(normalizedTask.dueDate)))}</span>` : ''}
+                                    ${normalizedTask.tag !== 'none' ? `<span>${renderPriorityFlagMarkup(normalizedTask.tag)}</span>` : ''}
+                                </span>
+                            ` : ''}
+                        </span>
+                    </label>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function buildProjectCalendarAssignTaskModalMarkup(project, modalState) {
+    const projectId = String(project?.id || '');
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const taskSortMode = getProjectTaskSortPreference(projectId);
+    const tasks = getProjectCalendarDraggableTasks(project);
+
+    return `
+        ${buildProjectCalendarDayModalHeader(projectId, modalState.dateKey, 'Assign Task', 'assign')}
+        <div class="project-calendar-day-modal-controls">
+            <select class="task-sort-select project-calendar-task-sort-select project-calendar-day-sort-select"
+                    aria-label="Sort incomplete tasks"
+                    onchange="setProjectTaskSortMode(${projectIdLiteral}, this.value)">
+                <option value="default" ${taskSortMode === 'default' ? 'selected' : ''}>MANUAL</option>
+                <option value="ascending" ${taskSortMode === 'ascending' ? 'selected' : ''}>A-Z ↑</option>
+                <option value="descending" ${taskSortMode === 'descending' ? 'selected' : ''}>A-Z ↓</option>
+                <option value="due-date" ${taskSortMode === 'due-date' ? 'selected' : ''}>DUE DATE</option>
+                <option value="tag-priority" ${taskSortMode === 'tag-priority' ? 'selected' : ''}>TAG PRIORITY</option>
+            </select>
+            <span class="project-calendar-task-dock-count">${tasks.length}</span>
+        </div>
+        ${buildProjectCalendarTaskChecklist(projectId, tasks, 'calendar-assign-task', 'No incomplete tasks available to assign')}
+        ${tasks.length ? `<button class="project-calendar-day-primary-button" type="button" onclick="assignSelectedProjectCalendarTasks(${projectIdLiteral}, ${serializeInlineJsString(modalState.dateKey)}, event)">Assign Selected</button>` : ''}
+    `;
+}
+
+function buildProjectCalendarClearTasksModalMarkup(project, modalState) {
+    const projectId = String(project?.id || '');
+    const projectIdLiteral = serializeInlineJsString(projectId);
+    const selectedTasks = getTasksDueOnDate(project, modalState.dateKey);
+
+    return `
+        ${buildProjectCalendarDayModalHeader(projectId, modalState.dateKey, 'Clear Tasks', 'clear')}
+        <p class="project-calendar-day-modal-help">Choose which tasks to clear from this date.</p>
+        ${buildProjectCalendarTaskChecklist(projectId, selectedTasks, 'calendar-clear-task', 'No tasks are assigned to this day')}
+        ${selectedTasks.length ? `<button class="project-calendar-day-primary-button project-calendar-day-primary-button--danger" type="button" onclick="confirmClearSelectedProjectCalendarTasks(${projectIdLiteral}, ${serializeInlineJsString(modalState.dateKey)}, event)">Clear Selected</button>` : ''}
+    `;
+}
+
+function buildProjectCalendarDayModalMarkup(project) {
+    const modalState = getProjectCalendarDayModalState(project?.id);
+    if (!modalState) return '';
+    const viewMarkup = modalState.view === 'create'
+        ? buildProjectCalendarCreateTaskModalMarkup(project, modalState)
+        : modalState.view === 'assign'
+            ? buildProjectCalendarAssignTaskModalMarkup(project, modalState)
+            : modalState.view === 'clear'
+                ? buildProjectCalendarClearTasksModalMarkup(project, modalState)
+                : buildProjectCalendarDayOptionsMarkup(project, modalState);
+
+    return `
+        <div class="project-calendar-day-modal-layer" role="presentation" onclick="closeProjectCalendarDayModal(${serializeInlineJsString(project?.id || '')}, event)">
+            <section class="project-calendar-day-modal" role="dialog" aria-modal="true" aria-label="Calendar day actions" onclick="event.stopPropagation();">
+                ${viewMarkup}
+            </section>
+        </div>
+    `;
+}
+
+function getCheckedProjectCalendarTaskIds(projectId, inputName) {
+    const section = document.getElementById(`calendar-section-${String(projectId || '')}`);
+    return Array.from(section?.querySelectorAll?.(`input[name="${inputName}"]:checked`) || [])
+        .map(input => String(input.value || ''))
+        .filter(Boolean);
+}
+
+function applyProjectCalendarTaskDueDateUpdate(projectId, taskIds, updater) {
+    if (!state.canEdit(projectId)) return false;
+    const project = state.findProject(projectId);
+    if (!project || !Array.isArray(project.tasks) || !Array.isArray(taskIds) || !taskIds.length || typeof updater !== 'function') return false;
+
+    const selectedIds = new Set(taskIds.map(id => String(id ?? '')));
+    let changed = false;
+    const updatedTasks = project.tasks.map((task, index) => {
+        const normalizedTask = normalizeTask(task, index);
+        if (!selectedIds.has(String(normalizedTask.id))) return normalizedTask;
+        const nextTask = normalizeTask(updater(normalizedTask) || normalizedTask, index);
+        if (JSON.stringify(nextTask) !== JSON.stringify(normalizedTask)) changed = true;
+        return nextTask;
+    });
+
+    if (!changed) return false;
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks }));
+    saveData();
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    render();
+    saveOpenProjectModalState(projectId, 'calendar');
+    return true;
 }
 
 function buildProjectCalendarTaskPriorityControl(projectId, task) {
@@ -1950,6 +2164,7 @@ const uiState = {
     editingProjectNoteTab: null,
     projectCalendarMonths: {},
     projectCalendarSelections: {},
+    projectCalendarDayModal: null,
     completedTaskDisplayLimits: {}
 };
 
@@ -12073,6 +12288,7 @@ function buildProjectCalendarSectionMarkup(project) {
         <div class="project-calendar-panel">
             <div class="project-calendar-main-row">
                 <div class="project-calendar-shell">
+                    <div class="project-calendar-select-day-label">SELECT A DAY</div>
                     <div class="project-calendar-toolbar">
                         <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, -1, event)" aria-label="Previous month">‹</button>
                         <div class="project-calendar-current-month">${escapeHtml(getCalendarMonthLabel(currentMonthKey))}</div>
@@ -12081,11 +12297,8 @@ function buildProjectCalendarSectionMarkup(project) {
                     </div>
                     ${buildProjectCalendarGridMarkup(project, currentMonthKey, selectedDate)}
                 </div>
-                <div class="project-calendar-side-panel">
-                    ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
-                </div>
             </div>
-            ${buildProjectCalendarTaskDockMarkup(project)}
+            ${buildProjectCalendarDayModalMarkup(project)}
         </div>
     `;
 }
@@ -12126,9 +12339,114 @@ function selectProjectCalendarDay(projectId, dateKey, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!state.findProject(projectId)) return;
-    setProjectCalendarSelectedDate(projectId, normalizeTaskDueDate(dateKey) || getTodayDateKey());
+    const safeDateKey = normalizeTaskDueDate(dateKey) || getTodayDateKey();
+    if (isProjectCalendarDateInPast(safeDateKey)) return;
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    setProjectCalendarDayModalState(projectId, safeDateKey, 'options');
     renderProjectCalendarSection(projectId);
     saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function switchProjectCalendarDayModalView(projectId, dateKey, view, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.findProject(projectId)) return;
+    const safeDateKey = normalizeTaskDueDate(dateKey) || getProjectCalendarSelectedDate(projectId);
+    if (!setProjectCalendarDayModalState(projectId, safeDateKey, view)) return;
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    requestAnimationFrame(() => {
+        const modalState = getProjectCalendarDayModalState(projectId);
+        if (modalState?.view === 'create') {
+            const editor = document.getElementById(`project-calendar-create-editor-${String(projectId || '')}`);
+            if (editor) focusRichTextEditorAtEnd(editor);
+        }
+    });
+}
+
+function closeProjectCalendarDayModal(projectId, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (uiState.projectCalendarDayModal?.projectId === String(projectId ?? '')) {
+        uiState.projectCalendarDayModal = null;
+        renderProjectCalendarSection(projectId, { preserveScroll: true });
+    }
+}
+
+function createProjectCalendarTaskFromDayModal(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!state.canEdit(projectId)) return;
+
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey) || isProjectCalendarDateInPast(safeDateKey)) return;
+
+    const project = state.findProject(projectId);
+    if (!project) return;
+
+    const editor = document.getElementById(`project-calendar-create-editor-${String(projectId || '')}`);
+    const text = sanitizeRichTextHtml(editor?.innerHTML || '');
+    if (!getRichTextPlainText(text)) {
+        editor?.focus?.({ preventScroll: true });
+        return;
+    }
+
+    const activeCategory = getProjectTaskCategoryFilter(projectId);
+    const category = activeCategory === DEFAULT_TASK_CATEGORY_FILTER ? DEFAULT_TASK_CATEGORY : sanitizeTaskCategoryName(activeCategory);
+    const newTask = normalizeTask({
+        id: Date.now(),
+        text,
+        completed: false,
+        tag: DEFAULT_TASK_TAG,
+        category,
+        dueDate: safeDateKey
+    });
+    const nextCategories = getTaskCategoryListWith([...getProjectTaskCategories(project), category]);
+    const updatedTasks = sortTasks([newTask, ...(Array.isArray(project.tasks) ? project.tasks : [])]);
+
+    rememberRecentLocalTaskSnapshot(project, updatedTasks);
+    state.updateProject(projectId, projectUpdate({ tasks: updatedTasks, taskCategories: nextCategories }));
+    saveData();
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    setProjectCalendarDayModalState(projectId, safeDateKey, 'options');
+    renderModalTaskList(projectId);
+    updateProjectProgress(projectId);
+    renderProjectCalendarSection(projectId, { preserveScroll: true });
+    render();
+    saveOpenProjectModalState(projectId, 'calendar');
+}
+
+function assignSelectedProjectCalendarTasks(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey) || isProjectCalendarDateInPast(safeDateKey)) return;
+    const selectedIds = getCheckedProjectCalendarTaskIds(projectId, 'calendar-assign-task');
+    if (!selectedIds.length) return;
+    setProjectCalendarSelectedDate(projectId, safeDateKey);
+    setProjectCalendarDayModalState(projectId, safeDateKey, 'options');
+    applyProjectCalendarTaskDueDateUpdate(projectId, selectedIds, task => ({ ...task, dueDate: safeDateKey }));
+}
+
+function confirmClearSelectedProjectCalendarTasks(projectId, dateKey, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const safeDateKey = normalizeTaskDueDate(dateKey);
+    if (!isValidDateKey(safeDateKey) || isProjectCalendarDateInPast(safeDateKey)) return;
+    const selectedIds = getCheckedProjectCalendarTaskIds(projectId, 'calendar-clear-task');
+    if (!selectedIds.length) return;
+    openConfirmationDialog({
+        title: selectedIds.length === 1 ? 'Clear Task From Day?' : 'Clear Tasks From Day?',
+        message: selectedIds.length === 1
+            ? `Remove this task from ${formatTaskDueDateForViewport(safeDateKey)}?`
+            : `Remove ${selectedIds.length} tasks from ${formatTaskDueDateForViewport(safeDateKey)}?`,
+        confirmLabel: 'Clear Tasks',
+        onConfirm: () => {
+            setProjectCalendarSelectedDate(projectId, safeDateKey);
+            setProjectCalendarDayModalState(projectId, safeDateKey, 'options');
+            applyProjectCalendarTaskDueDateUpdate(projectId, selectedIds, task => ({ ...task, dueDate: '' }));
+        }
+    });
 }
 
 function changeProjectCalendarMonth(projectId, direction = 0, event) {
@@ -12669,6 +12987,7 @@ function closeProjectModal() {
     const modal = document.getElementById('projectModal');
     removeTaskActionMenuPortals();
     uiState.openTaskActionMenu = null;
+    uiState.projectCalendarDayModal = null;
     modal.classList.remove('active');
     document.body.classList.remove('project-modal-open');
     clearOpenProjectModalState();
@@ -14661,6 +14980,11 @@ window.confirmDeleteProjectCard = confirmDeleteProjectCard;
 window.openProjectMetadataDetails = openProjectMetadataDetails;
 window.closeProjectMetadataDetails = closeProjectMetadataDetails;
 window.selectProjectCalendarDay = selectProjectCalendarDay;
+window.switchProjectCalendarDayModalView = switchProjectCalendarDayModalView;
+window.closeProjectCalendarDayModal = closeProjectCalendarDayModal;
+window.createProjectCalendarTaskFromDayModal = createProjectCalendarTaskFromDayModal;
+window.assignSelectedProjectCalendarTasks = assignSelectedProjectCalendarTasks;
+window.confirmClearSelectedProjectCalendarTasks = confirmClearSelectedProjectCalendarTasks;
 window.changeProjectCalendarMonth = changeProjectCalendarMonth;
 window.goToProjectCalendarToday = goToProjectCalendarToday;
 window.saveProjectCalendarNote = saveProjectCalendarNote;
