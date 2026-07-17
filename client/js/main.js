@@ -8983,6 +8983,9 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     let pendingCalendarDragPoint = null;
     let cachedCalendarDropTargets = [];
     let activeCalendarDropTarget = null;
+    let calendarAutoScrollFrame = 0;
+    let calendarAutoScrollPoint = null;
+    let calendarLastAutoScrollTime = 0;
 
     function getPoint(e) {
         const touch = e.touches?.[0] || e.changedTouches?.[0];
@@ -9003,6 +9006,30 @@ function setupProjectCalendarTaskDockDrag(projectId) {
             return window.scrollY || document.documentElement.scrollTop || 0;
         }
         return scrollEl?.scrollTop || 0;
+    }
+
+    function getCalendarScrollRect(scrollEl = getCalendarScrollContainer()) {
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            return { top: 0, bottom: window.innerHeight || document.documentElement.clientHeight || 0, height: window.innerHeight || document.documentElement.clientHeight || 0 };
+        }
+        const rect = scrollEl?.getBoundingClientRect?.();
+        if (rect) return { top: rect.top, bottom: rect.bottom, height: rect.height };
+        return { top: 0, bottom: window.innerHeight || 0, height: window.innerHeight || 0 };
+    }
+
+    function getCalendarMaxScrollTop(scrollEl = getCalendarScrollContainer()) {
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            return Math.max(0, (document.documentElement?.scrollHeight || document.body?.scrollHeight || 0) - (window.innerHeight || document.documentElement.clientHeight || 0));
+        }
+        return Math.max(0, (scrollEl?.scrollHeight || 0) - (scrollEl?.clientHeight || 0));
+    }
+
+    function setCalendarScrollTop(scrollEl, nextTop) {
+        if (scrollEl === document.scrollingElement || scrollEl === document.documentElement || scrollEl === document.body) {
+            window.scrollTo(window.scrollX || 0, nextTop);
+            return;
+        }
+        if (scrollEl) scrollEl.scrollTop = nextTop;
     }
 
     function getItems() {
@@ -9151,6 +9178,81 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         markDropDayAtPoint(x, y);
     }
 
+    function getCalendarAutoScrollVelocity(point) {
+        if (!point) return 0;
+        const scrollEl = dragScrollContainer || getCalendarScrollContainer();
+        const rect = getCalendarScrollRect(scrollEl);
+        if (!rect.height) return 0;
+        const edgeSize = Math.max(48, Math.min(112, rect.height * 0.2));
+        const maxSpeed = 22;
+        if (point.y < rect.top + edgeSize) {
+            return -maxSpeed * (1 - Math.max(0, point.y - rect.top) / edgeSize);
+        }
+        if (point.y > rect.bottom - edgeSize) {
+            return maxSpeed * (1 - Math.max(0, rect.bottom - point.y) / edgeSize);
+        }
+        return 0;
+    }
+
+    function stopCalendarAutoScroll() {
+        if (calendarAutoScrollFrame) {
+            window.cancelAnimationFrame(calendarAutoScrollFrame);
+            calendarAutoScrollFrame = 0;
+        }
+        calendarAutoScrollPoint = null;
+        calendarLastAutoScrollTime = 0;
+    }
+
+    function stepCalendarAutoScroll(timestamp) {
+        calendarAutoScrollFrame = 0;
+        if (!draggingItem || !calendarAutoScrollPoint) {
+            stopCalendarAutoScroll();
+            return;
+        }
+
+        const scrollEl = dragScrollContainer || getCalendarScrollContainer();
+        const velocity = getCalendarAutoScrollVelocity(calendarAutoScrollPoint);
+        if (Math.abs(velocity) < 0.5) {
+            stopCalendarAutoScroll();
+            return;
+        }
+
+        const currentTop = getCalendarScrollTop(scrollEl);
+        const maxTop = getCalendarMaxScrollTop(scrollEl);
+        const elapsed = calendarLastAutoScrollTime ? Math.min(48, Math.max(8, timestamp - calendarLastAutoScrollTime)) : 16;
+        calendarLastAutoScrollTime = timestamp;
+        const nextTop = Math.max(0, Math.min(maxTop, currentTop + velocity * (elapsed / 16)));
+
+        if (Math.abs(nextTop - currentTop) >= 0.5) {
+            setCalendarScrollTop(scrollEl, nextTop);
+            cacheCalendarDropTargets();
+            updateCalendarDraggedTaskPosition(calendarAutoScrollPoint.x, calendarAutoScrollPoint.y);
+        }
+
+        if (nextTop <= 0 && velocity < 0) {
+            stopCalendarAutoScroll();
+            return;
+        }
+        if (nextTop >= maxTop && velocity > 0) {
+            stopCalendarAutoScroll();
+            return;
+        }
+
+        calendarAutoScrollFrame = window.requestAnimationFrame(stepCalendarAutoScroll);
+    }
+
+    function updateCalendarAutoScroll(point) {
+        calendarAutoScrollPoint = point || null;
+        if (!calendarAutoScrollPoint || Math.abs(getCalendarAutoScrollVelocity(calendarAutoScrollPoint)) < 0.5) {
+            stopCalendarAutoScroll();
+            return;
+        }
+        if (!calendarAutoScrollFrame) {
+            calendarLastAutoScrollTime = 0;
+            calendarAutoScrollFrame = window.requestAnimationFrame(stepCalendarAutoScroll);
+        }
+    }
+
     function applyCalendarDragMove(point) {
         if (!draggingItem || !point) return;
 
@@ -9161,6 +9263,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         }
 
         updateCalendarDraggedTaskPosition(point.x, point.y);
+        updateCalendarAutoScroll(point);
         moved = true;
     }
 
@@ -9204,6 +9307,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
             window.cancelAnimationFrame(calendarDragFrame);
             calendarDragFrame = 0;
         }
+        stopCalendarAutoScroll();
         removeCalendarDragGhost();
     }
 
@@ -9245,7 +9349,12 @@ function setupProjectCalendarTaskDockDrag(projectId) {
     function onMove(e) {
         if (!draggingItem) return;
         e.preventDefault();
-        requestCalendarDragFrame(getPoint(e));
+        const point = getPoint(e);
+        if (e.type === 'mousemove') {
+            applyCalendarDragMove(point);
+        } else {
+            requestCalendarDragFrame(point);
+        }
     }
 
     function onEnd(e) {

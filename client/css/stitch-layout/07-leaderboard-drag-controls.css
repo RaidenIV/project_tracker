@@ -2386,3 +2386,95 @@ body[data-theme$="-light"] .project-calendar-drag-layer .task-item.project-calen
         -webkit-backface-visibility: hidden !important;
     }
 }
+
+/* Targeted fix: calendar task dragging auto-scroll, pointer adhesion, and Android task-row fit */
+.project-calendar-drag-layer,
+body[data-theme] .project-calendar-drag-layer {
+    background: transparent !important;
+}
+
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item {
+    display: grid !important;
+    grid-template-columns: auto auto auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 3.25rem !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    touch-action: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-main-content,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-main-content {
+    grid-column: 4 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    align-self: center !important;
+    overflow: hidden !important;
+}
+
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-text,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-text {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.25 !important;
+    overflow: hidden !important;
+}
+
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling,
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-reordering,
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling-source,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-reordering,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling-source,
+.project-calendar-drag-layer .task-item.project-calendar-drag-ghost,
+body[data-theme] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+@media (max-width: 768px) {
+    #projectModal .project-calendar-task-dock-list,
+    body[data-theme] #projectModal .project-calendar-task-dock-list {
+        gap: 0.55rem !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item,
+    body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item {
+        grid-template-columns: auto auto auto minmax(0, 1fr) !important;
+        min-height: 3.35rem !important;
+        padding: 0.68rem 0.72rem !important;
+    }
+
+    #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-text,
+    body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-text {
+        font-size: clamp(0.86rem, 3.7vw, 1rem) !important;
+        line-height: 1.24 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+    }
+
+    #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-glance-meta,
+    body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item .task-glance-meta {
+        margin-top: 0.24rem !important;
+    }
+}
