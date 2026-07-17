@@ -1127,12 +1127,68 @@ function getProjectCalendarDraggableTasks(project) {
         .filter(task => !isTaskCompleted(task));
 }
 
+function buildProjectCalendarDockTaskItem(projectId, task, sortMode, canEditCalendar) {
+    const normalizedTask = normalizeTask(task);
+    const project = state.findProject(projectId);
+    const taskAssignee = getTaskAssigneeMember(project, normalizedTask);
+    const dueDate = normalizeTaskDueDate(normalizedTask.dueDate);
+    const taskOverdue = isTaskOverdue(normalizedTask);
+    const visibleTaskDueDate = dueDate ? formatTaskDueDateForViewport(dueDate) : '';
+    const dueDateLabel = taskOverdue ? `Overdue: ${visibleTaskDueDate}` : (dueDate ? `Due ${visibleTaskDueDate}` : '');
+    const priorityLabel = getPriorityTagLabel(normalizedTask.tag);
+    const canManualReorder = sortMode === DEFAULT_TASK_SORT_MODE && canEditCalendar;
+
+    return `
+        <div class="task-item project-calendar-task-dock-item ${taskAssignee ? 'task-item--assigned' : ''}"
+             data-calendar-task-item
+             data-task-id="${escapeHtml(String(normalizedTask.id))}"
+             draggable="false"
+             role="listitem"
+             title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}">
+            ${canEditCalendar ? `
+                <span class="task-bulk-select project-calendar-task-select-spacer" aria-hidden="true">
+                    <span aria-hidden="true"></span>
+                </span>
+            ` : ''}
+            ${canManualReorder ? `
+                <svg class="task-drag-handle project-calendar-task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" ondragstart="event.preventDefault(); event.stopPropagation();">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+            ` : '<span class="task-drag-handle-spacer" aria-hidden="true"></span>'}
+            ${buildProjectCalendarTaskCompletionControl(projectId, normalizedTask)}
+            <div class="task-main-content">
+                <span class="task-text ${normalizedTask.completed ? 'completed' : ''}">${getTaskDisplayHtml(normalizedTask.text || '', 'Untitled task')}</span>
+                ${(dueDate || normalizedTask.tag !== 'none') ? `
+                    <div class="task-glance-meta" aria-label="Task due date and priority">
+                        ${dueDate ? `
+                            <span class="task-glance-detail task-glance-detail--due has-value ${taskOverdue ? 'is-overdue' : ''}"
+                                  title="${escapeHtml(dueDateLabel)}">
+                                <svg class="task-glance-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"></path>
+                                </svg>
+                                <span>${escapeHtml(visibleTaskDueDate)}</span>
+                            </span>
+                        ` : ''}
+                        ${normalizedTask.tag !== 'none' ? `
+                            <span class="task-glance-detail task-glance-detail--priority task-glance-detail--priority-${normalizedTask.tag}"
+                                  title="Priority: ${escapeHtml(priorityLabel)}"
+                                  aria-label="Priority: ${escapeHtml(priorityLabel)}">
+                                <span class="task-tag-flag task-tag-flag--${normalizedTask.tag}" aria-hidden="true"></span>
+                            </span>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
 function buildProjectCalendarTaskDockMarkup(project) {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const canEditCalendar = state.canEdit(project?.id);
     const tasks = getProjectCalendarDraggableTasks(project);
     const taskSortMode = getProjectTaskSortPreference(project?.id);
-    const canManualReorder = taskSortMode === DEFAULT_TASK_SORT_MODE && canEditCalendar;
 
     return `
         <div class="project-calendar-task-dock" aria-label="Calendar task drag list">
@@ -1156,29 +1212,8 @@ function buildProjectCalendarTaskDockMarkup(project) {
                 </div>
             </div>
             ${tasks.length ? `
-                <div class="project-calendar-task-dock-list" data-calendar-task-list="${escapeHtml(String(project?.id || ''))}">
-                    ${tasks.map(task => {
-                        const taskIdLiteral = serializeInlineJsString(task.id);
-                        const dueDate = normalizeTaskDueDate(task.dueDate);
-                        return `
-                            <div class="project-calendar-draggable-task ${getProjectCalendarTaskPriorityClass(task)} ${canManualReorder ? 'has-manual-reorder' : ''}"
-                                 data-calendar-task-item
-                                 data-task-id="${escapeHtml(String(task.id))}"
-                                 draggable="false"
-                                 role="listitem"
-                                 title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}">
-                                ${canManualReorder ? `
-                                    <svg class="task-drag-handle project-calendar-task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" ondragstart="event.preventDefault(); event.stopPropagation();">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                                    </svg>
-                                ` : ''}
-                                ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
-                                <span class="project-calendar-draggable-task-text">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
-                                <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDateForViewport(dueDate)) : 'No due date'}</span>
-                                ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
-                            </div>
-                        `;
-                    }).join('')}
+                <div class="project-calendar-task-dock-list task-list" data-calendar-task-list="${escapeHtml(String(project?.id || ''))}">
+                    ${tasks.map(task => buildProjectCalendarDockTaskItem(project?.id || '', task, taskSortMode, canEditCalendar)).join('')}
                 </div>
             ` : '<div class="project-calendar-empty">No incomplete tasks available to schedule</div>'}
         </div>
@@ -9037,7 +9072,7 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         calendarDragOffsetY = Math.max(0, Math.min(rect.height, point.y - rect.top));
         const computed = window.getComputedStyle(item);
         const taskTextColor = computed.color || 'var(--text, #f8fafc)';
-        ghost.querySelectorAll?.('.project-calendar-draggable-task-text, .project-calendar-draggable-task-text *').forEach(node => {
+        ghost.querySelectorAll?.('.project-calendar-draggable-task-text, .project-calendar-draggable-task-text *, .task-text, .task-text *').forEach(node => {
             node.style.setProperty('color', taskTextColor, 'important');
             node.style.setProperty('-webkit-text-fill-color', taskTextColor, 'important');
             node.style.setProperty('visibility', 'visible', 'important');
@@ -9045,8 +9080,10 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         });
         // Apply positioning inline so the ghost sits at the exact source position on
         // first paint, then follows the pointer via updateCalendarDraggedTaskPosition.
-        ghost.style.setProperty('display', 'grid', 'important');
-        ghost.style.setProperty('grid-template-columns', computed.gridTemplateColumns || 'auto minmax(0, 1fr) auto', 'important');
+        ghost.style.setProperty('display', computed.display || 'flex', 'important');
+        if (computed.gridTemplateColumns && computed.gridTemplateColumns !== 'none') {
+            ghost.style.setProperty('grid-template-columns', computed.gridTemplateColumns, 'important');
+        }
         ghost.style.setProperty('align-items', computed.alignItems || 'center', 'important');
         ghost.style.setProperty('gap', computed.gap || '0.55rem', 'important');
         ghost.style.setProperty('color', taskTextColor, 'important');
@@ -9060,10 +9097,12 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         ghost.style.setProperty('margin', '0', 'important');
         ghost.style.setProperty('z-index', '2147483647', 'important');
         ghost.style.setProperty('pointer-events', 'none', 'important');
+        ghost.style.setProperty('opacity', '1', 'important');
         ghost.style.setProperty('transform', `translate3d(${rect.left}px, ${rect.top}px, 0)`, 'important');
         ghost.style.setProperty('will-change', 'transform', 'important');
         getOrCreateCalendarDragLayer().appendChild(ghost);
         item.classList.add('is-calendar-task-scheduling-source');
+        item.style.setProperty('opacity', '1', 'important');
         return ghost;
     }
 
@@ -9096,9 +9135,11 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         if (draggingItem) {
             draggingItem.classList.remove('is-calendar-task-reordering', 'is-calendar-task-scheduling', 'is-calendar-task-scheduling-source');
             draggingItem.style.transform = '';
+            draggingItem.style.opacity = '';
         }
         taskList.querySelectorAll('.is-calendar-task-scheduling-source').forEach(item => {
             item.classList.remove('is-calendar-task-scheduling-source');
+            item.style.opacity = '';
         });
         removeCalendarDragGhost();
     }

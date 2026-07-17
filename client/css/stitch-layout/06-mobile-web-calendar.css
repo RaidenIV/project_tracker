@@ -5517,3 +5517,16 @@ body[data-theme] #projectModal .rich-text-editor strong {
         min-width: 0 !important;
     }
 }
+
+
+/* Targeted fix: let calendar incomplete tasks inherit the main Project Modal task-row layout */
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item {
+    opacity: 1 !important;
+    cursor: grab !important;
+}
+
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item:active,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item:active {
+    cursor: grabbing !important;
+}

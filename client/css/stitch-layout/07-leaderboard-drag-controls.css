@@ -2311,3 +2311,49 @@ body[data-theme$="-light"] .project-calendar-drag-layer .project-calendar-drag-g
     color: var(--text, #111827) !important;
     -webkit-text-fill-color: var(--text, #111827) !important;
 }
+
+
+/* Targeted fix: calendar incomplete tasks use the main project task-row surface and stay opaque while dragged */
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling,
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-reordering,
+#projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling-source,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-reordering,
+body[data-theme] #projectModal .project-calendar-task-dock-list .task-item.project-calendar-task-dock-item.is-calendar-task-scheduling-source {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.project-calendar-drag-layer .task-item.project-calendar-drag-ghost,
+body[data-theme] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost {
+    display: flex !important;
+    align-items: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: var(--text, #f8fafc) !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+    background: var(--surface, rgba(15, 23, 42, 0.98)) !important;
+}
+
+.project-calendar-drag-layer .task-item.project-calendar-drag-ghost .task-text,
+.project-calendar-drag-layer .task-item.project-calendar-drag-ghost .task-text *,
+body[data-theme] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost .task-text,
+body[data-theme] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost .task-text * {
+    color: var(--text, #f8fafc) !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body[data-theme$="-light"] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost,
+body[data-theme$="-light"] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost .task-text,
+body[data-theme$="-light"] .project-calendar-drag-layer .task-item.project-calendar-drag-ghost .task-text * {
+    color: var(--text, #111827) !important;
+    -webkit-text-fill-color: var(--text, #111827) !important;
+}
