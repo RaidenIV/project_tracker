@@ -1103,8 +1103,8 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                 <div class="project-calendar-note-actions">
                     <span class="project-calendar-note-limit">${selectedNote.length}/${PROJECT_CALENDAR_NOTE_MAX_LENGTH}</span>
                     ${canEditCalendar ? `
-                        <button class="project-calendar-note-button" type="button" onclick="saveProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)">Save Note</button>
-                        <button class="project-calendar-note-button project-calendar-note-button--secondary" type="button" onclick="deleteProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)" ${selectedNote ? '' : 'disabled'}>Delete Note</button>
+                        <button class="project-calendar-note-button" type="button" onclick="saveProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)">SAVE</button>
+                        <button class="project-calendar-note-button project-calendar-note-button--secondary" type="button" onclick="deleteProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)" ${selectedNote ? '' : 'disabled'}>DELETE</button>
                     ` : '<span class="project-calendar-readonly-note">Read-only</span>'}
                 </div>
             </div>
@@ -9035,8 +9035,23 @@ function setupProjectCalendarTaskDockDrag(projectId) {
         ghost.classList.add('project-calendar-drag-ghost');
         calendarDragOffsetX = Math.max(0, Math.min(rect.width, point.x - rect.left));
         calendarDragOffsetY = Math.max(0, Math.min(rect.height, point.y - rect.top));
+        const computed = window.getComputedStyle(item);
+        const taskTextColor = computed.color || 'var(--text, #f8fafc)';
+        ghost.querySelectorAll?.('.project-calendar-draggable-task-text, .project-calendar-draggable-task-text *').forEach(node => {
+            node.style.setProperty('color', taskTextColor, 'important');
+            node.style.setProperty('-webkit-text-fill-color', taskTextColor, 'important');
+            node.style.setProperty('visibility', 'visible', 'important');
+            node.style.setProperty('opacity', '1', 'important');
+        });
         // Apply positioning inline so the ghost sits at the exact source position on
         // first paint, then follows the pointer via updateCalendarDraggedTaskPosition.
+        ghost.style.setProperty('display', 'grid', 'important');
+        ghost.style.setProperty('grid-template-columns', computed.gridTemplateColumns || 'auto minmax(0, 1fr) auto', 'important');
+        ghost.style.setProperty('align-items', computed.alignItems || 'center', 'important');
+        ghost.style.setProperty('gap', computed.gap || '0.55rem', 'important');
+        ghost.style.setProperty('color', taskTextColor, 'important');
+        ghost.style.setProperty('-webkit-text-fill-color', taskTextColor, 'important');
+        ghost.style.setProperty('background', computed.backgroundColor || 'var(--surface-subtle, rgba(255, 255, 255, 0.05))', 'important');
         ghost.style.setProperty('position', 'fixed', 'important');
         ghost.style.setProperty('left', '0', 'important');
         ghost.style.setProperty('top', '0', 'important');

@@ -2278,3 +2278,36 @@ body[data-theme^="glass"] #projectModal .task-item.is-editing .task-edit-rich-to
         inset 0 0 0 1px color-mix(in srgb, var(--accent, currentColor) 60%, transparent),
         0 0 0 2px color-mix(in srgb, var(--accent, currentColor) 18%, transparent) !important;
 }
+
+/* Targeted patch: keep mobile calendar drag text visible in the top-layer ghost */
+.project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme^="console"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme^="blueprint"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost {
+    display: grid !important;
+    align-items: center !important;
+    color: var(--text, #f8fafc) !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+    background: var(--surface-subtle, rgba(15, 23, 42, 0.96)) !important;
+}
+
+.project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text,
+.project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text *,
+body[data-theme^="console"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text,
+body[data-theme^="console"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text *,
+body[data-theme^="blueprint"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text,
+body[data-theme^="blueprint"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text *,
+body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text,
+body[data-theme^="glass"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text * {
+    color: var(--text, #f8fafc) !important;
+    -webkit-text-fill-color: var(--text, #f8fafc) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body[data-theme$="-light"] .project-calendar-drag-layer .project-calendar-draggable-task.project-calendar-drag-ghost,
+body[data-theme$="-light"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text,
+body[data-theme$="-light"] .project-calendar-drag-layer .project-calendar-drag-ghost .project-calendar-draggable-task-text * {
+    color: var(--text, #111827) !important;
+    -webkit-text-fill-color: var(--text, #111827) !important;
+}
