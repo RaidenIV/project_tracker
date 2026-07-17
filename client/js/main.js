@@ -14239,6 +14239,21 @@ function isMobileWebSidebarViewport() {
     return window.matchMedia('(max-width: 980px)').matches;
 }
 
+function syncMobileViewportHeight() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    if (!isMobileWebSidebarViewport()) {
+        root.style.removeProperty('--taskcom-mobile-viewport-height');
+        return;
+    }
+
+    const viewportHeight = Math.ceil(window.visualViewport?.height || window.innerHeight || 0);
+    if (viewportHeight > 0) {
+        root.style.setProperty('--taskcom-mobile-viewport-height', `${viewportHeight}px`);
+    }
+}
+
 function renderPanelEdgeToggleIcon(isOpen) {
     const panelEdgeToggle = document.getElementById('panelEdgeToggle');
     if (!panelEdgeToggle) return;
@@ -14298,6 +14313,7 @@ function closeMobileWebSidebarForModal() {
 }
 
 function syncMobileAppBarHeight() {
+    syncMobileViewportHeight();
     const topAppBar = document.querySelector('.top-app-bar');
     const root = document.documentElement;
     if (!topAppBar || !root) return;
@@ -14358,6 +14374,8 @@ function initializeMobileWebSidebar() {
 
     window.addEventListener('resize', syncMobileSidebarState);
     window.addEventListener('orientationchange', () => requestAnimationFrame(syncMobileSidebarState));
+    window.visualViewport?.addEventListener?.('resize', syncMobileViewportHeight, { passive: true });
+    window.visualViewport?.addEventListener?.('scroll', syncMobileViewportHeight, { passive: true });
     if (typeof ResizeObserver !== 'undefined') {
         const topAppBar = document.querySelector('.top-app-bar');
         if (topAppBar) {
@@ -14367,6 +14385,7 @@ function initializeMobileWebSidebar() {
         }
     }
     requestAnimationFrame(syncMobileSidebarState);
+    syncMobileViewportHeight();
     syncMobileSidebarState();
 }
 

@@ -5988,3 +5988,63 @@ body[data-theme^="glass"] .project-calendar-day-modal-help {
         font-size: 0.8rem !important;
     }
 }
+
+/* Targeted patch: mobile calendar day modal centering + full-height viewport */
+@media (max-width: 980px) {
+    html,
+    body,
+    body.mobile-drawer-open,
+    body.mobile-sidebar-open {
+        height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+        min-height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+    }
+
+    .container,
+    body.control-panel-is-collapsed .container {
+        height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+        min-height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+    }
+
+    .control-panel,
+    .control-panel.collapsed,
+    body.control-panel-is-collapsed .control-panel,
+    body.control-panel-is-collapsed .control-panel.collapsed,
+    .control-panel-content,
+    .control-panel-scroll-inner,
+    body.mobile-drawer-open .control-panel-content,
+    body.mobile-drawer-open .control-panel-scroll-inner {
+        height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+        min-height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+        max-height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+    }
+
+    .viewport,
+    body[data-theme^="console"] .viewport,
+    body[data-theme^="glass"] .viewport,
+    body[data-theme^="blueprint"] .viewport,
+    body.control-panel-is-collapsed .viewport,
+    body.mobile-sidebar-open .viewport,
+    body.mobile-drawer-open .viewport {
+        height: calc(var(--taskcom-mobile-viewport-height, 100dvh) - var(--mobile-app-bar-height, 3.35rem)) !important;
+        min-height: calc(var(--taskcom-mobile-viewport-height, 100dvh) - var(--mobile-app-bar-height, 3.35rem)) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .project-calendar-day-modal-layer,
+    body[data-theme^="console"] .project-calendar-day-modal-layer,
+    body[data-theme^="blueprint"] .project-calendar-day-modal-layer,
+    body[data-theme^="glass"] .project-calendar-day-modal-layer {
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: var(--taskcom-mobile-viewport-height, 100dvh) !important;
+        padding: calc(1rem + env(safe-area-inset-top, 0px)) 0.75rem calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .project-calendar-day-modal,
+    body[data-theme^="console"] .project-calendar-day-modal,
+    body[data-theme^="blueprint"] .project-calendar-day-modal,
+    body[data-theme^="glass"] .project-calendar-day-modal {
+        max-height: calc(var(--taskcom-mobile-viewport-height, 100dvh) - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
