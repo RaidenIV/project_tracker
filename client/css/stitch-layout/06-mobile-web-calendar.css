@@ -6078,3 +6078,95 @@ body[data-theme^="glass"] .project-calendar-day-modal-help {
         display: grid !important;
     }
 }
+
+/* Targeted patch: restore old desktop project-modal calendar tab while preserving current mobile flow */
+@media (min-width: 981px) {
+    .project-calendar-panel,
+    body[data-theme^="console"] .project-calendar-panel,
+    body[data-theme^="blueprint"] .project-calendar-panel,
+    body[data-theme^="glass"] .project-calendar-panel {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 1rem !important;
+        align-items: start !important;
+        width: 100% !important;
+    }
+
+    .project-calendar-main-row,
+    body[data-theme^="console"] .project-calendar-main-row,
+    body[data-theme^="blueprint"] .project-calendar-main-row,
+    body[data-theme^="glass"] .project-calendar-main-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr) !important;
+        gap: 1rem !important;
+        align-items: start !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .project-calendar-side-panel,
+    body[data-theme^="console"] .project-calendar-side-panel,
+    body[data-theme^="blueprint"] .project-calendar-side-panel,
+    body[data-theme^="glass"] .project-calendar-side-panel {
+        display: block !important;
+        min-width: 0 !important;
+    }
+
+    .project-calendar-panel > .project-calendar-task-dock,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock {
+        display: grid !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-task-dock-list {
+        display: grid !important;
+        gap: 0.5rem !important;
+        max-height: min(34vh, 22rem) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-right: 0.25rem !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task {
+        display: grid !important;
+        grid-template-columns: auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        min-width: 0 !important;
+        padding: 0.7rem 0.8rem !important;
+        border: 1px solid var(--border, rgba(148, 163, 184, 0.24)) !important;
+        border-radius: 0.75rem !important;
+        background: var(--surface-subtle, rgba(255, 255, 255, 0.05)) !important;
+        color: var(--text, currentColor) !important;
+        cursor: grab !important;
+        user-select: none !important;
+    }
+
+    .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="console"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="blueprint"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder,
+    body[data-theme^="glass"] .project-calendar-panel > .project-calendar-task-dock .project-calendar-draggable-task.has-manual-reorder {
+        grid-template-columns: auto auto minmax(12rem, 1fr) minmax(7rem, auto) auto !important;
+    }
+
+    .project-calendar-select-day-label,
+    body[data-theme^="console"] .project-calendar-select-day-label,
+    body[data-theme^="blueprint"] .project-calendar-select-day-label,
+    body[data-theme^="glass"] .project-calendar-select-day-label,
+    .project-calendar-day-modal-layer,
+    body[data-theme^="console"] .project-calendar-day-modal-layer,
+    body[data-theme^="blueprint"] .project-calendar-day-modal-layer,
+    body[data-theme^="glass"] .project-calendar-day-modal-layer {
+        display: none !important;
+    }
+}

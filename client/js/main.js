@@ -1320,8 +1320,8 @@ function buildProjectCalendarSelectedDayMarkup(project, selectedDate) {
                 <div class="project-calendar-note-actions">
                     <span class="project-calendar-note-limit">${selectedNote.length}/${PROJECT_CALENDAR_NOTE_MAX_LENGTH}</span>
                     ${canEditCalendar ? `
-                        <button class="project-calendar-note-button" type="button" onclick="saveProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)">SAVE</button>
-                        <button class="project-calendar-note-button project-calendar-note-button--secondary" type="button" onclick="deleteProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)" ${selectedNote ? '' : 'disabled'}>DELETE</button>
+                        <button class="project-calendar-note-button" type="button" onclick="saveProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)">Save Note</button>
+                        <button class="project-calendar-note-button project-calendar-note-button--secondary" type="button" onclick="deleteProjectCalendarNote(${projectIdLiteral}, ${selectedDateLiteral}, event)" ${selectedNote ? '' : 'disabled'}>Delete Note</button>
                     ` : '<span class="project-calendar-readonly-note">Read-only</span>'}
                 </div>
             </div>
@@ -1406,6 +1406,7 @@ function buildProjectCalendarTaskDockMarkup(project) {
     const canEditCalendar = state.canEdit(project?.id);
     const tasks = getProjectCalendarDraggableTasks(project);
     const taskSortMode = getProjectTaskSortPreference(project?.id);
+    const canManualReorder = taskSortMode === DEFAULT_TASK_SORT_MODE && canEditCalendar;
 
     return `
         <div class="project-calendar-task-dock" aria-label="Calendar task drag list">
@@ -1429,8 +1430,29 @@ function buildProjectCalendarTaskDockMarkup(project) {
                 </div>
             </div>
             ${tasks.length ? `
-                <div class="project-calendar-task-dock-list task-list" data-calendar-task-list="${escapeHtml(String(project?.id || ''))}">
-                    ${tasks.map(task => buildProjectCalendarDockTaskItem(project?.id || '', task, taskSortMode, canEditCalendar)).join('')}
+                <div class="project-calendar-task-dock-list" data-calendar-task-list="${escapeHtml(String(project?.id || ''))}">
+                    ${tasks.map(task => {
+                        const taskIdLiteral = serializeInlineJsString(task.id);
+                        const dueDate = normalizeTaskDueDate(task.dueDate);
+                        return `
+                            <div class="project-calendar-draggable-task ${getProjectCalendarTaskPriorityClass(task)} ${canManualReorder ? 'has-manual-reorder' : ''}"
+                                 data-calendar-task-item
+                                 data-task-id="${escapeHtml(String(task.id))}"
+                                 draggable="false"
+                                 role="listitem"
+                                 title="${canEditCalendar ? 'Drag onto a calendar date to assign a due date' : 'Read-only task'}">
+                                ${canManualReorder ? `
+                                    <svg class="task-drag-handle project-calendar-task-drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" ondragstart="event.preventDefault(); event.stopPropagation();">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                                    </svg>
+                                ` : ''}
+                                ${buildProjectCalendarTaskCompletionControl(project?.id || '', task)}
+                                <span class="project-calendar-draggable-task-text">${getTaskDisplayHtml(task.text || '', 'Untitled task')}</span>
+                                <span class="project-calendar-draggable-task-date ${dueDate ? 'has-date' : ''}">${dueDate ? escapeHtml(formatTaskDueDateForViewport(dueDate)) : 'No due date'}</span>
+                                ${buildProjectCalendarTaskPriorityControl(project?.id || '', task)}
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             ` : '<div class="project-calendar-empty">No incomplete tasks available to schedule</div>'}
         </div>
