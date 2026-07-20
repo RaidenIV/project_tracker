@@ -896,7 +896,8 @@ function isProjectCalendarDateInPast(dateKey) {
 
 function getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks = [], note = '', projectDueDate = '' }) {
     const classes = ['project-calendar-day'];
-    const isPast = isProjectCalendarDateInPast(dateKey);
+    const useMobileDayModal = isMobileWebSidebarViewport();
+    const isPast = useMobileDayModal && isProjectCalendarDateInPast(dateKey);
     if (dateKey === selectedDate && !isPast) classes.push('is-selected');
     if (dateKey === todayKey) classes.push('is-today');
     if (isPast) classes.push('is-past', 'is-disabled');
@@ -949,7 +950,8 @@ function buildProjectCalendarGridMarkup(project, monthKey, selectedDate) {
                 if (tasks.length) ariaParts.push(`${taskLabel}, highest priority ${getPriorityTagLabel(priorityTag)}`);
                 if (note) ariaParts.push('has note');
                 if (projectDueDate === dateKey) ariaParts.push('project due date');
-                const isPast = isProjectCalendarDateInPast(dateKey);
+                const useMobileDayModal = isMobileWebSidebarViewport();
+                const isPast = useMobileDayModal && isProjectCalendarDateInPast(dateKey);
                 const interactionAttrs = isPast ? `disabled aria-disabled="true"` : `onclick="selectProjectCalendarDay(${projectIdLiteral}, '${dateKey}', event)" ondragover="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)" ondragenter="handleProjectCalendarDayDragOver(${projectIdLiteral}, '${dateKey}', event)" ondragleave="handleProjectCalendarDayDragLeave(event)" ondrop="handleProjectCalendarTaskDrop(${projectIdLiteral}, '${dateKey}', event)"`;
                 return `
                     <button class="${getProjectCalendarDayClass({ dateKey, selectedDate, todayKey, tasks, note, projectDueDate })}"
@@ -1128,6 +1130,7 @@ function buildProjectCalendarClearTasksModalMarkup(project, modalState) {
 }
 
 function buildProjectCalendarDayModalMarkup(project) {
+    if (!isMobileWebSidebarViewport()) return '';
     const modalState = getProjectCalendarDayModalState(project?.id);
     if (!modalState) return '';
     const viewMarkup = modalState.view === 'create'
@@ -12283,6 +12286,29 @@ function buildProjectCalendarSectionMarkup(project) {
     const projectIdLiteral = serializeInlineJsString(project?.id || '');
     const currentMonthKey = getProjectCalendarMonthKey(project?.id);
     const selectedDate = getProjectCalendarSelectedDate(project?.id);
+    const useMobileDayModal = isMobileWebSidebarViewport();
+
+    if (!useMobileDayModal) {
+        return `
+            <div class="project-calendar-panel">
+                <div class="project-calendar-main-row">
+                    <div class="project-calendar-shell">
+                        <div class="project-calendar-toolbar">
+                            <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, -1, event)" aria-label="Previous month">‹</button>
+                            <div class="project-calendar-current-month">${escapeHtml(getCalendarMonthLabel(currentMonthKey))}</div>
+                            <button class="project-calendar-nav-button" type="button" onclick="changeProjectCalendarMonth(${projectIdLiteral}, 1, event)" aria-label="Next month">›</button>
+                            <button class="project-calendar-today-button" type="button" onclick="goToProjectCalendarToday(${projectIdLiteral}, event)">Today</button>
+                        </div>
+                        ${buildProjectCalendarGridMarkup(project, currentMonthKey, selectedDate)}
+                    </div>
+                    <div class="project-calendar-side-panel">
+                        ${buildProjectCalendarSelectedDayMarkup(project, selectedDate)}
+                    </div>
+                </div>
+                ${buildProjectCalendarTaskDockMarkup(project)}
+            </div>
+        `;
+    }
 
     return `
         <div class="project-calendar-panel">
@@ -12340,6 +12366,15 @@ function selectProjectCalendarDay(projectId, dateKey, event) {
     event?.stopPropagation?.();
     if (!state.findProject(projectId)) return;
     const safeDateKey = normalizeTaskDueDate(dateKey) || getTodayDateKey();
+
+    if (!isMobileWebSidebarViewport()) {
+        uiState.projectCalendarDayModal = null;
+        setProjectCalendarSelectedDate(projectId, safeDateKey);
+        renderProjectCalendarSection(projectId);
+        saveOpenProjectModalState(projectId, 'calendar');
+        return;
+    }
+
     if (isProjectCalendarDateInPast(safeDateKey)) return;
     setProjectCalendarSelectedDate(projectId, safeDateKey);
     setProjectCalendarDayModalState(projectId, safeDateKey, 'options');

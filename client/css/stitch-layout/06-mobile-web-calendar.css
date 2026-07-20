@@ -6048,3 +6048,33 @@ body[data-theme^="glass"] .project-calendar-day-modal-help {
         max-height: calc(var(--taskcom-mobile-viewport-height, 100dvh) - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
     }
 }
+
+/* Targeted patch: restore desktop calendar layout while preserving mobile day modal flow */
+@media (min-width: 981px) {
+    .project-calendar-main-row,
+    body[data-theme^="console"] .project-calendar-main-row,
+    body[data-theme^="blueprint"] .project-calendar-main-row,
+    body[data-theme^="glass"] .project-calendar-main-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr) !important;
+        gap: 1rem !important;
+        align-items: start !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .project-calendar-side-panel,
+    body[data-theme^="console"] .project-calendar-side-panel,
+    body[data-theme^="blueprint"] .project-calendar-side-panel,
+    body[data-theme^="glass"] .project-calendar-side-panel {
+        display: block !important;
+        min-width: 0 !important;
+    }
+
+    .project-calendar-task-dock,
+    body[data-theme^="console"] .project-calendar-task-dock,
+    body[data-theme^="blueprint"] .project-calendar-task-dock,
+    body[data-theme^="glass"] .project-calendar-task-dock {
+        display: grid !important;
+    }
+}
