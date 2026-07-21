@@ -2861,6 +2861,52 @@ body {
     min-width: 140px;
 }
 
+.personal-progression-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.personal-progression-modal-progress {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+}
+
+.personal-progression-modal-progress[hidden] {
+    display: none;
+}
+
+.personal-progression-modal-next {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.personal-progression-modal-next:hover {
+    background: var(--accent);
+    color: #fff;
+    transform: translateX(2px);
+}
+
+.personal-progression-modal-next[hidden] {
+    display: none;
+}
+
 .account-modal-actions {
     margin-top: 24px;
     display: flex;

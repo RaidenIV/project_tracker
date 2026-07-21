@@ -224,6 +224,7 @@ function getCompetitiveAchievementIconClass(id) {
 
 let personalProgressionModalQueue = [];
 let personalProgressionModalActive = false;
+let personalProgressionModalIndex = 0;
 
 function normalizePersonalProgressionStats(stats = {}) {
     const source = stats && typeof stats === 'object' ? stats : {};
@@ -575,7 +576,7 @@ function renderAccountProgression() {
 
 function queuePersonalProgressionModal(payload) {
     personalProgressionModalQueue.push(payload);
-    showNextPersonalProgressionModal();
+    showPersonalProgressionModal();
 }
 
 function ensurePersonalProgressionModal() {
@@ -589,7 +590,13 @@ function ensurePersonalProgressionModal() {
                 <div class="personal-progression-modal-kicker" id="personalProgressionModalKicker">Achievement Unlocked</div>
                 <h3 class="personal-progression-modal-title" id="personalProgressionModalTitle"></h3>
                 <p class="personal-progression-modal-description" id="personalProgressionModalDescription"></p>
-                <button class="modal-done-btn personal-progression-modal-button" type="button" onclick="closePersonalProgressionModal()">Continue</button>
+                <div class="personal-progression-modal-progress" id="personalProgressionModalProgress" hidden></div>
+                <div class="personal-progression-modal-actions">
+                    <button class="modal-done-btn personal-progression-modal-button" type="button" onclick="closePersonalProgressionModal()">Continue</button>
+                    <button class="personal-progression-modal-next" id="personalProgressionModalNext" type="button" onclick="showNextPersonalProgressionModal()" aria-label="Show next achievement" hidden>
+                        <span class="personal-progression-modal-next-arrow" aria-hidden="true">&rarr;</span>
+                    </button>
+                </div>
             </div>
         </div>
     `);
@@ -601,15 +608,21 @@ function ensurePersonalProgressionModal() {
     return modal;
 }
 
-function showNextPersonalProgressionModal() {
-    if (personalProgressionModalActive || personalProgressionModalQueue.length === 0) return;
-    const payload = personalProgressionModalQueue.shift();
+function renderPersonalProgressionModalItem() {
     const modal = ensurePersonalProgressionModal();
     if (!modal) return;
 
+    const total = personalProgressionModalQueue.length;
+    if (total === 0) return;
+    if (personalProgressionModalIndex < 0) personalProgressionModalIndex = 0;
+    if (personalProgressionModalIndex > total - 1) personalProgressionModalIndex = total - 1;
+
+    const payload = personalProgressionModalQueue[personalProgressionModalIndex] || {};
     const kickerEl = document.getElementById('personalProgressionModalKicker');
     const titleEl = document.getElementById('personalProgressionModalTitle');
     const descriptionEl = document.getElementById('personalProgressionModalDescription');
+    const progressEl = document.getElementById('personalProgressionModalProgress');
+    const nextEl = document.getElementById('personalProgressionModalNext');
     const iconEl = modal.querySelector('.personal-progression-modal-star');
     if (kickerEl) kickerEl.textContent = payload.kicker || 'Achievement Unlocked';
     if (titleEl) titleEl.textContent = payload.title || '';
@@ -619,9 +632,35 @@ function showNextPersonalProgressionModal() {
         iconEl.classList.add(payload.iconClass || 'is-personal-star');
     }
 
+    const hasMultiple = total > 1;
+    if (progressEl) {
+        progressEl.hidden = !hasMultiple;
+        progressEl.textContent = hasMultiple ? `${personalProgressionModalIndex + 1} of ${total}` : '';
+    }
+    if (nextEl) {
+        nextEl.hidden = !(hasMultiple && personalProgressionModalIndex < total - 1);
+    }
+}
+
+function showPersonalProgressionModal() {
+    if (personalProgressionModalQueue.length === 0) return;
+    const modal = ensurePersonalProgressionModal();
+    if (!modal) return;
+
+    if (!personalProgressionModalActive) {
+        personalProgressionModalIndex = 0;
+    }
+    renderPersonalProgressionModalItem();
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
     personalProgressionModalActive = true;
+}
+
+function showNextPersonalProgressionModal() {
+    if (personalProgressionModalIndex < personalProgressionModalQueue.length - 1) {
+        personalProgressionModalIndex += 1;
+        renderPersonalProgressionModalItem();
+    }
 }
 
 function closePersonalProgressionModal() {
@@ -629,7 +668,8 @@ function closePersonalProgressionModal() {
     modal?.classList.remove('active');
     modal?.setAttribute('aria-hidden', 'true');
     personalProgressionModalActive = false;
-    setTimeout(showNextPersonalProgressionModal, 120);
+    personalProgressionModalQueue = [];
+    personalProgressionModalIndex = 0;
 }
 
 function evaluatePersonalProgression({ showModals = true, persistStatsOnly = false } = {}) {
@@ -15031,6 +15071,7 @@ window.openProjectModal = openProjectModal;
 window.openAccountSettingsModal = openAccountSettingsModal;
 window.closeAccountSettingsModal = closeAccountSettingsModal;
 window.closePersonalProgressionModal = closePersonalProgressionModal;
+window.showNextPersonalProgressionModal = showNextPersonalProgressionModal;
 window.triggerProfilePicUpload = triggerProfilePicUpload;
 window.removeProfilePicture = removeProfilePicture;
 window.saveAccountSettingsFromModal = saveAccountSettingsFromModal;
