@@ -9985,9 +9985,7 @@ body[data-theme^="glass"] .notifications-modal .notification-card.notification-c
 body[data-theme^="blueprint"] .notifications-modal .notification-card.notification-card--unread {
     position: relative !important;
     padding-left: 30px !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.12), -2px -2px 5px rgba(255, 255, 255, 0.72) !important;
+    box-shadow: none !important;
 }
 
 .notifications-modal .notification-card.notification-card--unread::before,

@@ -9275,6 +9275,12 @@ body.control-panel-is-collapsed .panel-edge-toggle svg {
 
 .notifications-modal .notification-card {
     cursor: default;
+    box-shadow: none;
+}
+
+.notifications-modal .notification-card:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 
