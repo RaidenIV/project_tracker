@@ -2216,7 +2216,7 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
     const leaderboardMode = normalizeLeaderboardMode(mode);
     const [accounts, projects, statsRecords] = await Promise.all([
         Account.find({}, 'username profilePic').lean(),
-        Project.find({ archived: { $ne: true } }, 'owner completed completedDate completedBy completedByName tasks collaborators').lean(),
+        Project.find({}, 'owner completed completedDate completedBy completedByName tasks collaborators archived').lean(),
         Stats.find({}).lean()
     ]);
 
@@ -2303,49 +2303,52 @@ async function buildLeaderboardData(currentUserId, mode = 'weekly') {
         const remainingTaskCount = Math.max(0, tasks.length - completedTaskCount);
         const taskCompletionRate = tasks.length > 0 ? completedTaskCount / tasks.length : 0;
         const completedProject = !!project.completed;
+        const archivedProject = !!project.archived;
         const projectCompletedBy = String(project.completedBy || ownerId || '');
         const latestCompletedTask = tasks
             .filter(task => isTaskCompleted(task) && task.completedDate)
             .sort((a, b) => new Date(b.completedDate || 0) - new Date(a.completedDate || 0))[0] || null;
 
-        participantIds.forEach(participantId => {
-            const row = rows.get(participantId);
-            if (!row) return;
+        if (!archivedProject) {
+            participantIds.forEach(participantId => {
+                const row = rows.get(participantId);
+                if (!row) return;
 
-            row.totalProjects += 1;
-            row.totalTasks += tasks.length;
-            row.completedTasks += completedTaskCount;
-            row.remainingTasks += remainingTaskCount;
+                row.totalProjects += 1;
+                row.totalTasks += tasks.length;
+                row.completedTasks += completedTaskCount;
+                row.remainingTasks += remainingTaskCount;
 
-            if (completedProject) {
-                row.completedProjects += 1;
-            } else {
-                row.activeProjects += 1;
-                row.activeProgressRaw += taskCompletionRate;
-            }
-
-            if (completedProject && projectCompletedBy === participantId) {
-                row.allTimeCompletedProjects += 1;
-                if (timestampInRange(project.completedDate, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
-                if (timestampInRange(project.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedProjects += 1;
-                if (timestampInRange(project.completedDate, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
-                if (timestampInRange(project.completedDate, previousWeekStart, previousWeekEnd)) row.previousWeeklyCompletedProjects += 1;
-                if (timestampInRange(project.completedDate, monthStart, monthEnd)) row.monthlyCompletedProjects += 1;
-                if (timestampInRange(project.completedDate, previousMonthStart, previousMonthEnd)) row.previousMonthlyCompletedProjects += 1;
-            }
-
-            if (isSharedProject) {
-                row.sharedProjects += 1;
-                row.sharedTasks += tasks.length;
-                row.sharedCompletedTasks += completedTaskCount;
-                row.sharedRemainingTasks += remainingTaskCount;
-                if (completedProject && latestCompletedTask && String(latestCompletedTask.completedBy || ownerId || '') === participantId) {
-                    row.finalSharedProjectClosures += 1;
+                if (completedProject) {
+                    row.completedProjects += 1;
+                } else {
+                    row.activeProjects += 1;
+                    row.activeProgressRaw += taskCompletionRate;
                 }
-                const creditedSharedTasks = tasks.filter(task => isTaskCompleted(task) && getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
-                if (tasks.length > 0 && creditedSharedTasks / tasks.length >= 0.5) row.sharedCarryProjects += 1;
-            }
-        });
+
+                if (completedProject && projectCompletedBy === participantId) {
+                    row.allTimeCompletedProjects += 1;
+                    if (timestampInRange(project.completedDate, dayStart, dayEnd)) row.dailyCompletedProjects += 1;
+                    if (timestampInRange(project.completedDate, previousDayStart, previousDayEnd)) row.previousDailyCompletedProjects += 1;
+                    if (timestampInRange(project.completedDate, weekStart, weekEnd)) row.weeklyCompletedProjects += 1;
+                    if (timestampInRange(project.completedDate, previousWeekStart, previousWeekEnd)) row.previousWeeklyCompletedProjects += 1;
+                    if (timestampInRange(project.completedDate, monthStart, monthEnd)) row.monthlyCompletedProjects += 1;
+                    if (timestampInRange(project.completedDate, previousMonthStart, previousMonthEnd)) row.previousMonthlyCompletedProjects += 1;
+                }
+
+                if (isSharedProject) {
+                    row.sharedProjects += 1;
+                    row.sharedTasks += tasks.length;
+                    row.sharedCompletedTasks += completedTaskCount;
+                    row.sharedRemainingTasks += remainingTaskCount;
+                    if (completedProject && latestCompletedTask && String(latestCompletedTask.completedBy || ownerId || '') === participantId) {
+                        row.finalSharedProjectClosures += 1;
+                    }
+                    const creditedSharedTasks = tasks.filter(task => isTaskCompleted(task) && getCreditedUserIdsForCompletedTask(task, participantIds, ownerId).includes(participantId)).length;
+                    if (tasks.length > 0 && creditedSharedTasks / tasks.length >= 0.5) row.sharedCarryProjects += 1;
+                }
+            });
+        }
 
         tasks.forEach(task => {
             const creditedUserIds = getCreditedUserIdsForCompletedTask(task, participantIds, ownerId);

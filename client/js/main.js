@@ -3772,7 +3772,6 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
     monthEnd.setMonth(monthEnd.getMonth() + 1);
 
     state.getProjects().forEach(project => {
-        if (isProjectArchived(project)) return;
         const tasks = Array.isArray(project.tasks) ? project.tasks.map((task, index) => normalizeTask(task, index)) : [];
         const completedProject = isProjectCompleted(project);
         const completedTaskCount = tasks.filter(task => isTaskCompleted(task)).length;
@@ -3786,6 +3785,9 @@ function buildLocalCurrentLeaderboardEntry(currentUserId) {
         row.dailyCompletedTasks += countLocalCompletedRecords(completedRecords, dayStart, dayEnd);
         row.weeklyCompletedTasks += countLocalCompletedRecords(completedRecords, weekStart, weekEnd);
         row.monthlyCompletedTasks += countLocalCompletedRecords(completedRecords, monthStart, monthEnd);
+
+        if (isProjectArchived(project)) return;
+
         const projectCompletedTimestamp = getCompletionTimestamp(project.completedDate);
         const projectCreditedToUser = completedProject && (
             project.completedBy === userId
