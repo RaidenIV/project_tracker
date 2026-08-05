@@ -12920,11 +12920,19 @@ function openProjectModal(projectId, options = {}) {
                 You have viewer access ${project.ownerName ? '— shared by ' + project.ownerName : ''}
             </div>` : `
             <div class="modal-actions">
-                ${project.archived ? `<button class="modal-delete-btn" onclick="restoreArchivedProject('${project.id}', event)">Restore Project</button>` : `<button class="modal-delete-btn" onclick="archiveProject('${project.id}', event)">Archive Project</button>`}
-                ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
-                <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
-                    ${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}
-                </button>
+                ${project.archived ? `
+                    <button class="modal-delete-btn" onclick="completeProjectFromModal('${project.id}')">
+                        ${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}
+                    </button>
+                    ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
+                    <button class="modal-done-btn" onclick="restoreArchivedProject('${project.id}', event)">Restore Project</button>
+                ` : `
+                    <button class="modal-delete-btn" onclick="archiveProject('${project.id}', event)">Archive Project</button>
+                    ${project.userRole === 'owner' ? `<button class="modal-delete-btn" onclick="confirmDeleteProject('${project.id}')">Delete Project</button>` : ''}
+                    <button class="modal-done-btn" onclick="completeProjectFromModal('${project.id}')">
+                        ${isProjectCompleted(project) ? 'Mark as Active' : 'Mark as Complete'}
+                    </button>
+                `}
             </div>`}
         </div>
 

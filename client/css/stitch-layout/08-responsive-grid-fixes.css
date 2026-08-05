@@ -6361,7 +6361,7 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
     body[data-theme^="console"] #projectModal .modal-paste-section > .rich-text-toolbar,
     body[data-theme^="glass"] #projectModal .modal-paste-section > .rich-text-toolbar,
     body[data-theme^="blueprint"] #projectModal .modal-paste-section > .rich-text-toolbar {
-        display: none !important;
+        display: inline-flex !important;
     }
 
     #projectModal .modal-paste-section:focus-within > .rich-text-toolbar,
@@ -6375,7 +6375,7 @@ body[data-theme^="blueprint"] .project-card .project-card-tasks-remaining {
     body[data-theme^="console"] #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar,
     body[data-theme^="glass"] #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar,
     body[data-theme^="blueprint"] #projectModal.modal-overlay.active .task-item.is-editing .task-edit-rich-toolbar {
-        display: none !important;
+        display: inline-flex !important;
     }
 
     #projectModal.modal-overlay.active .task-item.is-editing .task-main-content:focus-within .task-edit-rich-toolbar,
@@ -8679,7 +8679,7 @@ body[data-theme] #projectModal .modal-paste-section > .rich-text-toolbar,
 body[data-theme^="console"] #projectModal .modal-paste-section > .rich-text-toolbar,
 body[data-theme^="glass"] #projectModal .modal-paste-section > .rich-text-toolbar,
 body[data-theme^="blueprint"] #projectModal .modal-paste-section > .rich-text-toolbar {
-    display: none !important;
+    display: inline-flex !important;
 }
 
 #projectModal .modal-paste-section:has(.modal-task-entry-editor:focus) > .rich-text-toolbar,
